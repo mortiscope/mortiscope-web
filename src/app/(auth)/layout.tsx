@@ -20,8 +20,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Right-side panel */}
-      <div className="flex w-full items-center justify-center overflow-y-auto p-6 md:w-1/2 md:p-10">
-        <div className="w-full max-w-md">{children}</div>
+      <div className="w-full overflow-y-auto md:w-1/2">
+        <div className="flex min-h-full w-full items-center justify-center p-6 md:p-10">
+          <div className="w-full max-w-md">{children}</div>
+        </div>
       </div>
     </main>
   );
