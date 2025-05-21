@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
 
 import { CustomCursor } from "@/components/custom-cursor";
@@ -51,9 +52,11 @@ const Hero = () => {
             {/* Sign In Button container */}
             <div>
               {/* Sign In button */}
-              <Button className="font-inter relative cursor-pointer overflow-hidden rounded-full border-2 border-slate-900 bg-transparent px-4 py-1.5 text-sm font-normal text-slate-900 uppercase transition-all duration-500 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-full before:bg-gradient-to-r before:from-slate-900 before:to-slate-800 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-transparent hover:text-white hover:before:left-0 md:px-5 md:py-2 md:text-base lg:px-6 lg:text-lg">
-                Sign In
-              </Button>
+              <Link href="/signin">
+                <Button className="font-inter relative cursor-pointer overflow-hidden rounded-full border-2 border-slate-900 bg-transparent px-4 py-1.5 text-sm font-normal text-slate-900 uppercase transition-all duration-500 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-full before:bg-gradient-to-r before:from-slate-900 before:to-slate-800 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-transparent hover:text-white hover:before:left-0 md:px-5 md:py-2 md:text-base lg:px-6 lg:text-lg">
+                  Sign In
+                </Button>
+              </Link>
             </div>
           </nav>
         </div>
@@ -74,16 +77,18 @@ const Hero = () => {
               </h1>
               {/* Hero Description */}
               <p className="font-inter text-base leading-relaxed text-slate-900 md:text-lg lg:text-xl">
-                Mortiscope simplifies oriental latrine fly&apos;s growth analysis, reducing time spent on
-                manual examination. As a supplemental forensic tool, it enhances accuracy and
-                supports forensic scientists in estimating time of death efficiently.
+                Mortiscope simplifies oriental latrine fly&apos;s growth analysis, reducing time
+                spent on manual examination. As a supplemental forensic tool, it enhances accuracy
+                and supports forensic scientists in estimating time of death efficiently.
               </p>
               {/* Hero Call-to-Action Button container */}
               <div>
                 {/* Start Analysis button */}
-                <Button className="font-inter relative cursor-pointer overflow-hidden rounded-lg border-none bg-yellow-500 px-4 py-4 text-sm font-normal text-white uppercase transition-all duration-200 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-green-700 before:to-green-600 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-amber-500 hover:text-white hover:before:left-0 md:px-5 md:py-5 md:text-base lg:px-6 lg:py-6 lg:text-lg">
-                  Start Analysis
-                </Button>
+                <Link href="/signup">
+                  <Button className="font-inter relative cursor-pointer overflow-hidden rounded-lg border-none bg-yellow-500 px-4 py-4 text-sm font-normal text-white uppercase transition-all duration-200 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-green-700 before:to-green-600 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-amber-500 hover:text-white hover:before:left-0 md:px-5 md:py-5 md:text-base lg:px-6 lg:py-6 lg:text-lg">
+                    Start Analysis
+                  </Button>
+                </Link>
               </div>
             </div>
 
