@@ -1,20 +1,47 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { type SignUpFormValues, SignUpSchema } from "@/lib/schemas/auth";
 
 export default function SignUpPage() {
   // State to manage password visibility (show/hide)
   const [showPassword, setShowPassword] = useState(false);
   // State to manage confirm password visibility (show/hide)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const form = useForm<SignUpFormValues>({
+    resolver: zodResolver(SignUpSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = async (values: SignUpFormValues) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    console.log("Sign-in form submitted:", values);
+  };
 
   // Function to toggle the password visibility state
   const togglePasswordVisibility = () => {
@@ -26,9 +53,15 @@ export default function SignUpPage() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  // Determine if the button should be disabled
+  const isButtonDisabled = !form.formState.isValid || form.formState.isSubmitting;
+
+  const nameFieldsError =
+    form.formState.errors.firstName?.message || form.formState.errors.lastName?.message;
+
   return (
     // Main container for the sign-up form
-    <div className="flex w-full flex-col items-center justify-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
+    <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
       {/* Logo section, links to homepage */}
       <div className="mb-1 flex flex-col items-center md:mb-2">
         <Link href="/" aria-label="Go to homepage">
@@ -53,112 +86,166 @@ export default function SignUpPage() {
         </p>
       </div>
       {/* Sign-up form */}
-      <form className="font-inter mt-4 w-full space-y-2 md:space-y-4">
-        {/* Name input fields */}
-        <div className="flex w-full flex-col gap-4 md:flex-row md:gap-6">
-          {/* First Name input field */}
-          <div className="grid w-full items-center gap-1.5 md:w-1/2">
-            <Label htmlFor="firstName" className="text-sm font-normal">
-              First Name
-            </Label>
-            <Input
-              type="text"
-              id="firstName"
-              placeholder="Enter your first name"
-              className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-            />
-          </div>
-          {/* Last Name input field */}
-          <div className="grid w-full items-center gap-1.5 md:w-1/2">
-            <Label htmlFor="lastName" className="text-sm font-normal">
-              Last Name
-            </Label>
-            <Input
-              type="text"
-              id="lastName"
-              placeholder="Enter your last name"
-              className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-            />
-          </div>
-        </div>
-        {/* Email input field */}
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="email" className="text-sm font-normal">
-            Email
-          </Label>
-          <Input
-            type="email"
-            id="email"
-            placeholder="Enter your email"
-            className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-          />
-        </div>
-        {/* Password input field with visibility toggle */}
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="password" className="text-sm font-normal">
-            Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              placeholder="Enter your password"
-              className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-            />
-            {/* Button to toggle password visibility */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-              onClick={togglePasswordVisibility}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <PiEye size={18} className="md:h-5 md:w-5" />
-              ) : (
-                <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-        {/* Confirm Password input field with visibility toggle */}
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="confirmPassword" className="text-sm font-normal">
-            Confirm Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showConfirmPassword ? "text" : "password"}
-              id="confirmPassword"
-              placeholder="Confirm your password"
-              className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-              onClick={toggleConfirmPasswordVisibility}
-              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-            >
-              {/* Conditional icon rendering */}
-              {showConfirmPassword ? (
-                <PiEye size={18} className="md:h-5 md:w-5" />
-              ) : (
-                <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-        {/* Sign Up Button */}
-        <Button
-          type="submit"
-          className="font-inter relative mt-2 h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-0 md:h-10 md:text-base"
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="font-inter mt-4 w-full space-y-3 md:space-y-4"
         >
-          Sign Up
-        </Button>
-      </form>
+          {/* Name input fields container */}
+          <div>
+            <div className="flex w-full flex-col gap-3 md:flex-row md:gap-6">
+              {/* First Name input field */}
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem className="w-full md:w-1/2">
+                    <FormLabel className="text-xs font-normal md:text-sm">First Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Enter your first name"
+                        className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              {/* Last Name input field */}
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem className="w-full md:w-1/2">
+                    <FormLabel className="text-xs font-normal md:text-sm">Last Name</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Enter your last name"
+                        className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                        {...field}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+            {/* Combined validation messages for First Name and Last Name fields */}
+            {nameFieldsError && (
+              <div className="text-destructive mt-1 text-xs font-medium">
+                <p>{nameFieldsError}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Email input field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-normal md:text-sm">Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* Password input field with visibility toggle */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-normal md:text-sm">Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                      {...field}
+                    />
+                    {/* Button to toggle password visibility */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                      onClick={togglePasswordVisibility}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <PiEye size={18} className="md:h-5 md:w-5" />
+                      ) : (
+                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* Confirm Password input field with visibility toggle */}
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-normal md:text-sm">Confirm Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                      {...field}
+                    />
+                    {/* Button to toggle confirm password visibility */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                      onClick={toggleConfirmPasswordVisibility}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showConfirmPassword ? (
+                        <PiEye size={18} className="md:h-5 md:w-5" />
+                      ) : (
+                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* Sign Up Button */}
+          <Button
+            type="submit"
+            disabled={isButtonDisabled}
+            className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
+              isButtonDisabled
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
+            }`}
+          >
+            {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
+          </Button>
+        </form>
+      </Form>
       {/* Separator with text in the middle */}
       <div className="relative w-full pt-2 md:pt-0">
         <Separator />
