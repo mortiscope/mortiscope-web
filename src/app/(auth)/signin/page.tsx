@@ -1,27 +1,54 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { type SignInFormValues, SignInSchema } from "@/lib/schemas/auth";
 
 export default function SignInPage() {
   // State to manage password visibility (show/hide)
   const [showPassword, setShowPassword] = useState(false);
+
+  const form = useForm<SignInFormValues>({
+    resolver: zodResolver(SignInSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onChange",
+  });
+
+  const onSubmit = async (values: SignInFormValues) => {
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    console.log("Sign-in form submitted:", values);
+  };
 
   // Function to toggle the password visibility state
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Determine if the button should be disabled
+  const isButtonDisabled = !form.formState.isValid || form.formState.isSubmitting;
+
   return (
     // Main container for the sign-in form
-    <div className="flex w-full flex-col items-center justify-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
+    <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
       {/* Logo section, links to homepage */}
       <div className="mb-1 flex flex-col items-center md:mb-2">
         <Link href="/" aria-label="Go to homepage">
@@ -45,66 +72,92 @@ export default function SignInPage() {
           Sign in to access your account and continue your work.
         </p>
       </div>
+
       {/* Sign-in form */}
-      <form className="font-inter mt-4 w-full space-y-2 md:space-y-4">
-        {/* Email input field */}
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="email" className="text-sm font-normal">
-            Email
-          </Label>
-          <Input
-            type="email"
-            id="email"
-            placeholder="Enter your email"
-            className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-          />
-        </div>
-        {/* Password input field with visibility toggle */}
-        <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="password" className="text-sm font-normal">
-            Password
-          </Label>
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              placeholder="Enter your password"
-              className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-            />
-            {/* Button to toggle password visibility */}
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-              onClick={togglePasswordVisibility}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? (
-                <PiEye size={18} className="md:h-5 md:w-5" />
-              ) : (
-                <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-        {/* Forgot Password anchor link */}
-        <div className="flex justify-end">
-          <Link
-            href="/forgot-password"
-            className="relative text-xs font-normal text-slate-600 after:absolute after:-bottom-0.5 after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-slate-800 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:text-slate-800 hover:after:origin-bottom-left hover:after:scale-x-100 md:text-sm"
-          >
-            Forgot Password?
-          </Link>
-        </div>
-        {/* Sign In Button */}
-        <Button
-          type="submit"
-          className="font-inter relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base"
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="font-inter mt-4 w-full space-y-3 md:space-y-4"
         >
-          Sign In
-        </Button>
-      </form>
+          {/* Email input field */}
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-normal md:text-sm">Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* Password input field with visibility toggle */}
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-xs font-normal md:text-sm">Password</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                      {...field}
+                    />
+                    {/* Button to toggle password visibility */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                      onClick={togglePasswordVisibility}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? (
+                        <PiEye size={18} className="md:h-5 md:w-5" />
+                      ) : (
+                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                      )}
+                    </Button>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+          {/* Forgot Password anchor link */}
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="relative text-xs font-normal text-slate-600 after:absolute after:-bottom-0.5 after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-slate-800 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:text-slate-800 hover:after:origin-bottom-left hover:after:scale-x-100 md:text-sm"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+          {/* Sign In Button */}
+          <Button
+            type="submit"
+            disabled={isButtonDisabled}
+            className={`font-inter relative h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:h-10 md:text-base ${
+              isButtonDisabled
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
+            }`}
+          >
+            {form.formState.isSubmitting ? "Signing In..." : "Sign In"}
+          </Button>
+        </form>
+      </Form>
       {/* Separator with text in the middle */}
       <div className="relative w-full pt-2 md:pt-0">
         <Separator />
