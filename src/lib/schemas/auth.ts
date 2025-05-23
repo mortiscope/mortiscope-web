@@ -75,12 +75,37 @@ const BaseSignUpSchemaObject = z.object({
 
 // Refinement to the base object
 export const SignUpSchema = BaseSignUpSchemaObject.refine(
-  (data) => data.password === data.confirmPassword,
+  // Password must not be the same as the local part of email
+  (data) => {
+    if (data.email && data.email.includes("@")) {
+      const emailLocalPart = data.email.split("@")[0];
+      return data.password !== emailLocalPart;
+    }
+    return true;
+  },
   {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
+    message: "Password cannot be the same as your email username.",
+    path: ["password"],
   }
-);
+)
+  .refine(
+    // Password must not be the same as the entire email
+    (data) => {
+      return data.password !== data.email;
+    },
+    {
+      message: "Password cannot be the same as your full email address.",
+      path: ["password"],
+    }
+  )
+  .refine(
+    // Third refinement: password === confirmPassword
+    (data) => data.password === data.confirmPassword,
+    {
+      message: "Passwords do not match.",
+      path: ["confirmPassword"],
+    }
+  );
 
 // Sign In Schema
 export const SignInSchema = z.object({
