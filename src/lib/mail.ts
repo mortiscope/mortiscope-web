@@ -1,4 +1,6 @@
+import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailVerification } from "@/emails/email-verification";
+
 import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
 
@@ -46,5 +48,19 @@ export const sendWelcomeEmail = async (email: string, username?: string | null) 
     to: email,
     subject: "MortiScope: Getting Started",
     react: WelcomeEmail({ username }),
+  });
+};
+
+/**
+ * Sends a verification link to a new email address to confirm a change.
+ * @param email The recipient's new email address.
+ * @param token The unique verification token for the email change.
+ */
+export const sendEmailChangeVerificationLink = async (email: string, token: string) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Confirm New Email Address",
+    react: EmailChangeVerification({ token }),
   });
 };
