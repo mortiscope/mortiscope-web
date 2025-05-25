@@ -64,3 +64,16 @@ export const verificationTokens = pgTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
+
+// Stores tokens to securely verify a user's request to change their email
+export const emailChangeTokens = pgTable("email_change_tokens", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  token: text("token").notNull().unique(),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  newEmail: text("new_email").notNull(),
+});
