@@ -1,6 +1,6 @@
 import { EmailChangeVerification } from "@/emails/email-change-verification";
+import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
-
 import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
 
@@ -62,5 +62,21 @@ export const sendEmailChangeVerificationLink = async (email: string, token: stri
     to: email,
     subject: "MortiScope: Confirm New Email Address",
     react: EmailChangeVerification({ token }),
+  });
+};
+
+/**
+ * Sends a notification about an email change.
+ * @param email The recipient's email address (either old or new).
+ * @param type Differentiates the notification type: 'old' for a security alert, 'new' for confirmation.
+ */
+export const sendEmailChangeNotification = async (email: string, type: "old" | "new") => {
+  const subject = type === "old" ? "MortiScope: Email Change Request" : "MortiScope: Email Updated";
+
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject,
+    react: EmailUpdated({ notificationType: type }),
   });
 };
