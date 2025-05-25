@@ -1,4 +1,5 @@
 import { EmailVerification } from "@/emails/email-verification";
+import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
 
 let domain: string;
@@ -31,5 +32,19 @@ export const sendEmailVerification = async (email: string, token: string) => {
     to: email,
     subject: "MortiScope: Verify Your Email Address",
     react: EmailVerification({ token }),
+  });
+};
+
+/**
+ * Sends a welcome email to a user upon successful registration.
+ * @param email The recipient's email address.
+ * @param username The user's name for personalization (optional).
+ */
+export const sendWelcomeEmail = async (email: string, username?: string | null) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Getting Started",
+    react: WelcomeEmail({ username }),
   });
 };
