@@ -3,10 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
+import { signUp } from "@/actions/signup";
+import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -26,6 +28,14 @@ export default function SignUpForm() {
   // State to manage confirm password visibility (show/hide)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // State for overall form success or error messages from the server action
+  const [error, setError] = useState<string | undefined>();
+  const [success, setSuccess] = useState<string | undefined>();
+
+  // Handle the pending state of the server action
+  const [isPending, startTransition] = useTransition();
+
+  // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<SignUpFormValues>({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
@@ -38,9 +48,20 @@ export default function SignUpForm() {
     mode: "onChange",
   });
 
-  const onSubmit = async (values: SignUpFormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    console.log("Sign-in form submitted:", values);
+  // Function to handle form submission
+  const onSubmit = (values: SignUpFormValues) => {
+    // Clear previous messages before a new submission
+    setError("");
+    setSuccess("");
+
+    // Wrap the server action in startTransition to manage pending UI states
+    startTransition(() => {
+      signUp(values).then((data) => {
+        // Set the message based on the response
+        setError(data.error);
+        setSuccess(data.success);
+      });
+    });
   };
 
   // Function to toggle the password visibility state
@@ -53,8 +74,8 @@ export default function SignUpForm() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  // Determine if the button should be disabled
-  const isButtonDisabled = !form.formState.isValid || form.formState.isSubmitting;
+  // Determine if the button should be visually disabled based on form validity and pending state
+  const isButtonDisabled = !form.formState.isValid || isPending;
 
   const nameFieldsError =
     form.formState.errors.firstName?.message || form.formState.errors.lastName?.message;
@@ -85,6 +106,7 @@ export default function SignUpForm() {
           Get started by filling the information fields below.
         </p>
       </div>
+
       {/* Sign-up form */}
       <Form {...form}>
         <form
@@ -158,6 +180,7 @@ export default function SignUpForm() {
               </FormItem>
             )}
           />
+
           {/* Password input field with visibility toggle */}
           <FormField
             control={form.control}
@@ -173,6 +196,7 @@ export default function SignUpForm() {
                       className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                       {...field}
                     />
+
                     {/* Button to toggle password visibility */}
                     <Button
                       type="button"
@@ -195,6 +219,7 @@ export default function SignUpForm() {
               </FormItem>
             )}
           />
+
           {/* Confirm Password input field with visibility toggle */}
           <FormField
             control={form.control}
@@ -232,20 +257,28 @@ export default function SignUpForm() {
               </FormItem>
             )}
           />
+
           {/* Sign Up Button */}
-          <Button
-            type="submit"
-            disabled={isButtonDisabled}
-            className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
-              isButtonDisabled
-                ? "cursor-not-allowed opacity-60"
-                : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
-            }`}
-          >
-            {form.formState.isSubmitting ? "Signing Up..." : "Sign Up"}
-          </Button>
+          <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>
+            <Button
+              type="submit"
+              disabled={isButtonDisabled}
+              className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
+                isButtonDisabled
+                  ? "opacity-60"
+                  : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
+              }`}
+            >
+              {isPending ? "Signing Up..." : "Sign Up"}
+            </Button>
+          </div>
         </form>
+
+        {/* Displaying form feedback messages */}
+        <FormFeedback message={error} type="error" />
+        <FormFeedback message={success} type="success" />
       </Form>
+
       {/* Separator with text in the middle */}
       <div className="relative w-full pt-2 md:pt-0">
         <Separator />
@@ -253,6 +286,7 @@ export default function SignUpForm() {
           Or sign up with
         </span>
       </div>
+
       {/* Social Login Buttons section */}
       <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3">
         {/* Array of social providers, mapped to create buttons */}
@@ -278,6 +312,7 @@ export default function SignUpForm() {
           </Button>
         ))}
       </div>
+
       {/* Link to Sign In page for existing users */}
       <p className="font-inter pt-2 text-center text-xs text-slate-600 md:pt-0 md:text-sm">
         Already have an account?&nbsp;
