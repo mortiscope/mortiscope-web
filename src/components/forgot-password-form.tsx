@@ -3,8 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
+import { forgotPassword } from "@/actions/forgot-password";
+import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,9 +18,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ForgotPasswordSchema, type ForgotPasswordFormValues } from "@/lib/schemas/auth";
+import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/lib/schemas/auth";
 
-export default function ForgotPasswordPage() {
+export default function ForgotPasswordForm() {
+  // State for overall form success or error messages from the server action
+  const [error, setError] = useState<string | undefined>("");
+  const [success, setSuccess] = useState<string | undefined>("");
+
+  // Handle the pending state of the server action
+  const [isPending, startTransition] = useTransition();
+
+  // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: {
@@ -26,14 +37,24 @@ export default function ForgotPasswordPage() {
     mode: "onChange",
   });
 
-  const onSubmit = async (values: ForgotPasswordFormValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    alert(`Password reset link sent for:\n${JSON.stringify(values, null, 2)}`);
-    console.log("Forgot password form submitted:", values);
+  // Function to handle form submission
+  const onSubmit = (values: ForgotPasswordFormValues) => {
+    // Clear previous messages before a new submission
+    setError("");
+    setSuccess("");
+
+    // Wrap the server action in a transition to manage pending UI states
+    startTransition(() => {
+      forgotPassword(values).then((data) => {
+        // Set the message based on the response
+        setError(data?.error);
+        setSuccess(data?.success);
+      });
+    });
   };
 
-  // Determine if the button should be disabled
-  const isButtonDisabled = !form.formState.isValid || form.formState.isSubmitting;
+  // Determine if the button should be visually disabled based on form validity and pending state
+  const isButtonDisabled = !form.formState.isValid || isPending;
 
   return (
     // Main container for the forgot password form
@@ -58,7 +79,7 @@ export default function ForgotPasswordPage() {
           Forgot Password?
         </h1>
         <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
 
@@ -66,7 +87,7 @@ export default function ForgotPasswordPage() {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="font-inter mt-4 w-full space-y-3 md:space-y-4"
+          className="font-inter w-full space-y-3 md:space-y-4"
         >
           {/* Email input field */}
           <FormField
@@ -79,6 +100,7 @@ export default function ForgotPasswordPage() {
                   <Input
                     type="email"
                     placeholder="Enter your email"
+                    disabled={isPending}
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                     {...field}
                   />
@@ -88,18 +110,25 @@ export default function ForgotPasswordPage() {
             )}
           />
 
-          {/* Send Reset Link Button */}
-          <Button
-            type="submit"
-            disabled={isButtonDisabled}
-            className={`font-inter relative h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:h-10 md:text-base ${
-              isButtonDisabled
-                ? "cursor-not-allowed opacity-60"
-                : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
-            }`}
-          >
-            {form.formState.isSubmitting ? "Sending..." : "Send Reset Link"}
-          </Button>
+          {/* Form feedback for success or error messages */}
+          <FormFeedback message={success} type="success" />
+          <FormFeedback message={error} type="error" />
+
+          {/* Wrapper to apply disabled cursor style to the button */}
+          <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>
+            {/* Send Reset Link Button */}
+            <Button
+              type="submit"
+              disabled={isButtonDisabled}
+              className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
+                isButtonDisabled
+                  ? "opacity-60"
+                  : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
+              }`}
+            >
+              {isPending ? "Sending..." : "Send Reset Link"}
+            </Button>
+          </div>
         </form>
       </Form>
 
