@@ -1,6 +1,9 @@
 import { z } from "zod";
 
-// Base Email Schema
+/**
+ * Defines a reusable, strict validation schema for email addresses.
+ * Includes format, length (based on RFC 5321), and a basic domain check.
+ */
 const emailValidationSchema = z
   .string()
   .min(1, { message: "Email is required." })
@@ -16,7 +19,10 @@ const emailValidationSchema = z
     { message: "Email must include a valid domain." }
   );
 
-// New Password Schema
+/**
+ * Defines a reusable, strong password policy based on NIST guidelines.
+ * Used for creating or resetting passwords to ensure they meet security standards.
+ */
 const newPasswordValidationSchema = z
   .string()
   .min(1, { message: "New password is required." })
@@ -36,12 +42,18 @@ const newPasswordValidationSchema = z
     message: "New password cannot contain spaces.",
   });
 
-// Current Password Schema
+/**
+ * A simple schema for validating a user's current password input.
+ * It only checks for non-emptiness, as strength validation is not needed here.
+ */
 const currentPasswordValidationSchema = z
   .string()
   .min(1, { message: "Current password is required." });
 
-// Name Validation
+/**
+ * A reusable schema for validating user names (first or last).
+ * Enforces capitalization, a valid character set, and clean formatting.
+ */
 const nameValidation = z
   .string()
   .min(1, { message: "This field is required." })
@@ -60,7 +72,9 @@ const nameValidation = z
     message: "Cannot start or end with a hyphen or apostrophe.",
   });
 
-// Define the base object schema for sign up
+/**
+ * The base schema definition for sign-up fields before cross-field validation.
+ */
 const BaseSignUpSchemaObject = z.object({
   firstName: nameValidation.refine((val) => val.trim().length > 0, {
     message: "First name is required.",
@@ -73,7 +87,11 @@ const BaseSignUpSchemaObject = z.object({
   confirmPassword: z.string().min(1, { message: "Please confirm your password." }),
 });
 
-// Refinement to the base object
+/**
+
+ * The complete schema for the user sign-up form.
+ * It extends the base object with cross-field validations to ensure password security and confirmation matching.
+ */
 export const SignUpSchema = BaseSignUpSchemaObject.refine(
   // Password must not be the same as the local part of email
   (data) => {
@@ -107,19 +125,26 @@ export const SignUpSchema = BaseSignUpSchemaObject.refine(
     }
   );
 
-// Sign In Schema
+/**
+ * Schema for the user sign-in form.
+ */
 export const SignInSchema = z.object({
   email: BaseSignUpSchemaObject.shape.email,
   password: currentPasswordValidationSchema,
 });
 
-// Forgot Password Schema
+/**
+ * Schema for the forgot password form, requiring only a valid email.
+ */
 export const ForgotPasswordSchema = z.object({
   email: BaseSignUpSchemaObject.shape.email,
 });
 
-// Resetting a Forgotten Password
-export const PasswordResetSchema = z
+/**
+ * Schema for the password reset form.
+ * Ensures the new password meets strength requirements and is confirmed correctly.
+ */
+export const ResetPasswordSchema = z
   .object({
     newPassword: newPasswordValidationSchema,
     confirmNewPassword: z.string().min(1, { message: "Please confirm your new password." }),
@@ -129,7 +154,10 @@ export const PasswordResetSchema = z
     path: ["confirmNewPassword"],
   });
 
-// Changing Password
+/**
+ * Schema for the change password form (used by authenticated users).
+ * Requires the current password and validates the new password against the old password.
+ */
 export const ChangePasswordSchema = z
   .object({
     currentPassword: currentPasswordValidationSchema,
@@ -145,8 +173,31 @@ export const ChangePasswordSchema = z
     path: ["newPassword"],
   });
 
+/**
+ * Schema for the email change request form.
+ * Requires the new email and the user's current password for re-authentication.
+ */
+export const EmailChangeRequestSchema = z.object({
+  newEmail: emailValidationSchema,
+  currentPassword: z.string().min(1, { message: "Current password is required." }),
+});
+
+/**
+ * Schema for the account deletion request form.
+ * The password field is optional as it's only required for credential-based users,
+ * not for OAuth users.
+ */
+export const AccountDeletionRequestSchema = z.object({
+  password: z.string().optional(),
+});
+
+/**
+ * Exports TypeScript types inferred from the Zod schemas.
+ */
 export type SignUpFormValues = z.infer<typeof SignUpSchema>;
 export type SignInFormValues = z.infer<typeof SignInSchema>;
 export type ForgotPasswordFormValues = z.infer<typeof ForgotPasswordSchema>;
-export type PasswordResetFormValues = z.infer<typeof PasswordResetSchema>;
+export type ResetPasswordFormValues = z.infer<typeof ResetPasswordSchema>;
 export type ChangePasswordFormValues = z.infer<typeof ChangePasswordSchema>;
+export type EmailChangeRequestFormValues = z.infer<typeof EmailChangeRequestSchema>;
+export type AccountDeletionRequestFormValues = z.infer<typeof AccountDeletionRequestSchema>;
