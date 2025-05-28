@@ -2,6 +2,7 @@ import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
 import { ForgotPassword } from "@/emails/forgot-password";
+import { PasswordUpdated } from "@/emails/password-updated";
 import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
 
@@ -93,5 +94,18 @@ export const sendForgotPassword = async (email: string, token: string) => {
     to: email,
     subject: "MortiScope: Forgot Password",
     react: ForgotPassword({ token }),
+  });
+};
+
+/**
+ * Sends a confirmation that the user's password was changed.
+ * @param email The recipient's email address.
+ */
+export const sendPasswordUpdatedEmail = async (email: string) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Password Updated",
+    react: PasswordUpdated(),
   });
 };
