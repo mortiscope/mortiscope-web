@@ -2,7 +2,12 @@ import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 import { db } from "@/db";
-import { emailChangeTokens, forgotPasswordTokens, verificationTokens } from "@/db/schema";
+import {
+  accountDeletionTokens,
+  emailChangeTokens,
+  forgotPasswordTokens,
+  verificationTokens,
+} from "@/db/schema";
 
 /**
  * Generates a new email verification token.
@@ -89,4 +94,32 @@ export const generateForgotPasswordToken = async (email: string) => {
   });
 
   return newForgotPasswordToken;
+};
+
+/**
+ * Generates a token to confirm an account deletion request.
+ * @param email The email associated with the account to be deleted.
+ * @returns A promise resolving to the newly created account deletion token record.
+ */
+export const generateAccountDeletionToken = async (email: string) => {
+  const token = uuidv4();
+  // Token is valid for 1 hour.
+  const expires = new Date(new Date().getTime() + 3600 * 1000);
+
+  const newDeletionToken = await db.transaction(async (tx) => {
+    await tx.delete(accountDeletionTokens).where(eq(accountDeletionTokens.identifier, email));
+
+    const result = await tx
+      .insert(accountDeletionTokens)
+      .values({
+        identifier: email,
+        token,
+        expires,
+      })
+      .returning();
+
+    return result[0];
+  });
+
+  return newDeletionToken;
 };

@@ -88,3 +88,14 @@ export const forgotPasswordTokens = pgTable(
   },
   (fpt) => [primaryKey({ columns: [fpt.identifier, fpt.token] })]
 );
+
+// Stores tokens to confirm an account deletion request
+export const accountDeletionTokens = pgTable(
+  "account_deletion_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull().unique(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (adt) => [primaryKey({ columns: [adt.identifier, adt.token] })]
+);
