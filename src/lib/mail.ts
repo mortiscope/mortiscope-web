@@ -1,6 +1,7 @@
 import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
+import { ForgotPassword } from "@/emails/forgot-password";
 import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
 
@@ -78,5 +79,19 @@ export const sendEmailChangeNotification = async (email: string, type: "old" | "
     to: email,
     subject,
     react: EmailUpdated({ notificationType: type }),
+  });
+};
+
+/**
+ * Sends a password reset link to the user.
+ * @param email The recipient's email address.
+ * @param token The unique password reset token.
+ */
+export const sendForgotPassword = async (email: string, token: string) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Forgot Password",
+    react: ForgotPassword({ token }),
   });
 };
