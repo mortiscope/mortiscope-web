@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
 import { db } from "@/db";
-import { emailChangeTokens, verificationTokens } from "@/db/schema";
+import { emailChangeTokens, forgotPasswordTokens, verificationTokens } from "@/db/schema";
 
 /**
  * Generates a new email verification token.
@@ -61,4 +61,32 @@ export const generateEmailChangeToken = async (userId: string, newEmail: string)
   });
 
   return newEmailChangeToken;
+};
+
+/**
+ * Generates a new password reset token.
+ * @param email The user's email address.
+ * @returns A promise resolving to the newly created password reset token record.
+ */
+export const generateForgotPasswordToken = async (email: string) => {
+  const token = uuidv4();
+  // Token is valid for 1 hour.
+  const expires = new Date(new Date().getTime() + 3600 * 1000);
+
+  const newForgotPasswordToken = await db.transaction(async (tx) => {
+    await tx.delete(forgotPasswordTokens).where(eq(forgotPasswordTokens.identifier, email));
+
+    const result = await tx
+      .insert(forgotPasswordTokens)
+      .values({
+        identifier: email,
+        token,
+        expires,
+      })
+      .returning();
+
+    return result[0];
+  });
+
+  return newForgotPasswordToken;
 };

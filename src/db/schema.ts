@@ -77,3 +77,14 @@ export const emailChangeTokens = pgTable("email_change_tokens", {
     .references(() => users.id, { onDelete: "cascade" }),
   newEmail: text("new_email").notNull(),
 });
+
+// Stores tokens for the password reset process
+export const forgotPasswordTokens = pgTable(
+  "forgot_password_tokens",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull().unique(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (fpt) => [primaryKey({ columns: [fpt.identifier, fpt.token] })]
+);
