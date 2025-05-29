@@ -1,0 +1,1 @@
+export const DELETION_GRACE_PERIOD_DAYS = 30;

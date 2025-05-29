@@ -1,3 +1,4 @@
+import { AccountDeletionRequest } from "@/emails/account-deletion-request";
 import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
@@ -107,5 +108,19 @@ export const sendPasswordUpdatedEmail = async (email: string) => {
     to: email,
     subject: "MortiScope: Password Updated",
     react: PasswordUpdated(),
+  });
+};
+
+/**
+ * Sends an email asking the user to confirm their account deletion request.
+ * @param email The user's email address.
+ * @param token The unique token to authorize deletion.
+ */
+export const sendAccountDeletionRequest = async (email: string, token: string) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Account Deletion Request",
+    react: AccountDeletionRequest({ token }),
   });
 };
