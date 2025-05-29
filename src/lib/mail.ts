@@ -1,3 +1,4 @@
+import { AccountDeletionCancelled } from "@/emails/account-deletion-cancelled";
 import { AccountDeletionRequest } from "@/emails/account-deletion-request";
 import { AccountDeletionScheduled } from "@/emails/account-deletion-scheduled";
 import { EmailChangeVerification } from "@/emails/email-change-verification";
@@ -137,5 +138,19 @@ export const sendAccountDeletionScheduled = async (email: string, deletionWindow
     to: email,
     subject: "MortiScope: Account Deletion Schedule",
     react: AccountDeletionScheduled({ deletionWindowDays }),
+  });
+};
+
+/**
+ * Notifies the user that their scheduled account deletion has been cancelled.
+ * @param email The user's email address.
+ * @param username The user's name for personalization (optional).
+ */
+export const sendAccountDeletionCancelled = async (email: string, username?: string | null) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Account Deletion Cancelled",
+    react: AccountDeletionCancelled({ username }),
   });
 };
