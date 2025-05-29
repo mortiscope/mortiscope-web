@@ -5,6 +5,7 @@ import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
 import { ForgotPassword } from "@/emails/forgot-password";
+import { GoodbyeEmail } from "@/emails/goodbye-email";
 import { PasswordUpdated } from "@/emails/password-updated";
 import { WelcomeEmail } from "@/emails/welcome-email";
 import { resend } from "@/lib/resend";
@@ -152,5 +153,19 @@ export const sendAccountDeletionCancelled = async (email: string, username?: str
     to: email,
     subject: "MortiScope: Account Deletion Cancelled",
     react: AccountDeletionCancelled({ username }),
+  });
+};
+
+/**
+ * Sends a final farewell email after an account has been permanently deleted.
+ * @param email The user's former email address.
+ * @param username The user's name for personalization (optional).
+ */
+export const sendGoodbyeEmail = async (email: string, username?: string | null) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Account Permanently Deleted",
+    react: GoodbyeEmail({ username }),
   });
 };
