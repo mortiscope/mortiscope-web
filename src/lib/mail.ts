@@ -1,4 +1,5 @@
 import { AccountDeletionRequest } from "@/emails/account-deletion-request";
+import { AccountDeletionScheduled } from "@/emails/account-deletion-scheduled";
 import { EmailChangeVerification } from "@/emails/email-change-verification";
 import { EmailUpdated } from "@/emails/email-updated";
 import { EmailVerification } from "@/emails/email-verification";
@@ -122,5 +123,19 @@ export const sendAccountDeletionRequest = async (email: string, token: string) =
     to: email,
     subject: "MortiScope: Account Deletion Request",
     react: AccountDeletionRequest({ token }),
+  });
+};
+
+/**
+ * Informs the user that their account deletion is scheduled and details the grace period.
+ * @param email The user's email address.
+ * @param deletionWindowDays The number of days in the grace period.
+ */
+export const sendAccountDeletionScheduled = async (email: string, deletionWindowDays: number) => {
+  await resend.emails.send({
+    from: fromAddress,
+    to: email,
+    subject: "MortiScope: Account Deletion Schedule",
+    react: AccountDeletionScheduled({ deletionWindowDays }),
   });
 };
