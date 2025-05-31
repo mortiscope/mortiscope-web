@@ -60,7 +60,7 @@ export const ForgotPassword = ({ token }: ForgotPasswordProps) => {
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Reset Your Password</Preview>
+        <Preview>This email contains the link to complete your password reset request.</Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a decorative banner */}
           <Section

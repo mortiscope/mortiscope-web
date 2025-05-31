@@ -60,7 +60,7 @@ export const EmailChangeVerification = ({ token }: EmailChangeVerificationProps)
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Confirm Your New Email Address</Preview>
+        <Preview>A final step is required to update the email for your MortiScope account.</Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a decorative banner */}
           <Section

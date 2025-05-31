@@ -64,7 +64,10 @@ export const AccountDeletionScheduled = ({
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Your Account Deletion is Scheduled</Preview>
+        <Preview>
+          This email confirms that your account is scheduled for permanent deletion and explains the
+          recovery process.
+        </Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a warning banner */}
           <Section

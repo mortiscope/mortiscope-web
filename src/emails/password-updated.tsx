@@ -56,7 +56,10 @@ export const PasswordUpdated = () => {
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Your Password Has Been Updated</Preview>
+        <Preview>
+          This is a security notification confirming a recent password change on your MortiScope
+          account.
+        </Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a decorative banner */}
           <Section

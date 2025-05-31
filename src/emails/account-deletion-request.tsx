@@ -67,7 +67,7 @@ export const AccountDeletionRequest = ({
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Confirm Your Account Deletion</Preview>
+        <Preview>Action required to confirm the deletion of your MortiScope account.</Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a warning banner */}
           <Section

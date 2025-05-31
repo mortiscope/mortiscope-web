@@ -59,7 +59,10 @@ export const GoodbyeEmail = ({ username }: GoodbyeEmailProps) => {
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Your Account Has Been Deleted</Preview>
+        <Preview>
+          This is the final confirmation that your MortiScope account and all associated data have
+          been permanently deleted.
+        </Preview>
         <Body className="mx-auto my-auto bg-gray-50 font-sans">
           {/* Header section with a decorative banner */}
           <Section

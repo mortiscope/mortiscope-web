@@ -61,7 +61,9 @@ export const AccountDeletionCancelled = ({ username }: AccountDeletionCancelledP
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Account Deletion Cancelled</Preview>
+        <Preview>
+          This confirms the scheduled deletion for your MortiScope account has been cancelled.
+        </Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a decorative banner */}
           <Section

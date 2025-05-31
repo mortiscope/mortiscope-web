@@ -40,8 +40,8 @@ export const EmailUpdated = ({ notificationType }: EmailUpdatedProps) => {
 
   // Dynamically set the email's preview text based on the notification type
   const previewText = isSecurityAlert
-    ? "MortiScope: Your Email Address Has Been Changed"
-    : "MortiScope: Your Email Address Has Been Updated";
+    ? "A security alert regarding a recent change to the email address on your MortiScope account."
+    : "Confirmation that your MortiScope account email has been successfully updated to this address.";
 
   // Dynamically set the main heading
   const headingText = isSecurityAlert ? "Email Address Changed" : "Email Address Updated";

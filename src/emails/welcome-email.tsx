@@ -65,7 +65,7 @@ export const WelcomeEmail = ({ username }: WelcomeEmailProps) => {
             fontStyle="normal"
           />
         </Head>
-        <Preview>Welcome to MortiScope!</Preview>
+        <Preview>Welcome to MortiScope! Your account is now active and ready to be used.</Preview>
         <Body className="mx-auto my-auto bg-gray-50 font-sans">
           {/* Header section with a decorative banner */}
           <Section

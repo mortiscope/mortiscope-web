@@ -60,7 +60,9 @@ export const EmailVerification = ({ token }: EmailVerificationProps) => {
             fontStyle="normal"
           />
         </Head>
-        <Preview>MortiScope: Verify Your Email Address</Preview>
+        <Preview>
+          Verify this email address as the final step to activate your MortiScope account.
+        </Preview>
         <Body className="mx-auto my-auto bg-slate-200 font-sans">
           {/* Header section with a decorative banner */}
           <Section
