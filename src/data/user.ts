@@ -3,7 +3,11 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 
-// Retrieves a user from the database by their email
+/**
+ * Retrieves a user from the database by their email address.
+ * @param email The user's email to search for.
+ * @returns A promise that resolves to the user object or null if not found or a database error occurs.
+ */
 export const getUserByEmail = async (email: string) => {
   try {
     const user = await db.query.users.findFirst({
@@ -16,7 +20,11 @@ export const getUserByEmail = async (email: string) => {
   }
 };
 
-// Retrieves a user from the database by their unique ID
+/**
+ * Retrieves a user from the database by their unique ID.
+ * @param id The user's unique identifier.
+ * @returns A promise that resolves to the user object or null if not found or a database error occurs.
+ */
 export const getUserById = async (id: string) => {
   try {
     const user = await db.query.users.findFirst({
