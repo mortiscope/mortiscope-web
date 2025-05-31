@@ -56,8 +56,8 @@ export default function SignInForm() {
     });
   };
 
-  // Function to handle OAuth sign-in. Now accepts 'orcid'.
-  const handleOAuthSignIn = (provider: "google") => {
+  // Function to handle OAuth sign-in
+  const handleOAuthSignIn = (provider: "google" | "orcid") => {
     startTransition(() => {
       socialSignIn(provider, {
         callbackUrl: "/dashboard",
@@ -220,6 +220,8 @@ export default function SignInForm() {
               const providerName = provider.label.toLowerCase();
               if (providerName === "google") {
                 handleOAuthSignIn("google");
+              } else if (providerName === "orcid") {
+                handleOAuthSignIn("orcid");
               }
             }}
             disabled={isPending}

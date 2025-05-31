@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn as socialSignIn } from "next-auth/react";
 import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
@@ -66,9 +66,9 @@ export default function SignUpForm() {
   };
 
   // Function to handle OAuth sign-in
-  const handleOAuthSignIn = (provider: "google") => {
+  const handleOAuthSignIn = (provider: "google" | "orcid") => {
     startTransition(() => {
-      signIn(provider, {
+      socialSignIn(provider, {
         callbackUrl: "/dashboard",
       });
     });
@@ -207,7 +207,6 @@ export default function SignUpForm() {
                       {...field}
                     />
 
-                    {/* Button to toggle password visibility */}
                     <Button
                       type="button"
                       variant="ghost"
@@ -245,7 +244,6 @@ export default function SignUpForm() {
                       className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                       {...field}
                     />
-                    {/* Button to toggle confirm password visibility */}
                     <Button
                       type="button"
                       variant="ghost"
@@ -310,8 +308,11 @@ export default function SignUpForm() {
             key={provider.label}
             variant="outline"
             onClick={() => {
-              if (provider.label.toLowerCase() === "google") {
+              const providerName = provider.label.toLowerCase();
+              if (providerName === "google") {
                 handleOAuthSignIn("google");
+              } else if (providerName === "orcid") {
+                handleOAuthSignIn("orcid");
               }
             }}
             // All buttons are disabled only when a transition is pending.
