@@ -93,9 +93,9 @@ const Hero = () => {
             </div>
 
             {/* Right-side Content */}
-            <div className="relative order-last flex h-full min-h-[300px] items-end justify-center sm:min-h-[350px] md:order-none md:min-h-[400px] lg:min-h-[550px]">
+            <div className="relative order-last flex h-full min-h-[300px] items-end justify-center sm:min-h-[350px] md:order-none md:min-h-[400px] lg:min-h-[550px] xl:min-h-[600px] 2xl:min-h-[650px]">
               {/* Container for the hand image */}
-              <div className="absolute bottom-[-95%] left-1/2 w-[145%] max-w-none -translate-x-1/2 sm:bottom-[-100%] sm:w-[155%] md:bottom-[-85%] md:w-[180%] lg:bottom-[-115%] lg:w-[180%]">
+              <div className="absolute bottom-[-95%] left-1/2 w-[145%] max-w-none -translate-x-1/2 sm:bottom-[-100%] sm:w-[155%] md:bottom-[-85%] md:w-[180%] lg:bottom-[-115%] lg:w-[180%] xl:bottom-[-90%] xl:w-[160%] 2xl:bottom-[-80%] 2xl:w-[140%]">
                 {/* Hand image */}
                 <div className="relative z-10 -rotate-12 transform md:-rotate-15">
                   <Image
@@ -109,7 +109,7 @@ const Hero = () => {
                 </div>
 
                 {/* Container for the fly image */}
-                <div className="absolute bottom-[80%] left-[55%] z-20 w-[45%] max-w-md -translate-x-1/2 sm:bottom-[55%] sm:w-[50%] md:bottom-[85%] md:w-[55%] lg:bottom-[85%] lg:w-[45%]">
+                <div className="absolute bottom-[80%] left-[55%] z-20 w-[45%] max-w-md -translate-x-1/2 sm:bottom-[55%] sm:w-[50%] md:bottom-[85%] md:w-[55%] lg:bottom-[85%] lg:w-[45%] xl:bottom-[90%] xl:w-[50%] 2xl:bottom-[90%] 2xl:w-[55%]">
                   {/* Fly image */}
                   <Image
                     src="/chrysomya_megacephala.png"
