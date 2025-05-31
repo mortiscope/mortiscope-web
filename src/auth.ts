@@ -2,6 +2,7 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 
 import { getUserByEmail, getUserById } from "@/data/user";
 import { db } from "@/db";
@@ -13,6 +14,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // Configures the session strategy to use JSON Web Tokens (JWT)
   session: { strategy: "jwt" },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
     Credentials({
       /**
        * The core logic for the credentials provider.

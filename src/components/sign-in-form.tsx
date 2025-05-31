@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Image from "next/image";
 import Link from "next/link";
+import { signIn as socialSignIn } from "next-auth/react";
 import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
@@ -51,6 +52,15 @@ export default function SignInForm() {
     startTransition(() => {
       signIn(values).then((data) => {
         setError(data?.error);
+      });
+    });
+  };
+
+  // Function to handle OAuth sign-in. Now accepts 'orcid'.
+  const handleOAuthSignIn = (provider: "google") => {
+    startTransition(() => {
+      socialSignIn(provider, {
+        callbackUrl: "/dashboard",
       });
     });
   };
@@ -206,7 +216,14 @@ export default function SignInForm() {
           <Button
             key={provider.label}
             variant="outline"
-            className="relative h-9 w-full cursor-pointer overflow-hidden rounded px-5 py-2.5 text-white transition-all duration-500 hover:rounded-sm hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 md:h-10"
+            onClick={() => {
+              const providerName = provider.label.toLowerCase();
+              if (providerName === "google") {
+                handleOAuthSignIn("google");
+              }
+            }}
+            disabled={isPending}
+            className="relative h-9 w-full cursor-pointer overflow-hidden rounded px-5 py-2.5 text-white transition-all duration-500 hover:rounded-sm hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:h-10"
           >
             {/* Social provider logos */}
             <Image
