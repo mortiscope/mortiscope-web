@@ -56,22 +56,19 @@ export const resetPassword = async (values: ResetPasswordFormValues, token?: str
     // Hash the new password before storing it
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Atomically update the user's password and delete the reset token
-    await db.transaction(async (tx) => {
-      // Update the user record with the new hashed password
-      await tx
-        .update(users)
-        .set({
-          password: hashedPassword,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, existingUser.id!));
+    // Update the user record with the new hashed password
+    await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, existingUser.id!));
 
-      // Invalidate the token by deleting it from the database
-      await tx
-        .delete(forgotPasswordTokens)
-        .where(eq(forgotPasswordTokens.token, existingToken.token));
-    });
+    // Invalidate the token by deleting it from the database
+    await db
+      .delete(forgotPasswordTokens)
+      .where(eq(forgotPasswordTokens.token, existingToken.token));
 
     // Send a confirmation email about the password change
     try {

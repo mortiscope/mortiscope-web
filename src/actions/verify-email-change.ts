@@ -51,30 +51,27 @@ export const verifyEmailChange = async (token: string): Promise<VerificationActi
   }
 
   try {
-    // Perform the email update within a database transaction to ensure atomicity
-    await db.transaction(async (tx) => {
-      // Update the user's email and mark it as verified
-      await tx
-        .update(users)
-        .set({
-          email: existingToken.newEmail,
-          emailVerified: new Date(),
-        })
-        .where(eq(users.id, existingToken.userId));
+    // Update the user's email and mark it as verified
+    await db
+      .update(users)
+      .set({
+        email: existingToken.newEmail,
+        emailVerified: new Date(),
+      })
+      .where(eq(users.id, existingToken.userId));
 
-      // For security, invalidate all active sessions for this user by forcing a log-out on all other devices
-      await tx.delete(sessions).where(eq(sessions.userId, existingToken.userId));
+    // For security, invalidate all active sessions for this user by forcing a log-out on all other devices
+    await db.delete(sessions).where(eq(sessions.userId, existingToken.userId));
 
-      // Delete the used token to prevent it from being used again
-      await tx.delete(emailChangeTokens).where(eq(emailChangeTokens.id, existingToken.id));
-    });
+    // Delete the used token to prevent it from being used again
+    await db.delete(emailChangeTokens).where(eq(emailChangeTokens.id, existingToken.id));
 
-    // After the transaction succeeds, send a final confirmation email to the new address
+    // After the operations succeed, send a final confirmation email to the new address
     await sendEmailChangeNotification(existingToken.newEmail, "new");
 
     return { status: "success", message: "Your email address has been successfully updated!" };
   } catch (error) {
-    // Handle any unexpected errors during the database transaction
+    // Handle any unexpected errors during the database operations
     console.error("VERIFY_EMAIL_CHANGE_ACTION_ERROR:", error);
     return { status: "error", message: "An unexpected error occurred while updating your email." };
   }

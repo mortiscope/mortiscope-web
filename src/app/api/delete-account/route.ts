@@ -33,61 +33,52 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Perform all database operations within a transaction for atomicity
-    const result = await db.transaction(async (tx) => {
-      // Validate the provided token
-      const deletionToken = await getAccountDeletionTokenByToken(token);
-      if (!deletionToken) {
-        throw new Error("Token not found");
-      }
+    // Validate the provided token
+    const deletionToken = await getAccountDeletionTokenByToken(token);
+    if (!deletionToken) {
+      throw new Error("Token not found");
+    }
 
-      // Check for token expiration
-      const hasExpired = new Date(deletionToken.expires) < new Date();
-      if (hasExpired) {
-        throw new Error("Token has expired");
-      }
+    // Check for token expiration
+    const hasExpired = new Date(deletionToken.expires) < new Date();
+    if (hasExpired) {
+      throw new Error("Token has expired");
+    }
 
-      // Invalidate the token immediately to prevent reuse
-      await tx
-        .delete(accountDeletionTokens)
-        .where(eq(accountDeletionTokens.token, deletionToken.token));
+    // Invalidate the token immediately to prevent reuse
+    await db
+      .delete(accountDeletionTokens)
+      .where(eq(accountDeletionTokens.token, deletionToken.token));
 
-      // Find the user associated with the token
-      const existingUser = await getUserByEmail(deletionToken.identifier);
+    // Find the user associated with the token
+    const existingUser = await getUserByEmail(deletionToken.identifier);
 
-      // Gracefully handle cases where the user is gone or deletion is already pending
-      if (!existingUser || existingUser.deletionScheduledAt) {
-        return { email: null };
-      }
-
+    // Gracefully handle cases where the user is gone or deletion is already pending
+    if (!existingUser || existingUser.deletionScheduledAt) {
+      // If user doesn't exist or deletion is already scheduled, we don't need to do anything further.
+    } else {
       // Calculate the final deletion date based on the grace period
       const deletionDate = new Date();
       deletionDate.setDate(deletionDate.getDate() + DELETION_GRACE_PERIOD_DAYS);
 
       // Schedule the user for deletion by setting the `deletionScheduledAt` timestamp
-      await tx
+      await db
         .update(users)
         .set({ deletionScheduledAt: deletionDate })
         .where(eq(users.id, existingUser.id));
 
-      // Return the email to be used for sending a notification after the transaction
-      return { email: existingUser.email };
-    });
-
-    // After the transaction is successfully committed, send a notification email
-    if (result && result.email) {
-      // This is in a separate try/catch as a failed email should not affect the successful deletion scheduling
+      // After the operations are successful, send a notification email
       try {
-        await sendAccountDeletionScheduled(result.email, DELETION_GRACE_PERIOD_DAYS);
+        await sendAccountDeletionScheduled(existingUser.email, DELETION_GRACE_PERIOD_DAYS);
       } catch (emailError) {
         console.error(
-          `CRITICAL LOG: Account deletion for ${result.email} was scheduled, but the notification email failed to send.`,
+          `CRITICAL LOG: Account deletion for ${existingUser.email} was scheduled, but the notification email failed to send.`,
           emailError
         );
       }
     }
   } catch (error) {
-    // Catch any errors from the transaction and log them.
+    // Catch any errors from the database operations and log them.
     if (error instanceof Error) {
       console.error(`Account deletion confirmation failed: ${error.message}`);
     } else {

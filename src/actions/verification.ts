@@ -90,14 +90,10 @@ const verifyNewUser = async (token: string): Promise<VerificationActionResult> =
   }
 
   try {
-    // Atomically update the user and delete the token
-    await db.transaction(async (tx) => {
-      await tx
-        .update(users)
-        .set({ emailVerified: new Date() })
-        .where(eq(users.id, existingUser.id));
-      await tx.delete(verificationTokens).where(eq(verificationTokens.token, existingToken.token));
-    });
+    // Update the user and delete the token
+    await db.update(users).set({ emailVerified: new Date() }).where(eq(users.id, existingUser.id));
+
+    await db.delete(verificationTokens).where(eq(verificationTokens.token, existingToken.token));
 
     // Send a welcome email
     await sendWelcomeEmail(existingUser.email, existingUser.name).catch((e) => console.error(e));

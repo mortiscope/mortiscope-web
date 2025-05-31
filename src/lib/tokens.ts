@@ -19,21 +19,18 @@ export const generateVerificationToken = async (email: string) => {
   // Token is valid for 1 hour.
   const expires = new Date(new Date().getTime() + 3600 * 1000);
 
-  const newVerificationToken = await db.transaction(async (tx) => {
-    // Invalidate any existing tokens for this email.
-    await tx.delete(verificationTokens).where(eq(verificationTokens.identifier, email));
+  // Invalidate any existing tokens for this email.
+  await db.delete(verificationTokens).where(eq(verificationTokens.identifier, email));
 
-    const result = await tx
-      .insert(verificationTokens)
-      .values({
-        identifier: email,
-        token,
-        expires,
-      })
-      .returning();
-
-    return result[0];
-  });
+  // Create the new token.
+  const [newVerificationToken] = await db
+    .insert(verificationTokens)
+    .values({
+      identifier: email,
+      token,
+      expires,
+    })
+    .returning();
 
   return newVerificationToken;
 };
@@ -49,21 +46,19 @@ export const generateEmailChangeToken = async (userId: string, newEmail: string)
   // Token is valid for 30 minutes.
   const expires = new Date(new Date().getTime() + 1800 * 1000);
 
-  const newEmailChangeToken = await db.transaction(async (tx) => {
-    await tx.delete(emailChangeTokens).where(eq(emailChangeTokens.userId, userId));
+  // Invalidate any existing tokens for this user.
+  await db.delete(emailChangeTokens).where(eq(emailChangeTokens.userId, userId));
 
-    const result = await tx
-      .insert(emailChangeTokens)
-      .values({
-        userId,
-        newEmail,
-        token,
-        expires,
-      })
-      .returning();
-
-    return result[0];
-  });
+  // Create the new token.
+  const [newEmailChangeToken] = await db
+    .insert(emailChangeTokens)
+    .values({
+      userId,
+      newEmail,
+      token,
+      expires,
+    })
+    .returning();
 
   return newEmailChangeToken;
 };
@@ -78,20 +73,18 @@ export const generateForgotPasswordToken = async (email: string) => {
   // Token is valid for 1 hour.
   const expires = new Date(new Date().getTime() + 3600 * 1000);
 
-  const newForgotPasswordToken = await db.transaction(async (tx) => {
-    await tx.delete(forgotPasswordTokens).where(eq(forgotPasswordTokens.identifier, email));
+  // Invalidate any existing tokens for this email.
+  await db.delete(forgotPasswordTokens).where(eq(forgotPasswordTokens.identifier, email));
 
-    const result = await tx
-      .insert(forgotPasswordTokens)
-      .values({
-        identifier: email,
-        token,
-        expires,
-      })
-      .returning();
-
-    return result[0];
-  });
+  // Create the new token.
+  const [newForgotPasswordToken] = await db
+    .insert(forgotPasswordTokens)
+    .values({
+      identifier: email,
+      token,
+      expires,
+    })
+    .returning();
 
   return newForgotPasswordToken;
 };
@@ -106,20 +99,18 @@ export const generateAccountDeletionToken = async (email: string) => {
   // Token is valid for 1 hour.
   const expires = new Date(new Date().getTime() + 3600 * 1000);
 
-  const newDeletionToken = await db.transaction(async (tx) => {
-    await tx.delete(accountDeletionTokens).where(eq(accountDeletionTokens.identifier, email));
+  // Invalidate any existing tokens for this email.
+  await db.delete(accountDeletionTokens).where(eq(accountDeletionTokens.identifier, email));
 
-    const result = await tx
-      .insert(accountDeletionTokens)
-      .values({
-        identifier: email,
-        token,
-        expires,
-      })
-      .returning();
-
-    return result[0];
-  });
+  // Create the new token.
+  const [newDeletionToken] = await db
+    .insert(accountDeletionTokens)
+    .values({
+      identifier: email,
+      token,
+      expires,
+    })
+    .returning();
 
   return newDeletionToken;
 };
