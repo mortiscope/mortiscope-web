@@ -3,6 +3,8 @@ import "@/app/globals.css";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Metadata } from "next/types";
 
+import { Toaster } from "@/components/ui/sonner";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -24,9 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${plusJakartaSans.variable} antialiased`}>
-        {children}
+        <main>{children}</main>
+        <Toaster position="bottom-right" richColors />
       </body>
     </html>
   );
