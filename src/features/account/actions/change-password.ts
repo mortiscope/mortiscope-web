@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { type ChangePasswordFormValues, ChangePasswordSchema } from "@/features/auth/schemas/auth";
 import { sendPasswordUpdatedEmail } from "@/lib/mail";
+import { privateActionLimiter } from "@/lib/rate-limiter";
 
 /**
  * A server action to handle user password changes.
@@ -20,6 +21,14 @@ export const changePassword = async (values: ChangePasswordFormValues) => {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: "Unauthorized." };
+  }
+
+  // Apply a rate limit based on the user's ID to prevent rapid password change attempts from a single account
+  const { success } = await privateActionLimiter.limit(session.user.id);
+  if (!success) {
+    return {
+      error: "You are attempting to change your password too frequently. Please try again shortly.",
+    };
   }
 
   // Validate the form fields against the schema

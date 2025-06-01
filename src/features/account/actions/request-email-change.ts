@@ -4,8 +4,12 @@ import bcrypt from "bcryptjs";
 
 import { auth } from "@/auth";
 import { getUserByEmail, getUserById } from "@/data/user";
-import { type EmailChangeRequestFormValues, EmailChangeRequestSchema } from "@/features/auth/schemas/auth";
+import {
+  type EmailChangeRequestFormValues,
+  EmailChangeRequestSchema,
+} from "@/features/auth/schemas/auth";
 import { sendEmailChangeNotification, sendEmailChangeVerificationLink } from "@/lib/mail";
+import { emailActionLimiter, privateActionLimiter } from "@/lib/rate-limiter";
 import { generateEmailChangeToken } from "@/lib/tokens";
 
 /**
@@ -20,6 +24,12 @@ export const requestEmailChange = async (values: EmailChangeRequestFormValues) =
     return { error: "Unauthorized." };
   }
 
+  // Apply a general rate limit for this authenticated action based on the user's ID
+  const { success: privateLimitSuccess } = await privateActionLimiter.limit(session.user.id);
+  if (!privateLimitSuccess) {
+    return { error: "You are making too many requests. Please try again shortly." };
+  }
+
   // Validate the form fields against the schema
   const validatedFields = EmailChangeRequestSchema.safeParse(values);
   if (!validatedFields.success) {
@@ -27,6 +37,12 @@ export const requestEmailChange = async (values: EmailChangeRequestFormValues) =
   }
 
   const { newEmail, currentPassword } = validatedFields.data;
+
+  // Apply a stricter rate limit based on the target email address to prevent spamming
+  const { success: emailLimitSuccess } = await emailActionLimiter.limit(newEmail);
+  if (!emailLimitSuccess) {
+    return { error: "A verification link for this email was requested recently. Please wait." };
+  }
 
   // Fetch the full user record to perform password re-authentication
   const user = await getUserById(session.user.id);

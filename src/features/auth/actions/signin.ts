@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 
 import { signIn as authSignIn } from "@/auth";
@@ -9,6 +10,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 import { sendAccountDeletionCancelled, sendEmailVerification } from "@/lib/mail";
+import { publicActionLimiter } from "@/lib/rate-limiter";
 import { generateVerificationToken } from "@/lib/tokens";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
@@ -18,6 +20,16 @@ import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
  * @returns A promise resolving to an object with an `error` message or performing a redirect on success.
  */
 export const signIn = async (values: SignInFormValues) => {
+  // Get the request headers to extract the user's IP address
+  const requestHeaders = await headers();
+  const ip = requestHeaders.get("x-forwarded-for");
+
+  // Apply rate limiting to prevent brute-force login attempts from a single IP
+  const { success } = await publicActionLimiter.limit(ip ?? "127.0.0.1");
+  if (!success) {
+    return { error: "Too many requests. Please try again in a moment." };
+  }
+
   // Validate the form fields against the schema.
   const validatedFields = SignInSchema.safeParse(values);
   if (!validatedFields.success) {

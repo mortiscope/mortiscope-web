@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { getUserByEmail } from "@/data/user";
 import { AccountDeletionRequestSchema } from "@/features/auth/schemas/auth";
 import { sendAccountDeletionRequest } from "@/lib/mail";
+import { privateActionLimiter } from "@/lib/rate-limiter";
 import { generateAccountDeletionToken } from "@/lib/tokens";
 
 /**
@@ -21,6 +22,14 @@ export const requestAccountDeletion = async (
   const session = await auth();
   if (!session?.user?.email) {
     return { error: "Unauthorized: You must be logged in to delete your account." };
+  }
+
+  // Apply a rate limit based on the user's identifier to prevent abuse of this sensitive, destructive action.
+  const { success } = await privateActionLimiter.limit(session.user.email);
+  if (!success) {
+    return {
+      error: "You have made too many deletion requests. Please wait a while.",
+    };
   }
 
   // Fetch the full user record to check for pending deletions and password

@@ -1,12 +1,14 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { type SignUpFormValues, SignUpSchema } from "@/features/auth/schemas/auth";
 import { sendEmailVerification } from "@/lib/mail";
+import { publicActionLimiter } from "@/lib/rate-limiter";
 import { generateVerificationToken } from "@/lib/tokens";
 
 /**
@@ -15,6 +17,16 @@ import { generateVerificationToken } from "@/lib/tokens";
  * @returns A promise resolving to an object with either a `success` or `error` message.
  */
 export const signUp = async (values: SignUpFormValues) => {
+  // Get the request headers to extract the user's IP address
+  const requestHeaders = await headers();
+  const ip = requestHeaders.get("x-forwarded-for");
+
+  // Apply rate limiting to prevent spam and bot account creation from a single IP
+  const { success } = await publicActionLimiter.limit(ip ?? "127.0.0.1");
+  if (!success) {
+    return { error: "Too many requests. Please try again in a moment." };
+  }
+
   // Validate the form fields against the schema
   const validatedFields = SignUpSchema.safeParse(values);
   if (!validatedFields.success) {

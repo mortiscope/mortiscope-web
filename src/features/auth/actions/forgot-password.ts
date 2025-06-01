@@ -3,6 +3,7 @@
 import { getUserByEmail } from "@/data/user";
 import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 import { sendForgotPassword } from "@/lib/mail";
+import { emailActionLimiter } from "@/lib/rate-limiter";
 import { generateForgotPasswordToken } from "@/lib/tokens";
 
 /**
@@ -19,6 +20,12 @@ export const forgotPassword = async (values: ForgotPasswordFormValues) => {
   }
 
   const { email } = validatedFields.data;
+
+  // Apply a rate limit based on the target email address to prevent spamming a user's inbox
+  const { success } = await emailActionLimiter.limit(email);
+  if (!success) {
+    return { error: "Too many requests. Please wait a minute before retrying." };
+  }
 
   try {
     // Check if a user with the provided email exists
