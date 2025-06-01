@@ -66,7 +66,7 @@ export default function SignUpForm() {
   };
 
   // Function to handle OAuth sign-in
-  const handleOAuthSignIn = (provider: "google" | "orcid") => {
+  const handleOAuthSignIn = (provider: "google" | "orcid" | "microsoft-entra-id") => {
     startTransition(() => {
       socialSignIn(provider, {
         callbackUrl: "/dashboard",
@@ -313,6 +313,8 @@ export default function SignUpForm() {
                 handleOAuthSignIn("google");
               } else if (providerName === "orcid") {
                 handleOAuthSignIn("orcid");
+              } else if (providerName === "microsoft") {
+                handleOAuthSignIn("microsoft-entra-id");
               }
             }}
             // All buttons are disabled only when a transition is pending.

@@ -5,12 +5,14 @@ import NextAuth from "next-auth";
 import type { OAuthConfig, Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { getUserByEmail, getUserById } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { sendEmailChangeNotification } from "@/lib/mail";
 import { SignInSchema } from "@/lib/schemas/auth";
+
 // Define the shape of the user profile data returned by ORCID's APIs
 interface OrcidProfile {
   sub: string;
@@ -91,6 +93,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+    }),
+    MicrosoftEntraID({
+      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
+      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+      issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({

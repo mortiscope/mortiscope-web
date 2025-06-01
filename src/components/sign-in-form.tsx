@@ -57,7 +57,7 @@ export default function SignInForm() {
   };
 
   // Function to handle OAuth sign-in
-  const handleOAuthSignIn = (provider: "google" | "orcid") => {
+  const handleOAuthSignIn = (provider: "google" | "orcid" | "microsoft-entra-id") => {
     startTransition(() => {
       socialSignIn(provider, {
         callbackUrl: "/dashboard",
@@ -222,6 +222,8 @@ export default function SignInForm() {
                 handleOAuthSignIn("google");
               } else if (providerName === "orcid") {
                 handleOAuthSignIn("orcid");
+              } else if (providerName === "microsoft") {
+                handleOAuthSignIn("microsoft-entra-id");
               }
             }}
             disabled={isPending}
