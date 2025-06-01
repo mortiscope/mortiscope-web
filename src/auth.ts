@@ -1,5 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
 import type { OAuthConfig, Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
@@ -7,13 +8,15 @@ import Google from "next-auth/providers/google";
 
 import { getUserByEmail, getUserById } from "@/data/user";
 import { db } from "@/db";
+import { users } from "@/db/schema";
+import { sendEmailChangeNotification } from "@/lib/mail";
 import { SignInSchema } from "@/lib/schemas/auth";
-
 // Define the shape of the user profile data returned by ORCID's APIs
 interface OrcidProfile {
   sub: string;
   name?: string;
   email?: string;
+  email_verified?: boolean;
 }
 
 /**
@@ -51,10 +54,7 @@ const ORCIDProvider: OAuthConfig<OrcidProfile> = {
 
     try {
       const personResponse = await fetch(personApiEndpoint, {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${tokens.access_token}`,
-        },
+        headers: { Accept: "application/json", Authorization: `Bearer ${tokens.access_token}` },
       });
 
       if (personResponse.ok) {
@@ -74,14 +74,7 @@ const ORCIDProvider: OAuthConfig<OrcidProfile> = {
     } catch (error) {
       console.error("Failed to fetch ORCID person data:", error);
     }
-
-    // Fallback in case the second API call fails.
-    return {
-      id: profile.sub,
-      name: profile.name,
-      email: profile.email,
-      image: null,
-    };
+    return { id: profile.sub, name: profile.name, email: profile.email, image: null };
   },
   // These credentials will be read from your environment variables.
   clientId: process.env.ORCID_CLIENT_ID,
@@ -94,8 +87,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // Configures the session strategy to use JSON Web Tokens (JWT)
   session: { strategy: "jwt" },
   providers: [
-    // Add the custom ORCID provider to the array.
-    ORCIDProvider as Provider, // Cast as Provider to satisfy the array type
+    ORCIDProvider as Provider,
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -128,16 +120,46 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     /**
      * Acts as a gatekeeper for sign-in attempts
      */
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (!user.id) return false;
 
       // Allow OAuth providers to sign in without email verification check
       if (account?.provider !== "credentials") {
+        const existingUser = await getUserById(user.id);
+        if (!existingUser) {
+          console.error("OAuth sign-in: User not found after adapter ran.");
+          return false;
+        }
+
+        const providerEmail = profile?.email;
+
+        if (providerEmail && existingUser.email !== providerEmail) {
+          console.log(
+            `Email for user ${user.id} has changed. Syncing from ${existingUser.email} to ${providerEmail}.`
+          );
+
+          await db
+            .update(users)
+            .set({
+              email: providerEmail,
+              emailVerified: new Date(),
+            })
+            .where(eq(users.id, user.id));
+
+          // Send a notification about the automatic email update.
+          try {
+            await sendEmailChangeNotification(providerEmail, "new");
+          } catch (error) {
+            console.error("Failed to send automatic email change notification:", error);
+          }
+        }
+
         return true;
       }
 
       // For credential-based sign-in, block the user if their email is not verified
       const existingUser = await getUserById(user.id);
+
       if (!existingUser?.emailVerified) {
         return false;
       }
@@ -146,13 +168,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     /**
-     * Enrich the session object with data from the JWT
+     * Enrich the session object with the user's ID from the JWT
      */
     async session({ token, session }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
       }
       return session;
+    },
+
+    /**
+     * The `jwt` callback is essential for populating the token with the user's ID
+     */
+    async jwt({ token, user }) {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
     },
   },
 });
