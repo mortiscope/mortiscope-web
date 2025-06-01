@@ -6,9 +6,9 @@ import { useSearchParams } from "next/navigation";
 import React, { Suspense, useCallback, useEffect, useState, useTransition } from "react";
 import { BeatLoader } from "react-spinners";
 
-import { verification } from "@/actions/verification";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
+import { verification } from "@/features/auth/actions/verification";
 
 // Define the possible states for the UI display
 type DisplayStatus = "loading" | "success" | "error" | "info";
@@ -70,7 +70,7 @@ function VerificationProcess() {
         <Link href="/" aria-label="Go to homepage">
           <div className="flex cursor-pointer items-center">
             <Image
-              src="/logo.svg"
+              src="/logos/logo.svg"
               alt="Mortiscope Logo"
               width={60}
               height={60}

@@ -65,7 +65,7 @@ export const PasswordUpdated = () => {
           <Section
             className="h-[175px] w-full bg-emerald-600"
             style={{
-              backgroundImage: `url(${domain}/temple.svg)`,
+              backgroundImage: `url(${domain}/icons/temple.svg)`,
               backgroundRepeat: "repeat",
             }}
           />
@@ -74,7 +74,7 @@ export const PasswordUpdated = () => {
           <Container className="mx-auto -mt-16 mb-[40px] w-full max-w-[465px] rounded-none bg-slate-50 p-8 sm:rounded-2xl">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logo.svg`}
+                src={`${domain}/logos/logo.svg`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -128,7 +128,7 @@ export const PasswordUpdated = () => {
           {/* Site title */}
           <Section className="mt-8 mb-8 w-full text-center">
             <Img
-              src={`${domain}/site-title.svg`}
+              src={`${domain}/logos/site-title.svg`}
               width="175"
               height="25"
               alt="MortiScope"

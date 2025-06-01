@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
-import { forgotPassword } from "@/actions/forgot-password";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,7 +17,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/lib/schemas/auth";
+import { forgotPassword } from "@/features/auth/actions/forgot-password";
+import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ForgotPasswordForm() {
   // State for overall form success or error messages from the server action
@@ -64,7 +64,7 @@ export default function ForgotPasswordForm() {
         <Link href="/" aria-label="Go to homepage">
           <div className="flex cursor-pointer items-center">
             <Image
-              src="/logo.svg"
+              src="/logos/logo.svg"
               alt="Mortiscope Logo"
               width={60}
               height={60}

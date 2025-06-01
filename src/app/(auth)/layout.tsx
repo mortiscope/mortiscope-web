@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Left-side panel */}
       <div className="relative hidden h-full w-1/2 md:block">
         <Image
-          src="/auth-image.jpg"
+          src="/images/auth-image.jpg"
           alt="Chrysomya Megacephala fly on a leaf"
           fill
           priority

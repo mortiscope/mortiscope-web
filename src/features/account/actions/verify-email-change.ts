@@ -2,11 +2,14 @@
 
 import { eq } from "drizzle-orm";
 
-import type { VerificationActionResult } from "@/actions/verification";
-import { deleteEmailChangeToken, getEmailChangeTokenByToken } from "@/data/email-change-token";
 import { getUserByEmail, getUserById } from "@/data/user";
 import { db } from "@/db";
 import { emailChangeTokens, sessions, users } from "@/db/schema";
+import {
+  deleteEmailChangeToken,
+  getEmailChangeTokenByToken,
+} from "@/features/account/tokens/email-change-token";
+import type { VerificationActionResult } from "@/features/auth/actions/verification";
 import { sendEmailChangeNotification } from "@/lib/mail";
 
 /**

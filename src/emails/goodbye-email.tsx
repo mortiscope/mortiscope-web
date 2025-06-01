@@ -67,7 +67,7 @@ export const GoodbyeEmail = ({ username }: GoodbyeEmailProps) => {
           {/* Header section with a decorative banner */}
           <Section
             style={{
-              backgroundImage: `linear-gradient(to bottom, transparent 10%, ${bodyBgColor} 100%), url(${domain}/goodbye-banner.jpg)`,
+              backgroundImage: `linear-gradient(to bottom, transparent 10%, ${bodyBgColor} 100%), url(${domain}/images/goodbye-banner.jpg)`,
               backgroundSize: "cover",
               backgroundPosition: "center",
               height: "225px",
@@ -79,7 +79,7 @@ export const GoodbyeEmail = ({ username }: GoodbyeEmailProps) => {
           <Container className="mx-auto -mt-4 mb-[40px] w-full max-w-[560px] rounded-none p-8 sm:rounded-2xl">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logo.svg`}
+                src={`${domain}/logos/logo.svg`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -121,7 +121,7 @@ export const GoodbyeEmail = ({ username }: GoodbyeEmailProps) => {
           {/* Site title */}
           <Section className="mt-8 mb-8 w-full text-center">
             <Img
-              src={`${domain}/site-title.svg`}
+              src={`${domain}/logos/site-title.svg`}
               width="175"
               height="25"
               alt="MortiScope"

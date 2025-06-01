@@ -5,8 +5,8 @@ import bcrypt from "bcryptjs";
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { type SignUpFormValues, SignUpSchema } from "@/features/auth/schemas/auth";
 import { sendEmailVerification } from "@/lib/mail";
-import { type SignUpFormValues, SignUpSchema } from "@/lib/schemas/auth";
 import { generateVerificationToken } from "@/lib/tokens";
 
 /**

@@ -5,8 +5,8 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { getUserByEmail } from "@/data/user";
+import { AccountDeletionRequestSchema } from "@/features/auth/schemas/auth";
 import { sendAccountDeletionRequest } from "@/lib/mail";
-import { AccountDeletionRequestSchema } from "@/lib/schemas/auth";
 import { generateAccountDeletionToken } from "@/lib/tokens";
 
 /**

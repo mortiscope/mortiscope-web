@@ -7,8 +7,8 @@ import { signIn as authSignIn } from "@/auth";
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 import { sendAccountDeletionCancelled, sendEmailVerification } from "@/lib/mail";
-import { type SignInFormValues, SignInSchema } from "@/lib/schemas/auth";
 import { generateVerificationToken } from "@/lib/tokens";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 

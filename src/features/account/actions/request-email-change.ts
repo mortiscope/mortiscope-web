@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 
 import { auth } from "@/auth";
 import { getUserByEmail, getUserById } from "@/data/user";
+import { type EmailChangeRequestFormValues, EmailChangeRequestSchema } from "@/features/auth/schemas/auth";
 import { sendEmailChangeNotification, sendEmailChangeVerificationLink } from "@/lib/mail";
-import { type EmailChangeRequestFormValues, EmailChangeRequestSchema } from "@/lib/schemas/auth";
 import { generateEmailChangeToken } from "@/lib/tokens";
 
 /**

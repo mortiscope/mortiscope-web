@@ -14,7 +14,7 @@ const Hero = () => {
       {/* Main hero section container */}
       <section
         ref={heroSectionRef}
-        className="flex min-h-auto w-full flex-col overflow-hidden bg-[url('/background.png')] bg-cover bg-center bg-no-repeat"
+        className="flex min-h-auto w-full flex-col overflow-hidden bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat"
         aria-label="Hero background image"
       >
         {/* Navigation bar wrapper */}
@@ -24,7 +24,7 @@ const Hero = () => {
             {/* Logo with Title */}
             <div className="flex items-center">
               {/* Logo image */}
-              <Image src="/logo.svg" alt="Mortiscope Logo" width={50} height={50} />
+              <Image src="/logos/logo.svg" alt="Mortiscope Logo" width={50} height={50} />
               {/* Site title */}
               <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
                 <span className="text-green-800">MORTI</span>
@@ -99,7 +99,7 @@ const Hero = () => {
                 {/* Hand image */}
                 <div className="relative z-10 -rotate-12 transform md:-rotate-15">
                   <Image
-                    src="/hand.png"
+                    src="/images/hand.png"
                     alt="Hand reaching out the fly"
                     width={1422}
                     height={1800}
@@ -112,7 +112,7 @@ const Hero = () => {
                 <div className="absolute bottom-[80%] left-[55%] z-20 w-[45%] max-w-md -translate-x-1/2 sm:bottom-[55%] sm:w-[50%] md:bottom-[85%] md:w-[55%] lg:bottom-[85%] lg:w-[45%] xl:bottom-[90%] xl:w-[50%] 2xl:bottom-[90%] 2xl:w-[55%]">
                   {/* Fly image */}
                   <Image
-                    src="/chrysomya_megacephala.png"
+                    src="/images/chrysomya-megacephala.png"
                     alt="Chrysomya Megacephala fly"
                     width={698}
                     height={465}
@@ -130,7 +130,7 @@ const Hero = () => {
       <CustomCursor
         containerRef={heroSectionRef}
         iconClassName="brightness-0 invert"
-        iconSrc="/icon-fly.svg"
+        iconSrc="/icons/icon-fly.svg"
         iconSize={32}
         className="h-18 w-18 bg-slate-800 shadow-xl"
       />

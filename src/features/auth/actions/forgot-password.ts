@@ -1,8 +1,8 @@
 "use server";
 
 import { getUserByEmail } from "@/data/user";
+import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 import { sendForgotPassword } from "@/lib/mail";
-import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/lib/schemas/auth";
 import { generateForgotPasswordToken } from "@/lib/tokens";
 
 /**

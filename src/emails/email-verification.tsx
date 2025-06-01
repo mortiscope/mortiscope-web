@@ -68,7 +68,7 @@ export const EmailVerification = ({ token }: EmailVerificationProps) => {
           <Section
             className="h-[175px] w-full bg-emerald-600"
             style={{
-              backgroundImage: `url(${domain}/temple.svg)`,
+              backgroundImage: `url(${domain}/icons/temple.svg)`,
               backgroundRepeat: "repeat",
             }}
           />
@@ -78,7 +78,7 @@ export const EmailVerification = ({ token }: EmailVerificationProps) => {
             <Section className="mt-4 text-center">
               {/* Logo section */}
               <Img
-                src={`${domain}/logo.svg`}
+                src={`${domain}/logos/logo.svg`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -129,7 +129,7 @@ export const EmailVerification = ({ token }: EmailVerificationProps) => {
           {/* Site title */}
           <Section className="mt-8 mb-8 w-full text-center">
             <Img
-              src={`${domain}/site-title.svg`}
+              src={`${domain}/logos/site-title.svg`}
               width="175"
               height="25"
               alt="MortiScope"

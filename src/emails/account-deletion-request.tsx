@@ -73,7 +73,7 @@ export const AccountDeletionRequest = ({
           <Section
             className="h-[175px] w-full bg-rose-600"
             style={{
-              backgroundImage: `url(${domain}/skulls.svg)`,
+              backgroundImage: `url(${domain}/icons/skulls.svg)`,
               backgroundRepeat: "repeat",
             }}
           />
@@ -82,7 +82,7 @@ export const AccountDeletionRequest = ({
           <Container className="mx-auto -mt-16 mb-[40px] w-full max-w-[465px] rounded-none bg-slate-50 p-8 sm:rounded-2xl">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logo.svg`}
+                src={`${domain}/logos/logo.svg`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -149,7 +149,7 @@ export const AccountDeletionRequest = ({
           {/* Site title */}
           <Section className="mt-8 mb-8 w-full text-center">
             <Img
-              src={`${domain}/site-title.svg`}
+              src={`${domain}/logos/site-title.svg`}
               width="175"
               height="25"
               alt="MortiScope"

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import VerificationForm from "@/components/verification-form";
+import VerificationForm from "@/features/auth/components/verification-form";
 
 export const metadata: Metadata = {
   title: "Verification • MortiScope",

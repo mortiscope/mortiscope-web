@@ -1,10 +1,10 @@
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAccountDeletionTokenByToken } from "@/data/account-deletion-token";
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { accountDeletionTokens, users } from "@/db/schema";
+import { getAccountDeletionTokenByToken } from "@/features/account/tokens/account-deletion-token";
 import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/config";
 import { sendAccountDeletionScheduled } from "@/lib/mail";
 

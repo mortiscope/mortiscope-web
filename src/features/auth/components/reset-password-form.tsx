@@ -8,7 +8,6 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
-import { resetPassword } from "@/actions/reset-password";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +19,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/lib/schemas/auth";
+import { resetPassword } from "@/features/auth/actions/reset-password";
+import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ResetPasswordForm() {
   // Hook to access URL search parameters
@@ -89,7 +89,7 @@ export default function ResetPasswordForm() {
           <Link href="/" aria-label="Go to homepage">
             <div className="flex cursor-pointer items-center">
               <Image
-                src="/logo.svg"
+                src="/logos/logo.svg"
                 alt="Mortiscope Logo"
                 width={60}
                 height={60}
@@ -140,7 +140,7 @@ export default function ResetPasswordForm() {
         <Link href="/" aria-label="Go to homepage">
           <div className="flex cursor-pointer items-center">
             <Image
-              src="/logo.svg"
+              src="/logos/logo.svg"
               alt="Mortiscope Logo"
               width={60}
               height={60}

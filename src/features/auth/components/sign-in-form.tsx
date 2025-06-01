@@ -8,7 +8,6 @@ import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
-import { signIn } from "@/actions/signin";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +20,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { type SignInFormValues, SignInSchema } from "@/lib/schemas/auth";
+import { signIn } from "@/features/auth/actions/signin";
+import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 
 export default function SignInForm() {
   // State to manage password visibility (show/hide)
@@ -81,7 +81,7 @@ export default function SignInForm() {
         <Link href="/" aria-label="Go to homepage">
           <div className="flex cursor-pointer items-center">
             <Image
-              src="/logo.svg"
+              src="/logos/logo.svg"
               alt="Mortiscope Logo"
               width={60}
               height={60}
@@ -208,10 +208,10 @@ export default function SignInForm() {
       <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3">
         {/* Array of social providers, mapped to create buttons */}
         {[
-          { src: "/logo-google.svg", alt: "Google", label: "Google" },
-          { src: "/logo-linkedin.svg", alt: "LinkedIn", label: "LinkedIn" },
-          { src: "/logo-microsoft.svg", alt: "Microsoft", label: "Microsoft" },
-          { src: "/logo-orcid.svg", alt: "ORCID", label: "ORCID" },
+          { src: "/logos/logo-google.svg", alt: "Google", label: "Google" },
+          { src: "/logos/logo-linkedin.svg", alt: "LinkedIn", label: "LinkedIn" },
+          { src: "/logos/logo-microsoft.svg", alt: "Microsoft", label: "Microsoft" },
+          { src: "/logos/logo-orcid.svg", alt: "ORCID", label: "ORCID" },
         ].map((provider) => (
           <Button
             key={provider.label}

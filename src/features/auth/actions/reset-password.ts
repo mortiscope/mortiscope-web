@@ -3,12 +3,12 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
-import { getForgotPasswordTokenByToken } from "@/data/forgot-password-token";
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { forgotPasswordTokens, users } from "@/db/schema";
+import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/features/auth/schemas/auth";
+import { getForgotPasswordTokenByToken } from "@/features/auth/tokens/forgot-password-token";
 import { sendPasswordUpdatedEmail } from "@/lib/mail";
-import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/lib/schemas/auth";
 
 /**
  * A server action to finalize the password reset process.

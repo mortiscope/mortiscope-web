@@ -7,8 +7,8 @@ import { auth } from "@/auth";
 import { getUserById } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { type ChangePasswordFormValues, ChangePasswordSchema } from "@/features/auth/schemas/auth";
 import { sendPasswordUpdatedEmail } from "@/lib/mail";
-import { type ChangePasswordFormValues, ChangePasswordSchema } from "@/lib/schemas/auth";
 
 /**
  * A server action to handle user password changes.

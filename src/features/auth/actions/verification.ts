@@ -2,11 +2,11 @@
 
 import { eq } from "drizzle-orm";
 
-import { verifyEmailChange } from "@/actions/verify-email-change";
 import { getUserByEmail } from "@/data/user";
-import { getVerificationTokenByToken } from "@/data/verification-token";
 import { db } from "@/db";
 import { users, verificationTokens } from "@/db/schema";
+import { verifyEmailChange } from "@/features/account/actions/verify-email-change";
+import { getVerificationTokenByToken } from "@/features/auth/tokens/verification-token";
 import { sendWelcomeEmail } from "@/lib/mail";
 
 /**

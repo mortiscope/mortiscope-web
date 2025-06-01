@@ -1,6 +1,6 @@
 "use client";
 
-import Hero from "@/app/(public)/components/hero";
+import Hero from "@/features/home/components/hero";
 
 const LandingPage = () => {
   return (
