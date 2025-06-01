@@ -34,8 +34,10 @@ export const changePassword = async (values: ChangePasswordFormValues) => {
   try {
     // Retrieve the current user from the database
     const user = await getUserById(userId);
+
+    // If the user doesn't exist or doesn't have a password (is an OAuth user), block the action.
     if (!user || !user.password) {
-      return { error: "An unexpected error occurred." };
+      return { error: "Password cannot be changed for accounts signed in with a provider." };
     }
 
     // Verify that the provided current password is correct

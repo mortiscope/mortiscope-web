@@ -31,7 +31,14 @@ export const forgotPassword = async (values: ForgotPasswordFormValues) => {
       };
     }
 
-    // If the user exists, generate and send the password reset token
+    // If the user exists but has no password, they are an OAuth user.
+    if (!existingUser.password) {
+      return {
+        success: "A password reset link has been sent.",
+      };
+    }
+
+    // If the user exists and has a password, generate and send the password reset token
     const forgotPasswordToken = await generateForgotPasswordToken(email);
     await sendForgotPassword(forgotPasswordToken.identifier, forgotPasswordToken.token);
 
