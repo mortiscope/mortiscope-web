@@ -9,9 +9,9 @@ import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { getUserByEmail, getUserById } from "@/data/user";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import * as schema from "@/db/schema";
+import { SignInSchema } from "@/features/auth/schemas/auth";
 import { sendEmailChangeNotification } from "@/lib/mail";
-import { SignInSchema } from "@/lib/schemas/auth";
 
 // Define the shape of the user profile data returned by ORCID's APIs
 interface OrcidProfile {
@@ -85,9 +85,26 @@ const ORCIDProvider: OAuthConfig<OrcidProfile> = {
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Specifies the Drizzle ORM adapter, linking NextAuth to the application's database schema
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(db, {
+    usersTable: schema.users,
+    accountsTable: schema.accounts,
+    sessionsTable: schema.sessions,
+    verificationTokensTable: schema.verificationTokens,
+  }),
   // Configures the session strategy to use JSON Web Tokens (JWT)
   session: { strategy: "jwt" },
+  // Events are asynchronous functions that do not return a response, used for side effects.
+  events: {
+    async linkAccount({ user }) {
+      // Guard clause to ensure the user object and its ID exist.
+      if (!user?.id) return;
+
+      await db
+        .update(schema.users)
+        .set({ emailVerified: new Date() })
+        .where(eq(schema.users.id, user.id));
+    },
+  },
   providers: [
     ORCIDProvider as Provider,
     Google({
@@ -133,26 +150,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Allow OAuth providers to sign in without email verification check
       if (account?.provider !== "credentials") {
-        const existingUser = await getUserById(user.id);
-        if (!existingUser) {
-          console.error("OAuth sign-in: User not found after adapter ran.");
-          return false;
-        }
 
         const providerEmail = profile?.email;
-
-        if (providerEmail && existingUser.email !== providerEmail) {
+        if (providerEmail && user.email !== providerEmail) {
           console.log(
-            `Email for user ${user.id} has changed. Syncing from ${existingUser.email} to ${providerEmail}.`
+            `Email for user ${user.id} has changed. Syncing from ${user.email} to ${providerEmail}.`
           );
 
           await db
-            .update(users)
+            .update(schema.users)
             .set({
               email: providerEmail,
               emailVerified: new Date(),
             })
-            .where(eq(users.id, user.id));
+            .where(eq(schema.users.id, user.id));
 
           // Send a notification about the automatic email update.
           try {
