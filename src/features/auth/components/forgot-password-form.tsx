@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { FormFeedback } from "@/components/form-feedback";
@@ -21,12 +21,11 @@ import { forgotPassword } from "@/features/auth/actions/forgot-password";
 import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ForgotPasswordForm() {
-  // State for overall form success or error messages from the server action
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
-
-  // Handle the pending state of the server action
-  const [isPending, startTransition] = useTransition();
+  // Manages the server state for the forgot password action using TanStack Query
+  const { mutate, isPending, data } = useMutation({
+    // Specifies the server action to be executed when the mutation is triggered
+    mutationFn: forgotPassword,
+  });
 
   // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<ForgotPasswordFormValues>({
@@ -39,18 +38,8 @@ export default function ForgotPasswordForm() {
 
   // Function to handle form submission
   const onSubmit = (values: ForgotPasswordFormValues) => {
-    // Clear previous messages before a new submission
-    setError("");
-    setSuccess("");
-
-    // Wrap the server action in a transition to manage pending UI states
-    startTransition(() => {
-      forgotPassword(values).then((data) => {
-        // Set the message based on the response
-        setError(data?.error);
-        setSuccess(data?.success);
-      });
-    });
+    // Call the mutate function from useMutation, passing the form values
+    mutate(values);
   };
 
   // Determine if the button should be visually disabled based on form validity and pending state
@@ -111,8 +100,8 @@ export default function ForgotPasswordForm() {
           />
 
           {/* Form feedback for success or error messages */}
-          <FormFeedback message={success} type="success" />
-          <FormFeedback message={error} type="error" />
+          <FormFeedback message={data?.success} type="success" />
+          <FormFeedback message={data?.error} type="error" />
 
           {/* Wrapper to apply disabled cursor style to the button */}
           <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>

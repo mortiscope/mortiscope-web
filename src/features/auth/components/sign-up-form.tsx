@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn as socialSignIn } from "next-auth/react";
@@ -24,17 +25,22 @@ import { signUp } from "@/features/auth/actions/signup";
 import { type SignUpFormValues, SignUpSchema } from "@/features/auth/schemas/auth";
 
 export default function SignUpForm() {
+  // Manages the server state for the credentials sign-up action using TanStack Query
+  const {
+    mutate: credentialsSignUp,
+    isPending: isCredentialsPending,
+    data,
+  } = useMutation({
+    mutationFn: signUp,
+  });
+
   // State to manage password visibility (show/hide)
   const [showPassword, setShowPassword] = useState(false);
   // State to manage confirm password visibility (show/hide)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // State for overall form success or error messages from the server action
-  const [error, setError] = useState<string | undefined>();
-  const [success, setSuccess] = useState<string | undefined>();
-
-  // Handle the pending state of the server action
-  const [isPending, startTransition] = useTransition();
+  // Handle the pending state for social OAuth sign-in, which is a separate client-side flow
+  const [isSocialPending, startSocialTransition] = useTransition();
 
   // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<SignUpFormValues>({
@@ -51,23 +57,13 @@ export default function SignUpForm() {
 
   // Function to handle form submission
   const onSubmit = (values: SignUpFormValues) => {
-    // Clear previous messages before a new submission
-    setError("");
-    setSuccess("");
-
-    // Wrap the server action in startTransition to manage pending UI states
-    startTransition(() => {
-      signUp(values).then((data) => {
-        // Set the message based on the response
-        setError(data.error);
-        setSuccess(data.success);
-      });
-    });
+    // Triggers the mutation with the form's values for the credentials sign-up
+    credentialsSignUp(values);
   };
 
   // Function to handle OAuth sign-in
   const handleOAuthSignIn = (provider: "google" | "orcid" | "microsoft-entra-id") => {
-    startTransition(() => {
+    startSocialTransition(() => {
       socialSignIn(provider, {
         callbackUrl: "/dashboard",
       });
@@ -84,9 +80,12 @@ export default function SignUpForm() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  // Determine if the button should be visually disabled based on form validity and pending state
-  const isButtonDisabled = !form.formState.isValid || isPending;
+  // Determine if the main submit button should be visually disabled
+  const isSubmitDisabled = !form.formState.isValid || isCredentialsPending || isSocialPending;
+  // Determine if all interactive elements should be disabled during any pending state
+  const isAnyActionPending = isCredentialsPending || isSocialPending;
 
+  // Retrieve combined error message for name fields from react-hook-form state
   const nameFieldsError =
     form.formState.errors.firstName?.message || form.formState.errors.lastName?.message;
 
@@ -139,6 +138,7 @@ export default function SignUpForm() {
                         placeholder="Enter your first name"
                         className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                         {...field}
+                        disabled={isAnyActionPending}
                       />
                     </FormControl>
                   </FormItem>
@@ -157,6 +157,7 @@ export default function SignUpForm() {
                         placeholder="Enter your last name"
                         className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                         {...field}
+                        disabled={isAnyActionPending}
                       />
                     </FormControl>
                   </FormItem>
@@ -184,6 +185,7 @@ export default function SignUpForm() {
                     placeholder="Enter your email"
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                     {...field}
+                    disabled={isAnyActionPending}
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -205,6 +207,7 @@ export default function SignUpForm() {
                       placeholder="Enter your password"
                       className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                       {...field}
+                      disabled={isAnyActionPending}
                     />
 
                     <Button
@@ -243,6 +246,7 @@ export default function SignUpForm() {
                       placeholder="Confirm your password"
                       className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                       {...field}
+                      disabled={isAnyActionPending}
                     />
                     <Button
                       type="button"
@@ -266,25 +270,25 @@ export default function SignUpForm() {
             )}
           />
 
+          {/* Displaying form feedback messages */}
+          <FormFeedback message={data?.error} type="error" />
+          <FormFeedback message={data?.success} type="success" />
+
           {/* Sign Up Button */}
-          <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>
+          <div className={`inline-block w-full ${isSubmitDisabled ? "cursor-not-allowed" : ""}`}>
             <Button
               type="submit"
-              disabled={isButtonDisabled}
+              disabled={isSubmitDisabled}
               className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
-                isButtonDisabled
+                isSubmitDisabled
                   ? "opacity-60"
                   : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
               }`}
             >
-              {isPending ? "Signing Up..." : "Sign Up"}
+              {isCredentialsPending ? "Signing Up..." : "Sign Up"}
             </Button>
           </div>
         </form>
-
-        {/* Displaying form feedback messages */}
-        <FormFeedback message={error} type="error" />
-        <FormFeedback message={success} type="success" />
       </Form>
 
       {/* Separator with text in the middle */}
@@ -317,8 +321,7 @@ export default function SignUpForm() {
                 handleOAuthSignIn("microsoft-entra-id");
               }
             }}
-            // All buttons are disabled only when a transition is pending.
-            disabled={isPending}
+            disabled={isAnyActionPending}
             className="relative h-9 w-full cursor-pointer overflow-hidden rounded px-5 py-2.5 text-white transition-all duration-500 hover:rounded-sm hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:h-10"
           >
             {/* Social provider logos */}

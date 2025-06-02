@@ -1,17 +1,15 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { Suspense, useCallback, useEffect, useState, useTransition } from "react";
+import React, { Suspense } from "react";
 import { BeatLoader } from "react-spinners";
 
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import { verification } from "@/features/auth/actions/verification";
-
-// Define the possible states for the UI display
-type DisplayStatus = "loading" | "success" | "error" | "info";
 
 function VerificationProcess() {
   // Hook to access URL search parameters
@@ -23,44 +21,19 @@ function VerificationProcess() {
   // Determine if the verification is for an email change
   const isEmailChange = type === "email-change";
 
-  // State to manage the current UI status (loading, success, error, or info)
-  const [displayStatus, setDisplayStatus] = useState<DisplayStatus>("loading");
-  // State to store the feedback message to be displayed to the user
-  const [feedbackMessage, setFeedbackMessage] = useState<string>("");
-  // Hook to manage the pending state of the server action
-  const [isVerifying, startVerificationTransition] = useTransition();
-
-  // Memoized function to handle the call to the verification server action
-  const handleVerification = useCallback((currentToken: string, currentType: string | null) => {
-    // Wrap the async operation in a transition to avoid UI blocking
-    startVerificationTransition(async () => {
-      try {
-        // Call the server action with the token and type
-        const data = await verification(currentToken, currentType);
-        // Update state based on the response from the server action
-        setDisplayStatus(data.status);
-        setFeedbackMessage(data.message);
-      } catch (error) {
-        // Handle any unexpected errors during the verification process
-        console.error("Verification failed:", error);
-        setDisplayStatus("error");
-        setFeedbackMessage("An unexpected error occurred during verification.");
-      }
-    });
-  }, []);
-
-  // Effect hook to trigger the verification process on component mount
-  useEffect(() => {
-    // If a token is present in the URL, attempt verification
-    if (token) {
-      handleVerification(token, type);
-    } else {
-      // If no token is found, display an informational message
-      setDisplayStatus("info");
-      setFeedbackMessage("This page is used to verify email address after signing up.");
-    }
-    // Dependencies array ensures this effect runs only when these values change
-  }, [token, type, handleVerification]);
+  // Manages the server state for the verification action using TanStack Query
+  const { data, isLoading, isSuccess } = useQuery({
+    // A unique key for this query, which includes the token and type
+    queryKey: ["verification", token, type],
+    // The function that fetches the data. It calls the server action
+    queryFn: () => verification(token, type),
+    // Ensures the query only runs if a token is present in the URL
+    enabled: !!token,
+    // Disables automatic retries on failure, as verification is a one-time action
+    retry: false,
+    // Prevents re-fetching when the window is refocused
+    refetchOnWindowFocus: false,
+  });
 
   return (
     // Main container for the verification page content
@@ -94,15 +67,17 @@ function VerificationProcess() {
       <div className="font-inter w-full max-w-md space-y-3 text-center md:space-y-4">
         {/* Displays a loading spinner or a feedback message */}
         <div className="flex min-h-[36px] w-full items-center justify-center rounded-lg md:min-h-[40px]">
-          {isVerifying || displayStatus === "loading" ? (
-            <BeatLoader color="#16a34a" size={12} />
-          ) : (
-            feedbackMessage && (
-              <FormFeedback
-                message={feedbackMessage}
-                type={displayStatus === "success" ? "success" : "error"}
-              />
-            )
+          {isLoading && <BeatLoader color="#16a34a" size={12} />}
+
+          {!isLoading && !isSuccess && (
+            <FormFeedback message="This page is used to verify an email address." type="error" />
+          )}
+
+          {isSuccess && data && (
+            <FormFeedback
+              message={data.message}
+              type={data.status === "success" ? "success" : "error"}
+            />
           )}
         </div>
         {/* Button to navigate user after verification */}
@@ -110,8 +85,8 @@ function VerificationProcess() {
           asChild
           className="font-inter relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base"
         >
-          <Link href={displayStatus === "success" ? "/signin" : "/"}>
-            {displayStatus === "success" ? "Proceed to Sign In" : "Back to Homepage"}
+          <Link href={data?.status === "success" ? "/signin" : "/"}>
+            {data?.status === "success" ? "Proceed to Sign In" : "Back to Homepage"}
           </Link>
         </Button>
       </div>

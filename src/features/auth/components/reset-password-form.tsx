@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { PiEye, PiEyeSlash } from "react-icons/pi";
 
@@ -28,17 +29,17 @@ export default function ResetPasswordForm() {
   // Retrieve the password reset token from the URL
   const token = searchParams.get("token");
 
+  // Manages the server state for the password reset action using TanStack Query
+  const { mutate, isPending, data } = useMutation({
+    // Specifies the server action to be executed
+    mutationFn: (variables: { values: ResetPasswordFormValues; token?: string | null }) =>
+      resetPassword(variables.values, variables.token),
+  });
+
   // State to manage password visibility (show/hide)
   const [showPassword, setShowPassword] = useState(false);
   // State to manage confirm password visibility (show/hide)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // State for overall form success or error messages from the server action
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
-
-  // Handle the pending state of the server action
-  const [isPending, startTransition] = useTransition();
 
   // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<ResetPasswordFormValues>({
@@ -52,19 +53,8 @@ export default function ResetPasswordForm() {
 
   // Function to handle form submission
   const onSubmit = (values: ResetPasswordFormValues) => {
-    // Clear previous messages before a new submission
-    setError("");
-    setSuccess("");
-
-    // Wrap the server action in startTransition to manage pending UI states
-    startTransition(() => {
-      // Call the server action with form values and the token
-      resetPassword(values, token).then((data) => {
-        // Set the message based on the response
-        setError(data?.error);
-        setSuccess(data?.success);
-      });
-    });
+    // Triggers the mutation, passing the form values and the token as a single object
+    mutate({ values, token });
   };
 
   // Function to toggle the password visibility state
@@ -155,14 +145,14 @@ export default function ResetPasswordForm() {
           Reset Password
         </h1>
         <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          {!success
+          {!data?.success
             ? "Enter your new password below. Make sure that it meets the security requirements."
             : ""}
         </p>
       </div>
 
       {/* Render the form only if the password has not been successfully reset */}
-      {!success && (
+      {!data?.success && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -249,7 +239,7 @@ export default function ResetPasswordForm() {
             />
 
             {/* Displaying form feedback messages */}
-            <FormFeedback message={error} type="error" />
+            <FormFeedback message={data?.error} type="error" />
 
             {/* Wrapper to apply disabled cursor style to the button */}
             <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>
@@ -271,20 +261,20 @@ export default function ResetPasswordForm() {
       )}
 
       {/* Display success message and link to sign in */}
-      <div className="w-full">
-        <FormFeedback message={success} type="success" />
-        {success && (
+      {data?.success && (
+        <div className="w-full">
+          <FormFeedback message={data.success} type="success" />
           <Button
             asChild
-            className="font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white md:mt-4 md:h-10 md:text-base"
+            className="font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-4 md:h-10 md:text-base"
           >
             <Link href="/signin">Back to Sign In</Link>
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Show an alternative link if the form is still active */}
-      {!success && (
+      {!data?.success && (
         <p className="font-inter text-center text-xs text-slate-600 md:text-sm">
           No longer need to reset?&nbsp;
           <Link

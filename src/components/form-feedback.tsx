@@ -32,7 +32,7 @@ export function FormFeedback({ message, type }: FormFeedbackProps) {
   return (
     <div
       className={cn(
-        "font-inter flex w-full items-center justify-center gap-x-2 rounded-lg p-2 text-sm md:p-2.5",
+        "font-inter flex w-full items-center justify-center gap-x-2 rounded-lg p-2 text-center text-sm md:p-2.5",
         bg,
         text
       )}
