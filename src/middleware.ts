@@ -30,6 +30,11 @@ export default auth((req) => {
     return;
   }
 
+  // If a logged-in user tries to access a public route, redirect them to the dashboard
+  if (isPublicRoute && isLoggedIn) {
+    return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+  }
+
   // Protect all non-public routes
   if (!isLoggedIn && !isPublicRoute) {
     return Response.redirect(new URL("/signin", nextUrl));
