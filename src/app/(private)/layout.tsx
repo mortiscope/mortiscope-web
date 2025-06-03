@@ -1,7 +1,9 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import React from "react";
 
+import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -17,6 +19,8 @@ interface Props {
  * @returns A React component representing the main authenticated layout.
  */
 const PrivateLayout = ({ children }: Props) => {
+  const pathname = usePathname();
+
   return (
     // Provides sidebar state management to all nested components
     <SidebarProvider
@@ -33,7 +37,15 @@ const PrivateLayout = ({ children }: Props) => {
         {/* A simple flex container for the rest of the page. */}
         <div className="flex flex-1 flex-col">
           <AppHeader />
-          <main className="flex-1 bg-slate-200 p-4 sm:px-6">{children}</main>
+          <main className="flex-1 bg-slate-200 px-8 py-6">
+            {/* Conditionally render the breadcrumb. */}
+            {pathname !== "/dashboard" && (
+              <div className="mb-4">
+                <AppBreadcrumb />
+              </div>
+            )}
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
