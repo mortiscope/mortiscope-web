@@ -37,7 +37,7 @@ const PrivateLayout = ({ children }: Props) => {
         {/* A simple flex container for the rest of the page. */}
         <div className="flex flex-1 flex-col">
           <AppHeader />
-          <main className="flex-1 bg-slate-200 px-8 py-6">
+          <main className="flex-1 bg-slate-200 md:p-8 p-6">
             {/* Conditionally render the breadcrumb. */}
             {pathname !== "/dashboard" && (
               <div className="mb-4">

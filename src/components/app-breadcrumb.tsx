@@ -19,6 +19,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { analysisSteps } from "@/features/analyze/components/analyze-progress";
+import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { cn } from "@/lib/utils";
 
 /**
  * Defines the structure for a single breadcrumb item.
@@ -70,10 +73,27 @@ const generateBreadcrumbsFromPath = (pathname: string): BreadcrumbItemType[] => 
 /**
  * A styled, reusable link component for a single breadcrumb item.
  */
-const BreadcrumbLinkItem = ({ href, label }: BreadcrumbItemType) => (
+const BreadcrumbLinkItem = ({
+  href,
+  label,
+  isStatic = false,
+}: BreadcrumbItemType & { isStatic?: boolean }) => (
   <BreadcrumbLink asChild>
-    <Link href={href} className="group cursor-pointer">
-      <span className="transition-colors duration-300 ease-in-out group-hover:text-emerald-500">
+    <Link
+      href={href}
+      className={cn(
+        "group",
+        // Conditionally apply cursor and disable pointer events
+        isStatic ? "cursor-default pointer-events-none" : "cursor-pointer",
+      )}
+    >
+      <span
+        className={cn(
+          "transition-colors duration-300 ease-in-out",
+          // Conditionally apply the hover text color class
+          !isStatic && "group-hover:text-emerald-600",
+        )}
+      >
         {label}
       </span>
     </Link>
@@ -83,13 +103,30 @@ const BreadcrumbLinkItem = ({ href, label }: BreadcrumbItemType) => (
 /**
  * A styled, reusable dropdown menu item for use within the ellipsis.
  */
-const StyledDropdownMenuItem = ({ href, label }: BreadcrumbItemType) => (
+const StyledDropdownMenuItem = ({
+  href,
+  label,
+  isStatic = false,
+}: BreadcrumbItemType & { isStatic?: boolean }) => (
   <DropdownMenuItem
     asChild
-    className="cursor-pointer border-2 border-transparent transition-colors duration-300 ease-in-out hover:border-emerald-200 focus:bg-emerald-100"
+    disabled={isStatic}
+    className={cn(
+      "border-2 border-transparent transition-colors duration-300 ease-in-out",
+      !isStatic &&
+        "cursor-pointer hover:border-emerald-200 focus:bg-emerald-100",
+    )}
   >
-    <Link href={href} className="group">
-      <span className="transition-colors duration-300 ease-in-out group-hover:text-emerald-500">
+    <Link
+      href={href}
+      className={cn("group", isStatic && "pointer-events-none")}
+    >
+      <span
+        className={cn(
+          "transition-colors duration-300 ease-in-out",
+          !isStatic && "group-hover:text-emerald-600",
+        )}
+      >
         {label}
       </span>
     </Link>
@@ -101,10 +138,19 @@ const StyledDropdownMenuItem = ({ href, label }: BreadcrumbItemType) => (
  */
 export function AppBreadcrumb() {
   const pathname = usePathname();
-  // Memoize the breadcrumb generation to prevent re-calculation on every render.
-  const items = React.useMemo(() => generateBreadcrumbsFromPath(pathname), [pathname]);
+  const currentStep = useAnalyzeStore((state) => state.step);
 
-  // Handle the base case for the root path.
+  const items = React.useMemo(() => {
+    const baseItems = generateBreadcrumbsFromPath(pathname);
+    if (pathname === "/analyze") {
+      const stepDetails = analysisSteps.find((s) => s.id === currentStep);
+      if (stepDetails) {
+        return [...baseItems, { href: pathname, label: stepDetails.name }];
+      }
+    }
+    return baseItems;
+  }, [pathname, currentStep]);
+
   if (items.length === 0) {
     return (
       <Breadcrumb className="font-inter">
@@ -151,9 +197,18 @@ export function AppBreadcrumb() {
               <DropdownMenu>
                 <EllipsisTrigger />
                 <DropdownMenuContent align="start" className="font-inter">
-                  {linkItems.map((item) => (
-                    <StyledDropdownMenuItem key={item.href} {...item} />
-                  ))}
+                  {linkItems.map((item) => {
+                    // --- MODIFICATION: Determine if the "Analyze" link should be static ---
+                    const isStatic =
+                      pathname === "/analyze" && item.href === "/analyze";
+                    return (
+                      <StyledDropdownMenuItem
+                        key={item.href}
+                        {...item}
+                        isStatic={isStatic}
+                      />
+                    );
+                  })}
                 </DropdownMenuContent>
               </DropdownMenu>
             </BreadcrumbItem>
@@ -162,7 +217,9 @@ export function AppBreadcrumb() {
 
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage className="max-w-28 truncate">{currentPageItem.label}</BreadcrumbPage>
+          <BreadcrumbPage className="max-w-28 truncate">
+            {currentPageItem.label}
+          </BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
 
@@ -175,20 +232,31 @@ export function AppBreadcrumb() {
 
         {/* Renders all links directly if the path is short enough. */}
         {!needsEllipsisDesktop &&
-          linkItems.map((item) => (
-            <React.Fragment key={item.href}>
-              <BreadcrumbItem>
-                <BreadcrumbLinkItem href={item.href} label={item.label} />
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-            </React.Fragment>
-          ))}
+          linkItems.map((item) => {
+            const isStatic = pathname === "/analyze" && item.href === "/analyze";
+            return (
+              <React.Fragment key={item.href}>
+                <BreadcrumbItem>
+                  <BreadcrumbLinkItem
+                    href={item.href}
+                    label={item.label}
+                    isStatic={isStatic}
+                  />
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </React.Fragment>
+            );
+          })}
 
         {/* Renders the collapsed breadcrumb view for longer paths. */}
         {needsEllipsisDesktop && (
           <>
             <BreadcrumbItem>
-              <BreadcrumbLinkItem href={linkItems[0].href} label={linkItems[0].label} />
+              <BreadcrumbLinkItem
+                href={linkItems[0].href}
+                label={linkItems[0].label}
+                isStatic={pathname === "/analyze" && linkItems[0].href === "/analyze"}
+              />
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -196,7 +264,11 @@ export function AppBreadcrumb() {
                 <EllipsisTrigger />
                 <DropdownMenuContent align="start" className="font-inter">
                   {linkItems.slice(1, -1).map((item) => (
-                    <StyledDropdownMenuItem key={item.href} {...item} />
+                    <StyledDropdownMenuItem
+                      key={item.href}
+                      {...item}
+                      isStatic={pathname === "/analyze" && item.href === "/analyze"}
+                    />
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -206,6 +278,7 @@ export function AppBreadcrumb() {
               <BreadcrumbLinkItem
                 href={linkItems[linkItems.length - 1].href}
                 label={linkItems[linkItems.length - 1].label}
+                isStatic={pathname === "/analyze" && linkItems[linkItems.length - 1].href === "/analyze"}
               />
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -214,7 +287,9 @@ export function AppBreadcrumb() {
 
         {/* The final, non-clickable breadcrumb for the current page. */}
         <BreadcrumbItem>
-          <BreadcrumbPage className="truncate">{currentPageItem.label}</BreadcrumbPage>
+          <BreadcrumbPage className="truncate">
+            {currentPageItem.label}
+          </BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>
