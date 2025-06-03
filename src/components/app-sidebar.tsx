@@ -7,8 +7,9 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { FiLogOut, FiMoreHorizontal } from "react-icons/fi";
 import { GrList } from "react-icons/gr";
-import { IoImagesOutline, IoSettingsOutline } from "react-icons/io5";
+import { IoSettingsOutline } from "react-icons/io5";
 import { LuHouse } from "react-icons/lu";
+import { PiMicroscope } from "react-icons/pi";
 import { PiLightbulbFilament } from "react-icons/pi";
 
 import {
@@ -37,9 +38,9 @@ const homeMenuItem = {
 // Defines the data for the "Analysis" group of menu items.
 const analysisMenuItems = [
   {
-    icon: IoImagesOutline,
-    label: "Upload",
-    href: "/upload",
+    icon: PiMicroscope,
+    label: "Analyze",
+    href: "/analyze",
   },
   {
     icon: GrList,
