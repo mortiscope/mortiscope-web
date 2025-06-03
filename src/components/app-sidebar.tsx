@@ -145,7 +145,7 @@ export const AppSidebar = () => {
       collapsible="icon"
     >
       {/* The header section of the sidebar. */}
-      <SidebarHeader className="bg-emerald-900 px-3 pt-8 pb-4">
+      <SidebarHeader className="bg-emerald-900 px-3 pt-6 pb-4">
         <div className="flex flex-col items-center text-center">
           {/* Conditionally wraps the logo in a tooltip when the sidebar is collapsed. */}
           {isCollapsed ? (
