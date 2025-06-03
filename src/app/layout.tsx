@@ -4,6 +4,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Metadata } from "next/types";
 
 import QueryProvider from "@/components/providers/query-provider";
+import { NextAuthSessionProvider } from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
@@ -29,10 +30,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${plusJakartaSans.variable} antialiased`}>
-        <QueryProvider>
-          <main>{children}</main>
-          <Toaster position="bottom-right" richColors />
-        </QueryProvider>
+        <NextAuthSessionProvider>
+          <QueryProvider>
+            <main>{children}</main>
+            <Toaster position="bottom-right" richColors />
+          </QueryProvider>
+        </NextAuthSessionProvider>
       </body>
     </html>
   );
