@@ -73,7 +73,7 @@ export const AccountDeletionScheduled = ({
           <Section
             className="h-[175px] w-full bg-rose-600"
             style={{
-              backgroundImage: `url(${domain}/icons/skulls.svg)`,
+              backgroundImage: `url(${domain}/icons/pattern-skulls.svg)`,
               backgroundRepeat: "repeat",
             }}
           />

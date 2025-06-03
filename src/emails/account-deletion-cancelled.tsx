@@ -69,7 +69,7 @@ export const AccountDeletionCancelled = ({ username }: AccountDeletionCancelledP
           <Section
             className="h-[175px] w-full bg-emerald-600"
             style={{
-              backgroundImage: `url(${domain}/icons/temple.svg)`,
+              backgroundImage: `url(${domain}/icons/pattern-temple.svg)`,
               backgroundRepeat: "repeat",
             }}
           />
