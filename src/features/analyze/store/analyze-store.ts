@@ -5,7 +5,8 @@ import { create } from "zustand";
  * This holds all the information gathered from the user during the process.
  */
 type AnalyzeStateData = {
-  imageFile: File | null;
+  // An array to hold all the uploaded image files.
+  files: File[];
 };
 
 /**
@@ -23,8 +24,10 @@ type AnalyzeState = {
   nextStep: () => void;
   // Action to return to the previous step.
   prevStep: () => void;
-  // Action to set or clear the user's uploaded image file.
-  setImageFile: (file: File | null) => void;
+  // Action to add new files to the list.
+  addFiles: (files: File[]) => void;
+  // Action to remove a specific file from the list by its name.
+  removeFile: (fileName: string) => void;
   // Action to reset the entire store to its initial state.
   reset: () => void;
 };
@@ -36,7 +39,7 @@ type AnalyzeState = {
 const initialState: { step: number; data: AnalyzeStateData } = {
   step: 1,
   data: {
-    imageFile: null,
+    files: [],
   },
 };
 
@@ -52,8 +55,22 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   nextStep: () => set((state) => ({ step: state.step + 1 })),
   // Decrements the current step by 1.
   prevStep: () => set((state) => ({ step: state.step - 1 })),
-  // Updates the `imageFile` in the nested `data` object.
-  setImageFile: (file) => set((state) => ({ data: { ...state.data, imageFile: file } })),
+  // Adds new files to the state.
+  addFiles: (newFiles) =>
+    set((state) => ({
+      data: {
+        ...state.data,
+        files: [...state.data.files, ...newFiles],
+      },
+    })),
+  // Removes a file from the list by its name.
+  removeFile: (fileName) =>
+    set((state) => ({
+      data: {
+        ...state.data,
+        files: state.data.files.filter((file) => file.name !== fileName),
+      },
+    })),
   // Resets the store to its initial default values.
   reset: () => set(initialState),
 }));
