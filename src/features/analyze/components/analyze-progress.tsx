@@ -8,12 +8,15 @@ import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
 import { IoImageOutline } from "react-icons/io5";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { CIRCLE_ANIMATION_DURATION, LINE_ANIMATION_DURATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface AnalyzeProgressProps {
-  /** The current active step number in the analysis process. */
+  /**
+   * The current active step number in the analysis process.
+   */
   currentStep: number;
 }
 
@@ -35,6 +38,8 @@ export const analysisSteps = [
  * @param {AnalyzeProgressProps} props The component's props.
  */
 export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
+  // The store to navigate directly to a specific step.
+  const setStep = useAnalyzeStore((state) => state.setStep);
   // Determines if the viewport matches a large screen size for responsive rendering.
   const isLg = useMediaQuery("(min-width: 1024px)");
 
@@ -63,13 +68,34 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
           const isCurrent = step.id === currentStep;
           const Icon = step.icon;
 
-          const isArriving = isGoingBackward && isCurrent;
           let circleDelay = 0;
-          if (isArriving) {
-            // When going backward, destination circle waits for the leaving circle and line.
-            circleDelay = CIRCLE_ANIMATION_DURATION + LINE_ANIMATION_DURATION;
-          } else if (!isGoingBackward && isCurrent) {
-            // When going forward, destination circle waits for the line.
+          let lineDelay = 0;
+
+          if (isGoingBackward) {
+            // This step is the destination of the backward jump.
+            if (isCurrent) {
+              const stepsToJump = prevStepRef.current - currentStep;
+              const totalLineAnimationTime = stepsToJump * LINE_ANIMATION_DURATION;
+              circleDelay = CIRCLE_ANIMATION_DURATION + totalLineAnimationTime;
+            }
+            // This step is an intermediate step between the destination and the source.
+            else if (step.id > currentStep && step.id < prevStepRef.current) {
+              const prevStepIndex = prevStepRef.current - 1;
+              const animationOrder = prevStepIndex - 1 - stepIdx;
+              circleDelay =
+                CIRCLE_ANIMATION_DURATION +
+                animationOrder * LINE_ANIMATION_DURATION +
+                LINE_ANIMATION_DURATION;
+            }
+            // This is a line that needs to "un-fill" sequentially.
+            const prevStepIndex = prevStepRef.current - 1;
+            if (stepIdx >= currentStep - 1 && stepIdx < prevStepIndex) {
+              // The right-most line animates first. Each line to its left is delayed.
+              const animationOrder = prevStepIndex - 1 - stepIdx;
+              lineDelay = CIRCLE_ANIMATION_DURATION + animationOrder * LINE_ANIMATION_DURATION;
+            }
+          } else if (isCurrent) {
+            // When going forward, the destination circle only needs to wait for one line to fill.
             circleDelay = LINE_ANIMATION_DURATION;
           }
 
@@ -79,9 +105,20 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
             delay: circleDelay,
           };
 
+          const handleStepClick = () => {
+            // Allow navigation only to previously completed steps.
+            if (isCompleted && setStep) {
+              setStep(step.id);
+            }
+          };
+
           const StepIcon = (
             <motion.span
-              className="group flex h-10 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-2"
+              onClick={handleStepClick}
+              className={cn(
+                "group flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2",
+                isCompleted && "cursor-pointer"
+              )}
               variants={circleVariants}
               animate={isCompleted ? "completed" : isCurrent ? "current" : "inactive"}
               transition={{
@@ -162,7 +199,7 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
                     transition={{
                       duration: LINE_ANIMATION_DURATION,
                       ease: "easeInOut",
-                      delay: isGoingBackward ? CIRCLE_ANIMATION_DURATION : 0,
+                      delay: lineDelay,
                     }}
                     aria-hidden="true"
                   />

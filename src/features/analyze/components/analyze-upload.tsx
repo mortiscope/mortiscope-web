@@ -125,7 +125,7 @@ export const AnalyzeUpload = () => {
                     <IoImagesOutline className={iconClasses} />
                     <p className={largeTextClasses}>Upload from Device</p>
                     <p className={descriptionTextClasses}>
-                      Click to browse or drag and drop up to 4 file images with a maximum file size
+                      Click to browse or drag and drop up to 20 file images with a maximum file size
                       of 10MB each. See supported file images&nbsp;
                       <button
                         type="button"
