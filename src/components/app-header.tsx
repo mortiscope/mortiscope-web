@@ -53,7 +53,7 @@ export const AppHeader = () => {
     "group font-inter cursor-pointer border-2 border-transparent transition-colors duration-300 ease-in-out hover:border-emerald-200 focus:bg-emerald-100";
 
   return (
-    <header className="bg-background sticky top-0 z-30 flex h-20 items-center justify-between gap-4 border-b px-6">
+    <header className="bg-background sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b px-6 md:h-20">
       {/* Left section of the header. */}
       <div className="flex items-center gap-4">
         <SidebarTrigger
@@ -61,19 +61,21 @@ export const AppHeader = () => {
             "hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-slate-900 transition ease-in-out focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none [&>svg]:!size-5"
           )}
         />
-        <h1 className="font-plus-jakarta-sans text-xl font-semibold text-slate-800">{pageTitle}</h1>
+        <h1 className="font-plus-jakarta-sans text-lg font-semibold text-slate-800 md:text-xl">
+          {pageTitle}
+        </h1>
       </div>
 
       {/* Right section of the header. */}
       <div>
         {/* Displays a skeleton loader while the user session is being fetched. */}
-        {status === "loading" && <Skeleton className="h-10 w-10 rounded-full" />}
+        {status === "loading" && <Skeleton className="h-8 w-8 rounded-full md:h-10 md:w-10" />}
 
         {/* Renders the user avatar and dropdown menu when the user is authenticated. */}
         {status === "authenticated" && user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Avatar className="h-10 w-10 cursor-pointer transition duration-300 ease-in-out hover:opacity-90">
+              <Avatar className="h-8 w-8 cursor-pointer transition duration-300 ease-in-out hover:opacity-90 md:h-10 md:w-10">
                 <AvatarImage src={avatarSrc} alt={user.name ?? "User Avatar"} />
                 <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
