@@ -1,14 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { IoLayersOutline, IoPhonePortraitOutline, IoImagesOutline } from "react-icons/io5";
+import { PiGlobeStand } from "react-icons/pi";
 
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 /**
  * An array of objects defining the supported image formats and their descriptions.
@@ -19,21 +23,25 @@ const supportedFormats = [
     name: "JPEG / JPG",
     description:
       "A widely supported format using lossy compression, ideal for photographic images. Note that high compression can introduce artifacts which may affect analytical precision.",
+    icon: IoImagesOutline,
   },
   {
     name: "PNG",
     description:
       "A lossless compression format that preserves all original image data, making it excellent for detailed scientific images where quality is critical. It also supports transparency.",
+    icon: IoLayersOutline,
   },
   {
     name: "WebP",
     description:
       "A modern format offering superior lossless and lossy compression. It often yields smaller files than JPEG and PNG at equivalent quality, making it a versatile choice for web applications.",
+    icon: PiGlobeStand,
   },
   {
     name: "HEIF / HEIC",
     description:
       "A high-efficiency format offering significant compression advantages over JPEG. While native to modern Apple devices, its compatibility across other platforms is still evolving.",
+    icon: IoPhonePortraitOutline,
   },
 ];
 
@@ -46,8 +54,8 @@ const modalContentVariants = {
   show: {
     opacity: 1,
     transition: {
-      delayChildren: 0.4,
-      staggerChildren: 0.2,
+      delayChildren: 0.3,
+      staggerChildren: 0.25,
     },
   },
 };
@@ -56,14 +64,14 @@ const modalContentVariants = {
  * Framer Motion variants for individual animated items within the modal.
  */
 const itemVariants = {
-  hidden: { y: 15, opacity: 0 },
+  hidden: { y: 20, opacity: 0 },
   show: {
     y: 0,
     opacity: 1,
     transition: {
-      type: "tween",
-      ease: "easeOut",
-      duration: 0.5,
+      type: "spring",
+      damping: 20,
+      stiffness: 150,
     },
   },
 };
@@ -87,7 +95,7 @@ interface SupportedFormatsModalProps {
 export function SupportedFormatsModal({ isOpen, onOpenChange }: SupportedFormatsModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-md">
+      <DialogContent className="flex h-full max-h-[85vh] flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-lg md:h-auto md:rounded-3xl">
         {/* Main animation wrapper for the modal content. */}
         <motion.div
           className="contents"
@@ -96,28 +104,50 @@ export function SupportedFormatsModal({ isOpen, onOpenChange }: SupportedFormats
           animate="show"
         >
           {/* Animated wrapper for the dialog header. */}
-          <motion.div variants={itemVariants}>
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-lg">
+          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
+            <DialogHeader className="text-center">
+              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
                 Supported File Formats
               </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-center">
-                Upload an image in one of the formats listed below. Files in other formats may not
-                be processed correctly.
+              <DialogDescription className="font-inter text-center text-sm text-slate-600">
+                Please upload an image in one of the approved formats.
               </DialogDescription>
             </DialogHeader>
           </motion.div>
 
-          {/* Scrollable container for the list of supported formats. */}
-          <div className="font-inter grid gap-4 overflow-y-auto py-4 pr-3">
-            {supportedFormats.map((format) => (
-              // Each format item is individually animated.
-              <motion.div key={format.name} className="flex flex-col" variants={itemVariants}>
-                <h4 className="font-semibold text-slate-800">{format.name}</h4>
-                <p className="text-sm text-slate-600">{format.description}</p>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            variants={itemVariants}
+            className="flex-1 overflow-y-auto border-y border-slate-200 p-6"
+          >
+            <ul className="font-inter grid gap-4">
+              {supportedFormats.map((format) => (
+                // Each format is a list item.
+                <li
+                  key={format.name}
+                  className="flex items-start rounded-xl border border-slate-200 bg-slate-50/50 p-4 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50"
+                >
+                  {/* Each format renders its own unique icon from the data array. */}
+                  <format.icon className="mt-1 mr-4 h-5 w-5 flex-shrink-0 text-emerald-500" />
+                  <div>
+                    <h4 className="font-semibold text-slate-800">{format.name}</h4>
+                    <p className="text-sm text-slate-600">{format.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Animated wrapper for the dialog footer. */}
+          <motion.div variants={itemVariants} className="shrink-0 px-6 pb-6 md:pt-2 pt-0">
+            <DialogFooter>
+              <Button
+                onClick={() => onOpenChange(false)}
+                className="font-inter relative mt-2 h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 px-6 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-0 md:h-10 md:w-auto md:text-base"
+              >
+                Got It
+              </Button>
+            </DialogFooter>
+          </motion.div>
         </motion.div>
       </DialogContent>
     </Dialog>
