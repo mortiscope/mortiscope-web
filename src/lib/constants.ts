@@ -49,3 +49,13 @@ export const ACCEPTED_IMAGE_TYPES = {
   "image/heic": [".heic"],
   "image/heif": [".heif"],
 };
+
+/**
+ * Defines the available aspect ratio options for the camera capture feature.
+ * @constant {object[]}
+ */
+export const CAMERA_ASPECT_RATIOS = [
+  { name: "Square", value: 1, className: "aspect-square" },
+  { name: "Landscape", value: 16 / 9, className: "aspect-video" },
+  { name: "Portrait", value: 9 / 16, className: "aspect-[9/16]" },
+];

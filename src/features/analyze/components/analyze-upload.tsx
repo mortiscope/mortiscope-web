@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnalyzeCapture } from "@/features/analyze/components/analyze-capture";
 import { SupportedFormatsModal } from "@/features/analyze/components/supported-formats-modal";
 import { UploadPreview } from "@/features/analyze/components/upload-preview";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -39,6 +40,8 @@ export const AnalyzeUpload = () => {
   const [activeTab, setActiveTab] = useState("upload");
   // State to manage the visibility of the supported formats modal.
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // State to manage the visibility of the camera capture modal.
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   // Checks if the maximum number of files has been reached.
   const isMaxFilesReached = filesCount >= MAX_FILES;
@@ -100,6 +103,7 @@ export const AnalyzeUpload = () => {
     accept: ACCEPTED_IMAGE_TYPES,
     maxSize: MAX_FILE_SIZE,
     maxFiles: MAX_FILES,
+    noClick: activeTab === "camera",
     disabled: isMaxFilesReached,
   });
 
@@ -135,6 +139,8 @@ export const AnalyzeUpload = () => {
   return (
     <>
       <SupportedFormatsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
+      <AnalyzeCapture isOpen={isCameraOpen} onOpenChange={setIsCameraOpen} />
+
       {/* The main container for the upload component. */}
       <Card className="border-none py-2 shadow-none">
         {/* Header section with title and description. */}
@@ -196,7 +202,13 @@ export const AnalyzeUpload = () => {
 
             {/* The dropzone area where tab content is displayed. */}
             <div
-              {...getRootProps()}
+              {...getRootProps({
+                onClick: () => {
+                  if (activeTab === "camera" && !isMaxFilesReached) {
+                    setIsCameraOpen(true);
+                  }
+                },
+              })}
               className={cn(
                 dropzoneBaseClasses,
                 dropzoneStateClasses,
