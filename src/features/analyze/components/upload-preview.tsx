@@ -32,13 +32,16 @@ const Thumbnail = ({ file }: { file: File }) => {
   }
 
   return (
-    <Image
-      src={previewUrl}
-      alt={`Preview of ${file.name}`}
-      className="flex-shrink-0 rounded-md object-cover"
-      width={40}
-      height={40}
-    />
+    // Enforces the square aspect ratio and clips the image.
+    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
+      <Image
+        src={previewUrl}
+        alt={`Preview of ${file.name}`}
+        fill
+        className="object-cover"
+        sizes="40px"
+      />
+    </div>
   );
 };
 
