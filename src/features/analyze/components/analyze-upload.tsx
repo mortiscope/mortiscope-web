@@ -1,5 +1,6 @@
 "use client";
 
+import { fileTypeFromBlob } from "file-type";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, Upload as UploadIcon } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -48,7 +49,7 @@ export const AnalyzeUpload = () => {
 
   // Memoized callback for handling file drops.
   const onDrop = useCallback(
-    (acceptedFiles: File[], fileRejections: FileRejection[]) => {
+    async (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       // Handle file rejections from react-dropzone with individual toast notifications.
       fileRejections.forEach(({ file, errors }) => {
         errors.forEach((error) => {
@@ -64,8 +65,27 @@ export const AnalyzeUpload = () => {
         });
       });
 
+      // Client-side validation to prevent users from uploading files with changed extensions
+      const validationPromises = acceptedFiles.map(async (file) => {
+        const type = await fileTypeFromBlob(file);
+        const isValid = Object.keys(ACCEPTED_IMAGE_TYPES).includes(type?.mime ?? "");
+        if (!isValid) {
+          toast.error("Something is wrong with the file.");
+          return null;
+        }
+        return file;
+      });
+
+      const validFiles = (await Promise.all(validationPromises)).filter(
+        (file): file is File => file !== null
+      );
+
+      if (validFiles.length === 0) {
+        return;
+      }
+
       // Check if adding the new files would exceed the maximum limit.
-      if (filesCount + acceptedFiles.length > MAX_FILES) {
+      if (filesCount + validFiles.length > MAX_FILES) {
         toast.error(`You can only upload a maximum of ${MAX_FILES} images.`);
         return;
       }
@@ -74,7 +94,7 @@ export const AnalyzeUpload = () => {
       const currentFileNames = new Set(files.map((f) => f.name));
       const uniqueNewFiles: File[] = [];
 
-      acceptedFiles.forEach((file) => {
+      validFiles.forEach((file) => {
         if (currentFileNames.has(file.name)) {
           // Fire a toast for each individual duplicate file.
           toast.error(`${file.name} is already in the upload list.`);
