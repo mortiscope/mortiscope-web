@@ -1,5 +1,6 @@
 /**
  * A list of paths to deterministic SVG avatars used as fallbacks
+ * @constant {object}
  */
 export const DETERMINISTIC_AVATARS = [
   "/avatars/avatar-1.svg",
@@ -23,3 +24,28 @@ export const LINE_ANIMATION_DURATION = 0.8;
  * @constant {number}
  */
 export const CIRCLE_ANIMATION_DURATION = 0.4;
+
+/**
+ * The maximum number of files a user can upload.
+ * @constant {number}
+ */
+export const MAX_FILES = 20;
+
+/**
+ * The maximum file size allowed for each individual file in bytes (10MB).
+ * @constant {number}
+ */
+export const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+/**
+ * An object defining the accepted image MIME types and their corresponding file extensions.
+ * Used for file validation in react-dropzone.
+ * @constant {object}
+ */
+export const ACCEPTED_IMAGE_TYPES = {
+  "image/jpeg": [".jpeg", ".jpg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+  "image/heic": [".heic"],
+  "image/heif": [".heif"],
+};

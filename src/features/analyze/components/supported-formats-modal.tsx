@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { IoLayersOutline, IoPhonePortraitOutline, IoImagesOutline } from "react-icons/io5";
+import { IoImagesOutline,IoLayersOutline, IoPhonePortraitOutline } from "react-icons/io5";
 import { PiGlobeStand } from "react-icons/pi";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 /**
  * An array of objects defining the supported image formats and their descriptions.
