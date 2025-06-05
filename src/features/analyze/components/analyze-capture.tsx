@@ -2,6 +2,7 @@
 
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
 import * as React from "react";
 import { FiCamera } from "react-icons/fi";
 import {
@@ -10,6 +11,7 @@ import {
   LuRectangleVertical,
   LuRefreshCw,
   LuSquare,
+  LuTrash2,
 } from "react-icons/lu";
 import { PiWarningLight } from "react-icons/pi";
 import { SlUser } from "react-icons/sl";
@@ -25,9 +27,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CAMERA_ASPECT_RATIOS } from "@/lib/constants";
+import { CAMERA_ASPECT_RATIOS, MAX_FILES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /**
@@ -76,6 +80,74 @@ const itemVariants = {
 };
 
 /**
+ * A thumbnail component for displaying captured images within the dialog.
+ * It shows a preview, includes a button to remove the image, and has a conditional ring style for mobile.
+ */
+const CapturedImageThumbnail = ({
+  file,
+  onRemove,
+  isMobile,
+}: {
+  /** The captured image file to be displayed. */
+  file: File;
+  /** Callback function to trigger when the remove button is clicked. */
+  onRemove: () => void;
+  /** A boolean to determine if the component should render in its mobile variant. */
+  isMobile: boolean;
+}) => {
+  // State to hold the temporary local URL for the image file preview.
+  const [previewUrl, setPreviewUrl] = React.useState<string>("");
+
+  // Effect to create and revoke a temporary URL for the file object.
+  React.useEffect(() => {
+    // Create a temporary URL from the File object that can be used as an image source.
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
+    // Return a cleanup function to revoke the object URL.
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]); // This effect re-runs whenever the `file` prop changes.
+
+  // Renders a loading skeleton if the preview URL is not yet available.
+  if (!previewUrl) {
+    return <div className="h-16 w-16 flex-shrink-0 animate-pulse rounded-lg bg-slate-200" />;
+  }
+
+  // Renders the animated thumbnail with the image preview and a remove button.
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.8 }}
+      transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
+      className={cn(
+        "relative h-16 w-16 flex-shrink-0 rounded-lg",
+        isMobile && "ring-2 ring-emerald-400/60 ring-offset-black/50"
+      )}
+    >
+      <Image
+        src={previewUrl}
+        alt={`Captured: ${file.name}`}
+        fill
+        className="rounded-lg object-cover"
+        sizes="64px"
+      />
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onRemove}
+        aria-label={`Remove ${file.name}`}
+        // Positions the remove button at the top-right corner of the thumbnail.
+        className="absolute -top-2 -right-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-rose-200 text-rose-400 transition-all duration-300 ease-in-out hover:bg-rose-400 hover:text-white"
+      >
+        <LuTrash2 className="h-3 w-3" />
+      </Button>
+    </motion.div>
+  );
+};
+
+/**
  * Props for the AnalyzeCapture component.
  */
 interface AnalyzeCaptureProps {
@@ -114,6 +186,13 @@ type AspectRatioOption = (typeof aspectRatioOptions)[0];
  * permissions and errors, and provides distinct UI/UX for mobile and desktop devices.
  */
 export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
+  // Ref to access the Webcam component instance for taking screenshots.
+  const webcamRef = React.useRef<Webcam>(null);
+  // State from the global store for managing uploaded/captured files.
+  const files = useAnalyzeStore((state) => state.data.files);
+  const addFiles = useAnalyzeStore((state) => state.addFiles);
+  const removeFile = useAnalyzeStore((state) => state.removeFile);
+
   // State to prevent SSR issues with the Webcam component, which relies on browser APIs.
   const [isClient, setIsClient] = React.useState(false);
   // State to hold any camera-related error to display in the interface.
@@ -128,6 +207,8 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
   const [isMirrored, setIsMirrored] = React.useState(false);
   // Hook to determine if the device is mobile for responsive rendering.
   const isMobile = useIsMobile();
+  // A derived boolean state to check if the number of captured files has reached the maximum limit.
+  const isMaxFilesReached = files.length >= MAX_FILES;
 
   // Ensures the component only renders the Webcam on the client-side to prevent SSR errors.
   React.useEffect(() => {
@@ -176,7 +257,117 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
   };
 
   /**
-   * Callback for handling errors from the `react-webcam` component. 
+   * Captures a high-resolution frame from the webcam, crops it to the selected aspect ratio,
+   * applies any rotation, converts it to a File object, and adds it to the global store.
+   * This method uses the intrinsic dimensions of the video stream for maximum quality.
+   */
+  const handleCapture = async () => {
+    // Abort if the webcam component is not yet available.
+    if (!webcamRef.current) return;
+    const video = webcamRef.current.video;
+
+    // Failsafe to ensure the video element is available and ready.
+    if (!video) {
+      toast.error("Camera is not ready. Please try again.");
+      return;
+    }
+    // Prevent adding more files than the specified maximum.
+    if (files.length >= MAX_FILES) {
+      toast.error(`You cannot add more than ${MAX_FILES} images.`);
+      return;
+    }
+
+    // Create a canvas to capture the full-resolution image from the video stream.
+    const canvas = document.createElement("canvas");
+    // Use the video's intrinsic dimensions to capture at full native resolution.
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+
+    // Failsafe if the 2D context cannot be created, which can happen in rare browser scenarios.
+    if (!ctx) {
+      toast.error("Could not process image. Please try again.");
+      return;
+    }
+
+    // Draw the current video frame onto the hidden canvas.
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Process the full-resolution canvas image for cropping and rotation.
+    const finalImageSrc = await new Promise<string>((resolve) => {
+      const img = new window.Image();
+      // This onload handler executes once the high-resolution image is loaded.
+      img.onload = () => {
+        // Create a second canvas for performing the crop and rotation operations.
+        const cropCanvas = document.createElement("canvas");
+        const cropCtx = cropCanvas.getContext("2d");
+
+        // Failsafe if the context for the second canvas fails.
+        if (!cropCtx) {
+          resolve(canvas.toDataURL("image/jpeg", 1.0));
+          return;
+        }
+
+        const sourceWidth = img.width;
+        const sourceHeight = img.height;
+        const sourceAspectRatio = sourceWidth / sourceHeight;
+        const targetAspectRatio = aspectRatio.value;
+
+        // Calculate the dimensions for cropping the source image to the target aspect ratio.
+        let sWidth = sourceWidth;
+        let sHeight = sourceHeight;
+        let sx = 0;
+        let sy = 0;
+
+        if (sourceAspectRatio > targetAspectRatio) {
+          // If the source image is wider than the target, crop the sides.
+          sWidth = sourceHeight * targetAspectRatio;
+          sx = (sourceWidth - sWidth) / 2;
+        } else if (sourceAspectRatio < targetAspectRatio) {
+          // If the source image is taller than the target, crop the top and bottom.
+          sHeight = sourceWidth / targetAspectRatio;
+          sy = (sourceHeight - sHeight) / 2;
+        }
+
+        // Set the final canvas dimensions based on the crop size and rotation.
+        if (rotation === 90 || rotation === 270) {
+          cropCanvas.width = sHeight;
+          cropCanvas.height = sWidth;
+        } else {
+          cropCanvas.width = sWidth;
+          cropCanvas.height = sHeight;
+        }
+
+        // Translate the canvas context to the center to rotate around the image's midpoint.
+        cropCtx.translate(cropCanvas.width / 2, cropCanvas.height / 2);
+        cropCtx.rotate((rotation * Math.PI) / 180);
+        // Draw the cropped portion of the source image onto the rotated canvas.
+        cropCtx.drawImage(img, sx, sy, sWidth, sHeight, -sWidth / 2, -sHeight / 2, sWidth, sHeight);
+
+        // Resolve the promise with the final, processed image as a high-quality JPEG.
+        resolve(cropCanvas.toDataURL("image/jpeg", 1.0));
+      };
+      // Provide a fallback in case the image fails to load.
+      img.onerror = () => resolve(canvas.toDataURL("image/jpeg", 1.0));
+      // Set the source of the image object to the data URL of the initial capture.
+      img.src = canvas.toDataURL("image/jpeg", 1.0);
+    });
+
+    // Convert the final base64 image data to a File object.
+    const blob = await fetch(finalImageSrc).then((res) => res.blob());
+    const fileName = `capture-${Date.now()}.jpg`;
+    const newFile = new File([blob], fileName, { type: "image/jpeg" });
+
+    // Add the newly created file to the global state.
+    addFiles([newFile]);
+    // Show a success toast, but only on desktop devices to keep the mobile UI clean.
+    if (!isMobile) {
+      toast.success("Image captured successfully.");
+    }
+  };
+
+  /**
+   * Callback for handling errors from the `react-webcam` component.
    * It logs the error, shows a toast notification, and sets a specific error state on the error type.
    */
   const handleUserMediaError = (error: string | DOMException) => {
@@ -234,9 +425,12 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
     }
   };
 
-  /** Defines the constraints passed to the `react-webcam` component. */
+  /**
+   * Defines the constraints passed to the `react-webcam` component.
+   */
   const videoConstraints = {
-    aspectRatio: aspectRatio.value,
+    width: { ideal: 4096 },
+    height: { ideal: 2160 },
     facingMode: facingMode,
   };
 
@@ -287,6 +481,21 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                   </VisuallyHidden.Root>
                 </DialogHeader>
               )}
+
+              {/* Mobile-only indicator for the number of captured images. */}
+              <AnimatePresence>
+                {isMobile && files.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="font-inter absolute top-4 right-4 z-20 rounded-md bg-emerald-600/80 px-3 py-1 text-sm font-normal text-white shadow-lg backdrop-blur-sm"
+                  >
+                    {files.length} / {MAX_FILES}
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Renders the standard dialog header, but only on desktop devices. */}
               {!isMobile && (
@@ -340,7 +549,7 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                       </motion.div>
                     ) : isClient ? (
                       <motion.div
-                        key={`${aspectRatio.name}-${facingMode}-${rotation}-${isMirrored}`}
+                        key={facingMode}
                         className={cn(
                           "relative",
                           isMobile
@@ -358,18 +567,53 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                       >
                         <Webcam
+                          ref={webcamRef}
                           audio={false}
                           className="h-full w-full object-cover"
                           onUserMediaError={handleUserMediaError}
                           videoConstraints={videoConstraints}
                           mirrored={isMirrored}
                           style={{ transform: `rotate(${rotation}deg)` }}
+                          screenshotFormat="image/jpeg"
+                          screenshotQuality={1}
                         />
                       </motion.div>
                     ) : null}
                   </AnimatePresence>
                 </div>
               </motion.div>
+
+              {/* Displays a scrollable row of captured image thumbnails. */}
+              <AnimatePresence>
+                {files.length > 0 && (
+                  <motion.div
+                    variants={itemVariants}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className={cn(
+                      "shrink-0",
+                      isMobile ? "absolute bottom-[88px] left-0 z-10 w-full px-4" : "px-6 pb-4"
+                    )}
+                  >
+                    <ScrollArea className="w-full whitespace-nowrap">
+                      <div className="flex w-max space-x-4 p-3">
+                        <AnimatePresence>
+                          {files.map((file) => (
+                            <CapturedImageThumbnail
+                              key={file.name}
+                              file={file}
+                              onRemove={() => removeFile(file.name)}
+                              isMobile={isMobile}
+                            />
+                          ))}
+                        </AnimatePresence>
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Contains all the user-facing controls for the camera. */}
               <motion.div
@@ -422,21 +666,56 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                       </Tooltip>
 
                       {/* Main Capture Button */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            aria-label="Take picture"
-                            disabled={!!cameraError}
-                            className="group h-12 w-12 cursor-pointer rounded-full border-2 border-emerald-500 bg-transparent p-1 transition-all duration-300 ease-in-out hover:border-amber-400 hover:bg-transparent active:scale-95 disabled:cursor-not-allowed disabled:border-rose-200 disabled:bg-rose-100 disabled:hover:border-rose-200"
-                          >
-                            <div className="h-full w-full rounded-full bg-emerald-500/50 transition-colors duration-300 ease-in-out group-hover:bg-amber-400/50 group-disabled:bg-rose-200" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="font-inter">Capture Image</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <div
+                        className={cn({
+                          "cursor-not-allowed": !!cameraError || isMaxFilesReached,
+                        })}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              onClick={handleCapture}
+                              aria-label="Take picture"
+                              disabled={!!cameraError || isMaxFilesReached}
+                              className={cn(
+                                "group h-12 w-12 rounded-full border-2 bg-transparent p-1 transition-all duration-300 ease-in-out active:scale-95",
+                                // Conditional styling for the button's different states.
+                                {
+                                  // Styles for when a camera error occurs.
+                                  "border-rose-200 bg-rose-100": !!cameraError,
+                                  // Styles for when max files are reached but there is no camera error.
+                                  "border-emerald-500 opacity-60":
+                                    isMaxFilesReached && !cameraError,
+                                  // Default styles for the active, enabled state.
+                                  "cursor-pointer border-emerald-500 hover:border-amber-400 hover:bg-transparent":
+                                    !cameraError && !isMaxFilesReached,
+                                }
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "h-full w-full rounded-full transition-colors duration-300 ease-in-out",
+                                  // Conditional styling for the inner circle based on the button's state.
+                                  {
+                                    "bg-rose-200": !!cameraError,
+                                    "bg-emerald-500/50": isMaxFilesReached && !cameraError,
+                                    "bg-emerald-500/50 group-hover:bg-amber-400/50":
+                                      !cameraError && !isMaxFilesReached,
+                                  }
+                                )}
+                              />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-inter">
+                              {isMaxFilesReached
+                                ? `Maximum ${MAX_FILES} images reached`
+                                : `Capture Image (${files.length}/${MAX_FILES})`}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
 
                       {/* Mirror Control Button */}
                       <Tooltip>
