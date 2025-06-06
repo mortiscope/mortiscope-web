@@ -197,6 +197,8 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
   const [isClient, setIsClient] = React.useState(false);
   // State to hold any camera-related error to display in the interface.
   const [cameraError, setCameraError] = React.useState<CameraError | null>(null);
+  // State to prevent multiple captures from being triggered while one is processing.
+  const [isCapturing, setIsCapturing] = React.useState(false);
   // State for the current aspect ratio setting.
   const [aspectRatio, setAspectRatio] = React.useState<AspectRatioOption>(aspectRatioOptions[0]);
   // State to control which camera is active ('user' for front, 'environment' for back).
@@ -262,6 +264,9 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
    * This method uses the intrinsic dimensions of the video stream for maximum quality.
    */
   const handleCapture = async () => {
+    // Prevent multiple captures from being triggered simultaneously.
+    if (isCapturing) return;
+
     // Abort if the webcam component is not yet available.
     if (!webcamRef.current) return;
     const video = webcamRef.current.video;
@@ -277,92 +282,110 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
       return;
     }
 
-    // Create a canvas to capture the full-resolution image from the video stream.
-    const canvas = document.createElement("canvas");
-    // Use the video's intrinsic dimensions to capture at full native resolution.
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
+    setIsCapturing(true);
+    try {
+      // Create a canvas to capture the full-resolution image from the video stream.
+      const canvas = document.createElement("canvas");
+      // Use the video's intrinsic dimensions to capture at full native resolution.
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
 
-    // Failsafe if the 2D context cannot be created, which can happen in rare browser scenarios.
-    if (!ctx) {
-      toast.error("Could not process image. Please try again.");
-      return;
-    }
+      // Failsafe if the 2D context cannot be created, which can happen in rare browser scenarios.
+      if (!ctx) {
+        toast.error("Could not process image. Please try again.");
+        return;
+      }
 
-    // Draw the current video frame onto the hidden canvas.
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Draw the current video frame onto the hidden canvas.
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // Process the full-resolution canvas image for cropping and rotation.
-    const finalImageSrc = await new Promise<string>((resolve) => {
-      const img = new window.Image();
-      // This onload handler executes once the high-resolution image is loaded.
-      img.onload = () => {
-        // Create a second canvas for performing the crop and rotation operations.
-        const cropCanvas = document.createElement("canvas");
-        const cropCtx = cropCanvas.getContext("2d");
+      // Process the full-resolution canvas image for cropping and rotation.
+      const finalImageSrc = await new Promise<string>((resolve) => {
+        const img = new window.Image();
+        // This onload handler executes once the high-resolution image is loaded.
+        img.onload = () => {
+          // Create a second canvas for performing the crop and rotation operations.
+          const cropCanvas = document.createElement("canvas");
+          const cropCtx = cropCanvas.getContext("2d");
 
-        // Failsafe if the context for the second canvas fails.
-        if (!cropCtx) {
-          resolve(canvas.toDataURL("image/jpeg", 1.0));
-          return;
-        }
+          // Failsafe if the context for the second canvas fails.
+          if (!cropCtx) {
+            resolve(canvas.toDataURL("image/jpeg", 1.0));
+            return;
+          }
 
-        const sourceWidth = img.width;
-        const sourceHeight = img.height;
-        const sourceAspectRatio = sourceWidth / sourceHeight;
-        const targetAspectRatio = aspectRatio.value;
+          const sourceWidth = img.width;
+          const sourceHeight = img.height;
+          const sourceAspectRatio = sourceWidth / sourceHeight;
+          const targetAspectRatio = aspectRatio.value;
 
-        // Calculate the dimensions for cropping the source image to the target aspect ratio.
-        let sWidth = sourceWidth;
-        let sHeight = sourceHeight;
-        let sx = 0;
-        let sy = 0;
+          // Calculate the dimensions for cropping the source image to the target aspect ratio.
+          let sWidth = sourceWidth;
+          let sHeight = sourceHeight;
+          let sx = 0;
+          let sy = 0;
 
-        if (sourceAspectRatio > targetAspectRatio) {
-          // If the source image is wider than the target, crop the sides.
-          sWidth = sourceHeight * targetAspectRatio;
-          sx = (sourceWidth - sWidth) / 2;
-        } else if (sourceAspectRatio < targetAspectRatio) {
-          // If the source image is taller than the target, crop the top and bottom.
-          sHeight = sourceWidth / targetAspectRatio;
-          sy = (sourceHeight - sHeight) / 2;
-        }
+          if (sourceAspectRatio > targetAspectRatio) {
+            // If the source image is wider than the target, crop the sides.
+            sWidth = sourceHeight * targetAspectRatio;
+            sx = (sourceWidth - sWidth) / 2;
+          } else if (sourceAspectRatio < targetAspectRatio) {
+            // If the source image is taller than the target, crop the top and bottom.
+            sHeight = sourceWidth / targetAspectRatio;
+            sy = (sourceHeight - sHeight) / 2;
+          }
 
-        // Set the final canvas dimensions based on the crop size and rotation.
-        if (rotation === 90 || rotation === 270) {
-          cropCanvas.width = sHeight;
-          cropCanvas.height = sWidth;
-        } else {
-          cropCanvas.width = sWidth;
-          cropCanvas.height = sHeight;
-        }
+          // Set the final canvas dimensions based on the crop size and rotation.
+          if (rotation === 90 || rotation === 270) {
+            cropCanvas.width = sHeight;
+            cropCanvas.height = sWidth;
+          } else {
+            cropCanvas.width = sWidth;
+            cropCanvas.height = sHeight;
+          }
 
-        // Translate the canvas context to the center to rotate around the image's midpoint.
-        cropCtx.translate(cropCanvas.width / 2, cropCanvas.height / 2);
-        cropCtx.rotate((rotation * Math.PI) / 180);
-        // Draw the cropped portion of the source image onto the rotated canvas.
-        cropCtx.drawImage(img, sx, sy, sWidth, sHeight, -sWidth / 2, -sHeight / 2, sWidth, sHeight);
+          // Translate the canvas context to the center to rotate around the image's midpoint.
+          cropCtx.translate(cropCanvas.width / 2, cropCanvas.height / 2);
+          cropCtx.rotate((rotation * Math.PI) / 180);
+          // Draw the cropped portion of the source image onto the rotated canvas.
+          cropCtx.drawImage(
+            img,
+            sx,
+            sy,
+            sWidth,
+            sHeight,
+            -sWidth / 2,
+            -sHeight / 2,
+            sWidth,
+            sHeight
+          );
 
-        // Resolve the promise with the final, processed image as a high-quality JPEG.
-        resolve(cropCanvas.toDataURL("image/jpeg", 1.0));
-      };
-      // Provide a fallback in case the image fails to load.
-      img.onerror = () => resolve(canvas.toDataURL("image/jpeg", 1.0));
-      // Set the source of the image object to the data URL of the initial capture.
-      img.src = canvas.toDataURL("image/jpeg", 1.0);
-    });
+          // Resolve the promise with the final, processed image as a high-quality JPEG.
+          resolve(cropCanvas.toDataURL("image/jpeg", 1.0));
+        };
+        // Provide a fallback in case the image fails to load.
+        img.onerror = () => resolve(canvas.toDataURL("image/jpeg", 1.0));
+        // Set the source of the image object to the data URL of the initial capture.
+        img.src = canvas.toDataURL("image/jpeg", 1.0);
+      });
 
-    // Convert the final base64 image data to a File object.
-    const blob = await fetch(finalImageSrc).then((res) => res.blob());
-    const fileName = `capture-${Date.now()}.jpg`;
-    const newFile = new File([blob], fileName, { type: "image/jpeg" });
+      // Convert the final base64 image data to a File object.
+      const blob = await fetch(finalImageSrc).then((res) => res.blob());
+      const fileName = `capture-${Date.now()}.jpg`;
+      const newFile = new File([blob], fileName, { type: "image/jpeg" });
 
-    // Add the newly created file to the global state.
-    addFiles([newFile]);
-    // Show a success toast, but only on desktop devices to keep the mobile UI clean.
-    if (!isMobile) {
-      toast.success("Image captured successfully.");
+      // Add the newly created file to the global state.
+      addFiles([newFile]);
+      // Show a success toast, but only on desktop devices to keep the mobile interface clean.
+      if (!isMobile) {
+        toast.success("Image captured successfully.");
+      }
+    } catch (err) {
+      console.error("Failed to capture image:", err);
+      toast.error("An error occurred while capturing the image.");
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -677,19 +700,19 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                               variant="ghost"
                               onClick={handleCapture}
                               aria-label="Take picture"
-                              disabled={!!cameraError || isMaxFilesReached}
+                              disabled={!!cameraError || isMaxFilesReached || isCapturing}
                               className={cn(
                                 "group h-12 w-12 rounded-full border-2 bg-transparent p-1 transition-all duration-300 ease-in-out active:scale-95",
                                 // Conditional styling for the button's different states.
                                 {
                                   // Styles for when a camera error occurs.
                                   "border-rose-200 bg-rose-100": !!cameraError,
-                                  // Styles for when max files are reached but there is no camera error.
+                                  // Styles for when max files are reached or a capture is in progress.
                                   "border-emerald-500 opacity-60":
-                                    isMaxFilesReached && !cameraError,
+                                    (isMaxFilesReached || isCapturing) && !cameraError,
                                   // Default styles for the active, enabled state.
                                   "cursor-pointer border-emerald-500 hover:border-amber-400 hover:bg-transparent":
-                                    !cameraError && !isMaxFilesReached,
+                                    !cameraError && !isMaxFilesReached && !isCapturing,
                                 }
                               )}
                             >
@@ -699,9 +722,12 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                                   // Conditional styling for the inner circle based on the button's state.
                                   {
                                     "bg-rose-200": !!cameraError,
-                                    "bg-emerald-500/50": isMaxFilesReached && !cameraError,
+                                    // Style for when max files are reached or a capture is in progress.
+                                    "bg-emerald-500/50":
+                                      (isMaxFilesReached || isCapturing) && !cameraError,
+                                    // Default active style.
                                     "bg-emerald-500/50 group-hover:bg-amber-400/50":
-                                      !cameraError && !isMaxFilesReached,
+                                      !cameraError && !isMaxFilesReached && !isCapturing,
                                   }
                                 )}
                               />
