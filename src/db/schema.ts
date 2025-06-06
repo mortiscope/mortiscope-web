@@ -99,3 +99,19 @@ export const accountDeletionTokens = pgTable(
   },
   (adt) => [primaryKey({ columns: [adt.identifier, adt.token] })]
 );
+
+// Stores metadata for files uploaded to the S3 bucket
+export const uploads = pgTable("uploads", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  key: text("key").notNull().unique(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  size: integer("size").notNull(),
+  type: text("type").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
