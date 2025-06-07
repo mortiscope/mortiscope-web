@@ -1,9 +1,10 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { fileTypeFromBlob } from "file-type";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, Upload as UploadIcon } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type FileRejection, useDropzone } from "react-dropzone";
 import { BsCamera } from "react-icons/bs";
 import { IoImagesOutline } from "react-icons/io5";
@@ -19,12 +20,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { createUpload } from "@/features/analyze/actions/create-upload";
 import { AnalyzeCapture } from "@/features/analyze/components/analyze-capture";
 import { SupportedFormatsModal } from "@/features/analyze/components/supported-formats-modal";
 import { UploadPreview } from "@/features/analyze/components/upload-preview";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE, MAX_FILES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, formatBytes } from "@/lib/utils";
 
 /**
  * Renders the initial step of the analysis workflow.
@@ -32,9 +34,15 @@ import { cn } from "@/lib/utils";
  */
 export const AnalyzeUpload = () => {
   // Retrieves state and actions from the global analysis store.
-  const nextStep = useAnalyzeStore((state) => state.nextStep);
-  const files = useAnalyzeStore((state) => state.data.files);
-  const addFiles = useAnalyzeStore((state) => state.addFiles);
+  const {
+    nextStep,
+    data: { files },
+    addFiles,
+    updateFileProgress,
+    setUploadStatus,
+    setUploadKey,
+  } = useAnalyzeStore();
+
   const filesCount = files.length;
 
   // Manages the currently selected tab ("upload" or "camera").
@@ -44,8 +52,98 @@ export const AnalyzeUpload = () => {
   // State to manage the visibility of the camera capture modal.
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
-  // Checks if the maximum number of files has been reached.
-  const isMaxFilesReached = filesCount >= MAX_FILES;
+  /**
+   * TanStack Query mutation for cleanly handling the async call to our `createUpload` server action.
+   */
+  const presignedUrlMutation = useMutation({
+    mutationFn: createUpload,
+  });
+
+  /**
+   * A memoized callback that performs the direct upload of a file to S3 using a pre-signed URL.
+   */
+  const uploadToS3 = useCallback(
+    (file: File, url: string, fileId: string) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url, true);
+
+      // Event listener for tracking the upload progress.
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          // Update the global store with the new progress percentage.
+          updateFileProgress(fileId, percentComplete);
+        }
+      };
+
+      // Event listener for when the upload is complete.
+      xhr.onload = () => {
+        // Check for a successful HTTP status code.
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadStatus(fileId, "success");
+          toast.success(`${file.name} successfully uploaded.`);
+        } else {
+          // If S3 returns an error, mark the file as failed.
+          setUploadStatus(fileId, "error");
+          toast.error(`${file.name} upload failed.`);
+        }
+      };
+
+      // Event listener for network errors during the upload.
+      xhr.onerror = () => {
+        setUploadStatus(fileId, "error");
+        toast.error(`An error occurred while uploading ${file.name}.`);
+      };
+
+      // Initiate the upload.
+      xhr.send(file);
+    },
+    [updateFileProgress, setUploadStatus]
+  );
+
+  /**
+   * An effect that runs whenever the `files` array in the store changes.
+   */
+  useEffect(() => {
+    // Find all files that haven't started uploading yet.
+    const pendingFiles = files.filter((f) => f.status === "pending");
+    if (pendingFiles.length === 0) return;
+
+    pendingFiles.forEach(async (uploadableFile) => {
+      const { file, id } = uploadableFile;
+      try {
+        // Immediately mark the file as 'uploading' to prevent re-processing and update UI.
+        setUploadStatus(id, "uploading");
+
+        // Call the server action to get the pre-signed URL and unique key.
+        const result = await presignedUrlMutation.mutateAsync({
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+        });
+
+        // If the server action failed, throw an error to be caught by the catch block.
+        if (!result.success || !result.data) {
+          throw new Error(result.error || "Failed to prepare upload.");
+        }
+
+        // Store the generated S3 key in our global state for future reference.
+        setUploadKey(id, result.data.key);
+
+        // Perform the direct upload to S3.
+        uploadToS3(file, result.data.url, id);
+      } catch (error) {
+        // If getting the pre-signed URL fails, mark the file as an error.
+        setUploadStatus(id, "error");
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred getting the upload URL.";
+        toast.error(`${file.name} failed to upload. ${errorMessage}`);
+      }
+    });
+    // The dependency array ensures this effect re-runs only when the `files` array is modified.
+  }, [files, presignedUrlMutation, setUploadKey, setUploadStatus, uploadToS3]);
 
   // Memoized callback for handling file drops.
   const onDrop = useCallback(
@@ -55,7 +153,7 @@ export const AnalyzeUpload = () => {
         errors.forEach((error) => {
           let message = `Error with ${file.name}: ${error.message}`;
           if (error.code === "file-too-large") {
-            message = `${file.name} is larger than 10MB.`;
+            message = `${file.name} is larger than ${formatBytes(MAX_FILE_SIZE)}.`;
           } else if (error.code === "file-invalid-type") {
             message = `${file.name} is not a supported file type.`;
           } else if (error.code === "too-many-files") {
@@ -70,7 +168,7 @@ export const AnalyzeUpload = () => {
         const type = await fileTypeFromBlob(file);
         const isValid = Object.keys(ACCEPTED_IMAGE_TYPES).includes(type?.mime ?? "");
         if (!isValid) {
-          toast.error("Something is wrong with the file.");
+          toast.error(`The file "${file.name}" appears to be corrupted or is not a valid image.`);
           return null;
         }
         return file;
@@ -86,36 +184,31 @@ export const AnalyzeUpload = () => {
 
       // Check if adding the new files would exceed the maximum limit.
       if (filesCount + validFiles.length > MAX_FILES) {
-        toast.error(`You can only upload a maximum of ${MAX_FILES} images.`);
+        toast.error(
+          `Cannot add ${validFiles.length} file(s). You can only upload a maximum of ${MAX_FILES} images.`
+        );
         return;
       }
 
       // Check for duplicate files before adding.
-      const currentFileNames = new Set(files.map((f) => f.name));
-      const uniqueNewFiles: File[] = [];
+      const currentFileNames = new Set(files.map((f) => f.file.name));
+      const uniqueNewFiles = validFiles.filter((file) => !currentFileNames.has(file.name));
 
-      validFiles.forEach((file) => {
-        if (currentFileNames.has(file.name)) {
-          // Fire a toast for each individual duplicate file.
-          toast.error(`${file.name} is already in the upload list.`);
-        } else {
-          uniqueNewFiles.push(file);
-        }
-      });
+      // Notify user about any duplicate files that were skipped.
+      validFiles
+        .filter((file) => currentFileNames.has(file.name))
+        .forEach((file) => toast.error(`${file.name} is already in the upload list.`));
 
-      // Add the unique, accepted files to the global state.
+      // Add the unique, accepted files to the global state with 'upload' as their source.
       if (uniqueNewFiles.length > 0) {
-        addFiles(uniqueNewFiles);
-        // Show one aggregated success toast for a better user experience.
-        toast.success(
-          `${uniqueNewFiles.length} ${
-            uniqueNewFiles.length > 1 ? "files" : "file"
-          } added successfully.`
-        );
+        addFiles(uniqueNewFiles, "upload");
       }
     },
     [addFiles, files, filesCount]
   );
+
+  // Checks if the maximum number of files has been reached.
+  const isMaxFilesReached = filesCount >= MAX_FILES;
 
   // Configure the dropzone hook with validation rules.
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
@@ -128,7 +221,7 @@ export const AnalyzeUpload = () => {
   });
 
   // Determines if the "Next" button should be disabled.
-  const isNextDisabled = filesCount === 0;
+  const isNextDisabled = filesCount === 0 || files.some((file) => file.status !== "success");
 
   // Defines reusable CSS class strings for consistent styling and easier maintenance.
   const dropzoneBaseClasses =

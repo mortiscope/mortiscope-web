@@ -1,12 +1,14 @@
 "use client";
 
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import * as React from "react";
 import { FiCamera } from "react-icons/fi";
 import {
   LuArrowRightLeft,
+  LuLoaderCircle,
   LuRectangleHorizontal,
   LuRectangleVertical,
   LuRefreshCw,
@@ -29,7 +31,8 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { deleteUpload } from "@/features/analyze/actions/delete-upload";
+import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CAMERA_ASPECT_RATIOS, MAX_FILES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -84,17 +87,22 @@ const itemVariants = {
  * It shows a preview, includes a button to remove the image, and has a conditional ring style for mobile.
  */
 const CapturedImageThumbnail = ({
-  file,
+  uploadableFile,
   onRemove,
   isMobile,
+  isDeleting,
 }: {
-  /** The captured image file to be displayed. */
-  file: File;
-  /** Callback function to trigger when the remove button is clicked. */
+  // The captured image file wrapper to be displayed
+  uploadableFile: UploadableFile;
+  // Callback function to trigger when the remove button is clicked.
   onRemove: () => void;
-  /** A boolean to determine if the component should render in its mobile variant. */
+  // A boolean to determine if the component should render in its mobile variant.
   isMobile: boolean;
+  // A boolean to indicate if the deletion is in progress.
+  isDeleting: boolean;
 }) => {
+  // Destructure the raw File object for URL creation.
+  const { file } = uploadableFile;
   // State to hold the temporary local URL for the image file preview.
   const [previewUrl, setPreviewUrl] = React.useState<string>("");
 
@@ -137,11 +145,16 @@ const CapturedImageThumbnail = ({
         variant="ghost"
         size="icon"
         onClick={onRemove}
+        disabled={isDeleting}
         aria-label={`Remove ${file.name}`}
         // Positions the remove button at the top-right corner of the thumbnail.
-        className="absolute -top-2 -right-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-rose-200 text-rose-400 transition-all duration-300 ease-in-out hover:bg-rose-400 hover:text-white"
+        className="absolute -top-2 -right-2 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-rose-200 text-rose-400 transition-all duration-300 ease-in-out hover:bg-rose-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <LuTrash2 className="h-3 w-3" />
+        {isDeleting ? (
+          <LuLoaderCircle className="h-3 w-3 animate-spin" />
+        ) : (
+          <LuTrash2 className="h-3 w-3" />
+        )}
       </Button>
     </motion.div>
   );
@@ -209,8 +222,15 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
   const [isMirrored, setIsMirrored] = React.useState(false);
   // Hook to determine if the device is mobile for responsive rendering.
   const isMobile = useIsMobile();
+  // A derived state that filters only the files originating from the camera for the thumbnail preview.
+  const cameraFiles = files.filter((f) => f.source === "camera");
   // A derived boolean state to check if the number of captured files has reached the maximum limit.
   const isMaxFilesReached = files.length >= MAX_FILES;
+
+  // TanStack Query mutation for handling the file deletion.
+  const deleteMutation = useMutation({
+    mutationFn: deleteUpload,
+  });
 
   // Ensures the component only renders the Webcam on the client-side to prevent SSR errors.
   React.useEffect(() => {
@@ -232,6 +252,35 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
   React.useEffect(() => {
     setRotation(0);
   }, [aspectRatio]);
+
+  /**
+   * Handles the file removal process for captured images.
+   */
+  const handleRemoveFile = (file: UploadableFile) => {
+    if (!file.key) {
+      removeFile(file.id);
+      return;
+    }
+
+    deleteMutation.mutate(
+      { key: file.key },
+      {
+        onSuccess: (data) => {
+          if (data.success) {
+            removeFile(file.id);
+            if (!isMobile) {
+              toast.success("Captured image removed.");
+            }
+          } else {
+            toast.error(data.error || "Failed to remove captured image.");
+          }
+        },
+        onError: (error) => {
+          toast.error(`An error occurred: ${error.message}`);
+        },
+      }
+    );
+  };
 
   /** Cycles through the available aspect ratio options. */
   const handleAspectRatioChange = () => {
@@ -375,8 +424,9 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
       const fileName = `capture-${Date.now()}.jpg`;
       const newFile = new File([blob], fileName, { type: "image/jpeg" });
 
-      // Add the newly created file to the global state.
-      addFiles([newFile]);
+      // Add the newly created file to the global state with 'camera' as its source.
+      addFiles([newFile], "camera");
+
       // Show a success toast, but only on desktop devices to keep the mobile interface clean.
       if (!isMobile) {
         toast.success("Image captured successfully.");
@@ -608,7 +658,7 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
 
               {/* Displays a scrollable row of captured image thumbnails. */}
               <AnimatePresence>
-                {files.length > 0 && (
+                {cameraFiles.length > 0 && (
                   <motion.div
                     variants={itemVariants}
                     initial={{ opacity: 0, y: 10 }}
@@ -622,12 +672,16 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                     <ScrollArea className="w-full whitespace-nowrap">
                       <div className="flex w-max space-x-4 p-3">
                         <AnimatePresence>
-                          {files.map((file) => (
+                          {cameraFiles.map((uploadableFile) => (
                             <CapturedImageThumbnail
-                              key={file.name}
-                              file={file}
-                              onRemove={() => removeFile(file.name)}
+                              key={uploadableFile.id}
+                              uploadableFile={uploadableFile}
+                              onRemove={() => handleRemoveFile(uploadableFile)}
                               isMobile={isMobile}
+                              isDeleting={
+                                deleteMutation.isPending &&
+                                deleteMutation.variables?.key === uploadableFile.key
+                              }
                             />
                           ))}
                         </AnimatePresence>
