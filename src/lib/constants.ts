@@ -59,3 +59,9 @@ export const CAMERA_ASPECT_RATIOS = [
   { name: "Landscape", value: 16 / 9, className: "aspect-video" },
   { name: "Portrait", value: 9 / 16, className: "aspect-[9/16]" },
 ];
+
+/**
+ * The duration in seconds for which a pre-signed S3 URL is valid.
+ * @constant {number}
+ */
+export const PRESIGNED_URL_EXPIRATION_SECONDS = 60 * 10;
