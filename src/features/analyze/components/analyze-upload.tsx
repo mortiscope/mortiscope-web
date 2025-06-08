@@ -168,7 +168,7 @@ export const AnalyzeUpload = () => {
         const type = await fileTypeFromBlob(file);
         const isValid = Object.keys(ACCEPTED_IMAGE_TYPES).includes(type?.mime ?? "");
         if (!isValid) {
-          toast.error(`The file "${file.name}" appears to be corrupted or is not a valid image.`);
+          toast.error(`${file.name} appears to be corrupted or is not a valid image.`);
           return null;
         }
         return file;

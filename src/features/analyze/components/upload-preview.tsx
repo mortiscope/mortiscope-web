@@ -217,7 +217,7 @@ export const UploadPreview = () => {
       const fileToRemove = files.find((f) => f.id === fileId);
       removeFile(fileId);
       if (fileToRemove) {
-        toast.success(`"${fileToRemove.file.name}" removed.`);
+        toast.success(`${fileToRemove.file.name} removed.`);
       }
       setDeletingFileId(null);
       return;

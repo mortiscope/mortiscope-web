@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { AnalyzeProgress } from "@/features/analyze/components/analyze-progress";
 import { AnalyzeWizard } from "@/features/analyze/components/analyze-wizard";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -34,22 +33,23 @@ export const AnalyzeDynamicMetatitle = () => {
   }, [step]);
 
   return (
-    // Main container for the analyze page.
-    <Card className="w-full rounded-2xl shadow-none md:rounded-3xl">
-      {/* The header section. */}
-      <CardHeader>
-        <div className="mx-auto w-full">
-          <AnalyzeProgress currentStep={step} />
-        </div>
-      </CardHeader>
+    // Main container for the analyze page, now holding separate cards.
+    <div className="flex w-full flex-col gap-y-4 md:gap-y-6">
+      {/* Card for the progress bar. */}
+      <Card className="w-full rounded-2xl shadow-none md:rounded-3xl">
+        <CardHeader>
+          <div className="mx-auto w-full">
+            <AnalyzeProgress currentStep={step} />
+          </div>
+        </CardHeader>
+      </Card>
 
-      {/* A visual separator between the header and the main content. */}
-      <Separator className="border" />
-
-      {/* The main content section that houses the wizard. */}
-      <CardContent className="min-h-[450px] overflow-hidden">
-        <AnalyzeWizard />
-      </CardContent>
-    </Card>
+      {/* Card for the main wizard content. */}
+      <Card className="w-full rounded-2xl shadow-none md:rounded-3xl">
+        <CardContent className="min-h-[450px] overflow-hidden">
+          <AnalyzeWizard />
+        </CardContent>
+      </Card>
+    </div>
   );
 };
