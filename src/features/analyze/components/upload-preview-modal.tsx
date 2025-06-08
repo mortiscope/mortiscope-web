@@ -16,7 +16,12 @@ import {
   LuZoomOut,
 } from "react-icons/lu";
 import { TbRotate } from "react-icons/tb";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import {
+  TransformComponent,
+  TransformWrapper,
+  type ReactZoomPanPinchRef,
+  type ReactZoomPanPinchState,
+} from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { createUpload } from "@/features/analyze/actions/create-upload";
 import { renameUpload } from "@/features/analyze/actions/rename-upload";
+import { UploadPreviewMinimap } from "@/features/analyze/components/upload-preview-minimap";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn, formatBytes } from "@/lib/utils";
@@ -81,6 +87,14 @@ const itemVariants = {
   },
 };
 
+/**
+ * Dimensions of the content and wrapper for calculating the minimap viewport.
+ */
+interface ViewingBox {
+  content?: { width: number; height: number };
+  wrapper?: { width: number; height: number };
+}
+
 interface UploadPreviewModalProps {
   /**
    * The file to be displayed in the modal. If null, the modal is not rendered.
@@ -124,6 +138,15 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
   const [fileExtension, setFileExtension] = useState("");
   // State to immediately reflect the new name in the UI after a successful save.
   const [displayFileName, setDisplayFileName] = useState("");
+  // State to hold the pan-and-zoom transformation data for the minimap.
+  const [transformState, setTransformState] = useState<ReactZoomPanPinchState>({
+    scale: 1,
+    positionX: 0,
+    positionY: 0,
+    previousScale: 1,
+  });
+  // State to hold the dynamic dimensions of the pan-zoom container for accurate minimap calculation.
+  const [viewingBox, setViewingBox] = useState<ViewingBox>({});
   // Ref for the rename input to programmatically focus it.
   const titleInputRef = useRef<HTMLInputElement>(null);
   // Hook to determine if the device is mobile for responsive rendering.
@@ -163,6 +186,9 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
       setIsNameDirty(false);
       setIsSaving(false);
       setIsRenaming(false);
+      // Reset transform state for the new file
+      setTransformState({ scale: 1, positionX: 0, positionY: 0, previousScale: 1 });
+      setViewingBox({});
     }
   }, [file, isOpen]);
 
@@ -337,7 +363,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
     if (finalKey) setUploadKey(currentFileState.id, finalKey);
     setUploadStatus(currentFileState.id, "success");
     setDisplayFileName(newFileObject.name);
-    toast.success(`"${newFileObject.name}" changes saved.`);
+    toast.success(`${newFileObject.name} changes saved.`);
 
     // Reset all dirty and saving flags.
     setIsNameDirty(false);
@@ -393,6 +419,30 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
     };
 
     image.src = url;
+  };
+
+  /**
+   * Callback fired on any pan, zoom, or other transform.
+   * It updates our local state to reflect the transform and captures container dimensions for the minimap.
+   */
+  const onTransformed = (
+    ref: ReactZoomPanPinchRef,
+    state: { scale: number; positionX: number; positionY: number }
+  ) => {
+    setTransformState((prevState) => ({ ...prevState, ...state }));
+    const { contentComponent, wrapperComponent } = ref.instance;
+    if (contentComponent && wrapperComponent) {
+      setViewingBox({
+        content: {
+          width: contentComponent.clientWidth,
+          height: contentComponent.clientHeight,
+        },
+        wrapper: {
+          width: wrapperComponent.clientWidth,
+          height: wrapperComponent.clientHeight,
+        },
+      });
+    }
   };
 
   // Guard clause to prevent rendering if the file is not available or the mobile hook hasn't run.
@@ -555,6 +605,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                     maxScale={32}
                     limitToBounds={true}
                     wheel={{ step: 0.5 }}
+                    onTransformed={onTransformed}
                   >
                     {({ zoomIn, zoomOut, resetTransform, centerView }) => (
                       <>
@@ -567,7 +618,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                         >
                           {/* Desktop-only action buttons, overlaid on the image preview. */}
                           {!isMobile && (
-                            <div className="absolute top-2 right-8 z-10 flex items-center gap-1 rounded-lg bg-emerald-600/80 px-3 py-1 shadow-lg backdrop-blur-sm">
+                            <div className="absolute top-2 right-8 z-10 flex w-32 items-center justify-around rounded-lg bg-emerald-600/80 py-1 shadow-lg backdrop-blur-sm">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
@@ -645,6 +696,17 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                               sizes="(max-width: 768px) 100vw, 560px"
                             />
                           </TransformComponent>
+
+                          {/* The minimap to show the current view context, visible only on desktop. */}
+                          {!isMobile && (
+                            <UploadPreviewMinimap
+                              previewUrl={previewUrl}
+                              rotation={rotation}
+                              alt={`Minimap preview of ${file.file.name}`}
+                              transformState={transformState}
+                              viewingBox={viewingBox}
+                            />
+                          )}
                         </motion.div>
 
                         {/* A shared set of controls for pan-and-zoom functionality, styled responsively. */}
