@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { deleteUpload } from "@/features/analyze/actions/delete-upload";
+import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { cn, formatBytes } from "@/lib/utils";
 
@@ -160,43 +161,70 @@ export const UploadPreview = () => {
   const removeFile = useAnalyzeStore((state) => state.removeFile);
   const retryUpload = useAnalyzeStore((state) => state.retryUpload);
 
-  // TanStack Query mutation for handling the file deletion.
+  // State to manage the currently viewed file in the modal. If a file is set, the modal will open.
+  const [viewingFile, setViewingFile] = useState<UploadableFile | null>(null);
+  // State to track the ID of the file being deleted to show a spinner on the correct item.
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+
+  /**
+   * TanStack Query mutation for handling the S3 file deletion server action.
+   */
   const deleteMutation = useMutation({
-    mutationFn: deleteUpload,
+    mutationFn: (variables: { key: string; fileId: string }) =>
+      deleteUpload({ key: variables.key }),
+    onSuccess: (data, variables) => {
+      if (data.success) {
+        // Find the file in the store to get its name for the toast message.
+        const deletedFile = files.find((f) => f.id === variables.fileId);
+
+        // On successful deletion from S3, remove the file from the local Zustand store.
+        removeFile(variables.fileId);
+
+        // Show a more specific toast message including the file name.
+        if (deletedFile) {
+          toast.success(`${deletedFile.file.name} deleted successfully.`);
+        } else {
+          // Fallback message in case the file is not found (shouldn't happen).
+          toast.success("File deleted successfully.");
+        }
+      } else {
+        // If the server action returns success: false, show the error.
+        toast.error(data.error || "Failed to delete file from server.");
+      }
+    },
+    onError: (error) => {
+      // Handle network errors or exceptions from the server action.
+      toast.error(error.message || "An error occurred during deletion.");
+    },
+    onSettled: () => {
+      // Clear the deleting state regardless of outcome.
+      setDeletingFileId(null);
+    },
   });
 
   /**
-   * Handles the file removal process.
-   * It first attempts to delete the file from S3 and, upon success, removes it from the local state.
+   * Handles the file deletion process.
+   * If the file has a key, it's deleted from S3. Otherwise, it's just removed locally.
+   * @param fileId - The unique ID of the file in the store.
+   * @param fileKey - The S3 object key, if the file has been uploaded.
    */
-  const handleRemoveFile = (file: UploadableFile) => {
-    // If the file has no key, it was never uploaded or the pre-signed URL failed.
-    if (!file.key) {
-      removeFile(file.id);
-      toast.warning(`${file.file.name} removed from list.`);
+  const handleDeleteFile = (fileId: string, fileKey: string | null) => {
+    setDeletingFileId(fileId);
+
+    // If there's no key, the file hasn't been uploaded to S3 yet.
+    if (!fileKey) {
+      // Find the file before removing it to use its name in the toast.
+      const fileToRemove = files.find((f) => f.id === fileId);
+      removeFile(fileId);
+      if (fileToRemove) {
+        toast.success(`"${fileToRemove.file.name}" removed.`);
+      }
+      setDeletingFileId(null);
       return;
     }
 
-    // If a key exists, trigger the mutation to delete the file from S3.
-    deleteMutation.mutate(
-      { key: file.key },
-      {
-        onSuccess: (data) => {
-          if (data.success) {
-            // On successful deletion from S3, remove the file from the local Zustand store.
-            removeFile(file.id);
-            toast.success(`${file.file.name} successfully removed.`);
-          } else {
-            // Handle server-side errors (e.g., file not found, permission issues).
-            toast.error(`Failed to remove ${file.file.name}: ${data.error}`);
-          }
-        },
-        onError: (error) => {
-          // Handle client-side or network errors.
-          toast.error(`An error occurred: ${error.message}`);
-        },
-      }
-    );
+    // Trigger the mutation to delete the file from S3.
+    deleteMutation.mutate({ key: fileKey, fileId });
   };
 
   // If there are no files, this component renders nothing.
@@ -205,90 +233,99 @@ export const UploadPreview = () => {
   }
 
   return (
-    <TooltipProvider>
-      <div className="mt-6 w-full">
-        {/* Container for the file list, using a responsive grid layout. */}
-        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
-          <AnimatePresence>
-            {files.map((uploadableFile) => (
-              <motion.div
-                key={uploadableFile.id}
-                // Animates the item's position when the layout changes.
-                layout
-                // Initial state before entering.
-                initial={{ opacity: 0, y: -10 }}
-                // State to animate to on entering.
-                animate={{ opacity: 1, y: 0 }}
-                // State to animate to on exiting.
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{
-                  layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                  opacity: { duration: 0.4 },
-                  scale: { duration: 0.4 },
-                }}
-                className="font-inter group relative flex cursor-pointer items-center justify-between rounded-lg border-2 border-slate-200 bg-slate-50 p-2 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 sm:p-3"
-              >
-                {/* Left section containing the thumbnail and file details. */}
-                <div className="flex min-w-0 flex-grow items-center gap-3">
-                  <Thumbnail file={uploadableFile.file} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
-                      {uploadableFile.file.name}
-                    </p>
-                    <p className="text-xs text-slate-500 sm:text-sm">
-                      {formatBytes(uploadableFile.file.size)}
-                    </p>
+    <>
+      <TooltipProvider>
+        <div className="mt-6 w-full">
+          {/* Container for the file list, using a responsive grid layout. */}
+          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
+            <AnimatePresence>
+              {files.map((uploadableFile) => (
+                <motion.div
+                  key={uploadableFile.id}
+                  // Animates the item's position when the layout changes.
+                  layout
+                  // Initial state before entering.
+                  initial={{ opacity: 0, y: -10 }}
+                  // State to animate to on entering.
+                  animate={{ opacity: 1, y: 0 }}
+                  // State to animate to on exiting.
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{
+                    layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+                    opacity: { duration: 0.4 },
+                    scale: { duration: 0.4 },
+                  }}
+                  className="font-inter group relative flex cursor-pointer items-center justify-between rounded-lg border-2 border-slate-200 bg-slate-50 p-2 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 sm:p-3"
+                >
+                  {/* Left section containing the thumbnail and file details. */}
+                  <div className="flex min-w-0 flex-grow items-center gap-3">
+                    <Thumbnail file={uploadableFile.file} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
+                        {uploadableFile.file.name}
+                      </p>
+                      <p className="text-xs text-slate-500 sm:text-sm">
+                        {formatBytes(uploadableFile.file.size)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                {/* Right section with the status icon and action buttons. */}
-                <div className="flex flex-shrink-0 items-center gap-1">
-                  <StatusIcon file={uploadableFile} onRetry={retryUpload} />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`View ${uploadableFile.file.name}`}
-                        className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                      >
-                        <MdOutlineRemoveRedEye className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="font-inter">View</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRemoveFile(uploadableFile)}
-                        disabled={
-                          deleteMutation.isPending &&
-                          deleteMutation.variables?.key === uploadableFile.key
-                        }
-                        aria-label={`Remove ${uploadableFile.file.name}`}
-                        className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {deleteMutation.isPending &&
-                        deleteMutation.variables?.key === uploadableFile.key ? (
-                          <LuLoaderCircle className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <LuTrash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="font-inter">Remove file</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                  {/* Right section with the status icon and action buttons. */}
+                  <div className="flex flex-shrink-0 items-center gap-1">
+                    <StatusIcon file={uploadableFile} onRetry={retryUpload} />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setViewingFile(uploadableFile)}
+                          aria-label={`View ${uploadableFile.file.name}`}
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                          disabled={deletingFileId === uploadableFile.id}
+                        >
+                          <MdOutlineRemoveRedEye className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="font-inter">View</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
+                          }
+                          aria-label={`Remove ${uploadableFile.file.name}`}
+                          className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={deletingFileId === uploadableFile.id}
+                        >
+                          {deletingFileId === uploadableFile.id ? (
+                            <LuLoaderCircle className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <LuTrash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="font-inter">Remove file</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </TooltipProvider>
+      </TooltipProvider>
+
+      {/* Render the modal component outside the list. */}
+      <UploadPreviewModal
+        file={viewingFile}
+        isOpen={!!viewingFile}
+        onClose={() => setViewingFile(null)}
+      />
+    </>
   );
 };

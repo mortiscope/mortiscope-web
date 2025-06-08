@@ -225,7 +225,7 @@ export const AnalyzeUpload = () => {
 
   // Defines reusable CSS class strings for consistent styling and easier maintenance.
   const dropzoneBaseClasses =
-    "mt-4 group flex h-64 w-full flex-col items-center justify-center rounded-md border-2 border-dashed px-4 text-center transition-all duration-300 ease-in-out";
+    "mt-4 group flex h-96 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 text-center transition-all duration-300 ease-in-out";
   const dropzoneStateClasses = isMaxFilesReached
     ? "cursor-not-allowed bg-slate-100 border-slate-300 opacity-60"
     : "cursor-pointer border-emerald-300 bg-emerald-50 hover:border-solid hover:border-emerald-400 hover:bg-emerald-100 hover:shadow-lg hover:shadow-emerald-500/20";
