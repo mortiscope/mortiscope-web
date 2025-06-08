@@ -4,6 +4,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { createId } from "@paralleldrive/cuid2";
 import path from "path";
+import { z } from "zod";
 
 import { auth } from "@/auth";
 import {
@@ -37,13 +38,22 @@ type ActionResponse = {
   details?: Record<string, string[] | undefined>;
 };
 
+// Extend the base schema to include an optional 'key' for overwriting existing files.
+const extendedPresignedUrlSchema = generatePresignedUrlSchema.extend({
+  key: z.string().optional(),
+});
+
 /**
  * Creates a pre-signed URL for uploading a file to S3.
- * 
- * @param values The input data containing file details, validated against `generatePresignedUrlSchema`.
+ * If a `key` is provided in the input, it generates a URL to overwrite that specific object.
+ * Otherwise, it creates a new unique key for a new upload.
+ *
+ * @param values The input data containing file details, validated against the extended schema.
  * @returns A promise that resolves to an object indicating success or failure.
  */
-export async function createUpload(values: GeneratePresignedUrlInput): Promise<ActionResponse> {
+export async function createUpload(
+  values: GeneratePresignedUrlInput & { key?: string }
+): Promise<ActionResponse> {
   try {
     // Authenticate the user
     const session = await auth();
@@ -52,8 +62,8 @@ export async function createUpload(values: GeneratePresignedUrlInput): Promise<A
     }
     const userId = session.user.id;
 
-    // Validate the input parameters
-    const parseResult = generatePresignedUrlSchema.safeParse(values);
+    // Validate the input parameters using the extended schema
+    const parseResult = extendedPresignedUrlSchema.safeParse(values);
 
     if (!parseResult.success) {
       // Return a detailed error response for invalid input
@@ -64,7 +74,7 @@ export async function createUpload(values: GeneratePresignedUrlInput): Promise<A
       };
     }
 
-    const { fileName, fileType, fileSize } = parseResult.data;
+    const { fileName, fileType, fileSize, key: existingKey } = parseResult.data;
 
     // Add server-side validation for file size.
     if (fileSize > MAX_FILE_SIZE) {
@@ -86,12 +96,16 @@ export async function createUpload(values: GeneratePresignedUrlInput): Promise<A
       };
     }
 
-    // Generate a unique key for the S3 object
-    const baseName = path.basename(fileName, fileExtension);
-    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-]/g, "-");
-    const uniqueId = createId();
-    // Organize uploads by user ID in a dedicated 'uploads' folder
-    const key = `uploads/${userId}/${sanitizedBaseName}-${uniqueId}${fileExtension}`;
+    // Determine the S3 key. Use the provided key for overwrites, or generate a new one.
+    const key =
+      existingKey ??
+      (() => {
+        const baseName = path.basename(fileName, fileExtension);
+        const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-]/g, "-");
+        const uniqueId = createId();
+        // Organize uploads by user ID in a dedicated 'uploads' folder for new files.
+        return `uploads/${userId}/${sanitizedBaseName}-${uniqueId}${fileExtension}`;
+      })();
 
     // Create the S3 command for a PUT operation
     const command = new PutObjectCommand({

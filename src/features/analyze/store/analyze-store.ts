@@ -48,6 +48,8 @@ type AnalyzeState = {
   prevStep: () => void;
   // Action to add one or more files to the upload list.
   addFiles: (files: File[], source: UploadableFile["source"]) => void;
+  // Action to update the file object for a given uploadable file, e.g., after rotation.
+  updateFile: (fileId: string, newFile: File) => void;
   // Action to remove a file from the list by its unique id.
   removeFile: (fileId: string) => void;
   // Action to update the upload progress percentage for a specific file.
@@ -102,6 +104,16 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
       },
     }));
   },
+  // Updates the underlying File object of an existing UploadableFile.
+  updateFile: (fileId, newFile) =>
+    set((state) => ({
+      data: {
+        ...state.data,
+        files: state.data.files.map((uploadableFile) =>
+          uploadableFile.id === fileId ? { ...uploadableFile, file: newFile } : uploadableFile
+        ),
+      },
+    })),
   // Removes a file from the list by its unique id.
   removeFile: (fileId) =>
     set((state) => ({
