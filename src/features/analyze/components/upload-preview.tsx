@@ -3,14 +3,30 @@
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GoCheckCircle } from "react-icons/go";
 import { IoGridOutline, IoListOutline } from "react-icons/io5";
-import { LuLoaderCircle, LuRotateCw, LuTrash2 } from "react-icons/lu";
+import {
+  LuArrowDownAZ,
+  LuArrowUpDown,
+  LuArrowUpZA,
+  LuCalendarClock,
+  LuCalendarDays,
+  LuLoaderCircle,
+  LuRotateCw,
+  LuScaling,
+  LuTrash2,
+} from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { deleteUpload } from "@/features/analyze/actions/delete-upload";
@@ -20,7 +36,30 @@ import {
   useAnalyzeStore,
   type ViewMode,
 } from "@/features/analyze/store/analyze-store";
+import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
+
+/**
+ * A small component to render an icon for each sort option.
+ */
+const SortIcon = ({ value }: { value: SortOptionValue }) => {
+  const commonProps = { className: "mr-2 h-4 w-4 text-slate-600" };
+  switch (value) {
+    case "date-uploaded-desc":
+      return <LuCalendarClock {...commonProps} />;
+    case "date-modified-desc":
+      return <LuCalendarDays {...commonProps} />;
+    case "name-asc":
+      return <LuArrowDownAZ {...commonProps} />;
+    case "name-desc":
+      return <LuArrowUpZA {...commonProps} />;
+    case "size-asc":
+    case "size-desc":
+      return <LuScaling {...commonProps} />;
+    default:
+      return null;
+  }
+};
 
 /**
  * Renders an animated status icon based on the file's upload status.
@@ -169,14 +208,52 @@ export const UploadPreview = () => {
   // Retrieves the list of files and the actions from the store.
   const files = useAnalyzeStore((state) => state.data.files);
   const viewMode = useAnalyzeStore((state) => state.viewMode);
+  const sortOption = useAnalyzeStore((state) => state.sortOption);
   const setViewMode = useAnalyzeStore((state) => state.setViewMode);
+  const setSortOption = useAnalyzeStore((state) => state.setSortOption);
   const removeFile = useAnalyzeStore((state) => state.removeFile);
   const retryUpload = useAnalyzeStore((state) => state.retryUpload);
+
+  /**
+   * Memoize the current sort option's label to display in the trigger.
+   * This avoids re-calculating the label on every render.
+   */
+  const currentSortLabel = useMemo(() => {
+    // Find the option object that matches the current sortOption value.
+    const currentOption = SORT_OPTIONS.find((option) => option.value === sortOption);
+    // Return the label of the found option, or a default string if not found.
+    return currentOption?.label ?? "Sort by";
+  }, [sortOption]);
 
   // State to manage the currently viewed file in the modal. If a file is set, the modal will open.
   const [viewingFile, setViewingFile] = useState<UploadableFile | null>(null);
   // State to track the ID of the file being deleted to show a spinner on the correct item.
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+
+  /**
+   * Memoize the sorted files to prevent re-sorting on every render.
+   * The sorting logic is applied here based on the current sortOption from the store.
+   */
+  const sortedFiles = useMemo(() => {
+    // Create a shallow copy to avoid mutating the original array in the store.
+    const sorted = [...files];
+    switch (sortOption) {
+      case "name-asc":
+        return sorted.sort((a, b) => a.file.name.localeCompare(b.file.name));
+      case "name-desc":
+        return sorted.sort((a, b) => b.file.name.localeCompare(a.file.name));
+      case "size-asc":
+        return sorted.sort((a, b) => a.file.size - b.file.size);
+      case "size-desc":
+        return sorted.sort((a, b) => b.file.size - a.file.size);
+      case "date-modified-desc":
+        return sorted.sort((a, b) => b.file.lastModified - a.file.lastModified);
+      case "date-uploaded-desc":
+      default:
+        // Sort by upload date, newest first.
+        return sorted.sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime());
+    }
+  }, [files, sortOption]);
 
   /**
    * TanStack Query mutation for handling the S3 file deletion server action.
@@ -248,14 +325,42 @@ export const UploadPreview = () => {
     <>
       <TooltipProvider>
         <div className="mt-6 w-full">
-          {/* View mode switcher */}
+          {/* View mode and sort controls */}
           <motion.div
             layout
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="mb-4 flex justify-end"
+            className="mb-4 flex items-center justify-end gap-2"
           >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex h-10 cursor-pointer items-center gap-2 border-2 border-slate-200 px-3 hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  <span className="font-inter text-sm font-normal text-slate-800">
+                    {currentSortLabel}
+                  </span>
+                  <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-64">
+                {SORT_OPTIONS.map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => setSortOption(option.value as SortOptionValue)}
+                    className={cn(
+                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                    )}
+                  >
+                    <SortIcon value={option.value as SortOptionValue} />
+                    {option.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ToggleGroup
               type="single"
               variant="outline"
@@ -313,7 +418,7 @@ export const UploadPreview = () => {
               )}
             >
               <AnimatePresence>
-                {files.map((uploadableFile) => (
+                {sortedFiles.map((uploadableFile) => (
                   <motion.div
                     key={uploadableFile.id}
                     layout

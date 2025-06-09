@@ -198,7 +198,6 @@ export function AppBreadcrumb() {
                 <EllipsisTrigger />
                 <DropdownMenuContent align="start" className="font-inter">
                   {linkItems.map((item) => {
-                    // --- MODIFICATION: Determine if the "Analyze" link should be static ---
                     const isStatic =
                       pathname === "/analyze" && item.href === "/analyze";
                     return (
