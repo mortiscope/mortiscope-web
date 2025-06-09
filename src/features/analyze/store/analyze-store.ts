@@ -1,6 +1,8 @@
 import { createId } from "@paralleldrive/cuid2";
 import { create } from "zustand";
 
+import { type SortOptionValue } from "@/lib/constants";
+
 /**
  * Defines the status of an individual file upload.
  * - pending: The file has been added but the upload has not started.
@@ -28,6 +30,7 @@ export type UploadableFile = {
   progress: number;
   status: UploadStatus;
   source: "upload" | "camera";
+  dateUploaded: Date;
 };
 
 /**
@@ -47,6 +50,8 @@ type AnalyzeState = {
   step: number;
   // The current view mode for the upload preview.
   viewMode: ViewMode;
+  // The current sort option for the upload preview.
+  sortOption: SortOptionValue;
   // The data collected throughout the analysis process.
   data: AnalyzeStateData;
   // Action to set the current step to a specific number.
@@ -57,6 +62,8 @@ type AnalyzeState = {
   prevStep: () => void;
   // Action to set the view mode.
   setViewMode: (viewMode: ViewMode) => void;
+  // Action to set the sort option.
+  setSortOption: (sortOption: SortOptionValue) => void;
   // Action to add one or more files to the upload list.
   addFiles: (files: File[], source: UploadableFile["source"]) => void;
   // Action to update the file object for a given uploadable file, e.g., after rotation.
@@ -79,9 +86,15 @@ type AnalyzeState = {
  * The default state for the analysis store.
  * Used for initialization and for resetting the form.
  */
-const initialState: { step: number; viewMode: ViewMode; data: AnalyzeStateData } = {
+const initialState: {
+  step: number;
+  viewMode: ViewMode;
+  sortOption: SortOptionValue;
+  data: AnalyzeStateData;
+} = {
   step: 1,
   viewMode: "list",
+  sortOption: "date-uploaded-desc",
   data: {
     files: [],
   },
@@ -101,6 +114,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   prevStep: () => set((state) => ({ step: state.step - 1 })),
   // Sets the view mode for the upload preview.
   setViewMode: (viewMode) => set({ viewMode }),
+  // Sets the sort option for the upload preview.
+  setSortOption: (sortOption) => set({ sortOption }),
   // Adds new files, converting them to the UploadableFile format with a unique ID.
   addFiles: (newFiles, source) => {
     const uploadableFiles: UploadableFile[] = newFiles.map((file) => ({
@@ -110,6 +125,7 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
       progress: 0,
       status: "pending",
       source,
+      dateUploaded: new Date(),
     }));
     set((state) => ({
       data: {

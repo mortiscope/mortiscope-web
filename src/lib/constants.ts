@@ -65,3 +65,21 @@ export const CAMERA_ASPECT_RATIOS = [
  * @constant {number}
  */
 export const PRESIGNED_URL_EXPIRATION_SECONDS = 60 * 10;
+
+/**
+ * Defines the available sort options for the upload preview.
+ * @constant {object[]}
+ */
+export const SORT_OPTIONS = [
+  { value: "date-uploaded-desc", label: "Date Added (Newest)" },
+  { value: "date-modified-desc", label: "Date Created (Newest)" },
+  { value: "name-asc", label: "Name (A-Z)" },
+  { value: "name-desc", label: "Name (Z-A)" },
+  { value: "size-desc", label: "Size (Largest)" },
+  { value: "size-asc", label: "Size (Smallest)" },
+];
+
+/**
+ * Type alias for the sort option values.
+ */
+export type SortOptionValue = (typeof SORT_OPTIONS)[number]["value"];
