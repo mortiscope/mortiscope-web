@@ -17,10 +17,10 @@ import {
 } from "react-icons/lu";
 import { TbRotate } from "react-icons/tb";
 import {
-  TransformComponent,
-  TransformWrapper,
   type ReactZoomPanPinchRef,
   type ReactZoomPanPinchState,
+  TransformComponent,
+  TransformWrapper,
 } from "react-zoom-pan-pinch";
 import { toast } from "sonner";
 

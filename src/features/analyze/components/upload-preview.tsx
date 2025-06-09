@@ -5,15 +5,21 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { GoCheckCircle } from "react-icons/go";
+import { IoGridOutline, IoListOutline } from "react-icons/io5";
 import { LuLoaderCircle, LuRotateCw, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { deleteUpload } from "@/features/analyze/actions/delete-upload";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
-import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import {
+  type UploadableFile,
+  useAnalyzeStore,
+  type ViewMode,
+} from "@/features/analyze/store/analyze-store";
 import { cn, formatBytes } from "@/lib/utils";
 
 /**
@@ -119,7 +125,7 @@ const StatusIcon = ({
 /**
  * A small component that creates a temporary local URL for a File object and renders it as an image thumbnail.
  */
-const Thumbnail = ({ file }: { file: File }) => {
+const Thumbnail = ({ file, className }: { file: File; className?: string }) => {
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
@@ -135,18 +141,22 @@ const Thumbnail = ({ file }: { file: File }) => {
 
   // Render a skeleton loader while the image is loading.
   if (!previewUrl) {
-    return <div className="h-10 w-10 flex-shrink-0 rounded-md bg-slate-200" />;
+    return (
+      <div className={cn("flex-shrink-0 rounded-md bg-slate-200", className || "h-10 w-10")} />
+    );
   }
 
   return (
-    // Enforces the square aspect ratio and clips the image.
-    <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md">
+    // Enforces the aspect ratio and clips the image.
+    <div
+      className={cn("relative flex-shrink-0 overflow-hidden", className || "h-10 w-10 rounded-md")}
+    >
       <Image
         src={previewUrl}
         alt={`Preview of ${file.name}`}
         fill
         className="object-cover"
-        sizes="40px"
+        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
       />
     </div>
   );
@@ -158,6 +168,8 @@ const Thumbnail = ({ file }: { file: File }) => {
 export const UploadPreview = () => {
   // Retrieves the list of files and the actions from the store.
   const files = useAnalyzeStore((state) => state.data.files);
+  const viewMode = useAnalyzeStore((state) => state.viewMode);
+  const setViewMode = useAnalyzeStore((state) => state.setViewMode);
   const removeFile = useAnalyzeStore((state) => state.removeFile);
   const retryUpload = useAnalyzeStore((state) => state.retryUpload);
 
@@ -236,87 +248,207 @@ export const UploadPreview = () => {
     <>
       <TooltipProvider>
         <div className="mt-6 w-full">
-          {/* Container for the file list, using a responsive grid layout. */}
-          <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-3">
-            <AnimatePresence>
-              {files.map((uploadableFile) => (
-                <motion.div
-                  key={uploadableFile.id}
-                  // Animates the item's position when the layout changes.
-                  layout
-                  // Initial state before entering.
-                  initial={{ opacity: 0, y: -10 }}
-                  // State to animate to on entering.
-                  animate={{ opacity: 1, y: 0 }}
-                  // State to animate to on exiting.
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{
-                    layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                    opacity: { duration: 0.4 },
-                    scale: { duration: 0.4 },
-                  }}
-                  className="font-inter group relative flex cursor-pointer items-center justify-between rounded-lg border-2 border-slate-200 bg-slate-50 p-2 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 sm:p-3"
-                >
-                  {/* Left section containing the thumbnail and file details. */}
-                  <div className="flex min-w-0 flex-grow items-center gap-3">
-                    <Thumbnail file={uploadableFile.file} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
-                        {uploadableFile.file.name}
-                      </p>
-                      <p className="text-xs text-slate-500 sm:text-sm">
-                        {formatBytes(uploadableFile.file.size)}
-                      </p>
-                    </div>
-                  </div>
-                  {/* Right section with the status icon and action buttons. */}
-                  <div className="flex flex-shrink-0 items-center gap-1">
-                    <StatusIcon file={uploadableFile} onRetry={retryUpload} />
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setViewingFile(uploadableFile)}
-                          aria-label={`View ${uploadableFile.file.name}`}
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                          disabled={deletingFileId === uploadableFile.id}
-                        >
-                          <MdOutlineRemoveRedEye className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="font-inter">View</p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() =>
-                            handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
-                          }
-                          aria-label={`Remove ${uploadableFile.file.name}`}
-                          className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                          disabled={deletingFileId === uploadableFile.id}
-                        >
-                          {deletingFileId === uploadableFile.id ? (
-                            <LuLoaderCircle className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <LuTrash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="font-inter">Remove file</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          {/* View mode switcher */}
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="mb-4 flex justify-end"
+          >
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={viewMode}
+              onValueChange={(value) => {
+                if (value) setViewMode(value as ViewMode);
+              }}
+              aria-label="View mode"
+              className="border border-slate-200"
+            >
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value="list"
+                    aria-label="List view"
+                    className="cursor-pointer data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
+                  >
+                    <IoListOutline className="h-5 w-5" />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-inter">List view</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem
+                    value="grid"
+                    aria-label="Grid view"
+                    className="cursor-pointer data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
+                  >
+                    <IoGridOutline className="h-5 w-5" />
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-inter">Grid view</p>
+                </TooltipContent>
+              </Tooltip>
+            </ToggleGroup>
+          </motion.div>
+
+          {/* Container for the file list, with view-switch animation. */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className={cn(
+                "grid gap-3",
+                viewMode === "list"
+                  ? "grid-cols-1 md:grid-cols-2"
+                  : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              )}
+            >
+              <AnimatePresence>
+                {files.map((uploadableFile) => (
+                  <motion.div
+                    key={uploadableFile.id}
+                    layout
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{
+                      layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+                      opacity: { duration: 0.4 },
+                      scale: { duration: 0.4 },
+                    }}
+                    className={cn(
+                      "font-inter group relative rounded-lg border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-xl",
+                      {
+                        "flex cursor-pointer items-center justify-between p-2 sm:p-3":
+                          viewMode === "list",
+                        "flex aspect-square cursor-pointer flex-col overflow-hidden":
+                          viewMode === "grid",
+                      }
+                    )}
+                  >
+                    {viewMode === "list" ? (
+                      <>
+                        {/* List View Layout */}
+                        <div className="flex min-w-0 flex-grow items-center gap-3">
+                          <Thumbnail file={uploadableFile.file} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
+                              {uploadableFile.file.name}
+                            </p>
+                            <p className="text-xs text-slate-500 sm:text-sm">
+                              {formatBytes(uploadableFile.file.size)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-shrink-0 items-center gap-1">
+                          <StatusIcon file={uploadableFile} onRetry={retryUpload} />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setViewingFile(uploadableFile)}
+                                aria-label={`View ${uploadableFile.file.name}`}
+                                className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                disabled={deletingFileId === uploadableFile.id}
+                              >
+                                <MdOutlineRemoveRedEye className="h-5 w-5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-inter">View</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() =>
+                                  handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
+                                }
+                                aria-label={`Remove ${uploadableFile.file.name}`}
+                                className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={deletingFileId === uploadableFile.id}
+                              >
+                                {deletingFileId === uploadableFile.id ? (
+                                  <LuLoaderCircle className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <LuTrash2 className="h-4 w-4" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-inter">Remove file</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Grid View Layout */}
+                        <Thumbnail file={uploadableFile.file} className="min-h-0 flex-1" />
+                        <div className="flex w-full flex-col items-center justify-center p-2">
+                          <div className="flex flex-shrink-0 items-center gap-1">
+                            <StatusIcon file={uploadableFile} onRetry={retryUpload} />
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setViewingFile(uploadableFile)}
+                                  aria-label={`View ${uploadableFile.file.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                  disabled={deletingFileId === uploadableFile.id}
+                                >
+                                  <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
+                                  }
+                                  aria-label={`Remove ${uploadableFile.file.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                  disabled={deletingFileId === uploadableFile.id}
+                                >
+                                  {deletingFileId === uploadableFile.id ? (
+                                    <LuLoaderCircle className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <LuTrash2 className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Remove file</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </TooltipProvider>
 

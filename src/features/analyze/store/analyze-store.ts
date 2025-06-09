@@ -11,6 +11,13 @@ import { create } from "zustand";
 export type UploadStatus = "pending" | "uploading" | "success" | "error";
 
 /**
+ * Defines the available view modes for the upload preview.
+ * - list: Displays files in a vertical list.
+ * - grid: Displays files in a responsive grid.
+ */
+export type ViewMode = "list" | "grid";
+
+/**
  * Represents a file that is being prepared for or is in the process of being uploaded.
  * It extends the standard File object with metadata for tracking the upload.
  */
@@ -38,6 +45,8 @@ type AnalyzeStateData = {
 type AnalyzeState = {
   // The current active step in the multi-step form.
   step: number;
+  // The current view mode for the upload preview.
+  viewMode: ViewMode;
   // The data collected throughout the analysis process.
   data: AnalyzeStateData;
   // Action to set the current step to a specific number.
@@ -46,6 +55,8 @@ type AnalyzeState = {
   nextStep: () => void;
   // Action to return to the previous step.
   prevStep: () => void;
+  // Action to set the view mode.
+  setViewMode: (viewMode: ViewMode) => void;
   // Action to add one or more files to the upload list.
   addFiles: (files: File[], source: UploadableFile["source"]) => void;
   // Action to update the file object for a given uploadable file, e.g., after rotation.
@@ -68,8 +79,9 @@ type AnalyzeState = {
  * The default state for the analysis store.
  * Used for initialization and for resetting the form.
  */
-const initialState: { step: number; data: AnalyzeStateData } = {
+const initialState: { step: number; viewMode: ViewMode; data: AnalyzeStateData } = {
   step: 1,
+  viewMode: "list",
   data: {
     files: [],
   },
@@ -87,6 +99,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   nextStep: () => set((state) => ({ step: state.step + 1 })),
   // Decrements the current step by 1.
   prevStep: () => set((state) => ({ step: state.step - 1 })),
+  // Sets the view mode for the upload preview.
+  setViewMode: (viewMode) => set({ viewMode }),
   // Adds new files, converting them to the UploadableFile format with a unique ID.
   addFiles: (newFiles, source) => {
     const uploadableFiles: UploadableFile[] = newFiles.map((file) => ({
