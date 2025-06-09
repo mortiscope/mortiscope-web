@@ -11,6 +11,7 @@ import {
   LuFocus,
   LuLoaderCircle,
   LuRefreshCw,
+  LuTrash2,
   LuX,
   LuZoomIn,
   LuZoomOut,
@@ -36,6 +37,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { createUpload } from "@/features/analyze/actions/create-upload";
+import { deleteUpload } from "@/features/analyze/actions/delete-upload";
 import { renameUpload } from "@/features/analyze/actions/rename-upload";
 import { UploadPreviewMinimap } from "@/features/analyze/components/upload-preview-minimap";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -130,6 +132,8 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
   const [isNameDirty, setIsNameDirty] = useState(false);
   // State to track the saving process and provide user feedback.
   const [isSaving, setIsSaving] = useState(false);
+  // State to track the deletion process.
+  const [isDeleting, setIsDeleting] = useState(false);
   // State to control the rename input visibility.
   const [isRenaming, setIsRenaming] = useState(false);
   // State to hold the value of the file name (without extension) during editing.
@@ -154,6 +158,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
 
   // Hooks to interact with the global `analyze` store.
   const updateFile = useAnalyzeStore((state) => state.updateFile);
+  const removeFile = useAnalyzeStore((state) => state.removeFile);
   const setUploadStatus = useAnalyzeStore((state) => state.setUploadStatus);
   const setUploadKey = useAnalyzeStore((state) => state.setUploadKey);
 
@@ -165,6 +170,11 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
   // TanStack Query mutation for renaming the file on the server.
   const renameMutation = useMutation({
     mutationFn: renameUpload,
+  });
+
+  // TanStack Query mutation for deleting the file on the server.
+  const deleteMutation = useMutation({
+    mutationFn: deleteUpload,
   });
 
   /**
@@ -185,6 +195,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
       setIsRotationDirty(false);
       setIsNameDirty(false);
       setIsSaving(false);
+      setIsDeleting(false);
       setIsRenaming(false);
       // Reset transform state for the new file
       setTransformState({ scale: 1, positionX: 0, positionY: 0, previousScale: 1 });
@@ -257,7 +268,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
    */
   const handleSave = async () => {
     const currentFileState = useAnalyzeStore.getState().data.files.find((f) => f.id === file?.id);
-    if (!currentFileState || (!isNameDirty && !isRotationDirty) || isSaving) {
+    if (!currentFileState || (!isNameDirty && !isRotationDirty) || isSaving || isDeleting) {
       return;
     }
 
@@ -370,6 +381,43 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
     setIsRotationDirty(false);
     setIsSaving(false);
     setIsRenaming(false);
+  };
+
+  /**
+   * Handles the deletion of the file from both the client state and the server.
+   * It shows appropriate user feedback via toasts and closes the modal on success.
+   */
+  const handleDelete = async () => {
+    if (!file || isDeleting || isSaving) {
+      return;
+    }
+
+    // If there's no key, the file was likely never successfully uploaded.
+    if (!file.key) {
+      removeFile(file.id);
+      toast.success(`${file.file.name} removed.`);
+      onClose();
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const result = await deleteMutation.mutateAsync({ key: file.key });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to delete file on server.");
+      }
+
+      // On successful deletion from S3, remove the file from the local Zustand store.
+      removeFile(file.id);
+      toast.success(`${file.file.name} deleted successfully.`);
+      onClose();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete file.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   /**
@@ -511,7 +559,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                       <Button
                         variant="ghost"
                         onClick={() => setIsRenaming(true)}
-                        disabled={isRenaming || renameMutation.isPending || isSaving}
+                        disabled={isRenaming || renameMutation.isPending || isSaving || isDeleting}
                         aria-label="Rename image"
                         className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                       >
@@ -524,7 +572,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                       <Button
                         variant="ghost"
                         onClick={handleDownload}
-                        disabled={isSaving}
+                        disabled={isSaving || isDeleting}
                         aria-label="Download"
                         className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                       >
@@ -533,7 +581,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                       <Button
                         variant="ghost"
                         onClick={handleSave}
-                        disabled={(!isRotationDirty && !isNameDirty) || isSaving}
+                        disabled={(!isRotationDirty && !isNameDirty) || isSaving || isDeleting}
                         aria-label="Save"
                         className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                       >
@@ -541,6 +589,20 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                           <LuLoaderCircle className="h-5 w-5 animate-spin" />
                         ) : (
                           <AiOutlineSave className="!h-5 !w-5" />
+                        )}
+                      </Button>
+
+                      <Button
+                        variant="ghost"
+                        onClick={handleDelete}
+                        disabled={isDeleting || isSaving}
+                        aria-label="Delete"
+                        className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
+                      >
+                        {isDeleting ? (
+                          <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                        ) : (
+                          <LuTrash2 className="!h-5 !w-5" />
                         )}
                       </Button>
 
@@ -618,13 +680,18 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                         >
                           {/* Desktop-only action buttons, overlaid on the image preview. */}
                           {!isMobile && (
-                            <div className="absolute top-2 right-8 z-10 flex w-32 items-center justify-around rounded-lg bg-emerald-600/80 py-1 shadow-lg backdrop-blur-sm">
+                            <div className="absolute top-2 right-8 z-10 flex w-44 items-center justify-around rounded-lg bg-emerald-600/80 py-1 shadow-lg backdrop-blur-sm">
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     onClick={() => setIsRenaming(true)}
-                                    disabled={isRenaming || renameMutation.isPending || isSaving}
+                                    disabled={
+                                      isRenaming ||
+                                      renameMutation.isPending ||
+                                      isSaving ||
+                                      isDeleting
+                                    }
                                     aria-label="Rename image"
                                     className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                                   >
@@ -644,7 +711,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                                   <Button
                                     variant="ghost"
                                     onClick={handleDownload}
-                                    disabled={isSaving}
+                                    disabled={isSaving || isDeleting}
                                     aria-label="Download"
                                     className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                                   >
@@ -660,7 +727,9 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                                   <Button
                                     variant="ghost"
                                     onClick={handleSave}
-                                    disabled={(!isRotationDirty && !isNameDirty) || isSaving}
+                                    disabled={
+                                      (!isRotationDirty && !isNameDirty) || isSaving || isDeleting
+                                    }
                                     aria-label="Save"
                                     className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                                   >
@@ -673,6 +742,26 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   <p className="font-inter">Save changes</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    onClick={handleDelete}
+                                    disabled={isDeleting || isSaving}
+                                    aria-label="Delete image"
+                                    className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
+                                  >
+                                    {isDeleting ? (
+                                      <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                      <LuTrash2 className="!h-5 !w-5" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="font-inter">Delete file</p>
                                 </TooltipContent>
                               </Tooltip>
                             </div>
@@ -781,7 +870,7 @@ export const UploadPreviewModal = ({ file, isOpen, onClose }: UploadPreviewModal
                                 <Button
                                   variant="ghost"
                                   onClick={handleRotate}
-                                  disabled={isSaving}
+                                  disabled={isSaving || isDeleting}
                                   aria-label="Rotate image"
                                   className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-rose-300 disabled:hover:bg-transparent md:hover:bg-amber-100 md:hover:text-amber-600"
                                 >
