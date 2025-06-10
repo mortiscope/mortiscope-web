@@ -108,16 +108,19 @@ const CapturedImageThumbnail = ({
 
   // Effect to create and revoke a temporary URL for the file object.
   React.useEffect(() => {
-    // Create a temporary URL from the File object that can be used as an image source.
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    // The conditional logic is now safely inside the hook.
+    if (file) {
+      // Create a temporary URL from the File object that can be used as an image source.
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
 
-    // Return a cleanup function to revoke the object URL.
-    return () => URL.revokeObjectURL(objectUrl);
+      // Return a cleanup function to revoke the object URL.
+      return () => URL.revokeObjectURL(objectUrl);
+    }
   }, [file]); // This effect re-runs whenever the `file` prop changes.
 
-  // Renders a loading skeleton if the preview URL is not yet available.
-  if (!previewUrl) {
+  // Renders a loading skeleton if the file or previewUrl is not yet available.
+  if (!file || !previewUrl) {
     return <div className="h-16 w-16 flex-shrink-0 animate-pulse rounded-lg bg-slate-200" />;
   }
 

@@ -164,19 +164,33 @@ const StatusIcon = ({
 /**
  * A small component that creates a temporary local URL for a File object and renders it as an image thumbnail.
  */
-const Thumbnail = ({ file, className }: { file: File; className?: string }) => {
+const Thumbnail = ({
+  uploadableFile,
+  className,
+}: {
+  uploadableFile: UploadableFile;
+  className?: string;
+}) => {
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
-    // Create a blob URL from the file.
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
+    // If the file has a persisted URL, use it directly.
+    if (uploadableFile.url) {
+      setPreviewUrl(uploadableFile.url);
+      return;
+    }
 
-    // Cleanup function to revoke the object URL to free up memory when the component unmounts.
-    return () => {
-      URL.revokeObjectURL(objectUrl);
-    };
-  }, [file]);
+    // Otherwise, if it's a new file, create a temporary blob URL.
+    if (uploadableFile.file) {
+      const objectUrl = URL.createObjectURL(uploadableFile.file);
+      setPreviewUrl(objectUrl);
+
+      // Cleanup function to revoke the object URL to free up memory.
+      return () => {
+        URL.revokeObjectURL(objectUrl);
+      };
+    }
+  }, [uploadableFile]);
 
   // Render a skeleton loader while the image is loading.
   if (!previewUrl) {
@@ -192,7 +206,7 @@ const Thumbnail = ({ file, className }: { file: File; className?: string }) => {
     >
       <Image
         src={previewUrl}
-        alt={`Preview of ${file.name}`}
+        alt={`Preview of ${uploadableFile.name}`}
         fill
         className="object-cover"
         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -239,15 +253,15 @@ export const UploadPreview = () => {
     const sorted = [...files];
     switch (sortOption) {
       case "name-asc":
-        return sorted.sort((a, b) => a.file.name.localeCompare(b.file.name));
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
       case "name-desc":
-        return sorted.sort((a, b) => b.file.name.localeCompare(a.file.name));
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
       case "size-asc":
-        return sorted.sort((a, b) => a.file.size - b.file.size);
+        return sorted.sort((a, b) => a.size - b.size);
       case "size-desc":
-        return sorted.sort((a, b) => b.file.size - a.file.size);
+        return sorted.sort((a, b) => b.size - a.size);
       case "date-modified-desc":
-        return sorted.sort((a, b) => b.file.lastModified - a.file.lastModified);
+        return sorted.sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime());
       case "date-uploaded-desc":
       default:
         // Sort by upload date, newest first.
@@ -271,7 +285,7 @@ export const UploadPreview = () => {
 
         // Show a more specific toast message including the file name.
         if (deletedFile) {
-          toast.success(`${deletedFile.file.name} deleted successfully.`);
+          toast.success(`${deletedFile.name} deleted successfully.`);
         } else {
           // Fallback message in case the file is not found (shouldn't happen).
           toast.success("File deleted successfully.");
@@ -306,13 +320,13 @@ export const UploadPreview = () => {
       const fileToRemove = files.find((f) => f.id === fileId);
       removeFile(fileId);
       if (fileToRemove) {
-        toast.success(`${fileToRemove.file.name} removed.`);
+        toast.success(`${fileToRemove.name} removed.`);
       }
       setDeletingFileId(null);
       return;
     }
 
-    // Trigger the mutation to delete the file from S3.
+    // Trigger the mutation to delete the file from S3 and the database.
     deleteMutation.mutate({ key: fileKey, fileId });
   };
 
@@ -472,13 +486,13 @@ export const UploadPreview = () => {
                       <>
                         {/* List View Layout */}
                         <div className="flex min-w-0 flex-grow items-center gap-3">
-                          <Thumbnail file={uploadableFile.file} />
+                          <Thumbnail uploadableFile={uploadableFile} />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
-                              {uploadableFile.file.name}
+                              {uploadableFile.name}
                             </p>
                             <p className="text-xs text-slate-500 sm:text-sm">
-                              {formatBytes(uploadableFile.file.size)}
+                              {formatBytes(uploadableFile.size)}
                             </p>
                           </div>
                         </div>
@@ -490,7 +504,7 @@ export const UploadPreview = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setViewingFile(uploadableFile)}
-                                aria-label={`View ${uploadableFile.file.name}`}
+                                aria-label={`View ${uploadableFile.name}`}
                                 className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                 disabled={deletingFileId === uploadableFile.id}
                               >
@@ -509,7 +523,7 @@ export const UploadPreview = () => {
                                 onClick={() =>
                                   handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
                                 }
-                                aria-label={`Remove ${uploadableFile.file.name}`}
+                                aria-label={`Remove ${uploadableFile.name}`}
                                 className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 disabled={deletingFileId === uploadableFile.id}
                               >
@@ -529,7 +543,7 @@ export const UploadPreview = () => {
                     ) : (
                       <>
                         {/* Grid View Layout */}
-                        <Thumbnail file={uploadableFile.file} className="min-h-0 flex-1" />
+                        <Thumbnail uploadableFile={uploadableFile} className="min-h-0 flex-1" />
                         <div className="flex w-full flex-col items-center justify-center p-2">
                           <div className="flex flex-shrink-0 items-center gap-1">
                             <StatusIcon file={uploadableFile} onRetry={retryUpload} />
@@ -539,7 +553,7 @@ export const UploadPreview = () => {
                                   variant="ghost"
                                   size="icon"
                                   onClick={() => setViewingFile(uploadableFile)}
-                                  aria-label={`View ${uploadableFile.file.name}`}
+                                  aria-label={`View ${uploadableFile.name}`}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                   disabled={deletingFileId === uploadableFile.id}
                                 >
@@ -558,7 +572,7 @@ export const UploadPreview = () => {
                                   onClick={() =>
                                     handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
                                   }
-                                  aria-label={`Remove ${uploadableFile.file.name}`}
+                                  aria-label={`Remove ${uploadableFile.name}`}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
                                   disabled={deletingFileId === uploadableFile.id}
                                 >

@@ -1,17 +1,23 @@
 "use server";
 
 import { CopyObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { and, eq } from "drizzle-orm";
 import path from "path";
 import { z } from "zod";
 
 import { auth } from "@/auth";
+import { db } from "@/db";
+import { uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
 
-// Runtime check for AWS Bucket Name
-if (!process.env.AWS_BUCKET_NAME) {
-  throw new Error("Missing required AWS environment variable: AWS_BUCKET_NAME");
+// Runtime check for AWS environment variables
+if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
+  throw new Error(
+    "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
+  );
 }
 const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
+const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
 
 const renameUploadSchema = z.object({
   oldKey: z.string().min(1, "Old key is required."),
@@ -23,26 +29,27 @@ type ActionResponse = {
   success: boolean;
   data?: {
     newKey: string;
+    newUrl: string;
   };
   error?: string;
 };
 
 /**
- * Renames a file in the S3 bucket by copying it to a new key and deleting the old one.
+ * Renames a file in S3 and updates its corresponding record in the database.
  * Verifies user ownership via object metadata before performing the operation.
  *
  * @param values The input data containing the old S3 object key and the desired new file name.
- * @returns A promise that resolves to an object indicating success and the new key, or failure.
+ * @returns A promise that resolves to an object indicating success and the new key/URL, or failure.
  */
 export async function renameUpload(values: RenameUploadInput): Promise<ActionResponse> {
-  try {
-    // Authenticate the user
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
-    }
-    const userId = session.user.id;
+  // Authenticate the user
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = session.user.id;
 
+  try {
     // Validate the input parameters
     const parseResult = renameUploadSchema.safeParse(values);
     if (!parseResult.success) {
@@ -69,11 +76,16 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
     // Sanitize the new base name provided by the user
     const newBaseName = path.basename(newFileName, path.extname(newFileName));
     const sanitizedBaseName = newBaseName.replace(/[^a-zA-Z0-9-]/g, "-");
-    const newKey = `${oldPath}/${sanitizedBaseName}${oldExtension}`;
+    const finalNewFileName = `${sanitizedBaseName}${oldExtension}`;
+    const newKey = `${oldPath}/${finalNewFileName}`;
+
+    // Construct the new S3 URL
+    const newUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${newKey}`;
 
     // If the new key is the same as the old key after sanitization, there's nothing to do
     if (newKey === oldKey) {
-      return { success: true, data: { newKey: oldKey } };
+      const oldUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${oldKey}`;
+      return { success: true, data: { newKey: oldKey, newUrl: oldUrl } };
     }
 
     // Create and execute the CopyObject command
@@ -90,9 +102,35 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
     const deleteCommand = new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: oldKey });
     await s3.send(deleteCommand);
 
-    return { success: true, data: { newKey } };
+    // After successful S3 operations, update the record in the database
+    try {
+      await db
+        .update(uploads)
+        .set({
+          name: finalNewFileName,
+          key: newKey,
+          url: newUrl,
+        })
+        .where(and(eq(uploads.key, oldKey), eq(uploads.userId, userId)));
+    } catch (dbError) {
+      // The S3 object was renamed, but the database update failed.
+      console.error(
+        `CRITICAL: DB update failed after S3 rename. User: ${userId}, Old Key: ${oldKey}, New Key: ${newKey}`,
+        dbError
+      );
+      return {
+        success: false,
+        error: "File was renamed, but a database error occurred. Please contact support.",
+      };
+    }
+
+    return { success: true, data: { newKey, newUrl } };
   } catch (error) {
-    console.error("Error renaming file in S3:", error);
-    return { success: false, error: "An internal server error occurred while renaming the file." };
+    // This outer catch handles errors from S3 (copy/delete) or the initial metadata check.
+    console.error("Error renaming file:", error);
+    return {
+      success: false,
+      error: "An internal server error occurred while renaming the file.",
+    };
   }
 }

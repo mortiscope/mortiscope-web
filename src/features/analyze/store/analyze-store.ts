@@ -20,17 +20,46 @@ export type UploadStatus = "pending" | "uploading" | "success" | "error";
 export type ViewMode = "list" | "grid";
 
 /**
- * Represents a file that is being prepared for or is in the process of being uploaded.
- * It extends the standard File object with metadata for tracking the upload.
+ * Represents a file that is being prepared for, is in the process of being uploaded,
+ * or has been persisted in the database.
+ * It extends the standard File object with metadata for tracking and persistence.
  */
 export type UploadableFile = {
+  // The canonical ID for the file, generated on the client and stored in the database.
   id: string;
-  file: File;
+  // The actual File object, present for new uploads before they are saved.
+  file?: File;
+  // The unique key for the file in the S3 bucket.
   key: string;
+  // The full S3 URL of the file, populated after successful upload and DB save.
+  url: string;
+  // The name of the file.
+  name: string;
+  // The size of the file in bytes.
+  size: number;
+  // The MIME type of the file.
+  type: string;
+  // The current upload progress percentage.
   progress: number;
+  // The current status of the upload.
   status: UploadStatus;
-  source: "upload" | "camera";
+  // The origin of the file data. 'db' indicates it was loaded from the database.
+  source: "upload" | "camera" | "db";
+  // The date the file was added or initially uploaded.
   dateUploaded: Date;
+};
+
+/**
+ * The shape of a file record as returned from the database.
+ */
+export type PersistedFile = {
+  id: string;
+  key: string;
+  url: string;
+  name: string;
+  size: number;
+  type: string;
+  createdAt: Date;
 };
 
 /**
@@ -48,6 +77,8 @@ type AnalyzeStateData = {
 type AnalyzeState = {
   // The current active step in the multi-step form.
   step: number;
+  // Flag to indicate if the store has been hydrated with persisted data.
+  isHydrated: boolean;
   // The current view mode for the upload preview.
   viewMode: ViewMode;
   // The current sort option for the upload preview.
@@ -65,7 +96,7 @@ type AnalyzeState = {
   // Action to set the sort option.
   setSortOption: (sortOption: SortOptionValue) => void;
   // Action to add one or more files to the upload list.
-  addFiles: (files: File[], source: UploadableFile["source"]) => void;
+  addFiles: (files: File[], source: "upload" | "camera") => void;
   // Action to update the file object for a given uploadable file, e.g., after rotation.
   updateFile: (fileId: string, newFile: File) => void;
   // Action to remove a file from the list by its unique id.
@@ -78,6 +109,10 @@ type AnalyzeState = {
   retryUpload: (fileId: string) => void;
   // Action to store the server-side key (e.g., S3 key) for a file.
   setUploadKey: (fileId: string, key: string) => void;
+  // Action to store the final S3 URL for a file after saving its metadata.
+  setUploadUrl: (fileId: string, url: string) => void;
+  // Action to populate the store with files from the database.
+  hydrateFiles: (files: PersistedFile[]) => void;
   // Action to reset the entire store back to its initial state.
   reset: () => void;
 };
@@ -88,11 +123,13 @@ type AnalyzeState = {
  */
 const initialState: {
   step: number;
+  isHydrated: boolean;
   viewMode: ViewMode;
   sortOption: SortOptionValue;
   data: AnalyzeStateData;
 } = {
   step: 1,
+  isHydrated: false,
   viewMode: "list",
   sortOption: "date-uploaded-desc",
   data: {
@@ -122,6 +159,10 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
       id: createId(),
       file,
       key: "",
+      url: "",
+      name: file.name,
+      size: file.size,
+      type: file.type,
       progress: 0,
       status: "pending",
       source,
@@ -134,13 +175,21 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
       },
     }));
   },
-  // Updates the underlying File object of an existing UploadableFile.
+  // Updates the underlying File object and its metadata of an existing UploadableFile.
   updateFile: (fileId, newFile) =>
     set((state) => ({
       data: {
         ...state.data,
         files: state.data.files.map((uploadableFile) =>
-          uploadableFile.id === fileId ? { ...uploadableFile, file: newFile } : uploadableFile
+          uploadableFile.id === fileId
+            ? {
+                ...uploadableFile,
+                file: newFile,
+                name: newFile.name,
+                size: newFile.size,
+                type: newFile.type,
+              }
+            : uploadableFile
         ),
       },
     })),
@@ -186,6 +235,30 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
         files: state.data.files.map((f) => (f.id === fileId ? { ...f, key } : f)),
       },
     })),
+  // Sets the final S3 URL for a file after it has been saved to the database.
+  setUploadUrl: (fileId, url) =>
+    set((state) => ({
+      data: {
+        ...state.data,
+        files: state.data.files.map((f) => (f.id === fileId ? { ...f, url } : f)),
+      },
+    })),
+  // Populates the store with persisted files from the database.
+  hydrateFiles: (files) => {
+    const persistedFiles: UploadableFile[] = files.map((file) => ({
+      id: file.id,
+      key: file.key,
+      url: file.url,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      progress: 100,
+      status: "success",
+      source: "db",
+      dateUploaded: file.createdAt,
+    }));
+    set({ data: { files: persistedFiles }, isHydrated: true });
+  },
   // Resets the store to its initial default values.
   reset: () => set(initialState),
 }));

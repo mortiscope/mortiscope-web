@@ -102,9 +102,7 @@ export const accountDeletionTokens = pgTable(
 
 // Stores metadata for files uploaded to the S3 bucket
 export const uploads = pgTable("uploads", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
+  id: text("id").primaryKey(),
   key: text("key").notNull().unique(),
   name: text("name").notNull(),
   url: text("url").notNull(),

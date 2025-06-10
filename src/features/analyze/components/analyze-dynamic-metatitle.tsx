@@ -1,11 +1,14 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { getUpload } from "@/features/analyze/actions/get-upload";
 import { AnalyzeProgress } from "@/features/analyze/components/analyze-progress";
 import { AnalyzeWizard } from "@/features/analyze/components/analyze-wizard";
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type PersistedFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 
 /**
  * The main client-side component for the multi-step analysis workflow.
@@ -14,6 +17,34 @@ import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 export const AnalyzeDynamicMetatitle = () => {
   // Subscribes to the global store to get the current step number.
   const step = useAnalyzeStore((state) => state.step);
+  const isHydrated = useAnalyzeStore((state) => state.isHydrated);
+  const hydrateFiles = useAnalyzeStore((state) => state.hydrateFiles);
+
+  // TanStack Query to fetch the user's existing uploads from the database.
+  const { data, isSuccess } = useQuery<PersistedFile[] | null, Error>({
+    queryKey: ["user-uploads"],
+    queryFn: async () => {
+      const result = await getUpload();
+      // On failure, throw an error to be handled by TanStack Query's error state.
+      if (!result.success || !result.data) {
+        toast.error(result.error || "Failed to fetch existing uploads.");
+        throw new Error(result.error || "Failed to fetch existing uploads.");
+      }
+      return result.data;
+    },
+    // This is the key optimization: only run the query if the store has not yet been hydrated.
+    enabled: !isHydrated,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  // Effect to hydrate the store with persisted data once a successful fetch completes.
+  useEffect(() => {
+    // Only hydrate if the query was successful.
+    if (isSuccess && data && !isHydrated) {
+      hydrateFiles(data);
+    }
+  }, [isSuccess, data, isHydrated, hydrateFiles]);
 
   // Effect to dynamically update the page's metatitle based on the current step.
   useEffect(() => {

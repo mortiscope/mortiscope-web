@@ -1,8 +1,11 @@
 "use server";
 
 import { DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { and, eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
+import { db } from "@/db";
+import { uploads } from "@/db/schema";
 import { DeleteUploadInput, deleteUploadSchema } from "@/features/analyze/schemas/upload";
 import { s3 } from "@/lib/aws";
 
@@ -72,20 +75,29 @@ export async function deleteUpload(values: DeleteUploadInput): Promise<ActionRes
       };
     }
 
-    // Create the S3 command for a DELETE operation
-    const deleteCommand = new DeleteObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: key,
-    });
+    // Ddelete the corresponding record from the database.
+    await db.delete(uploads).where(and(eq(uploads.key, key), eq(uploads.userId, userId)));
 
-    // Execute the command to delete the object from S3
-    await s3.send(deleteCommand);
+    try {
+      // Create and execute the S3 command for a DELETE operation.
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+      });
+      await s3.send(deleteCommand);
+    } catch (s3Error) {
+      // If this block is reached, the database record was deleted but the S3 object was not.
+      console.error(
+        `CRITICAL: Orphaned S3 Object. DB record deleted but S3 deletion failed for key: '${key}'. User: '${userId}'.`,
+        s3Error
+      );
+    }
 
     // Return a success response
     return { success: true };
   } catch (error) {
-    // Catch block handles errors from both HeadObject and DeleteObject.
-    console.error("Error deleting file from S3:", error);
+    // This outer catch block handles errors from the initial auth, validation, S3 metadata check, or DB delete.
+    console.error("Error deleting file:", error);
     // Return a generic error to avoid leaking implementation details
     return {
       success: false,

@@ -119,14 +119,22 @@ const PreviewThumbnail = ({
   // A boolean to determine if the component should render in its mobile variant.
   isMobile: boolean;
 }) => {
-  const { file } = uploadableFile;
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
+    let objectUrl: string | undefined;
+    if (uploadableFile.url) {
+      setPreviewUrl(uploadableFile.url);
+    } else if (uploadableFile.file) {
+      objectUrl = URL.createObjectURL(uploadableFile.file);
+      setPreviewUrl(objectUrl);
+    }
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [uploadableFile]);
 
   if (!previewUrl) {
     return (
@@ -164,12 +172,12 @@ const PreviewThumbnail = ({
             "focus-visible:ring-amber-400",
           ]
         )}
-        aria-label={`View ${file.name}`}
+        aria-label={`View ${uploadableFile.name}`}
         disabled={isActive}
       >
         <Image
           src={previewUrl}
-          alt={`Thumbnail of ${file.name}`}
+          alt={`Thumbnail of ${uploadableFile.name}`}
           fill
           className="rounded-lg object-cover"
           sizes="64px"
@@ -268,6 +276,7 @@ export const UploadPreviewModal = ({
   const removeFile = useAnalyzeStore((state) => state.removeFile);
   const setUploadStatus = useAnalyzeStore((state) => state.setUploadStatus);
   const setUploadKey = useAnalyzeStore((state) => state.setUploadKey);
+  const setUploadUrl = useAnalyzeStore((state) => state.setUploadUrl);
 
   // TanStack Query mutation for generating a presigned URL (for rotated image re-upload).
   const presignedUrlMutation = useMutation({
@@ -277,6 +286,18 @@ export const UploadPreviewModal = ({
   // TanStack Query mutation for renaming the file on the server.
   const renameMutation = useMutation({
     mutationFn: renameUpload,
+    onSuccess: (data, variables) => {
+      if (!data.success || !data.data) {
+        toast.error(data.error || "Server-side rename failed.");
+        return;
+      }
+      // After a successful rename, update the key and URL in the store.
+      const fileToUpdate = allFiles.find((f) => f.key === variables.oldKey);
+      if (fileToUpdate) {
+        setUploadKey(fileToUpdate.id, data.data.newKey);
+        setUploadUrl(fileToUpdate.id, data.data.newUrl);
+      }
+    },
   });
 
   // TanStack Query mutation for deleting the file on the server.
@@ -292,15 +313,15 @@ export const UploadPreviewModal = ({
     const filesCopy = [...allFiles];
     switch (sortOption) {
       case "name-asc":
-        return filesCopy.sort((a, b) => a.file.name.localeCompare(b.file.name));
+        return filesCopy.sort((a, b) => a.name.localeCompare(b.name));
       case "name-desc":
-        return filesCopy.sort((a, b) => b.file.name.localeCompare(a.file.name));
+        return filesCopy.sort((a, b) => b.name.localeCompare(a.name));
       case "size-asc":
-        return filesCopy.sort((a, b) => a.file.size - b.file.size);
+        return filesCopy.sort((a, b) => a.size - b.size);
       case "size-desc":
-        return filesCopy.sort((a, b) => b.file.size - a.file.size);
+        return filesCopy.sort((a, b) => b.size - a.size);
       case "date-modified-desc":
-        return filesCopy.sort((a, b) => b.file.lastModified - a.file.lastModified);
+        return filesCopy.sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime());
       case "date-uploaded-desc":
       default:
         return filesCopy.sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime());
@@ -345,7 +366,7 @@ export const UploadPreviewModal = ({
    */
   useEffect(() => {
     if (activeFile) {
-      const name = activeFile.file.name;
+      const name = activeFile.name;
       const parts = name.split(".");
       const extension = parts.pop() ?? "";
       const nameBase = parts.join(".");
@@ -388,22 +409,36 @@ export const UploadPreviewModal = ({
       return;
     }
 
-    const objectUrl = URL.createObjectURL(activeFile.file);
-    setPreviewUrl(objectUrl);
+    let objectUrl: string | undefined;
+    let currentPreviewUrl = "";
 
-    const image = new window.Image();
-    image.onload = () => {
-      setImageDimensions({
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      });
-    };
-    image.src = objectUrl;
+    if (activeFile.url) {
+      currentPreviewUrl = activeFile.url;
+    } else if (activeFile.file) {
+      objectUrl = URL.createObjectURL(activeFile.file);
+      currentPreviewUrl = objectUrl;
+    }
+
+    setPreviewUrl(currentPreviewUrl);
+
+    if (currentPreviewUrl) {
+      const image = new window.Image();
+      image.onload = () => {
+        setImageDimensions({
+          width: image.naturalWidth,
+          height: image.naturalHeight,
+        });
+      };
+      image.src = currentPreviewUrl;
+    } else {
+      setImageDimensions(null);
+    }
 
     // Cleanup function to revoke the object URL when the component unmounts or the file changes.
     return () => {
-      URL.revokeObjectURL(objectUrl);
-      image.onload = null;
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
   }, [activeFile]);
 
@@ -442,6 +477,28 @@ export const UploadPreviewModal = ({
 
     let finalFile = currentFileState.file;
     let finalKey = currentFileState.key;
+    const finalUrl = currentFileState.url;
+
+    // Create a working file object if one doesn't exist
+    if (!finalFile && finalUrl) {
+      try {
+        const response = await fetch(finalUrl);
+        const blob = await response.blob();
+        finalFile = new File([blob], currentFileState.name, { type: currentFileState.type });
+      } catch {
+        toast.error("Could not fetch original image for editing.");
+        setIsSaving(false);
+        setUploadStatus(currentFileState.id, "error");
+        return;
+      }
+    }
+
+    if (!finalFile) {
+      toast.error("File data is missing.");
+      setIsSaving(false);
+      setUploadStatus(currentFileState.id, "error");
+      return;
+    }
 
     // Handle Rename Operation
     if (isNameDirty) {
@@ -502,11 +559,12 @@ export const UploadPreviewModal = ({
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate((rotation * Math.PI) / 180);
             ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
-            canvas.toBlob(resolve, finalFile.type, 1.0);
+            canvas.toBlob(resolve, finalFile!.type, 1.0);
           };
           image.onerror = () => resolve(null);
           image.src = url;
         });
+        URL.revokeObjectURL(url);
 
         if (!rotatedBlob) throw new Error("Could not process image for rotation.");
 
@@ -534,12 +592,10 @@ export const UploadPreviewModal = ({
     }
 
     // Finalize State
-    const newFileObject = new File([finalFile], finalFile.name, { type: finalFile.type });
-    updateFile(currentFileState.id, newFileObject);
-    if (finalKey) setUploadKey(currentFileState.id, finalKey);
+    updateFile(currentFileState.id, finalFile);
     setUploadStatus(currentFileState.id, "success");
-    setDisplayFileName(newFileObject.name);
-    toast.success(`${newFileObject.name} changes saved.`);
+    setDisplayFileName(finalFile.name);
+    toast.success(`${finalFile.name} changes saved.`);
 
     // Reset all dirty and saving flags.
     setIsNameDirty(false);
@@ -560,7 +616,7 @@ export const UploadPreviewModal = ({
     // If there's no key, the file was likely never successfully uploaded.
     if (!activeFile.key) {
       removeFile(activeFile.id);
-      toast.success(`${activeFile.file.name} removed.`);
+      toast.success(`${activeFile.name} removed.`);
       onClose();
       return;
     }
@@ -576,7 +632,7 @@ export const UploadPreviewModal = ({
 
       // On successful deletion from S3, remove the file from the local Zustand store.
       removeFile(activeFile.id);
-      toast.success(`${activeFile.file.name} deleted successfully.`);
+      toast.success(`${activeFile.name} deleted successfully.`);
       onClose();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not delete file.");
@@ -589,10 +645,9 @@ export const UploadPreviewModal = ({
    * Handles the download action by applying the current rotation to the image via a canvas.
    */
   const handleDownload = () => {
-    if (!activeFile) return;
+    if (!activeFile || !previewUrl) return;
 
     const image = new window.Image();
-    const url = URL.createObjectURL(activeFile.file);
     image.crossOrigin = "anonymous";
 
     image.onload = () => {
@@ -600,7 +655,6 @@ export const UploadPreviewModal = ({
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         toast.error("Could not process image for download.");
-        URL.revokeObjectURL(url);
         return;
       }
 
@@ -618,20 +672,18 @@ export const UploadPreviewModal = ({
 
       // Trigger a download of the canvas content.
       const link = document.createElement("a");
-      link.href = canvas.toDataURL(activeFile.file.type);
-      link.download = activeFile.file.name;
+      link.href = canvas.toDataURL(activeFile.type);
+      link.download = activeFile.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     };
 
     image.onerror = () => {
       toast.error("Failed to load image for download.");
-      URL.revokeObjectURL(url);
     };
 
-    image.src = url;
+    image.src = previewUrl;
   };
 
   /**
@@ -677,7 +729,7 @@ export const UploadPreviewModal = ({
         {isOpen && (
           <DialogContent
             className={cn(
-              "font-inter p-0",
+              "font-inter flex flex-col p-0",
               isMobile
                 ? "h-dvh w-screen max-w-none rounded-none border-none bg-black"
                 : "rounded-3xl sm:max-w-2xl"
@@ -813,7 +865,7 @@ export const UploadPreviewModal = ({
                         </DialogTitle>
                       )}
                       <DialogDescription className="font-inter flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-slate-600">
-                        <span>{new Date(activeFile.file.lastModified).toLocaleDateString()}</span>
+                        <span>{new Date(activeFile.dateUploaded).toLocaleDateString()}</span>
                         {imageDimensions && (
                           <>
                             <span className="hidden text-slate-400 sm:inline">•</span>
@@ -823,7 +875,7 @@ export const UploadPreviewModal = ({
                           </>
                         )}
                         <span className="hidden text-slate-400 sm:inline">•</span>
-                        <span>{formatBytes(activeFile.file.size)}</span>
+                        <span>{formatBytes(activeFile.size)}</span>
                       </DialogDescription>
                     </DialogHeader>
                   </motion.div>
@@ -948,7 +1000,7 @@ export const UploadPreviewModal = ({
                               <Image
                                 key={previewUrl}
                                 src={previewUrl}
-                                alt={`Preview of ${activeFile.file.name}`}
+                                alt={`Preview of ${activeFile.name}`}
                                 fill
                                 className="object-contain"
                                 style={{ transform: `rotate(${rotation}deg)` }}
@@ -961,7 +1013,7 @@ export const UploadPreviewModal = ({
                               <UploadPreviewMinimap
                                 previewUrl={previewUrl}
                                 rotation={rotation}
-                                alt={`Minimap preview of ${activeFile.file.name}`}
+                                alt={`Minimap preview of ${activeFile.name}`}
                                 transformState={transformState}
                                 viewingBox={viewingBox}
                               />

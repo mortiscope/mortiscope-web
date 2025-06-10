@@ -21,10 +21,11 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createUpload } from "@/features/analyze/actions/create-upload";
+import { saveUpload } from "@/features/analyze/actions/save-upload";
 import { AnalyzeCapture } from "@/features/analyze/components/analyze-capture";
 import { SupportedFormatsModal } from "@/features/analyze/components/supported-formats-modal";
 import { UploadPreview } from "@/features/analyze/components/upload-preview";
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE, MAX_FILES } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ export const AnalyzeUpload = () => {
     updateFileProgress,
     setUploadStatus,
     setUploadKey,
+    setUploadUrl,
   } = useAnalyzeStore();
 
   const filesCount = files.length;
@@ -60,10 +62,38 @@ export const AnalyzeUpload = () => {
   });
 
   /**
+   * TanStack Query mutation for saving the upload metadata to the database.
+   * This mutation now controls the final "success" or "error" state of an upload.
+   */
+  const saveUploadMutation = useMutation({
+    mutationFn: saveUpload,
+    onSuccess: (result, variables) => {
+      if (result.success && result.data) {
+        // The file is only marked as successful after both S3 upload and DB save are complete.
+        setUploadStatus(variables.id, "success");
+        setUploadUrl(variables.id, result.data.url);
+        toast.success(`${variables.name} uploaded and saved.`);
+      } else {
+        // If the server-side save fails, mark the file with an error.
+        setUploadStatus(variables.id, "error");
+        toast.error(`Failed to save ${variables.name}: ${result.error}`);
+      }
+    },
+    onError: (error, variables) => {
+      // Handle network errors or other exceptions during the save process.
+      setUploadStatus(variables.id, "error");
+      toast.error(`An error occurred while saving ${variables.name}.`);
+    },
+  });
+
+  /**
    * A memoized callback that performs the direct upload of a file to S3 using a pre-signed URL.
    */
   const uploadToS3 = useCallback(
-    (file: File, url: string, fileId: string) => {
+    (url: string, uploadableFile: UploadableFile) => {
+      // Guard against a missing file object, which is needed for the upload.
+      if (!uploadableFile.file) return;
+
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
 
@@ -72,33 +102,45 @@ export const AnalyzeUpload = () => {
         if (event.lengthComputable) {
           const percentComplete = Math.round((event.loaded / event.total) * 100);
           // Update the global store with the new progress percentage.
-          updateFileProgress(fileId, percentComplete);
+          updateFileProgress(uploadableFile.id, percentComplete);
         }
       };
 
-      // Event listener for when the upload is complete.
+      // Event listener for when the S3 upload part is complete.
       xhr.onload = () => {
-        // Check for a successful HTTP status code.
+        // Check for a successful HTTP status code from S3.
         if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadStatus(fileId, "success");
-          toast.success(`${file.name} successfully uploaded.`);
+          // After a successful S3 upload, trigger the mutation to save metadata to the database.
+          if (uploadableFile.key) {
+            saveUploadMutation.mutate({
+              id: uploadableFile.id,
+              key: uploadableFile.key,
+              name: uploadableFile.name,
+              size: uploadableFile.size,
+              type: uploadableFile.type,
+            });
+          } else {
+            // This case should not happen in normal flow, but it's a good safeguard.
+            setUploadStatus(uploadableFile.id, "error");
+            toast.error(`Could not save ${uploadableFile.name}: S3 key is missing.`);
+          }
         } else {
-          // If S3 returns an error, mark the file as failed.
-          setUploadStatus(fileId, "error");
-          toast.error(`${file.name} upload failed.`);
+          // If S3 itself returns an error, mark the file as failed immediately.
+          setUploadStatus(uploadableFile.id, "error");
+          toast.error(`${uploadableFile.name} upload failed.`);
         }
       };
 
-      // Event listener for network errors during the upload.
+      // Event listener for network errors during the S3 upload.
       xhr.onerror = () => {
-        setUploadStatus(fileId, "error");
-        toast.error(`An error occurred while uploading ${file.name}.`);
+        setUploadStatus(uploadableFile.id, "error");
+        toast.error(`An error occurred while uploading ${uploadableFile.name}.`);
       };
 
       // Initiate the upload.
-      xhr.send(file);
+      xhr.send(uploadableFile.file);
     },
-    [updateFileProgress, setUploadStatus]
+    [updateFileProgress, setUploadStatus, saveUploadMutation]
   );
 
   /**
@@ -109,8 +151,11 @@ export const AnalyzeUpload = () => {
     const pendingFiles = files.filter((f) => f.status === "pending");
     if (pendingFiles.length === 0) return;
 
-    pendingFiles.forEach(async (uploadableFile) => {
-      const { file, id } = uploadableFile;
+    pendingFiles.forEach(async (pendingFile) => {
+      // Ensure the file object exists for new uploads.
+      if (!pendingFile.file) return;
+
+      const { file, id } = pendingFile;
       try {
         // Immediately mark the file as 'uploading' to prevent re-processing and update UI.
         setUploadStatus(id, "uploading");
@@ -130,8 +175,13 @@ export const AnalyzeUpload = () => {
         // Store the generated S3 key in our global state for future reference.
         setUploadKey(id, result.data.key);
 
-        // Perform the direct upload to S3.
-        uploadToS3(file, result.data.url, id);
+        // Get the most up-to-date version of the file from the store, which now includes the key.
+        const fileToUpload = useAnalyzeStore.getState().data.files.find((f) => f.id === id);
+
+        // Perform the direct upload to S3, passing the complete file object to prevent stale closures.
+        if (fileToUpload) {
+          uploadToS3(result.data.url, fileToUpload);
+        }
       } catch (error) {
         // If getting the pre-signed URL fails, mark the file as an error.
         setUploadStatus(id, "error");
@@ -191,7 +241,7 @@ export const AnalyzeUpload = () => {
       }
 
       // Check for duplicate files before adding.
-      const currentFileNames = new Set(files.map((f) => f.file.name));
+      const currentFileNames = new Set(files.map((f) => f.name));
       const uniqueNewFiles = validFiles.filter((file) => !currentFileNames.has(file.name));
 
       // Notify user about any duplicate files that were skipped.
@@ -431,7 +481,7 @@ export const AnalyzeUpload = () => {
             <Button
               onClick={nextStep}
               disabled={isNextDisabled}
-              className="font-inter relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
+              className="font-inter disabled:cursor-not--allowed relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
             >
               Next
             </Button>
