@@ -666,7 +666,9 @@ export function AnalyzeCapture({ isOpen, onOpenChange }: AnalyzeCaptureProps) {
                     exit={{ opacity: 0, y: 10 }}
                     className={cn(
                       "shrink-0",
-                      isMobile ? "absolute bottom-[88px] left-0 z-10 w-full px-4" : "px-6 pb-4"
+                      isMobile
+                        ? "absolute bottom-[88px] left-0 z-10 w-full px-4"
+                        : "px-6 pb-0 md:pb-4"
                     )}
                   >
                     <ScrollArea className="w-full whitespace-nowrap">

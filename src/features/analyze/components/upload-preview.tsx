@@ -316,6 +316,34 @@ export const UploadPreview = () => {
     deleteMutation.mutate({ key: fileKey, fileId });
   };
 
+  /**
+   * Handles navigation between files in the preview modal.
+   * @param direction - "next" or "previous" to determine which file to show.
+   */
+  const handleNavigate = (direction: "next" | "previous") => {
+    if (!viewingFile) return;
+    const currentIndex = sortedFiles.findIndex((f) => f.id === viewingFile.id);
+    if (currentIndex === -1) return;
+
+    if (direction === "next" && currentIndex < sortedFiles.length - 1) {
+      setViewingFile(sortedFiles[currentIndex + 1]);
+    } else if (direction === "previous" && currentIndex > 0) {
+      setViewingFile(sortedFiles[currentIndex - 1]);
+    }
+  };
+
+  /**
+   * Handles selecting a file directly from the modal's thumbnail strip.
+   * This keeps the parent's `viewingFile` state in sync with the modal's internal state.
+   * @param fileId - The unique ID of the file selected in the modal.
+   */
+  const handleSelectFile = (fileId: string) => {
+    const fileToView = sortedFiles.find((f) => f.id === fileId);
+    if (fileToView) {
+      setViewingFile(fileToView);
+    }
+  };
+
   // If there are no files, this component renders nothing.
   if (files.length === 0) {
     return null;
@@ -562,6 +590,9 @@ export const UploadPreview = () => {
         file={viewingFile}
         isOpen={!!viewingFile}
         onClose={() => setViewingFile(null)}
+        onNext={() => handleNavigate("next")}
+        onPrevious={() => handleNavigate("previous")}
+        onSelectFile={handleSelectFile}
       />
     </>
   );
