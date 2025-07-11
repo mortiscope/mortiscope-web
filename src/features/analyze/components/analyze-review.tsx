@@ -1,8 +1,11 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +16,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { submitUpload } from "@/features/analyze/actions/submit-upload";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
+import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { cn } from "@/lib/utils";
 
@@ -27,8 +32,9 @@ const buttonClasses =
  */
 export const AnalyzeReview = () => {
   // Retrieves state and actions from the global Zustand store.
-  const { prevStep, details, data } = useAnalyzeStore();
+  const { prevStep, details, data, reset: resetAnalyzeStore } = useAnalyzeStore();
   const files = data.files;
+  const router = useRouter();
 
   // State to manage the visibility of the image preview modal.
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,8 +44,26 @@ export const AnalyzeReview = () => {
   // State to store local blob URLs for newly uploaded files to enable previews.
   const [objectUrls, setObjectUrls] = useState<Map<string, string>>(new Map());
 
-  // Formats the temperature for display, providing a default value.
-  const finalTemperatureCelsius = details.temperature?.value ?? 0;
+  // Mutation for submitting the analysis data to the server.
+  const { mutate: performSubmit, isPending } = useMutation({
+    mutationFn: submitUpload,
+    onSuccess: (response) => {
+      if (response.success) {
+        toast.success(response.message);
+        resetAnalyzeStore();
+        // Redirect to the dashboard after a successful submission.
+        router.push("/dashboard");
+      } else {
+        toast.error(response.message || "An unknown error occurred.");
+      }
+    },
+    onError: (error) => {
+      toast.error("Submission failed: " + error.message);
+    },
+  });
+
+  // Memoizes the final temperature value, defaulting to 0.
+  const finalTemperatureValue = details.temperature?.value ?? 0;
 
   // Constructs a complete, comma-separated address string from location details.
   const fullAddress = [
@@ -131,21 +155,39 @@ export const AnalyzeReview = () => {
    * In this implementation, it logs the data to the console for simulation purposes.
    */
   const handleSubmit = () => {
-    const submissionData = {
-      caseName: details.caseName,
-      temperatureCelsius: finalTemperatureCelsius.toFixed(1),
-      location: {
-        region: details.location?.region?.name,
-        province: details.location?.province?.name,
-        city: details.location?.city?.name,
-        barangay: details.location?.barangay?.name,
-      },
-      caseDate: details.caseDate,
-      uploadIds: files.map((file) => file.id),
-    };
+    // Re-validate the details from the store as a safeguard.
+    const validation = detailsSchema.safeParse(details);
+    if (!validation.success) {
+      toast.error("Form data is invalid. Please go back and check the details.");
+      console.error("Validation errors:", validation.error.flatten());
+      return;
+    }
 
-    console.log("Final Submission", submissionData);
-    alert("Case submitted successfully! (Simulated - check browser console for data)");
+    // Ensure at least one file has been uploaded.
+    if (files.length === 0) {
+      toast.error("Please upload at least one image to submit.");
+      return;
+    }
+
+    const validatedDetails = validation.data;
+
+    // Convert temperature to Celsius before submission, as the database requires it.
+    let temperatureInCelsius = validatedDetails.temperature.value;
+    if (validatedDetails.temperature.unit === "F") {
+      temperatureInCelsius = (validatedDetails.temperature.value - 32) * (5 / 9);
+    }
+
+    // Call the mutation with the prepared data.
+    performSubmit({
+      details: {
+        ...validatedDetails,
+        temperature: {
+          value: temperatureInCelsius,
+          unit: "C",
+        },
+      },
+      uploadIds: files.map((file) => file.id),
+    });
   };
 
   /**
@@ -327,7 +369,9 @@ export const AnalyzeReview = () => {
 
                 <div className="md:contents">
                   <p className="text-muted-foreground font-medium">Temperature</p>
-                  <p className="font-normal">{finalTemperatureCelsius.toFixed(1)} °C</p>
+                  <p className="font-normal">
+                    {finalTemperatureValue.toFixed(1)} °{details.temperature?.unit || "C"}
+                  </p>
                 </div>
 
                 <div className="md:contents">
@@ -348,11 +392,11 @@ export const AnalyzeReview = () => {
 
         {/* Footer containing navigation and submission buttons. */}
         <CardFooter className="flex justify-between gap-x-4 px-0 pt-8">
-          <Button onClick={prevStep} className={cn(buttonClasses)}>
+          <Button onClick={prevStep} disabled={isPending} className={cn(buttonClasses)}>
             Previous
           </Button>
-          <Button onClick={handleSubmit} className={cn(buttonClasses)}>
-            Submit
+          <Button onClick={handleSubmit} disabled={isPending} className={cn(buttonClasses)}>
+            {isPending ? "Submitting..." : "Submit"}
           </Button>
         </CardFooter>
       </Card>
