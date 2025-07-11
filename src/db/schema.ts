@@ -138,6 +138,7 @@ export const cases = pgTable(
   (table) => [uniqueIndex("case_name_idx").on(table.userId, table.caseName)]
 );
 
+// Stores metadata for each file uploaded to S3, linking it to a user and a case
 export const uploads = pgTable("uploads", {
   id: text("id").primaryKey(),
   key: text("key").notNull().unique(),
