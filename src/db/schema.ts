@@ -5,7 +5,6 @@ import {
   pgTable,
   primaryKey,
   real,
-  serial,
   text,
   timestamp,
   uniqueIndex,
@@ -114,7 +113,9 @@ export const accountDeletionTokens = pgTable(
 export const cases = pgTable(
   "cases",
   {
-    id: serial("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
@@ -149,7 +150,7 @@ export const uploads = pgTable("uploads", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  caseId: integer("case_id").references(() => cases.id, {
+  caseId: text("case_id").references(() => cases.id, {
     onDelete: "cascade",
   }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
