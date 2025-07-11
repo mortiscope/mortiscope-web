@@ -1,6 +1,16 @@
 import type { AdapterAccount } from "@auth/core/adapters";
 import { createId } from "@paralleldrive/cuid2";
-import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  real,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 // Represents the core user profile in the application
 export const users = pgTable("users", {
@@ -100,7 +110,34 @@ export const accountDeletionTokens = pgTable(
   (adt) => [primaryKey({ columns: [adt.identifier, adt.token] })]
 );
 
-// Stores metadata for files uploaded to the S3 bucket
+// Stores the main details for each case created by a user
+export const cases = pgTable(
+  "cases",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    caseName: varchar("case_name", { length: 256 }).notNull(),
+    temperatureCelsius: real("temperature_celsius").notNull(),
+    locationRegion: text("location_region").notNull(),
+    locationProvince: text("location_province").notNull(),
+    locationCity: text("location_city").notNull(),
+    locationBarangay: text("location_barangay").notNull(),
+    caseDate: timestamp("case_date", {
+      mode: "date",
+      withTimezone: true,
+    }).notNull(),
+    createdAt: timestamp("created_at", {
+      mode: "date",
+      withTimezone: true,
+    })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [uniqueIndex("case_name_idx").on(table.userId, table.caseName)]
+);
+
 export const uploads = pgTable("uploads", {
   id: text("id").primaryKey(),
   key: text("key").notNull().unique(),
@@ -111,5 +148,8 @@ export const uploads = pgTable("uploads", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  caseId: integer("case_id").references(() => cases.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });

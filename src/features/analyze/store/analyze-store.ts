@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { create } from "zustand";
 
+import { type DetailsFormData } from "@/features/analyze/schemas/details";
 import { type SortOptionValue } from "@/lib/constants";
 
 /**
@@ -85,6 +86,8 @@ type AnalyzeState = {
   sortOption: SortOptionValue;
   // The data collected throughout the analysis process.
   data: AnalyzeStateData;
+  // The data for the analysis details form.
+  details: Partial<DetailsFormData>;
   // Action to set the current step to a specific number.
   setStep: (step: number) => void;
   // Action to advance to the next step.
@@ -113,6 +116,8 @@ type AnalyzeState = {
   setUploadUrl: (fileId: string, url: string) => void;
   // Action to populate the store with files from the database.
   hydrateFiles: (files: PersistedFile[]) => void;
+  // Action to update the details form data with a validated payload.
+  updateDetailsData: (data: DetailsFormData) => void;
   // Action to reset the entire store back to its initial state.
   reset: () => void;
 };
@@ -127,6 +132,7 @@ const initialState: {
   viewMode: ViewMode;
   sortOption: SortOptionValue;
   data: AnalyzeStateData;
+  details: Partial<DetailsFormData>;
 } = {
   step: 1,
   isHydrated: false,
@@ -135,6 +141,7 @@ const initialState: {
   data: {
     files: [],
   },
+  details: {},
 };
 
 /**
@@ -259,6 +266,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
     }));
     set({ data: { files: persistedFiles }, isHydrated: true });
   },
+  // Action to update the analysis details data after successful validation.
+  updateDetailsData: (data) => set({ details: data }),
   // Resets the store to its initial default values.
   reset: () => set(initialState),
 }));

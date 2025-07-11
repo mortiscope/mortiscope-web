@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
+import { UseFormReturn } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
+import { DetailsFormInput } from "@/features/analyze/schemas/details";
 import { DETERMINISTIC_AVATARS } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
@@ -61,4 +63,38 @@ export function formatBytes(bytes: number, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+type LocationLevel = "province" | "city" | "barangay";
+
+/**
+ * Resets dependent location fields in both state and react-hook-form.
+ *
+ * @param form - The react-hook-form instance.
+ * @param levelsToReset - An array of location levels to reset.
+ * @param setCodeFns - An object with optional state setters for 'province', 'city', and 'barangay' codes.
+ */
+export function resetLocationFields(
+  form: UseFormReturn<DetailsFormInput>,
+  levelsToReset: LocationLevel[],
+  setCodeFns: Partial<Record<LocationLevel, (val: string | null) => void>>
+): void {
+  levelsToReset.forEach((level) => {
+    form.setValue(`location.${level}`, null);
+
+    const setter = setCodeFns[level];
+    if (setter) {
+      setter(null);
+    }
+  });
+}
+
+/**
+ * Converts a temperature from Fahrenheit to Celsius.
+ *
+ * @param fahrenheit - The temperature in Fahrenheit.
+ * @returns The temperature in Celsius.
+ */
+export function fahrenheitToCelsius(fahrenheit: number): number {
+  return ((fahrenheit - 32) * 5) / 9;
 }
