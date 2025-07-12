@@ -25,16 +25,14 @@ interface AnalyzeProgressProps {
  * Each object contains an ID, a display name, and a corresponding icon component.
  */
 export const analysisSteps = [
-  { id: 1, name: "Provide an Image", icon: IoImageOutline },
-  { id: 2, name: "Analysis Details", icon: HiOutlineClipboardDocumentList },
+  { id: 1, name: "Analysis Details", icon: HiOutlineClipboardDocumentList },
+  { id: 2, name: "Provide an Image", icon: IoImageOutline },
   { id: 3, name: "Review and Submit", icon: BsListCheck },
 ];
 
 /**
  * Renders a responsive, multi-step progress bar component.
  * It visually indicates completed, current, and upcoming steps in a process.
- * On smaller screens, step names are shown in tooltips; on larger screens, they are displayed next to the icons.
- *
  * @param {AnalyzeProgressProps} props The component's props.
  */
 export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
@@ -42,6 +40,8 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
   const setStep = useAnalyzeStore((state) => state.setStep);
   // Determines if the viewport matches a large screen size for responsive rendering.
   const isLg = useMediaQuery("(min-width: 1024px)");
+  // Determines if the viewport is larger than the small screen breakpoint.
+  const isSm = useMediaQuery("(min-width: 640px)");
 
   const prevStepRef = useRef(currentStep);
   useEffect(() => {
@@ -116,7 +116,8 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
             <motion.span
               onClick={handleStepClick}
               className={cn(
-                "group flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2",
+                "group flex flex-shrink-0 items-center justify-center rounded-full border-2",
+                isSm ? "h-10 w-10" : "h-8 w-8",
                 isCompleted && "cursor-pointer"
               )}
               variants={circleVariants}
@@ -128,13 +129,18 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
               }}
             >
               {/* Animate icon visibility instead of conditional rendering */}
-              <div className="relative flex h-6 w-6 items-center justify-center">
+              <div
+                className={cn(
+                  "relative flex items-center justify-center",
+                  isSm ? "h-6 w-6" : "h-5 w-5"
+                )}
+              >
                 {/* The Check Icon (visible only when completed) */}
                 <motion.div
                   initial={false}
                   animate={{ opacity: isCompleted ? 1 : 0, scale: isCompleted ? 1 : 0 }}
                   transition={iconTransition}
-                  className="absolute"
+                  className="absolute h-full w-full"
                 >
                   <Check className="h-full w-full text-white" aria-hidden="true" />
                 </motion.div>
@@ -144,11 +150,11 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
                   initial={false}
                   animate={{ opacity: isCompleted ? 0 : 1, scale: isCompleted ? 0 : 1 }}
                   transition={iconTransition}
-                  className="absolute"
+                  className="absolute h-full w-full"
                 >
                   <Icon
                     className={cn(
-                      "h-6 w-6 transition-all duration-300 ease-in-out",
+                      "h-full w-full transition-all duration-300 ease-in-out",
                       isCurrent ? "text-emerald-600" : "text-slate-400",
                       isCurrent && "group-hover:scale-110 group-hover:rotate-12"
                     )}
@@ -162,7 +168,12 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
           // Using React.Fragment to avoid adding an unnecessary DOM element for the list key.
           return (
             <React.Fragment key={step.name}>
-              <li className="relative z-10 flex items-center gap-x-3">
+              <li
+                className={cn(
+                  "relative z-10 flex items-center",
+                  isSm ? "gap-x-3" : "gap-x-2"
+                )}
+              >
                 {isLg ? (
                   StepIcon
                 ) : (
@@ -190,7 +201,12 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
 
               {/* Renders the connecting line between steps, but not after the last one. */}
               {stepIdx < analysisSteps.length - 1 && (
-                <div className="relative h-0.5 w-full flex-1 lg:mx-4">
+                <div
+                  className={cn(
+                    "relative h-0.5 w-full flex-1",
+                    isSm ? "mx-4" : "mx-2"
+                  )}
+                >
                   <div className="absolute inset-0 h-full w-full bg-slate-200" />
                   <motion.div
                     className="absolute inset-0 h-full bg-emerald-600"

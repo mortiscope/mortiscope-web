@@ -6,7 +6,7 @@ import { AnalyzeDynamicMetatitle } from "@/features/analyze/components/analyze-d
  * Server-side metadata for the Analyze page.
  */
 export const metadata: Metadata = {
-  title: "Analyze — Provide an Image • MortiScope",
+  title: "Analyze — Analysis Details • MortiScope",
 };
 
 /**
