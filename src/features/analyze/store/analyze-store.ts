@@ -78,6 +78,8 @@ type AnalyzeStateData = {
 type AnalyzeState = {
   // The current active step in the multi-step form.
   step: number;
+  // The ID of the case, populated after step 1 is successfully completed.
+  caseId: string | null;
   // Flag to indicate if the store has been hydrated with persisted data.
   isHydrated: boolean;
   // The current view mode for the upload preview.
@@ -88,8 +90,12 @@ type AnalyzeState = {
   data: AnalyzeStateData;
   // The data for the analysis details form.
   details: Partial<DetailsFormData>;
+  // State to track if a submission was just successfully fired.
+  submissionStatus: "idle" | "success";
   // Action to set the current step to a specific number.
   setStep: (step: number) => void;
+  // Action to store the newly created case's ID.
+  setCaseId: (caseId: string) => void;
   // Action to advance to the next step.
   nextStep: () => void;
   // Action to return to the previous step.
@@ -120,6 +126,10 @@ type AnalyzeState = {
   updateDetailsData: (data: DetailsFormData) => void;
   // Action to reset the entire store back to its initial state.
   reset: () => void;
+  // Action to flag a submission as successful.
+  setSubmissionSuccess: () => void;
+  // Action to clear the submission flag after the toast is shown.
+  clearSubmissionStatus: () => void;
 };
 
 /**
@@ -128,13 +138,16 @@ type AnalyzeState = {
  */
 const initialState: {
   step: number;
+  caseId: string | null;
   isHydrated: boolean;
   viewMode: ViewMode;
   sortOption: SortOptionValue;
   data: AnalyzeStateData;
   details: Partial<DetailsFormData>;
+  submissionStatus: "idle" | "success";
 } = {
   step: 1,
+  caseId: null,
   isHydrated: false,
   viewMode: "list",
   sortOption: "date-uploaded-desc",
@@ -142,6 +155,7 @@ const initialState: {
     files: [],
   },
   details: {},
+  submissionStatus: "idle",
 };
 
 /**
@@ -152,6 +166,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   ...initialState,
   // Sets the step to a specific value.
   setStep: (step) => set({ step }),
+  // Stores the ID of the newly created case.
+  setCaseId: (caseId) => set({ caseId }),
   // Increments the current step by 1.
   nextStep: () => set((state) => ({ step: state.step + 1 })),
   // Decrements the current step by 1.
@@ -270,4 +286,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set) => ({
   updateDetailsData: (data) => set({ details: data }),
   // Resets the store to its initial default values.
   reset: () => set(initialState),
+  // Action to flag a submission as successful.
+  setSubmissionSuccess: () => set({ submissionStatus: "success" }),
+  // Action to clear the submission flag after the toast is shown.
+  clearSubmissionStatus: () => set({ submissionStatus: "idle" }),
 }));

@@ -6,31 +6,18 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
 
-// Runtime check for required environment variables
-if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
-  throw new Error(
-    "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
-  );
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
-
-/**
- * Zod schema for validating the input for saving an upload's metadata.
- */
+// Define the schema for the data required to save an upload record.
 const saveUploadSchema = z.object({
-  id: z.string().cuid2("Invalid file ID."),
-  key: z.string().min(1, "S3 key is required."),
-  name: z.string().min(1, "File name is required."),
-  type: z.string().min(1, "File type is required."),
-  size: z.number().positive("File size must be positive."),
+  id: z.string(),
+  key: z.string(),
+  name: z.string(),
+  size: z.number(),
+  type: z.string(),
+  caseId: z.string().min(1, { message: "Case ID is required to save the upload." }),
 });
 
 type SaveUploadInput = z.infer<typeof saveUploadSchema>;
 
-/**
- * Defines the structured return type for the server action.
- */
 type ActionResponse = {
   success: boolean;
   data?: {
@@ -39,30 +26,42 @@ type ActionResponse = {
   error?: string;
 };
 
+// Runtime checks for environment variables
+if (!process.env.AWS_BUCKET_NAME) {
+  throw new Error("Missing required AWS environment variable: AWS_BUCKET_NAME");
+}
+const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
+
+if (!process.env.AWS_BUCKET_REGION) {
+  throw new Error("Missing required AWS environment variable: AWS_BUCKET_REGION");
+}
+const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
+
 /**
- * Saves a new upload's metadata to the database.
- * The client-generated CUID is used as the primary key to simplify state synchronization.
+ * Saves the metadata of a successfully uploaded file to the database.
+ * This action creates a permanent record in the `uploads` table, linking the file to a user and a case.
  *
- * @param values The metadata of the file to save.
- * @returns A promise that resolves to an object containing the generated S3 URL or an error.
+ * @param values - The validated metadata of the uploaded file.
+ * @returns A promise that resolves to an object indicating success or failure.
  */
 export async function saveUpload(values: SaveUploadInput): Promise<ActionResponse> {
+  // Authenticate the user session.
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = session.user.id;
+
+  // Validate the input on the server.
+  const parseResult = saveUploadSchema.safeParse(values);
+  if (!parseResult.success) {
+    return { success: false, error: "Invalid input provided for saving upload." };
+  }
+
+  const { id, key, name, size, type, caseId } = parseResult.data;
+  const url = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${key}`;
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
-    }
-    const userId = session.user.id;
-
-    const parseResult = saveUploadSchema.safeParse(values);
-    if (!parseResult.success) {
-      return { success: false, error: "Invalid input provided." };
-    }
-
-    const { id, key, name, size, type } = parseResult.data;
-
-    const url = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${key}`;
-
     await db.insert(uploads).values({
       id,
       key,
@@ -71,11 +70,12 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
       size,
       type,
       userId,
+      caseId,
     });
 
     return { success: true, data: { url } };
   } catch (error) {
     console.error("Error saving upload metadata:", error);
-    return { success: false, error: "An internal server error occurred while saving the file." };
+    return { success: false, error: "Failed to save upload details to the database." };
   }
 }

@@ -38,21 +38,20 @@ type ActionResponse = {
   details?: Record<string, string[] | undefined>;
 };
 
-// Extend the base schema to include an optional 'key' for overwriting existing files.
+// Extend the base schema to include the required 'caseId' as a string.
 const extendedPresignedUrlSchema = generatePresignedUrlSchema.extend({
   key: z.string().optional(),
+  caseId: z.string().min(1, { message: "Case ID is required." }),
 });
 
 /**
- * Creates a pre-signed URL for uploading a file to S3.
- * If a `key` is provided in the input, it generates a URL to overwrite that specific object.
- * Otherwise, it creates a new unique key for a new upload.
+ * Creates a pre-signed URL for uploading a file to a specific case folder in S3.
  *
- * @param values The input data containing file details, validated against the extended schema.
+ * @param values The input data containing file and case details, validated against the extended schema.
  * @returns A promise that resolves to an object indicating success or failure.
  */
 export async function createUpload(
-  values: GeneratePresignedUrlInput & { key?: string }
+  values: GeneratePresignedUrlInput & { key?: string; caseId: string }
 ): Promise<ActionResponse> {
   try {
     // Authenticate the user
@@ -74,7 +73,7 @@ export async function createUpload(
       };
     }
 
-    const { fileName, fileType, fileSize, key: existingKey } = parseResult.data;
+    const { fileName, fileType, fileSize, key: existingKey, caseId } = parseResult.data;
 
     // Add server-side validation for file size.
     if (fileSize > MAX_FILE_SIZE) {
@@ -96,15 +95,14 @@ export async function createUpload(
       };
     }
 
-    // Determine the S3 key. Use the provided key for overwrites, or generate a new one.
+    // Determine the S3 key. The key now follows the desired hierarchical structure.
     const key =
       existingKey ??
       (() => {
         const baseName = path.basename(fileName, fileExtension);
         const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9-]/g, "-");
         const uniqueId = createId();
-        // Organize uploads by user ID in a dedicated 'uploads' folder for new files.
-        return `uploads/${userId}/${sanitizedBaseName}-${uniqueId}${fileExtension}`;
+        return `uploads/${userId}/${caseId}/${sanitizedBaseName}-${uniqueId}${fileExtension}`;
       })();
 
     // Create the S3 command for a PUT operation
@@ -115,6 +113,7 @@ export async function createUpload(
       ContentLength: fileSize,
       Metadata: {
         userId: userId,
+        caseId: caseId,
       },
     });
 
