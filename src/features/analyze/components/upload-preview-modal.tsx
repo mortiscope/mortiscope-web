@@ -271,6 +271,8 @@ export const UploadPreviewModal = ({
 
   // Hooks to interact with the global `analyze` store.
   const allFiles = useAnalyzeStore((state) => state.data.files);
+  // Retrieve the current case ID from the store, required for re-uploads.
+  const caseId = useAnalyzeStore((state) => state.caseId);
   const sortOption = useAnalyzeStore((state) => state.sortOption);
   const updateFile = useAnalyzeStore((state) => state.updateFile);
   const removeFile = useAnalyzeStore((state) => state.removeFile);
@@ -472,6 +474,13 @@ export const UploadPreviewModal = ({
       return;
     }
 
+    // Add a guard clause to ensure the case ID is present before saving.
+    if (!caseId) {
+      toast.error("Cannot save changes. Case ID is missing.");
+      setUploadStatus(currentFileState.id, "error");
+      return;
+    }
+
     setIsSaving(true);
     setUploadStatus(currentFileState.id, "uploading");
 
@@ -576,6 +585,7 @@ export const UploadPreviewModal = ({
           fileType: finalFile.type,
           fileSize: finalFile.size,
           key: finalKey,
+          caseId: caseId,
         });
 
         if (!result.success || !result.data) throw new Error("Failed to prepare re-upload.");

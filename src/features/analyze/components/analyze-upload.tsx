@@ -37,6 +37,8 @@ export const AnalyzeUpload = () => {
   // Retrieves state and actions from the global analysis store.
   const {
     nextStep,
+    prevStep,
+    caseId,
     data: { files },
     addFiles,
     updateFileProgress,
@@ -72,7 +74,7 @@ export const AnalyzeUpload = () => {
         // The file is only marked as successful after both S3 upload and DB save are complete.
         setUploadStatus(variables.id, "success");
         setUploadUrl(variables.id, result.data.url);
-        toast.success(`${variables.name} uploaded and saved.`);
+        toast.success(`${variables.name} uploaded.`);
       } else {
         // If the server-side save fails, mark the file with an error.
         setUploadStatus(variables.id, "error");
@@ -91,8 +93,8 @@ export const AnalyzeUpload = () => {
    */
   const uploadToS3 = useCallback(
     (url: string, uploadableFile: UploadableFile) => {
-      // Guard against a missing file object, which is needed for the upload.
-      if (!uploadableFile.file) return;
+      // Guard against missing file object or the crucial caseId.
+      if (!uploadableFile.file || !caseId) return;
 
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
@@ -118,6 +120,7 @@ export const AnalyzeUpload = () => {
               name: uploadableFile.name,
               size: uploadableFile.size,
               type: uploadableFile.type,
+              caseId: caseId,
             });
           } else {
             // This case should not happen in normal flow, but it's a good safeguard.
@@ -140,13 +143,18 @@ export const AnalyzeUpload = () => {
       // Initiate the upload.
       xhr.send(uploadableFile.file);
     },
-    [updateFileProgress, setUploadStatus, saveUploadMutation]
+    [caseId, updateFileProgress, setUploadStatus, saveUploadMutation]
   );
 
   /**
-   * An effect that runs whenever the `files` array in the store changes.
+   * An effect that runs whenever the `files` array or `caseId` changes.
    */
   useEffect(() => {
+    // Critical guard: Do not attempt to process uploads if the case ID is not yet available.
+    if (!caseId) {
+      return;
+    }
+
     // Find all files that haven't started uploading yet.
     const pendingFiles = files.filter((f) => f.status === "pending");
     if (pendingFiles.length === 0) return;
@@ -160,11 +168,12 @@ export const AnalyzeUpload = () => {
         // Immediately mark the file as 'uploading' to prevent re-processing and update UI.
         setUploadStatus(id, "uploading");
 
-        // Call the server action to get the pre-signed URL and unique key.
+        // Call the server action to get the pre-signed URL, passing the required caseId.
         const result = await presignedUrlMutation.mutateAsync({
           fileName: file.name,
           fileSize: file.size,
           fileType: file.type,
+          caseId: caseId,
         });
 
         // If the server action failed, throw an error to be caught by the catch block.
@@ -192,8 +201,8 @@ export const AnalyzeUpload = () => {
         toast.error(`${file.name} failed to upload. ${errorMessage}`);
       }
     });
-    // The dependency array ensures this effect re-runs only when the `files` array is modified.
-  }, [files, presignedUrlMutation, setUploadKey, setUploadStatus, uploadToS3]);
+    // The dependency array ensures this effect re-runs only when the `files` array or `caseId` is modified.
+  }, [files, caseId, presignedUrlMutation, setUploadKey, setUploadStatus, uploadToS3]);
 
   // Memoized callback for handling file drops.
   const onDrop = useCallback(
@@ -267,7 +276,7 @@ export const AnalyzeUpload = () => {
     maxSize: MAX_FILE_SIZE,
     maxFiles: MAX_FILES,
     noClick: activeTab === "camera",
-    disabled: isMaxFilesReached,
+    disabled: isMaxFilesReached || !caseId,
   });
 
   // Determines if the "Next" button should be disabled.
@@ -276,9 +285,10 @@ export const AnalyzeUpload = () => {
   // Defines reusable CSS class strings for consistent styling and easier maintenance.
   const dropzoneBaseClasses =
     "mt-4 group flex h-96 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 text-center transition-all duration-300 ease-in-out";
-  const dropzoneStateClasses = isMaxFilesReached
-    ? "cursor-not-allowed bg-slate-100 border-slate-300 opacity-60"
-    : "cursor-pointer border-emerald-300 bg-emerald-50 hover:border-solid hover:border-emerald-400 hover:bg-emerald-100 hover:shadow-lg hover:shadow-emerald-500/20";
+  const dropzoneStateClasses =
+    isMaxFilesReached || !caseId
+      ? "cursor-not-allowed bg-slate-100 border-slate-300 opacity-60"
+      : "cursor-pointer border-emerald-300 bg-emerald-50 hover:border-solid hover:border-emerald-400 hover:bg-emerald-100 hover:shadow-lg hover:shadow-emerald-500/20";
   const dropzoneDragAcceptClasses = isDragAccept ? "!border-green-500 !bg-green-100" : "";
   const dropzoneDragRejectClasses = isDragReject
     ? "!border-rose-500 !bg-rose-100 hover:!border-rose-500 hover:!bg-rose-100 hover:!shadow-rose-500/20"
@@ -290,6 +300,8 @@ export const AnalyzeUpload = () => {
     "font-plus-jakarta-sans mt-4 font-semibold md:text-xl text-lg transition-colors duration-300 ease-in-out group-hover:group-enabled:text-slate-900";
   const descriptionTextClasses =
     "font-inter mt-1 max-w-sm text-sm text-slate-500 transition-colors duration-300 ease-in-out group-hover:group-enabled:text-slate-600";
+  const buttonClasses =
+    "font-inter relative h-9 flex-1 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 md:h-10 md:text-base";
 
   // Defines the animation variants for the tab content, creating a smooth fade and slide effect.
   const contentVariants = {
@@ -367,7 +379,7 @@ export const AnalyzeUpload = () => {
             <div
               {...getRootProps({
                 onClick: () => {
-                  if (activeTab === "camera" && !isMaxFilesReached) {
+                  if (activeTab === "camera" && !isMaxFilesReached && caseId) {
                     setIsCameraOpen(true);
                   }
                 },
@@ -405,18 +417,22 @@ export const AnalyzeUpload = () => {
                         isDragReject ? "text-rose-500" : "text-slate-700"
                       )}
                     >
-                      {isMaxFilesReached
-                        ? "Maximum files reached"
-                        : isDragAccept
-                          ? "Drop them here"
-                          : "Upload from Device"}
+                      {!caseId
+                        ? "Save Details First"
+                        : isMaxFilesReached
+                          ? "Maximum files reached"
+                          : isDragAccept
+                            ? "Drop them here"
+                            : "Upload from Device"}
                     </p>
                     <p className={descriptionTextClasses}>
-                      {isMaxFilesReached
-                        ? `You have uploaded the maximum of ${MAX_FILES} images`
-                        : `Click to browse or drag and drop up to ${MAX_FILES - filesCount} more. Maximum file size
+                      {!caseId
+                        ? "Please complete the previous step to enable uploads."
+                        : isMaxFilesReached
+                          ? `You have uploaded the maximum of ${MAX_FILES} images`
+                          : `Click to browse or drag and drop up to ${MAX_FILES - filesCount} more. Maximum file size
                       of 10MB each. See supported formats `}
-                      {!isMaxFilesReached && (
+                      {!isMaxFilesReached && caseId && (
                         <button
                           type="button"
                           onClick={(e) => {
@@ -475,13 +491,21 @@ export const AnalyzeUpload = () => {
           <UploadPreview />
         </CardContent>
 
-        {/* Footer section containing the primary action button. */}
-        <CardFooter className="flex justify-end px-0">
-          <div className={cn("mt-2 w-1/2 md:mt-0", isNextDisabled && "cursor-not-allowed")}>
+        {/* Footer section containing the navigation buttons. */}
+        <CardFooter className="flex justify-between gap-x-4 px-0">
+          {/* Wrapper for Previous Button */}
+          <div className="flex-1">
+            <Button type="button" onClick={prevStep} className={cn(buttonClasses, "w-full")}>
+              Previous
+            </Button>
+          </div>
+
+          {/* Wrapper for next button.*/}
+          <div className={cn("flex-1", isNextDisabled && "cursor-not-allowed")}>
             <Button
               onClick={nextStep}
               disabled={isNextDisabled}
-              className="font-inter disabled:cursor-not--allowed relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
+              className="font-inter disabled:cursor-not--allowed relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
             >
               Next
             </Button>
