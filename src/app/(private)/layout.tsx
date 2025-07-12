@@ -1,12 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
+import { toast } from "sonner";
 
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 
 interface Props {
   children: React.ReactNode;
@@ -20,6 +22,24 @@ interface Props {
  */
 const PrivateLayout = ({ children }: Props) => {
   const pathname = usePathname();
+
+  // Get the submission status and the action to clear it from the store.
+  const submissionStatus = useAnalyzeStore((state) => state.submissionStatus);
+  const clearSubmissionStatus = useAnalyzeStore((state) => state.clearSubmissionStatus);
+
+  /**
+   * Shows a success toast on page load if a successful submission just occurred.
+   */
+  useEffect(() => {
+    if (submissionStatus === "success") {
+      toast.success("Case successfully submitted!");
+      clearSubmissionStatus();
+    }
+    // This effect runs when the status changes or when the user navigates to a new page.
+  }, [submissionStatus, clearSubmissionStatus, pathname]);
+
+  // Determine if the breadcrumb should be visible.
+  const isBreadcrumbVisible = pathname !== "/dashboard" && pathname !== "/results";
 
   return (
     // Provides sidebar state management to all nested components
@@ -37,9 +57,9 @@ const PrivateLayout = ({ children }: Props) => {
         {/* A simple flex container for the rest of the page. */}
         <div className="flex flex-1 flex-col">
           <AppHeader />
-          <main className="flex-1 bg-slate-200 md:p-8 p-6">
+          <main className="flex-1 bg-slate-200 p-6 md:p-8">
             {/* Conditionally render the breadcrumb. */}
-            {pathname !== "/dashboard" && (
+            {isBreadcrumbVisible && (
               <div className="mb-4">
                 <AppBreadcrumb />
               </div>
