@@ -1,10 +1,7 @@
-"use client";
-
-import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,7 +13,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { submitUpload } from "@/features/analyze/actions/submit-upload";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -24,17 +20,25 @@ import { cn } from "@/lib/utils";
 
 // A shared class string for consistent button styling throughout the component.
 const buttonClasses =
-  "font-inter relative h-9 flex-1 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base";
+  "w-full font-inter relative h-9 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 md:h-10 md:text-base";
 
 /**
  * Renders the final review and submission step of the analysis form.
  * It displays a summary of all entered data and uploaded images.
  */
 export const AnalyzeReview = () => {
-  // Retrieves state and actions from the global Zustand store.
-  const { prevStep, details, data, reset: resetAnalyzeStore } = useAnalyzeStore();
-  const files = data.files;
   const router = useRouter();
+  // Provides a pending state to track the navigation.
+  const [isPending, startTransition] = useTransition();
+
+  // Retrieves state and actions from the global Zustand store using atomic selectors.
+  // This prevents unnecessary re-renders and fixes the infinite loop.
+  const prevStep = useAnalyzeStore((state) => state.prevStep);
+  const details = useAnalyzeStore((state) => state.details);
+  const data = useAnalyzeStore((state) => state.data);
+  const caseId = useAnalyzeStore((state) => state.caseId);
+  const setSubmissionSuccess = useAnalyzeStore((state) => state.setSubmissionSuccess);
+  const files = data.files;
 
   // State to manage the visibility of the image preview modal.
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,24 +47,6 @@ export const AnalyzeReview = () => {
 
   // State to store local blob URLs for newly uploaded files to enable previews.
   const [objectUrls, setObjectUrls] = useState<Map<string, string>>(new Map());
-
-  // Mutation for submitting the analysis data to the server.
-  const { mutate: performSubmit, isPending } = useMutation({
-    mutationFn: submitUpload,
-    onSuccess: (response) => {
-      if (response.success) {
-        toast.success(response.message);
-        resetAnalyzeStore();
-        // Redirect to the dashboard after a successful submission.
-        router.push("/dashboard");
-      } else {
-        toast.error(response.message || "An unknown error occurred.");
-      }
-    },
-    onError: (error) => {
-      toast.error("Submission failed: " + error.message);
-    },
-  });
 
   // Memoizes the final temperature value, defaulting to 0.
   const finalTemperatureValue = details.temperature?.value ?? 0;
@@ -151,42 +137,36 @@ export const AnalyzeReview = () => {
   };
 
   /**
-   * Prepares and "submits" the final analysis data.
-   * In this implementation, it logs the data to the console for simulation purposes.
+   * Finalizes the analysis process.
    */
   const handleSubmit = () => {
-    // Re-validate the details from the store as a safeguard.
+    // Prevent the function from running if a submission is already pending.
+    if (isPending) return;
+
+    // Perform final client-side checks as a safeguard.
     const validation = detailsSchema.safeParse(details);
     if (!validation.success) {
       toast.error("Form data is invalid. Please go back and check the details.");
-      console.error("Validation errors:", validation.error.flatten());
       return;
     }
 
-    // Ensure at least one file has been uploaded.
-    if (files.length === 0) {
-      toast.error("Please upload at least one image to submit.");
+    if (files.length === 0 || files.some((f) => f.status !== "success")) {
+      toast.error("Please ensure all images have been successfully uploaded.");
       return;
     }
 
-    const validatedDetails = validation.data;
-
-    // Convert temperature to Celsius before submission, as the database requires it.
-    let temperatureInCelsius = validatedDetails.temperature.value;
-    if (validatedDetails.temperature.unit === "F") {
-      temperatureInCelsius = (validatedDetails.temperature.value - 32) * (5 / 9);
+    // Safeguard check to ensure the caseId exists before redirecting.
+    if (!caseId) {
+      toast.error("An error occurred. Could not find case ID to proceed.");
+      return;
     }
 
-    // Call the mutation with the prepared data.
-    performSubmit({
-      details: {
-        ...validatedDetails,
-        temperature: {
-          value: temperatureInCelsius,
-          unit: "C",
-        },
-      },
-      uploadIds: files.map((file) => file.id),
+    // Set the success status in the global store for the next page to read.
+    setSubmissionSuccess();
+
+    // React treats this navigation as a non-ugent update.
+    startTransition(() => {
+      router.push(`/results/${caseId}`);
     });
   };
 
@@ -392,12 +372,19 @@ export const AnalyzeReview = () => {
 
         {/* Footer containing navigation and submission buttons. */}
         <CardFooter className="flex justify-between gap-x-4 px-0 pt-8">
-          <Button onClick={prevStep} disabled={isPending} className={cn(buttonClasses)}>
-            Previous
-          </Button>
-          <Button onClick={handleSubmit} disabled={isPending} className={cn(buttonClasses)}>
-            {isPending ? "Submitting..." : "Submit"}
-          </Button>
+          {/* Previous Button */}
+          <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
+            <Button onClick={prevStep} className={cn(buttonClasses)} disabled={isPending}>
+              Previous
+            </Button>
+          </div>
+
+          {/* Submit Button */}
+          <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
+            <Button onClick={handleSubmit} className={cn(buttonClasses)} disabled={isPending}>
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
         </CardFooter>
       </Card>
     </>

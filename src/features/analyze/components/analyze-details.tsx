@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { PiCalendarCheck } from "react-icons/pi";
 import { barangays, cities, provinces, regions } from "select-philippines-address";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -35,6 +37,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { createCase } from "@/features/analyze/actions/create-case";
+import { updateCase } from "@/features/analyze/actions/update-case";
 import {
   type DetailsFormData,
   type DetailsFormInput,
@@ -45,7 +49,7 @@ import { cn } from "@/lib/utils";
 
 // Reusable Tailwind CSS class strings for consistent styling
 const buttonClasses =
-  "font-inter relative h-9 flex-1 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base";
+  "font-inter relative h-9 flex-1 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 md:h-10 md:text-base";
 const uniformInputStyles =
   "h-9 border-2 border-slate-200 text-sm placeholder:!text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 data-[state=open]:border-green-600 md:h-10";
 const selectTriggerStyles = "data-[placeholder]:!text-slate-400";
@@ -81,7 +85,8 @@ const isDateToday = (date: Date | undefined): boolean => {
  */
 export const AnalyzeDetails = () => {
   // Retrieves state and actions from the Zustand store for managing the multi-step form.
-  const { nextStep, prevStep, updateDetailsData, details } = useAnalyzeStore();
+  const { nextStep, prevStep, updateDetailsData, setCaseId, details, caseId, step } =
+    useAnalyzeStore();
 
   // State variables to hold the dynamic lists for regions, provinces, cities, and barangays.
   const [regionList, setRegionList] = useState<AddressPart[]>([]);
@@ -102,6 +107,41 @@ export const AnalyzeDetails = () => {
       },
     },
     mode: "onChange",
+  });
+
+  // TanStack Query mutation for handling the async call to the `createCase` server action.
+  const createCaseMutation = useMutation({
+    mutationFn: createCase,
+    onSuccess: (result, submittedData) => {
+      if (result.success && result.data) {
+        toast.success("Case details have been saved.");
+        updateDetailsData(submittedData as DetailsFormData);
+        setCaseId(result.data.caseId);
+        nextStep();
+      } else {
+        toast.error(result.error || "An unknown error occurred while saving.");
+      }
+    },
+    onError: (error) => {
+      toast.error(`An unexpected error occurred: ${error.message}`);
+    },
+  });
+
+  // A separate mutation for updating an existing case.
+  const updateCaseMutation = useMutation({
+    mutationFn: updateCase,
+    onSuccess: (result, submittedData) => {
+      if (result.success) {
+        toast.success("Case details have been updated.");
+        updateDetailsData(submittedData.details);
+        nextStep();
+      } else {
+        toast.error(result.error || "An unknown error occurred while updating.");
+      }
+    },
+    onError: (error) => {
+      toast.error(`An unexpected error occurred: ${error.message}`);
+    },
   });
 
   // Watches for changes in form fields to trigger dependent effects.
@@ -158,14 +198,21 @@ export const AnalyzeDetails = () => {
   }, [watchedCity]);
 
   /**
-   * Handles form submission, updates the global state with the validated data,
-   * and proceeds to the next step in the analysis flow.
+   * Handles form submission by deciding whether to create a new case or update an existing one.
    * @param data - The validated form data.
    */
   const onSubmit: SubmitHandler<DetailsFormInput> = (data) => {
-    updateDetailsData(data as DetailsFormData);
-    nextStep();
+    const validatedData = data as DetailsFormData;
+
+    if (caseId) {
+      updateCaseMutation.mutate({ caseId, details: validatedData });
+    } else {
+      createCaseMutation.mutate(validatedData);
+    }
   };
+
+  // Determines if any mutation is currently running to disable the submit button.
+  const isPending = createCaseMutation.isPending || updateCaseMutation.isPending;
 
   return (
     // The main container for the form layout.
@@ -493,25 +540,30 @@ export const AnalyzeDetails = () => {
           </CardContent>
 
           <CardFooter className="flex justify-between gap-x-4 px-0 pt-6">
-            {/* Wrapper for Previous Button */}
-            <div className="flex-1">
-              <Button type="button" onClick={prevStep} className={cn(buttonClasses, "w-full")}>
+            {step > 1 && (
+              <Button
+                type="button"
+                onClick={prevStep}
+                disabled={isPending}
+                className={cn(buttonClasses)}
+              >
                 Previous
               </Button>
-            </div>
+            )}
 
             {/* Wrapper for next button.*/}
             <div
               className={cn("flex-1", {
-                "cursor-not-allowed": !form.formState.isValid,
+                "cursor-not-allowed": !form.formState.isValid || isPending,
+                "w-full": step === 1,
               })}
             >
               <Button
                 type="submit"
-                disabled={!form.formState.isValid}
+                disabled={!form.formState.isValid || isPending}
                 className={cn(buttonClasses, "w-full")}
               >
-                Next
+                {isPending ? "Saving..." : "Save and Continue"}
               </Button>
             </div>
           </CardFooter>
