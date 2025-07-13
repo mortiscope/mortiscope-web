@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useMemo } from "react";
 import { FaFolder } from "react-icons/fa6";
+import { GoPencil } from "react-icons/go";
 import { HiOutlineSearch } from "react-icons/hi";
 import { IoGridOutline, IoListOutline } from "react-icons/io5";
 import {
@@ -12,7 +13,10 @@ import {
   LuArrowUpZA,
   LuCalendarClock,
   LuCalendarDays,
+  LuEllipsisVertical,
+  LuTrash2,
 } from "react-icons/lu";
+import { MdOutlineRemoveRedEye } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -251,7 +255,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                   "grid gap-3 sm:gap-4",
                   viewMode === "list"
                     ? "grid-cols-1 md:grid-cols-2"
-                    : "md:g rid-cols-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+                    : "grid-cols-2 sm:grid-cols-4 lg:grid-cols-5"
                 )}
               >
                 <AnimatePresence>
@@ -275,8 +279,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                         className={cn(
                           "flex h-full w-full items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-amber-300 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
                           {
-                            "justify-between rounded-xl p-2 lg:rounded-2xl lg:p-3":
-                              viewMode === "list",
+                            "justify-between rounded-xl p-2 lg:p-3": viewMode === "list",
                             "aspect-square flex-col justify-center gap-2 rounded-2xl px-3 py-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl":
                               viewMode === "grid",
                           }
@@ -284,6 +287,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                       >
                         {viewMode === "list" ? (
                           <>
+                            {/* List View for Main content */}
                             <div className="flex min-w-0 flex-grow items-center gap-3">
                               <div
                                 className={cn(
@@ -307,9 +311,154 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                 </p>
                               </div>
                             </div>
+
+                            {/* Action Icons for larger screens */}
+                            <div className="hidden flex-shrink-0 items-center gap-1 lg:flex">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`View ${caseItem.caseName}`}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                  >
+                                    <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="font-inter">View</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Rename ${caseItem.caseName}`}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-sky-100 hover:text-sky-600"
+                                  >
+                                    <GoPencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="font-inter">Rename</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Delete ${caseItem.caseName}`}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
+                                  >
+                                    <LuTrash2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="font-inter">Delete</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
+
+                            {/* Ellipsis Dropdown for smaller screens */}
+                            <div className="lg:hidden">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Options for ${caseItem.caseName}`}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className="h-8 w-8 cursor-pointer rounded-full text-slate-500 transition-colors hover:bg-transparent hover:text-slate-700 focus-visible:ring-1 focus-visible:ring-slate-400 focus-visible:ring-offset-0"
+                                  >
+                                    <LuEllipsisVertical className="h-5 w-5" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  onCloseAutoFocus={(e) => e.preventDefault()}
+                                  className="w-40"
+                                >
+                                  <DropdownMenuItem
+                                    className={cn(
+                                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                                    )}
+                                  >
+                                    <MdOutlineRemoveRedEye className="mr-2 h-4 w-4" />
+                                    <span>Open</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className={cn(
+                                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
+                                    )}
+                                  >
+                                    <GoPencil className="mr-2 h-4 w-4" />
+                                    <span>Rename</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className={cn(
+                                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
+                                    )}
+                                  >
+                                    <LuTrash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </>
                         ) : (
                           <>
+                            {/* Dropdown menu for Grid View */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Options for ${caseItem.caseName}`}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  className="absolute top-2 right-2 z-10 h-9 w-9 cursor-pointer rounded-full text-slate-800 transition-colors hover:bg-transparent hover:text-slate-700 focus-visible:ring-1 focus-visible:ring-slate-400 focus-visible:ring-offset-0"
+                                >
+                                  <LuEllipsisVertical className="h-6 w-6" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="end"
+                                onCloseAutoFocus={(e) => e.preventDefault()}
+                                className="w-40"
+                              >
+                                <DropdownMenuItem
+                                  className={cn(
+                                    "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                                  )}
+                                >
+                                  <MdOutlineRemoveRedEye className="mr-2 h-4 w-4" />
+                                  <span>Open</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className={cn(
+                                    "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
+                                  )}
+                                >
+                                  <GoPencil className="mr-2 h-4 w-4" />
+                                  <span>Rename</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className={cn(
+                                    "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
+                                  )}
+                                >
+                                  <LuTrash2 className="mr-2 h-4 w-4" />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {/* Grid View for main content */}
                             <div
                               className={cn(
                                 "flex items-center justify-center rounded-full bg-emerald-100 transition-all duration-300 group-hover:bg-amber-100",

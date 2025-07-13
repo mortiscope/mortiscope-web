@@ -19,13 +19,13 @@ const ResultsSkeleton = () => {
   const skeletonCount = 20;
 
   return (
-    <div className="mt-6 flex w-full flex-1 flex-col">
+    <div className="flex w-full flex-1 flex-col">
       {/* Skeleton for Controls */}
       <div className="mb-4 flex items-center justify-between gap-2">
-        <Skeleton className="h-10 w-full max-w-sm" />
+        <Skeleton className="h-10 w-full max-w-sm bg-white" />
         <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-[110px] shrink-0 sm:w-[190px]" />
-          <Skeleton className="h-10 w-[74px] shrink-0" />
+          <Skeleton className="h-10 w-11 shrink-0 border-2 border-slate-200 bg-white sm:w-[190px]" />
+          <Skeleton className="h-10 w-[74px] shrink-0 border-2 border-slate-200 bg-white" />
         </div>
       </div>
 
@@ -43,10 +43,10 @@ const ResultsSkeleton = () => {
             // List View Skeleton
             <div
               key={`list-skeleton-${i}`}
-              className="flex h-full items-center justify-between rounded-xl border-2 border-slate-200 bg-slate-100 p-4 md:rounded-2xl"
+              className="flex h-full items-center justify-between rounded-xl border-2 border-slate-200 bg-slate-50 p-2 lg:rounded-2xl lg:p-3"
             >
               <div className="flex min-w-0 flex-grow items-center gap-3">
-                <Skeleton className="h-9 w-9 shrink-0 rounded-full bg-slate-200" />
+                <Skeleton className="h-9 w-9 shrink-0 rounded-full bg-slate-200 lg:h-12 lg:w-12" />
                 <div className="w-full min-w-0 flex-1 space-y-1.5">
                   <Skeleton className="h-4 w-3/4 bg-slate-200" />
                   <Skeleton className="h-3 w-1/2 bg-slate-200" />
@@ -57,9 +57,9 @@ const ResultsSkeleton = () => {
             // Grid View Skeleton
             <div
               key={`grid-skeleton-${i}`}
-              className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-slate-100 p-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl"
+              className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl"
             >
-              <Skeleton className="h-12 w-12 rounded-full bg-slate-200 sm:h-16 sm:w-16 lg:h-20 lg:w-20" />
+              <Skeleton className="h-12 w-12 rounded-full bg-slate-200 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-20 lg:w-20" />
               <div className="flex w-full flex-col items-center justify-end space-y-2">
                 <Skeleton className="h-4 w-5/6 bg-slate-200" />
                 <Skeleton className="h-3 w-1/2 bg-slate-200" />
