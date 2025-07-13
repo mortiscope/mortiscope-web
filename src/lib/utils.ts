@@ -98,3 +98,23 @@ export function resetLocationFields(
 export function fahrenheitToCelsius(fahrenheit: number): number {
   return ((fahrenheit - 32) * 5) / 9;
 }
+
+/**
+ * Formats a Date object into a more readable string format.
+ *
+ * @param date - The Date object to format.
+ * @returns A formatted string representation of the date.
+ */
+export function formatDate(date: Date): string {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    // Return a sensible fallback for invalid dates
+    return "Invalid Date";
+  }
+
+  // Uses the Intl.DateTimeFormat API for localized date formatting.
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
+}
