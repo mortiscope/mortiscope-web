@@ -53,7 +53,7 @@ export const AppHeader = () => {
     "group font-inter cursor-pointer border-2 border-transparent transition-colors duration-300 ease-in-out hover:border-emerald-200 focus:bg-emerald-100";
 
   return (
-    <header className="bg-background sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b px-6 md:h-20">
+    <header className="bg-background sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b px-6 shadow-sm md:h-20">
       {/* Left section of the header. */}
       <div className="flex items-center gap-4">
         <SidebarTrigger

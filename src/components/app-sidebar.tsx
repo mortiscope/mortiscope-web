@@ -44,8 +44,8 @@ const analysisMenuItems = [
   },
   {
     icon: GrList,
-    label: "History",
-    href: "/history",
+    label: "Results",
+    href: "/results",
   },
 ];
 
@@ -108,7 +108,7 @@ export const AppSidebar = () => {
   const HomeLink = (
     <Link href={homeMenuItem.href} passHref>
       <SidebarMenuButton
-        isActive={pathname === homeMenuItem.href}
+        isActive={pathname.startsWith(homeMenuItem.href)}
         className={cn(menuItemClasses, iconSizeOverride, collapsedButtonClasses)}
       >
         <homeMenuItem.icon className="text-white" />
@@ -213,7 +213,7 @@ export const AppSidebar = () => {
                 const menuItemLink = (
                   <Link href={item.href} passHref>
                     <SidebarMenuButton
-                      isActive={pathname === item.href}
+                      isActive={pathname.startsWith(item.href)}
                       className={cn(menuItemClasses, iconSizeOverride, collapsedButtonClasses)}
                     >
                       <item.icon className="text-white" />
