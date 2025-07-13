@@ -72,11 +72,13 @@ export const PRESIGNED_URL_EXPIRATION_SECONDS = 60 * 10;
  */
 export const SORT_OPTIONS = [
   { value: "date-uploaded-desc", label: "Date Added (Newest)" },
+  { value: "date-uploaded-asc", label: "Date Added (Oldest)" },
   { value: "date-modified-desc", label: "Date Created (Newest)" },
+  { value: "date-modified-asc", label: "Date Created (Oldest)" },
   { value: "name-asc", label: "Name (A-Z)" },
   { value: "name-desc", label: "Name (Z-A)" },
-  { value: "size-desc", label: "Size (Largest)" },
   { value: "size-asc", label: "Size (Smallest)" },
+  { value: "size-desc", label: "Size (Largest)" },
 ];
 
 /**
