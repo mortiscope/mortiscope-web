@@ -371,7 +371,7 @@ export const AnalyzeReview = () => {
         </div>
 
         {/* Footer containing navigation and submission buttons. */}
-        <CardFooter className="flex justify-between gap-x-4 px-0 pt-8">
+        <CardFooter className="flex justify-between gap-x-4 px-0">
           {/* Previous Button */}
           <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
             <Button onClick={prevStep} className={cn(buttonClasses)} disabled={isPending}>
