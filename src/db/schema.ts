@@ -2,6 +2,7 @@ import type { AdapterAccount } from "@auth/core/adapters";
 import { createId } from "@paralleldrive/cuid2";
 import {
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   real,
@@ -154,4 +155,39 @@ export const uploads = pgTable("uploads", {
     onDelete: "cascade",
   }),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
+// Stores the aggregated results of the detection and PMI computation for a specific case
+export const analysisResults = pgTable("analysis_results", {
+  caseId: text("case_id")
+    .primaryKey()
+    .references(() => cases.id, { onDelete: "cascade" }),
+  totalCounts: jsonb("total_counts"),
+  oldestStageDetected: text("oldest_stage_detected"),
+  pmiSourceImageKey: text("pmi_source_image_key"),
+  pmiDays: real("pmi_days"),
+  pmiHours: real("pmi_hours"),
+  pmiMinutes: real("pmi_minutes"),
+  stageUsedForCalculation: text("stage_used_for_calculation"),
+  temperatureProvided: real("temperature_provided"),
+  calculatedAdh: real("calculated_adh"),
+  ldtUsed: real("ldt_used"),
+  explanation: text("explanation"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+
+// Stores every single object detection from every image for bounding box rendering
+export const detections = pgTable("detections", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  uploadId: text("upload_id")
+    .notNull()
+    .references(() => uploads.id, { onDelete: "cascade" }),
+  label: text("label").notNull(),
+  confidence: real("confidence").notNull(),
+  xMin: real("x_min").notNull(),
+  yMin: real("y_min").notNull(),
+  xMax: real("x_max").notNull(),
+  yMax: real("y_max").notNull(),
 });

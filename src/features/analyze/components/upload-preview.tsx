@@ -46,8 +46,10 @@ const SortIcon = ({ value }: { value: SortOptionValue }) => {
   const commonProps = { className: "mr-2 h-4 w-4 text-slate-600" };
   switch (value) {
     case "date-uploaded-desc":
+    case "date-uploaded-asc":
       return <LuCalendarClock {...commonProps} />;
     case "date-modified-desc":
+    case "date-modified-asc":
       return <LuCalendarDays {...commonProps} />;
     case "name-asc":
       return <LuArrowDownAZ {...commonProps} />;
@@ -262,6 +264,10 @@ export const UploadPreview = () => {
         return sorted.sort((a, b) => b.size - a.size);
       case "date-modified-desc":
         return sorted.sort((a, b) => b.dateUploaded.getTime() - a.dateUploaded.getTime());
+      case "date-modified-asc":
+        return sorted.sort((a, b) => a.dateUploaded.getTime() - b.dateUploaded.getTime());
+      case "date-uploaded-asc":
+        return sorted.sort((a, b) => a.dateUploaded.getTime() - b.dateUploaded.getTime());
       case "date-uploaded-desc":
       default:
         // Sort by upload date, newest first.
@@ -387,7 +393,7 @@ export const UploadPreview = () => {
                   <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-64">
+              <DropdownMenuContent align="end" className="w-64">
                 {SORT_OPTIONS.map((option) => (
                   <DropdownMenuItem
                     key={option.value}
@@ -535,7 +541,7 @@ export const UploadPreview = () => {
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p className="font-inter">Remove file</p>
+                              <p className="font-inter">Remove</p>
                             </TooltipContent>
                           </Tooltip>
                         </div>
