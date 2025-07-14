@@ -1,5 +1,11 @@
 import { auth } from "@/auth";
-import { apiAuthPrefix, authRoutes, DEFAULT_LOGIN_REDIRECT, publicRoutes } from "@/routes";
+import {
+  apiAuthPrefix,
+  authRoutes,
+  DEFAULT_LOGIN_REDIRECT,
+  publicApiRoutes,
+  publicRoutes,
+} from "@/routes";
 
 /**
  * The main middleware function, wrapped in the `auth` helper from NextAuth.js.
@@ -13,11 +19,12 @@ export default auth((req) => {
 
   // Categorize the current route to apply specific rules
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isPublicApiRoute = publicApiRoutes.includes(nextUrl.pathname);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  // Allow all API routes used by NextAuth.js to pass through without checks
-  if (isApiAuthRoute) {
+  // Allow all public API routes to pass through without checks
+  if (isApiAuthRoute || isPublicApiRoute) {
     return;
   }
 

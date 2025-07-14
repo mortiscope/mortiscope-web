@@ -21,3 +21,10 @@ export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
  * @type {string[]}
  */
 export const publicRoutes: string[] = ["/", "/verification"];
+
+/**
+ * An array of API routes that are accessible to the public
+ * These routes are not protected by authentication.
+ * @type {string[]}
+ */
+export const publicApiRoutes: string[] = ["/api/inngest"];
