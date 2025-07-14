@@ -672,11 +672,11 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                   className="font-plus-jakarta-sans h-auto w-full truncate border-none bg-transparent p-0 px-2 text-center text-sm font-medium text-slate-800 shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 lg:text-base"
                                 />
                               ) : (
-                                <p className="font-plus-jakarta-sans w-full truncate px-2 text-sm font-medium text-slate-800 lg:text-base">
+                                <p className="font-plus-jakarta-sans w-full truncate px-2 text-sm font-medium text-slate-800 lg:text-base lg:font-semibold">
                                   {caseItem.caseName}
                                 </p>
                               )}
-                              <p className="truncate text-xs text-slate-500">
+                              <p className="truncate text-xs text-slate-500 lg:text-sm">
                                 {formatDate(caseItem.caseDate)}
                               </p>
                             </div>

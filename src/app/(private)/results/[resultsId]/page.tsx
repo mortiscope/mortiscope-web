@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import NotFoundPage from "@/app/not-found";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
+import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
 
 type Props = {
@@ -73,6 +74,7 @@ export default async function ResultsPage({ params }: Props) {
   return (
     <div className="flex flex-1 flex-col gap-4 pt-2">
       <ResultsDetails caseData={caseData} />
+      <ResultsAnalysis />
     </div>
   );
 }
