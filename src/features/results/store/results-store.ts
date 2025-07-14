@@ -17,6 +17,8 @@ interface ResultsState {
   sortOption: SortOptionValue;
   /** The current search query entered by the user. */
   searchTerm: string;
+  /** The ID of the case currently being renamed, or null if none. */
+  renamingCaseId: string | null;
   /**
    * Action to update the view mode.
    * @param mode The new view mode to set.
@@ -32,6 +34,11 @@ interface ResultsState {
    * @param term The new search term to set.
    */
   setSearchTerm: (term: string) => void;
+  /**
+   * Action to set the ID of the case being renamed.
+   * @param id The ID of the case to rename, or null to exit rename mode.
+   */
+  setRenamingCaseId: (id: string | null) => void;
 }
 
 /**
@@ -44,10 +51,14 @@ export const useResultsStore = create<ResultsState>((set) => ({
   sortOption: "date-modified-desc",
   // The initial search term is empty.
   searchTerm: "",
+  // No case is being renamed by default.
+  renamingCaseId: null,
   // Action to update the `viewMode` state.
   setViewMode: (mode) => set({ viewMode: mode }),
   // Action to update the `sortOption` state.
   setSortOption: (option) => set({ sortOption: option }),
   // Action to update the `searchTerm` state.
   setSearchTerm: (term) => set({ searchTerm: term }),
+  // Action to update the `renamingCaseId` state.
+  setRenamingCaseId: (id) => set({ renamingCaseId: id }),
 }));

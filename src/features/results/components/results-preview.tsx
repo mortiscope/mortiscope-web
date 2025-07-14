@@ -1,8 +1,9 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaFolder } from "react-icons/fa6";
 import { GoPencil } from "react-icons/go";
 import { HiOutlineSearch } from "react-icons/hi";
@@ -17,6 +18,7 @@ import {
   LuTrash2,
 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type getCases } from "@/features/results/actions/get-cases";
-// Import the new modal component with the updated name
+import { renameCase } from "@/features/results/actions/rename-case";
 import { DeleteCaseModal } from "@/features/results/components/delete-case-modal";
 import { useResultsStore, type ViewMode } from "@/features/results/store/results-store";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
@@ -76,11 +78,19 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
   const viewMode = useResultsStore((state) => state.viewMode);
   const sortOption = useResultsStore((state) => state.sortOption);
   const searchTerm = useResultsStore((state) => state.searchTerm);
+  const renamingCaseId = useResultsStore((state) => state.renamingCaseId);
   const setViewMode = useResultsStore((state) => state.setViewMode);
   const setSortOption = useResultsStore((state) => state.setSortOption);
   const setSearchTerm = useResultsStore((state) => state.setSearchTerm);
+  const setRenamingCaseId = useResultsStore((state) => state.setRenamingCaseId);
 
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Local state for the cases list, enabling optimistic updates.
+  const [cases, setCases] = useState<Case[]>(initialCases);
+  // Local state for the temporary new name during editing
+  const [tempCaseName, setTempCaseName] = useState("");
 
   // State to manage the delete confirmation modal.
   const [deleteModal, setDeleteModal] = useState<{
@@ -92,6 +102,91 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
     caseId: null,
     caseName: null,
   });
+
+  // TanStack Mutation for renaming a case with optimistic updates.
+  const { mutate: executeRename, isPending: isRenaming } = useMutation({
+    mutationFn: renameCase,
+    // When mutate is called, we update the UI instantly.
+    onMutate: async ({ caseId, newName }) => {
+      // Exit rename mode immediately for a seamless UX.
+      setRenamingCaseId(null);
+      // Snapshot the previous state of cases.
+      const previousCases = cases;
+      // Optimistically update the local cases state.
+      setCases((currentCases) =>
+        currentCases.map((caseItem) =>
+          caseItem.id === caseId ? { ...caseItem, caseName: newName } : caseItem
+        )
+      );
+      // Return a context object with the snapshotted value.
+      return { previousCases };
+    },
+    // This runs after the mutation is finished, on either success or error.
+    onSettled: (data, error, variables, context) => {
+      // If there was any kind of error, revert the optimistic update.
+      if (error || data?.error) {
+        if (context?.previousCases) {
+          setCases(context.previousCases);
+        }
+        toast.error(data?.error || "Failed to rename. Please try again.");
+      } else if (data?.success) {
+        // On success, the interface is already correct. Show the toast.
+        toast.success(data.success);
+      }
+    },
+  });
+
+  /**
+   * Automatically focuses and selects the text in the input when rename mode is activated.
+   */
+  useEffect(() => {
+    if (renamingCaseId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [renamingCaseId]);
+
+  /**
+   * Starts the rename process for a given case.
+   * @param {React.MouseEvent | Event} e The event that triggered the action.
+   * @param {string} caseId The ID of the case to rename.
+   * @param {string} currentName The current name of the case.
+   */
+  const handleStartRename = (e: React.MouseEvent | Event, caseId: string, currentName: string) => {
+    e.stopPropagation();
+    setRenamingCaseId(caseId);
+    setTempCaseName(currentName);
+  };
+
+  /**
+   * Confirms and submits the new case name.
+   */
+  const handleConfirmRename = () => {
+    if (isRenaming || !renamingCaseId) return;
+
+    // Find the original case from our local state to check if the name has changed.
+    const originalCase = cases.find((c) => c.id === renamingCaseId);
+    if (!tempCaseName.trim() || !originalCase || tempCaseName === originalCase.caseName) {
+      setRenamingCaseId(null);
+      return;
+    }
+
+    executeRename({ caseId: renamingCaseId, newName: tempCaseName.trim() });
+  };
+
+  /**
+   * Handles key presses within the rename input field.
+   * @param {React.KeyboardEvent<HTMLInputElement>} e The keyboard event.
+   */
+  const handleRenameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleConfirmRename();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      setRenamingCaseId(null);
+    }
+  };
 
   /**
    * Memoizes the list of relevant sort options for this context, excluding irrelevant ones.
@@ -116,9 +211,9 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
    * This is a performance optimization that prevents re-filtering unless the data or search term changes.
    */
   const filteredCases = useMemo(() => {
-    if (!searchTerm) return initialCases;
-    return initialCases.filter((c) => c.caseName.toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [initialCases, searchTerm]);
+    if (!searchTerm) return cases;
+    return cases.filter((c) => c.caseName.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [cases, searchTerm]);
 
   /**
    * Memoizes the final list of cases after sorting is applied to the filtered list.
@@ -144,7 +239,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
   }, [filteredCases, sortOption]);
 
   // Renders an initial empty state when no cases exist and there's no active search.
-  if (initialCases.length === 0 && !searchTerm) {
+  if (cases.length === 0 && !searchTerm) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center text-center">
         <FaFolder className="h-16 w-16 text-slate-300" />
@@ -307,7 +402,11 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                     >
                       {/* The main interactive element for a case. */}
                       <div
-                        onDoubleClick={() => router.push(`/results/${caseItem.id}`)}
+                        onDoubleClick={() => {
+                          if (renamingCaseId !== caseItem.id) {
+                            router.push(`/results/${caseItem.id}`);
+                          }
+                        }}
                         role="button"
                         tabIndex={0}
                         aria-label={`${caseItem.caseName}. Double-click to open, or use the menu for more actions.`}
@@ -338,9 +437,22 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                 />
                               </div>
                               <div className="min-w-0 flex-1">
-                                <p className="font-plus-jakarta-sans truncate pb-0.5 text-sm font-medium text-slate-800 lg:text-base">
-                                  {caseItem.caseName}
-                                </p>
+                                {renamingCaseId === caseItem.id ? (
+                                  <Input
+                                    ref={inputRef}
+                                    value={tempCaseName}
+                                    onChange={(e) => setTempCaseName(e.target.value)}
+                                    onBlur={handleConfirmRename}
+                                    onKeyDown={handleRenameKeyDown}
+                                    disabled={isRenaming}
+                                    maxLength={256}
+                                    className="font-plus-jakarta-sans h-auto truncate border-none bg-transparent p-0 pb-0.5 text-sm font-medium text-slate-800 shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 lg:text-base"
+                                  />
+                                ) : (
+                                  <p className="font-plus-jakarta-sans truncate pb-0.5 text-sm font-medium text-slate-800 lg:text-base">
+                                    {caseItem.caseName}
+                                  </p>
+                                )}
                                 <p className="truncate text-xs text-slate-500 lg:text-sm">
                                   {formatDate(caseItem.caseDate)}
                                 </p>
@@ -374,7 +486,9 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     variant="ghost"
                                     size="icon"
                                     aria-label={`Rename ${caseItem.caseName}`}
-                                    onClick={(e) => e.stopPropagation()}
+                                    onClick={(e) =>
+                                      handleStartRename(e, caseItem.id, caseItem.caseName)
+                                    }
                                     className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-sky-100 hover:text-sky-600"
                                   >
                                     <GoPencil className="h-4 w-4" />
@@ -407,7 +521,14 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
 
                             {/* Ellipsis Dropdown for smaller screens */}
                             <div className="lg:hidden">
-                              <DropdownMenu>
+                              <DropdownMenu
+                                onOpenChange={(open) => {
+                                  // If menu is closed while renaming, cancel rename
+                                  if (!open && renamingCaseId === caseItem.id) {
+                                    handleConfirmRename();
+                                  }
+                                }}
+                              >
                                 <DropdownMenuTrigger asChild>
                                   <Button
                                     variant="ghost"
@@ -434,6 +555,13 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     <span>Open</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
+                                    onSelect={(e) => {
+                                      e.stopPropagation();
+                                      setTimeout(
+                                        () => handleStartRename(e, caseItem.id, caseItem.caseName),
+                                        0
+                                      );
+                                    }}
                                     className={cn(
                                       "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
                                     )}
@@ -457,7 +585,14 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                         ) : (
                           <>
                             {/* Dropdown menu for Grid View */}
-                            <DropdownMenu>
+                            <DropdownMenu
+                              onOpenChange={(open) => {
+                                // If menu is closed while renaming, cancel rename
+                                if (!open && renamingCaseId === caseItem.id) {
+                                  handleConfirmRename();
+                                }
+                              }}
+                            >
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
@@ -484,6 +619,13 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                   <span>Open</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.stopPropagation();
+                                    setTimeout(
+                                      () => handleStartRename(e, caseItem.id, caseItem.caseName),
+                                      0
+                                    );
+                                  }}
                                   className={cn(
                                     "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
                                   )}
@@ -518,9 +660,22 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                               />
                             </div>
                             <div className="flex w-full flex-col items-center justify-end">
-                              <p className="font-plus-jakarta-sans w-full truncate px-2 text-sm font-medium text-slate-800 lg:text-base">
-                                {caseItem.caseName}
-                              </p>
+                              {renamingCaseId === caseItem.id ? (
+                                <Input
+                                  ref={inputRef}
+                                  value={tempCaseName}
+                                  onChange={(e) => setTempCaseName(e.target.value)}
+                                  onBlur={handleConfirmRename}
+                                  onKeyDown={handleRenameKeyDown}
+                                  disabled={isRenaming}
+                                  maxLength={256}
+                                  className="font-plus-jakarta-sans h-auto w-full truncate border-none bg-transparent p-0 px-2 text-center text-sm font-medium text-slate-800 shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 lg:text-base"
+                                />
+                              ) : (
+                                <p className="font-plus-jakarta-sans w-full truncate px-2 text-sm font-medium text-slate-800 lg:text-base">
+                                  {caseItem.caseName}
+                                </p>
+                              )}
                               <p className="truncate text-xs text-slate-500">
                                 {formatDate(caseItem.caseDate)}
                               </p>
