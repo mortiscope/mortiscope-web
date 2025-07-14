@@ -1,12 +1,11 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCases } from "@/features/results/actions/get-cases";
 import { ResultsPreview } from "@/features/results/components/results-preview";
+import { useCases } from "@/features/results/hooks/use-cases";
 import { useResultsStore } from "@/features/results/store/results-store";
 import { cn } from "@/lib/utils";
 
@@ -76,14 +75,7 @@ const ResultsSkeleton = () => {
  * The client-side container for the results page.
  */
 export const ResultsContainer = () => {
-  const {
-    data: cases,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ["cases"],
-    queryFn: () => getCases(),
-  });
+  const { isLoading, isError } = useCases();
 
   // Handle errors with a toast message.
   useEffect(() => {
@@ -92,5 +84,5 @@ export const ResultsContainer = () => {
     }
   }, [isError]);
 
-  return isLoading || isError ? <ResultsSkeleton /> : <ResultsPreview initialCases={cases || []} />;
+  return isLoading || isError ? <ResultsSkeleton /> : <ResultsPreview />;
 };

@@ -8,9 +8,9 @@ import { ResultsAnalysis } from "@/features/results/components/results-analysis"
 import { ResultsDetails } from "@/features/results/components/results-details";
 
 type Props = {
-  params: {
+  params: Promise<{
     resultsId: string;
-  };
+  }>;
 };
 
 /**

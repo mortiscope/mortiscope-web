@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -33,6 +33,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { type getCases } from "@/features/results/actions/get-cases";
 import { renameCase } from "@/features/results/actions/rename-case";
 import { DeleteCaseModal } from "@/features/results/components/delete-case-modal";
+import { useCases } from "@/features/results/hooks/use-cases";
 import { useResultsStore, type ViewMode } from "@/features/results/store/results-store";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 import { cn, formatDate } from "@/lib/utils";
@@ -73,7 +74,11 @@ const SortIcon = ({ value }: { value: SortOptionValue }) => {
  * @param {object} props The component props.
  * @param {Case[]} props.initialCases The initial list of cases passed from the server.
  */
-export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
+export const ResultsPreview = () => {
+  // Dfault to an empty array to prevent errors during render.
+  const { data: cases = [] } = useCases();
+  const queryClient = useQueryClient();
+
   // Retrieves state and actions from the global Zustand store.
   const viewMode = useResultsStore((state) => state.viewMode);
   const sortOption = useResultsStore((state) => state.sortOption);
@@ -87,8 +92,6 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Local state for the cases list, enabling optimistic updates.
-  const [cases, setCases] = useState<Case[]>(initialCases);
   // Local state for the temporary new name during editing
   const [tempCaseName, setTempCaseName] = useState("");
 
@@ -103,36 +106,49 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
     caseName: null,
   });
 
-  // TanStack Mutation for renaming a case with optimistic updates.
+  // Mutation with proper optimistic update logic using the queryClient.
   const { mutate: executeRename, isPending: isRenaming } = useMutation({
     mutationFn: renameCase,
-    // When mutate is called, we update the UI instantly.
+    // When mutate is called, the interface is updated instantly.
     onMutate: async ({ caseId, newName }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["cases"] });
+
       // Exit rename mode immediately for a seamless UX.
       setRenamingCaseId(null);
-      // Snapshot the previous state of cases.
-      const previousCases = cases;
-      // Optimistically update the local cases state.
-      setCases((currentCases) =>
-        currentCases.map((caseItem) =>
+
+      // Snapshot the previous state of cases from the cache.
+      const previousCases = queryClient.getQueryData<Case[]>(["cases"]);
+
+      // Optimistically update the cache.
+      queryClient.setQueryData<Case[]>(["cases"], (oldCases = []) =>
+        oldCases.map((caseItem) =>
           caseItem.id === caseId ? { ...caseItem, caseName: newName } : caseItem
         )
       );
+
       // Return a context object with the snapshotted value.
       return { previousCases };
     },
+    // This runs on error.
+    onError: (err, variables, context) => {
+      // If there was an error, revert the optimistic update.
+      if (context?.previousCases) {
+        queryClient.setQueryData(["cases"], context.previousCases);
+      }
+      toast.error("Failed to rename. Please try again.");
+    },
     // This runs after the mutation is finished, on either success or error.
-    onSettled: (data, error, variables, context) => {
-      // If there was any kind of error, revert the optimistic update.
-      if (error || data?.error) {
-        if (context?.previousCases) {
-          setCases(context.previousCases);
-        }
-        toast.error(data?.error || "Failed to rename. Please try again.");
+    onSettled: (data, error) => {
+      // If the server action returned a specific error message, show it
+      if (data?.error && !error) {
+        toast.error(data.error);
       } else if (data?.success) {
         // On success, the interface is already correct. Show the toast.
         toast.success(data.success);
       }
+      // Always refetch after error or success to ensure data consistency.
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 

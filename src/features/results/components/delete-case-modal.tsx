@@ -15,7 +15,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { deleteCase } from "@/features/results/actions/delete-case";
+import { type getCases } from "@/features/results/actions/get-cases";
 import { cn } from "@/lib/utils";
+
+type Case = Awaited<ReturnType<typeof getCases>>[number];
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -76,24 +79,45 @@ export const DeleteCaseModal = ({
 }: DeleteCaseModalProps) => {
   const queryClient = useQueryClient();
 
+  // Mutation with optimistic update logic.
   const { mutate, isPending } = useMutation({
     // The mutation function that will be called.
     mutationFn: deleteCase,
-    // The logic to run on a successful mutation.
+    onMutate: async (variables) => {
+      // Immediately close the modal for a snappy UX.
+      onOpenChange(false);
+
+      // Cancel any outgoing refetches to prevent overwriting our optimistic update.
+      await queryClient.cancelQueries({ queryKey: ["cases"] });
+
+      // Snapshot the previous value.
+      const previousCases = queryClient.getQueryData<Case[]>(["cases"]);
+
+      // Optimistically remove the case from the cache.
+      queryClient.setQueryData<Case[]>(["cases"], (oldCases = []) =>
+        oldCases.filter((c) => c.id !== variables.caseId)
+      );
+
+      // Return a context object with the snapshotted value.
+      return { previousCases };
+    },
     onSuccess: (data) => {
+      // If the server action returned a success message, show it.
       if (data.success) {
         toast.success(data.success);
-        // Invalidate the 'cases' query to trigger a refetch and update the UI.
-        queryClient.invalidateQueries({ queryKey: ["cases"] });
-        onOpenChange(false);
-      } else if (data.error) {
-        toast.error(data.error);
       }
     },
-    // The logic to run if the mutation encounters an error.
-    onError: (error) => {
-      console.error("Deletion failed:", error);
-      toast.error("An unexpected error occurred during deletion.");
+    onError: (error, variables, context) => {
+      // If the mutation fails, roll back to the previous state.
+      if (context?.previousCases) {
+        queryClient.setQueryData(["cases"], context.previousCases);
+      }
+      // Inform the user of the failure.
+      toast.error("Deletion failed. The case has been restored.");
+    },
+    onSettled: () => {
+      // Always refetch after the mutation is settled to ensure data consistency.
+      queryClient.invalidateQueries({ queryKey: ["cases"] });
     },
   });
 

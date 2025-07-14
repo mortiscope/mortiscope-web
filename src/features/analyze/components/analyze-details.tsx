@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
@@ -84,6 +84,9 @@ const isDateToday = (date: Date | undefined): boolean => {
  * Manages state for case details and dynamically populates Philippine address dropdowns based on user selections.
  */
 export const AnalyzeDetails = () => {
+  // Get the query client instance.
+  const queryClient = useQueryClient();
+
   // Retrieves state and actions from the Zustand store for managing the multi-step form.
   const { nextStep, prevStep, updateDetailsData, setCaseId, details, caseId, step } =
     useAnalyzeStore();
@@ -117,6 +120,8 @@ export const AnalyzeDetails = () => {
         toast.success("Case details have been saved.");
         updateDetailsData(submittedData as DetailsFormData);
         setCaseId(result.data.caseId);
+        // Invalidate the 'cases' query to ensure the list is refetched when the user navigates back to the results page.
+        queryClient.invalidateQueries({ queryKey: ["cases"] });
         nextStep();
       } else {
         toast.error(result.error || "An unknown error occurred while saving.");
@@ -134,6 +139,8 @@ export const AnalyzeDetails = () => {
       if (result.success) {
         toast.success("Case details have been updated.");
         updateDetailsData(submittedData.details);
+        // Also invalidate on update to reflect changes everywhere.
+        queryClient.invalidateQueries({ queryKey: ["cases"] });
         nextStep();
       } else {
         toast.error(result.error || "An unknown error occurred while updating.");
