@@ -123,8 +123,8 @@ export const DeleteCaseModal = ({
                 Delete Case
               </DialogTitle>
               <DialogDescription className="font-inter pt-4 text-center text-sm text-slate-600">
-                You are about to permanently delete the case folder named 
-                <strong className="font-semibold text-slate-800">{`"${caseName}"`}</strong>. Keep in
+                You are about to permanently delete the case folder named&nbsp;
+                <strong className="font-semibold text-slate-800">{`${caseName}`}</strong>. Keep in
                 mind that this action is irreversible.
               </DialogDescription>
             </DialogHeader>
