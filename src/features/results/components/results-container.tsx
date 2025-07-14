@@ -88,7 +88,7 @@ export const ResultsContainer = () => {
   // Handle errors with a toast message.
   useEffect(() => {
     if (isError) {
-      toast.error("Failed to load cases");
+      toast.error("Failed to load cases.");
     }
   }, [isError]);
 

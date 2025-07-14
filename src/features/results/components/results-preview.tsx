@@ -1,8 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Link from "next/link";
-import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { FaFolder } from "react-icons/fa6";
 import { GoPencil } from "react-icons/go";
 import { HiOutlineSearch } from "react-icons/hi";
@@ -29,6 +29,8 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type getCases } from "@/features/results/actions/get-cases";
+// Import the new modal component with the updated name
+import { DeleteCaseModal } from "@/features/results/components/delete-case-modal";
 import { useResultsStore, type ViewMode } from "@/features/results/store/results-store";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 import { cn, formatDate } from "@/lib/utils";
@@ -77,6 +79,19 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
   const setViewMode = useResultsStore((state) => state.setViewMode);
   const setSortOption = useResultsStore((state) => state.setSortOption);
   const setSearchTerm = useResultsStore((state) => state.setSearchTerm);
+
+  const router = useRouter();
+
+  // State to manage the delete confirmation modal.
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    caseId: string | null;
+    caseName: string | null;
+  }>({
+    isOpen: false,
+    caseId: null,
+    caseName: null,
+  });
 
   /**
    * Memoizes the list of relevant sort options for this context, excluding irrelevant ones.
@@ -141,9 +156,26 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
     );
   }
 
+  /**
+   * Opens the delete confirmation modal with the details of the selected case.
+   * @param {string} caseId The ID of the case to delete.
+   * @param {string} caseName The name of the case to delete.
+   */
+  const openDeleteModal = (caseId: string, caseName: string) => {
+    setDeleteModal({ isOpen: true, caseId, caseName });
+  };
+
   // The main component wrapper. Note the flex classes which are now effective.
   return (
     <TooltipProvider>
+      {/* Render the delete confirmation modal */}
+      <DeleteCaseModal
+        isOpen={deleteModal.isOpen}
+        onOpenChange={(isOpen) => setDeleteModal({ ...deleteModal, isOpen })}
+        caseId={deleteModal.caseId}
+        caseName={deleteModal.caseName}
+      />
+
       <div className="flex w-full flex-1 flex-col">
         {/* The main controls bar for searching, sorting, and changing view mode. */}
         <motion.div
@@ -273,11 +305,14 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                       }}
                       className="font-inter group relative"
                     >
-                      {/* The link wrapper for the entire case item. */}
-                      <Link
-                        href={`/results/${caseItem.id}`}
+                      {/* The main interactive element for a case. */}
+                      <div
+                        onDoubleClick={() => router.push(`/results/${caseItem.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`${caseItem.caseName}. Double-click to open, or use the menu for more actions.`}
                         className={cn(
-                          "flex h-full w-full items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-amber-300 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
+                          "flex h-full w-full cursor-pointer items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-amber-300 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
                           {
                             "justify-between rounded-xl p-2 lg:p-3": viewMode === "list",
                             "aspect-square flex-col justify-center gap-2 rounded-2xl px-3 py-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl":
@@ -320,7 +355,10 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     variant="ghost"
                                     size="icon"
                                     aria-label={`View ${caseItem.caseName}`}
-                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/results/${caseItem.id}`);
+                                    }}
                                     className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                   >
                                     <MdOutlineRemoveRedEye className="h-5 w-5" />
@@ -336,7 +374,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     variant="ghost"
                                     size="icon"
                                     aria-label={`Rename ${caseItem.caseName}`}
-                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
                                     className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-sky-100 hover:text-sky-600"
                                   >
                                     <GoPencil className="h-4 w-4" />
@@ -352,7 +390,10 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     variant="ghost"
                                     size="icon"
                                     aria-label={`Delete ${caseItem.caseName}`}
-                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDeleteModal(caseItem.id, caseItem.caseName);
+                                    }}
                                     className="h-8 w-8 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
                                   >
                                     <LuTrash2 className="h-4 w-4" />
@@ -372,7 +413,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     variant="ghost"
                                     size="icon"
                                     aria-label={`Options for ${caseItem.caseName}`}
-                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
                                     className="h-8 w-8 cursor-pointer rounded-full text-slate-500 transition-colors hover:bg-transparent hover:text-slate-700 focus-visible:ring-1 focus-visible:ring-slate-400 focus-visible:ring-offset-0"
                                   >
                                     <LuEllipsisVertical className="h-5 w-5" />
@@ -384,6 +425,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                   className="w-40"
                                 >
                                   <DropdownMenuItem
+                                    onSelect={() => router.push(`/results/${caseItem.id}`)}
                                     className={cn(
                                       "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
                                     )}
@@ -400,6 +442,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                     <span>Rename</span>
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
+                                    onSelect={() => openDeleteModal(caseItem.id, caseItem.caseName)}
                                     className={cn(
                                       "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
                                     )}
@@ -420,7 +463,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Options for ${caseItem.caseName}`}
-                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onClick={(e) => e.stopPropagation()}
                                   className="absolute top-2 right-2 z-10 h-9 w-9 cursor-pointer rounded-full text-slate-800 transition-colors hover:bg-transparent hover:text-slate-700 focus-visible:ring-1 focus-visible:ring-slate-400 focus-visible:ring-offset-0"
                                 >
                                   <LuEllipsisVertical className="h-6 w-6" />
@@ -432,6 +475,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                 className="w-40"
                               >
                                 <DropdownMenuItem
+                                  onSelect={() => router.push(`/results/${caseItem.id}`)}
                                   className={cn(
                                     "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
                                   )}
@@ -448,6 +492,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                                   <span>Rename</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  onSelect={() => openDeleteModal(caseItem.id, caseItem.caseName)}
                                   className={cn(
                                     "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
                                   )}
@@ -482,7 +527,7 @@ export const ResultsPreview = ({ initialCases }: { initialCases: Case[] }) => {
                             </div>
                           </>
                         )}
-                      </Link>
+                      </div>
                     </motion.div>
                   ))}
                 </AnimatePresence>
