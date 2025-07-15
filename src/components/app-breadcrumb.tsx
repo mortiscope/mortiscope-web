@@ -135,7 +135,16 @@ const StyledDropdownMenuItem = ({
  */
 export function AppBreadcrumb() {
   const pathname = usePathname();
-  const currentStep = useAnalyzeStore((state) => state.step);
+  const status = useAnalyzeStore((state) => state.status);
+
+  // Translate the wizard status into a step number for breadcrumb logic.
+  const currentStep = React.useMemo(() => {
+    const stepConfig = analysisSteps.find((s) => s.status === status);
+    if (stepConfig) return stepConfig.id;
+    // When processing, the breadcrumb should reflect the final completed step.
+    if (status === "processing") return 4;
+    return 1;
+  }, [status]);
 
   const pathSegments = React.useMemo(() => pathname.split("/").filter(Boolean), [pathname]);
   const isResultsPage = pathSegments[0] === "results" && pathSegments.length === 2;
@@ -157,13 +166,16 @@ export function AppBreadcrumb() {
     }
 
     if (pathname === "/analyze") {
+      if (status === "processing") {
+        return [...baseItems, { href: pathname, label: "Processing Analysis" }];
+      }
       const stepDetails = analysisSteps.find((s) => s.id === currentStep);
       if (stepDetails) {
         return [...baseItems, { href: pathname, label: stepDetails.name }];
       }
     }
     return baseItems;
-  }, [pathname, currentStep, isResultsPage, caseData, isLoading]);
+  }, [pathname, status, currentStep, isResultsPage, caseData, isLoading]);
 
   if (items.length === 0) {
     return (

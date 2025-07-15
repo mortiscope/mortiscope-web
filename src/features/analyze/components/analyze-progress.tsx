@@ -8,7 +8,7 @@ import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
 import { IoImageOutline } from "react-icons/io5";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type AnalyzeWizardStatus,useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { CIRCLE_ANIMATION_DURATION, LINE_ANIMATION_DURATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -24,10 +24,15 @@ interface AnalyzeProgressProps {
  * An array that defines the configuration for each step in the analysis process.
  * Each object contains an ID, a display name, and a corresponding icon component.
  */
-export const analysisSteps = [
-  { id: 1, name: "Analysis Details", icon: HiOutlineClipboardDocumentList },
-  { id: 2, name: "Provide an Image", icon: IoImageOutline },
-  { id: 3, name: "Review and Submit", icon: BsListCheck },
+export const analysisSteps: {
+  id: number;
+  name: string;
+  icon: React.ElementType;
+  status: AnalyzeWizardStatus;
+}[] = [
+  { id: 1, name: "Analysis Details", icon: HiOutlineClipboardDocumentList, status: "details" },
+  { id: 2, name: "Provide an Image", icon: IoImageOutline, status: "upload" },
+  { id: 3, name: "Review and Submit", icon: BsListCheck, status: "review" },
 ];
 
 /**
@@ -36,8 +41,8 @@ export const analysisSteps = [
  * @param {AnalyzeProgressProps} props The component's props.
  */
 export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
-  // The store to navigate directly to a specific step.
-  const setStep = useAnalyzeStore((state) => state.setStep);
+  // The store action to navigate directly to a specific step by its status.
+  const setStatus = useAnalyzeStore((state) => state.setStatus);
   // Determines if the viewport matches a large screen size for responsive rendering.
   const isLg = useMediaQuery("(min-width: 1024px)");
   // Determines if the viewport is larger than the small screen breakpoint.
@@ -107,8 +112,9 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
 
           const handleStepClick = () => {
             // Allow navigation only to previously completed steps.
-            if (isCompleted && setStep) {
-              setStep(step.id);
+            if (isCompleted && setStatus) {
+              // Use the 'status' string to update the store, not the numeric ID.
+              setStatus(step.status);
             }
           };
 

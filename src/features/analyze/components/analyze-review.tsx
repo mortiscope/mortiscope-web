@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { BeatLoader } from "react-spinners";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,29 +16,48 @@ import {
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type AnalysisStatus } from "@/features/results/actions/get-analysis-status";
+import { useAnalysisStatus } from "@/features/results/hooks/use-analysis-status";
 import { cn } from "@/lib/utils";
 
 // A shared class string for consistent button styling throughout the component.
 const buttonClasses =
   "w-full font-inter relative h-9 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 md:h-10 md:text-base";
 
+// A map of user-friendly messages corresponding to the backend analysis status.
+const processingMessages: Record<AnalysisStatus, string> = {
+  pending: "Waiting for image uploads to complete...",
+  processing: "Running analysis on the backend...",
+  completed: "Finalizing results...",
+  failed: "An error occurred during analysis.",
+  not_found: "Initializing analysis...",
+};
+
 /**
  * Renders the final review and submission step of the analysis form.
  * It displays a summary of all entered data and uploaded images.
  */
 export const AnalyzeReview = () => {
-  const router = useRouter();
   // Provides a pending state to track the navigation.
-  const [isPending, startTransition] = useTransition();
+  const [isPending] = useTransition();
 
   // Retrieves state and actions from the global Zustand store using atomic selectors.
-  // This prevents unnecessary re-renders and fixes the infinite loop.
   const prevStep = useAnalyzeStore((state) => state.prevStep);
   const details = useAnalyzeStore((state) => state.details);
   const data = useAnalyzeStore((state) => state.data);
   const caseId = useAnalyzeStore((state) => state.caseId);
-  const setSubmissionSuccess = useAnalyzeStore((state) => state.setSubmissionSuccess);
+  const startProcessing = useAnalyzeStore((state) => state.startProcessing);
+  const wizardStatus = useAnalyzeStore((state) => state.status);
   const files = data.files;
+
+  // Determines if the component should be in the "processing" UI state.
+  const isProcessing = wizardStatus === "processing";
+
+  // This is our new polling hook. It is enabled only when the wizard is in the 'processing' state.
+  const analysisStatus = useAnalysisStatus({
+    caseId,
+    isEnabled: isProcessing,
+  });
 
   // State to manage the visibility of the image preview modal.
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -140,8 +159,8 @@ export const AnalyzeReview = () => {
    * Finalizes the analysis process.
    */
   const handleSubmit = () => {
-    // Prevent the function from running if a submission is already pending.
-    if (isPending) return;
+    // Prevent the function from running if we are already in the processing state.
+    if (isProcessing) return;
 
     // Perform final client-side checks as a safeguard.
     const validation = detailsSchema.safeParse(details);
@@ -155,19 +174,15 @@ export const AnalyzeReview = () => {
       return;
     }
 
-    // Safeguard check to ensure the caseId exists before redirecting.
+    // Safeguard check to ensure the caseId exists before proceeding.
     if (!caseId) {
       toast.error("An error occurred. Could not find case ID to proceed.");
       return;
     }
 
-    // Set the success status in the global store for the next page to read.
-    setSubmissionSuccess();
-
-    // React treats this navigation as a non-ugent update.
-    startTransition(() => {
-      router.push(`/results/${caseId}`);
-    });
+    // Transition the interface to the 'processing' state to begin polling.
+    startProcessing();
+    toast.success("Analysis submitted!");
   };
 
   /**
@@ -192,7 +207,17 @@ export const AnalyzeReview = () => {
         onSelectFile={handleSelectFile}
       />
 
-      <Card className="border-none py-2 shadow-none">
+      <Card className="relative border-none py-2 shadow-none">
+        {/* A semi-transparent overlay that appears during processing. */}
+        {isProcessing && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-2 rounded-lg bg-white/80 backdrop-blur-sm">
+            <BeatLoader color="#16a34a" size={12} />
+            <p className="font-plus-jakarta-sans p-2 text-center text-lg font-medium text-slate-700 md:text-xl">
+              {processingMessages[analysisStatus ?? "not_found"]}
+            </p>
+          </div>
+        )}
+
         {/* Main header for the review step. */}
         <CardHeader className="px-0 text-center">
           <CardTitle className="font-plus-jakarta-sans text-xl">Review and Submit</CardTitle>
@@ -373,16 +398,24 @@ export const AnalyzeReview = () => {
         {/* Footer containing navigation and submission buttons. */}
         <CardFooter className="flex justify-between gap-x-4 px-0">
           {/* Previous Button */}
-          <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
-            <Button onClick={prevStep} className={cn(buttonClasses)} disabled={isPending}>
+          <div className={cn("flex-1", (isPending || isProcessing) && "cursor-not-allowed")}>
+            <Button
+              onClick={prevStep}
+              className={cn(buttonClasses)}
+              disabled={isPending || isProcessing}
+            >
               Previous
             </Button>
           </div>
 
           {/* Submit Button */}
-          <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
-            <Button onClick={handleSubmit} className={cn(buttonClasses)} disabled={isPending}>
-              {isPending ? "Submitting..." : "Submit"}
+          <div className={cn("flex-1", (isPending || isProcessing) && "cursor-not-allowed")}>
+            <Button
+              onClick={handleSubmit}
+              className={cn(buttonClasses)}
+              disabled={isPending || isProcessing}
+            >
+              {isProcessing ? "Processing..." : isPending ? "Submitting..." : "Submit"}
             </Button>
           </div>
         </CardFooter>
