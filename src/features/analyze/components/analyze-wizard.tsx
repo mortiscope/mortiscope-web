@@ -8,8 +8,8 @@ import { AnalyzeUpload } from "@/features/analyze/components/analyze-upload";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 
 export const AnalyzeWizard = () => {
-  // Select only the `step` value.
-  const step = useAnalyzeStore((state) => state.step);
+  // Select the new 'status' value from the store.
+  const status = useAnalyzeStore((state) => state.status);
   // Select only the `reset` action.
   const resetAnalyzeStore = useAnalyzeStore((state) => state.reset);
 
@@ -24,9 +24,9 @@ export const AnalyzeWizard = () => {
 
   return (
     <div>
-      {step === 1 && <AnalyzeDetails />}
-      {step === 2 && <AnalyzeUpload />}
-      {step === 3 && <AnalyzeReview />}
+      {status === "details" && <AnalyzeDetails />}
+      {status === "upload" && <AnalyzeUpload />}
+      {(status === "review" || status === "processing") && <AnalyzeReview />}
     </div>
   );
 };

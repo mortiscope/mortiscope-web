@@ -590,7 +590,7 @@ export const UploadPreview = () => {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p className="font-inter">Remove file</p>
+                                <p className="font-inter">Remove</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>

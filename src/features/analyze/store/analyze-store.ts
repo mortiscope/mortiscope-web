@@ -21,6 +21,15 @@ export type UploadStatus = "pending" | "uploading" | "success" | "error";
 export type ViewMode = "list" | "grid";
 
 /**
+ * Defines the current state of the analysis wizard UI.
+ * - details: The user is filling out the case details form.
+ * - upload: The user is uploading images for the case.
+ * - review: The user is reviewing all information before submission.
+ * - processing: The submission has been accepted and is being processed by the backend.
+ */
+export type AnalyzeWizardStatus = "details" | "upload" | "review" | "processing";
+
+/**
  * Represents a file that is being prepared for, is in the process of being uploaded,
  * or has been persisted in the database.
  * It extends the standard File object with metadata for tracking and persistence.
@@ -76,9 +85,9 @@ type AnalyzeStateData = {
  * Defines the complete shape of the analysis store,
  */
 type AnalyzeState = {
-  // The current active step in the multi-step form.
-  step: number;
-  // The ID of the case, populated after step 1 is successfully completed.
+  // The current active status of the wizard, controlling which component is displayed.
+  status: AnalyzeWizardStatus;
+  // The ID of the case, populated after the details step is successfully completed.
   caseId: string | null;
   // Flag to indicate if the store has been hydrated with persisted data.
   isHydrated: boolean;
@@ -92,14 +101,16 @@ type AnalyzeState = {
   details: Partial<DetailsFormData>;
   // State to track if a submission was just successfully fired.
   submissionStatus: "idle" | "success";
-  // Action to set the current step to a specific number.
-  setStep: (step: number) => void;
+  // Action to set the current status to a specific value.
+  setStatus: (status: AnalyzeWizardStatus) => void;
   // Action to store the newly created case's ID.
   setCaseId: (caseId: string) => void;
   // Action to advance to the next step.
   nextStep: () => void;
   // Action to return to the previous step.
   prevStep: () => void;
+  // Action to transition the store to the processing state after submission.
+  startProcessing: () => void;
   // Action to set the view mode.
   setViewMode: (viewMode: ViewMode) => void;
   // Action to set the sort option.
@@ -137,7 +148,7 @@ type AnalyzeState = {
  * Used for initialization and for resetting the form.
  */
 const initialState: {
-  step: number;
+  status: AnalyzeWizardStatus;
   caseId: string | null;
   isHydrated: boolean;
   viewMode: ViewMode;
@@ -146,7 +157,7 @@ const initialState: {
   details: Partial<DetailsFormData>;
   submissionStatus: "idle" | "success";
 } = {
-  step: 1,
+  status: "details",
   caseId: null,
   isHydrated: false,
   viewMode: "list",
@@ -162,16 +173,26 @@ const initialState: {
  * Creates and exports the Zustand store hook `useAnalyzeStore`.
  * This hook provides access to the analysis state and actions from any component.
  */
-export const useAnalyzeStore = create<AnalyzeState>((set) => ({
+export const useAnalyzeStore = create<AnalyzeState>((set, get) => ({
   ...initialState,
-  // Sets the step to a specific value.
-  setStep: (step) => set({ step }),
+  // Sets the status to a specific value.
+  setStatus: (status) => set({ status }),
   // Stores the ID of the newly created case.
   setCaseId: (caseId) => set({ caseId }),
-  // Increments the current step by 1.
-  nextStep: () => set((state) => ({ step: state.step + 1 })),
-  // Decrements the current step by 1.
-  prevStep: () => set((state) => ({ step: state.step - 1 })),
+  // Increments the current status based on the defined wizard flow.
+  nextStep: () => {
+    const currentStatus = get().status;
+    if (currentStatus === "details") set({ status: "upload" });
+    if (currentStatus === "upload") set({ status: "review" });
+  },
+  // Decrements the current status based on the defined wizard flow.
+  prevStep: () => {
+    const currentStatus = get().status;
+    if (currentStatus === "review") set({ status: "upload" });
+    if (currentStatus === "upload") set({ status: "details" });
+  },
+  // Transitions the wizard to the final 'processing' state.
+  startProcessing: () => set({ status: "processing" }),
   // Sets the view mode for the upload preview.
   setViewMode: (viewMode) => set({ viewMode }),
   // Sets the sort option for the upload preview.
