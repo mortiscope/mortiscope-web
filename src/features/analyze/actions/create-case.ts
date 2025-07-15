@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
 import { type DetailsFormData, detailsSchema } from "@/features/analyze/schemas/details";
+import { inngest } from "@/lib/inngest";
 
 /**
  * Defines the structured return type for the server action for clarity and type safety.
@@ -75,6 +76,12 @@ export async function createCase(values: DetailsFormData): Promise<ActionRespons
     if (!newCase?.id) {
       throw new Error("Database failed to return the new case ID.");
     }
+
+    // After creating the case, send an event to Inngest to start the asynchronous analysis workflow.
+    await inngest.send({
+      name: "analysis/request.sent",
+      data: { caseId: newCase.id },
+    });
 
     // On success, return the newly created case ID.
     return { success: true, data: { caseId: newCase.id } };

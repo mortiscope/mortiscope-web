@@ -12,12 +12,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:web": "concurrently \"pnpm:dev\" \"pnpm:inngest:dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "inngest:dev": "pnpm dlx inngest-cli dev -u http://localhost:3000/api/inngest",
     "email": "dotenv -- email dev --dir src/emails"
   },
   "dependencies": {
@@ -94,6 +96,7 @@
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@types/uuid": "^10.0.0",
+    "concurrently": "^9.2.0",
     "dotenv-cli": "^8.0.0",
     "drizzle-kit": "^0.31.1",
     "eslint": "^9.27.0",
