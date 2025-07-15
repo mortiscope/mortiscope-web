@@ -3,6 +3,7 @@ import { createId } from "@paralleldrive/cuid2";
 import {
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   real,
@@ -11,6 +12,14 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core";
+
+// Enum to define the possible statuses of an analysis job for type safety.
+export const analysisStatusEnum = pgEnum("analysis_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+]);
 
 // Represents the core user profile in the application
 export const users = pgTable("users", {
@@ -162,6 +171,7 @@ export const analysisResults = pgTable("analysis_results", {
   caseId: text("case_id")
     .primaryKey()
     .references(() => cases.id, { onDelete: "cascade" }),
+  status: analysisStatusEnum("status").notNull().default("pending"),
   totalCounts: jsonb("total_counts"),
   oldestStageDetected: text("oldest_stage_detected"),
   pmiSourceImageKey: text("pmi_source_image_key"),
@@ -173,7 +183,7 @@ export const analysisResults = pgTable("analysis_results", {
   calculatedAdh: real("calculated_adh"),
   ldtUsed: real("ldt_used"),
   explanation: text("explanation"),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }),
 });
 
 // Stores every single object detection from every image for bounding box rendering
