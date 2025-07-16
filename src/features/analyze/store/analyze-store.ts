@@ -1,5 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import superjson from "superjson";
 
 import { type DetailsFormData } from "@/features/analyze/schemas/details";
 import { type SortOptionValue } from "@/lib/constants";
@@ -79,6 +81,15 @@ export type PersistedFile = {
 type AnalyzeStateData = {
   // An array to hold all the files with their upload state.
   files: UploadableFile[];
+};
+
+/**
+ * Defines the persisted subset of the analysis store
+ */
+type PersistedAnalyzeState = {
+  status: AnalyzeWizardStatus;
+  caseId: string | null;
+  details: Partial<DetailsFormData>;
 };
 
 /**
@@ -179,144 +190,175 @@ const initialState: {
  * Creates and exports the Zustand store hook `useAnalyzeStore`.
  * This hook provides access to the analysis state and actions from any component.
  */
-export const useAnalyzeStore = create<AnalyzeState>((set, get) => ({
-  ...initialState,
-  // Sets the status to a specific value.
-  setStatus: (status) => set({ status }),
-  // Stores the ID of the newly created case.
-  setCaseId: (caseId) => set({ caseId }),
-  // Increments the current status based on the defined wizard flow.
-  nextStep: () => {
-    const currentStatus = get().status;
-    if (currentStatus === "details") set({ status: "upload" });
-    if (currentStatus === "upload") set({ status: "review" });
-  },
-  // Decrements the current status based on the defined wizard flow.
-  prevStep: () => {
-    const currentStatus = get().status;
-    if (currentStatus === "review") set({ status: "upload" });
-    if (currentStatus === "upload") set({ status: "details" });
-  },
-  // Transitions the wizard to the final 'processing' state.
-  startProcessing: () => set({ status: "processing" }),
-  // Sets the view mode for the upload preview.
-  setViewMode: (viewMode) => set({ viewMode }),
-  // Sets the sort option for the upload preview.
-  setSortOption: (sortOption) => set({ sortOption }),
-  // Sets the search term for the upload preview.
-  setSearchTerm: (searchTerm) => set({ searchTerm }),
-  // Adds new files, converting them to the UploadableFile format with a unique ID.
-  addFiles: (newFiles, source) => {
-    const uploadableFiles: UploadableFile[] = newFiles.map((file) => ({
-      id: createId(),
-      file,
-      key: "",
-      url: "",
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 0,
-      status: "pending",
-      source,
-      dateUploaded: new Date(),
-    }));
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: [...state.data.files, ...uploadableFiles],
+export const useAnalyzeStore = create<AnalyzeState>()(
+  persist<AnalyzeState, [], [], PersistedAnalyzeState>(
+    (set, get) => ({
+      ...initialState,
+      // Sets the status to a specific value.
+      setStatus: (status) => set({ status }),
+      // Stores the ID of the newly created case.
+      setCaseId: (caseId) => set({ caseId }),
+      // Increments the current status based on the defined wizard flow.
+      nextStep: () => {
+        const currentStatus = get().status;
+        if (currentStatus === "details") set({ status: "upload" });
+        if (currentStatus === "upload") set({ status: "review" });
       },
-    }));
-  },
-  // Updates the underlying File object and its metadata of an existing UploadableFile.
-  updateFile: (fileId, newFile) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((uploadableFile) =>
-          uploadableFile.id === fileId
-            ? {
-                ...uploadableFile,
-                file: newFile,
-                name: newFile.name,
-                size: newFile.size,
-                type: newFile.type,
-              }
-            : uploadableFile
-        ),
+      // Decrements the current status based on the defined wizard flow.
+      prevStep: () => {
+        const currentStatus = get().status;
+        if (currentStatus === "review") set({ status: "upload" });
+        if (currentStatus === "upload") set({ status: "details" });
       },
-    })),
-  // Removes a file from the list by its unique id.
-  removeFile: (fileId) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.filter((f) => f.id !== fileId),
+      // Transitions the wizard to the final 'processing' state.
+      startProcessing: () => set({ status: "processing" }),
+      // Sets the view mode for the upload preview.
+      setViewMode: (viewMode) => set({ viewMode }),
+      // Sets the sort option for the upload preview.
+      setSortOption: (sortOption) => set({ sortOption }),
+      // Sets the search term for the upload preview.
+      setSearchTerm: (searchTerm) => set({ searchTerm }),
+      // Adds new files, converting them to the UploadableFile format with a unique ID.
+      addFiles: (newFiles, source) => {
+        const uploadableFiles: UploadableFile[] = newFiles.map((file) => ({
+          id: createId(),
+          file,
+          key: "",
+          url: "",
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          progress: 0,
+          status: "pending",
+          source,
+          dateUploaded: new Date(),
+        }));
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: [...state.data.files, ...uploadableFiles],
+          },
+        }));
       },
-    })),
-  // Updates the progress of a specific file by its unique id.
-  updateFileProgress: (fileId, progress) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((f) => (f.id === fileId ? { ...f, progress } : f)),
+      // Updates the underlying File object and its metadata of an existing UploadableFile.
+      updateFile: (fileId, newFile) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((uploadableFile) =>
+              uploadableFile.id === fileId
+                ? {
+                    ...uploadableFile,
+                    file: newFile,
+                    name: newFile.name,
+                    size: newFile.size,
+                    type: newFile.type,
+                  }
+                : uploadableFile
+            ),
+          },
+        })),
+      // Removes a file from the list by its unique id.
+      removeFile: (fileId) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.filter((f) => f.id !== fileId),
+          },
+        })),
+      // Updates the progress of a specific file by its unique id.
+      updateFileProgress: (fileId, progress) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) => (f.id === fileId ? { ...f, progress } : f)),
+          },
+        })),
+      // Updates the status of a specific file by its unique id.
+      setUploadStatus: (fileId, status) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) => (f.id === fileId ? { ...f, status } : f)),
+          },
+        })),
+      // Resets a failed upload to 'pending' by its unique id to allow for a retry.
+      retryUpload: (fileId) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) =>
+              f.id === fileId ? { ...f, status: "pending", progress: 0 } : f
+            ),
+          },
+        })),
+      // Sets the S3 key for a specific file by its unique id after it's been generated.
+      setUploadKey: (fileId, key) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) => (f.id === fileId ? { ...f, key } : f)),
+          },
+        })),
+      // Sets the final S3 URL for a file after it has been saved to the database.
+      setUploadUrl: (fileId, url) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) => (f.id === fileId ? { ...f, url } : f)),
+          },
+        })),
+      // Populates the store with persisted files from the database.
+      hydrateFiles: (files) => {
+        const persistedFiles: UploadableFile[] = files.map((file) => ({
+          id: file.id,
+          key: file.key,
+          url: file.url,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          progress: 100,
+          status: "success",
+          source: "db",
+          dateUploaded: file.createdAt,
+        }));
+        set({ data: { files: persistedFiles }, isHydrated: true });
       },
-    })),
-  // Updates the status of a specific file by its unique id.
-  setUploadStatus: (fileId, status) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((f) => (f.id === fileId ? { ...f, status } : f)),
+      // Action to update the analysis details data after successful validation.
+      updateDetailsData: (data) => set({ details: data }),
+      // Resets the store to its initial default values, including clearing persisted data.
+      reset: () => {
+        set(initialState);
+        localStorage.removeItem("analyze-storage");
       },
-    })),
-  // Resets a failed upload to 'pending' by its unique id to allow for a retry.
-  retryUpload: (fileId) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((f) =>
-          f.id === fileId ? { ...f, status: "pending", progress: 0 } : f
-        ),
+      // Action to flag a submission as successful.
+      setSubmissionSuccess: () => set({ submissionStatus: "success" }),
+      // Action to clear the submission flag after the toast is shown.
+      clearSubmissionStatus: () => set({ submissionStatus: "idle" }),
+    }),
+    {
+      name: "analyze-storage",
+      // Custom storage engine to handle complex data types like Dates.
+      storage: {
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          return str ? (superjson.parse(str) as any) : null;
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, superjson.stringify(value));
+        },
+        removeItem: (name) => localStorage.removeItem(name),
       },
-    })),
-  // Sets the S3 key for a specific file by its unique id after it's been generated.
-  setUploadKey: (fileId, key) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((f) => (f.id === fileId ? { ...f, key } : f)),
+      // Only persist a subset of the state.
+      partialize: (state): PersistedAnalyzeState => ({
+        status: state.status,
+        caseId: state.caseId,
+        details: state.details,
+      }),
+      // Set the isHydrated flag to true once rehydration is complete.
+      onRehydrateStorage: () => (state) => {
+        if (state) state.isHydrated = true;
       },
-    })),
-  // Sets the final S3 URL for a file after it has been saved to the database.
-  setUploadUrl: (fileId, url) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        files: state.data.files.map((f) => (f.id === fileId ? { ...f, url } : f)),
-      },
-    })),
-  // Populates the store with persisted files from the database.
-  hydrateFiles: (files) => {
-    const persistedFiles: UploadableFile[] = files.map((file) => ({
-      id: file.id,
-      key: file.key,
-      url: file.url,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      progress: 100,
-      status: "success",
-      source: "db",
-      dateUploaded: file.createdAt,
-    }));
-    set({ data: { files: persistedFiles }, isHydrated: true });
-  },
-  // Action to update the analysis details data after successful validation.
-  updateDetailsData: (data) => set({ details: data }),
-  // Resets the store to its initial default values.
-  reset: () => set(initialState),
-  // Action to flag a submission as successful.
-  setSubmissionSuccess: () => set({ submissionStatus: "success" }),
-  // Action to clear the submission flag after the toast is shown.
-  clearSubmissionStatus: () => set({ submissionStatus: "idle" }),
-}));
+    }
+  )
+);
