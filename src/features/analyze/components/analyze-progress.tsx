@@ -8,7 +8,7 @@ import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
 import { IoImageOutline } from "react-icons/io5";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type AnalyzeWizardStatus,useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type AnalyzeWizardStatus, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { CIRCLE_ANIMATION_DURATION, LINE_ANIMATION_DURATION } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,8 @@ export const analysisSteps: {
 export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
   // The store action to navigate directly to a specific step by its status.
   const setStatus = useAnalyzeStore((state) => state.setStatus);
+  // Get the wizard status to check if the analysis has been submitted.
+  const wizardStatus = useAnalyzeStore((state) => state.status);
   // Determines if the viewport matches a large screen size for responsive rendering.
   const isLg = useMediaQuery("(min-width: 1024px)");
   // Determines if the viewport is larger than the small screen breakpoint.
@@ -53,6 +55,9 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
     prevStepRef.current = currentStep;
   }, [currentStep]);
   const isGoingBackward = currentStep < prevStepRef.current;
+
+  // Determine if the form has been submitted (is in the "processing" state).
+  const isSubmitted = wizardStatus === "processing";
 
   const circleVariants = {
     inactive: { borderColor: "#cbd5e1", backgroundColor: "#ffffff", scale: 1 },
@@ -72,6 +77,9 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
           const isCompleted = step.id < currentStep;
           const isCurrent = step.id === currentStep;
           const Icon = step.icon;
+
+          // A step is clickable only if it's completed and the form hasn't been submitted.
+          const isClickable = isCompleted && !isSubmitted;
 
           let circleDelay = 0;
           let lineDelay = 0;
@@ -111,8 +119,8 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
           };
 
           const handleStepClick = () => {
-            // Allow navigation only to previously completed steps.
-            if (isCompleted && setStatus) {
+            // Allow navigation only if the step is clickable.
+            if (isClickable && setStatus) {
               // Use the 'status' string to update the store, not the numeric ID.
               setStatus(step.status);
             }
@@ -124,7 +132,9 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
               className={cn(
                 "group flex flex-shrink-0 items-center justify-center rounded-full border-2",
                 isSm ? "h-10 w-10" : "h-8 w-8",
-                isCompleted && "cursor-pointer"
+                // Set cursor based on whether the step is clickable or disabled.
+                isClickable ? "cursor-pointer" : "",
+                isSubmitted && isCompleted ? "cursor-not-allowed" : ""
               )}
               variants={circleVariants}
               animate={isCompleted ? "completed" : isCurrent ? "current" : "inactive"}
@@ -174,12 +184,7 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
           // Using React.Fragment to avoid adding an unnecessary DOM element for the list key.
           return (
             <React.Fragment key={step.name}>
-              <li
-                className={cn(
-                  "relative z-10 flex items-center",
-                  isSm ? "gap-x-3" : "gap-x-2"
-                )}
-              >
+              <li className={cn("relative z-10 flex items-center", isSm ? "gap-x-3" : "gap-x-2")}>
                 {isLg ? (
                   StepIcon
                 ) : (
@@ -207,12 +212,7 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
 
               {/* Renders the connecting line between steps, but not after the last one. */}
               {stepIdx < analysisSteps.length - 1 && (
-                <div
-                  className={cn(
-                    "relative h-0.5 w-full flex-1",
-                    isSm ? "mx-4" : "mx-2"
-                  )}
-                >
+                <div className={cn("relative h-0.5 w-full flex-1", isSm ? "mx-4" : "mx-2")}>
                   <div className="absolute inset-0 h-full w-full bg-slate-200" />
                   <motion.div
                     className="absolute inset-0 h-full bg-emerald-600"

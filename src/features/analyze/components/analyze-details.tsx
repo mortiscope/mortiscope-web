@@ -88,7 +88,7 @@ export const AnalyzeDetails = () => {
   const queryClient = useQueryClient();
 
   // Retrieves state and actions from the Zustand store for managing the multi-step form.
-  const { nextStep, prevStep, updateDetailsData, setCaseId, details, caseId, step } =
+  const { nextStep, prevStep, updateDetailsData, setCaseId, details, caseId, status } =
     useAnalyzeStore();
 
   // State variables to hold the dynamic lists for regions, provinces, cities, and barangays.
@@ -547,7 +547,7 @@ export const AnalyzeDetails = () => {
           </CardContent>
 
           <CardFooter className="flex justify-between gap-x-4 px-0 pt-6">
-            {step > 1 && (
+            {status !== "details" && (
               <Button
                 type="button"
                 onClick={prevStep}
@@ -562,7 +562,7 @@ export const AnalyzeDetails = () => {
             <div
               className={cn("flex-1", {
                 "cursor-not-allowed": !form.formState.isValid || isPending,
-                "w-full": step === 1,
+                "w-full": status === "details",
               })}
             >
               <Button
