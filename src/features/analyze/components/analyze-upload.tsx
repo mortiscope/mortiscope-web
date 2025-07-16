@@ -427,7 +427,7 @@ export const AnalyzeUpload = () => {
                     </p>
                     <p className={descriptionTextClasses}>
                       {!caseId
-                        ? "Please complete the previous step to enable uploads."
+                        ? "Please complete the previous step to enable uploads"
                         : isMaxFilesReached
                           ? `You have uploaded the maximum of ${MAX_FILES} images`
                           : `Click to browse or drag and drop up to ${MAX_FILES - filesCount} more. Maximum file size
