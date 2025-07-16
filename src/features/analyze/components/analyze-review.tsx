@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -13,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cancelAnalysis } from "@/features/analyze/actions/cancel-analysis";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -23,6 +25,9 @@ import { cn } from "@/lib/utils";
 // A shared class string for consistent button styling throughout the component.
 const buttonClasses =
   "w-full font-inter relative h-9 cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 md:h-10 md:text-base";
+
+const cancelButtonClasses =
+  "w-full font-inter relative h-9 cursor-pointer overflow-hidden rounded-lg border-none bg-yellow-500 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-green-700 before:to-green-600 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-amber-500 hover:text-white hover:before:left-0 disabled:opacity-50 md:h-10 md:text-base";
 
 // A map of user-friendly messages corresponding to the backend analysis status.
 const processingMessages: Record<AnalysisStatus, string> = {
@@ -47,6 +52,7 @@ export const AnalyzeReview = () => {
   const data = useAnalyzeStore((state) => state.data);
   const caseId = useAnalyzeStore((state) => state.caseId);
   const startProcessing = useAnalyzeStore((state) => state.startProcessing);
+  const cancelProcessing = useAnalyzeStore((state) => state.cancelProcessing);
   const wizardStatus = useAnalyzeStore((state) => state.status);
   const files = data.files;
 
@@ -66,6 +72,25 @@ export const AnalyzeReview = () => {
 
   // State to store local blob URLs for newly uploaded files to enable previews.
   const [objectUrls, setObjectUrls] = useState<Map<string, string>>(new Map());
+
+  // Mutation to handle the cancellation of the analysis.
+  const { mutate: cancelAnalysisMutation, isPending: isCancelling } = useMutation({
+    mutationFn: cancelAnalysis,
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        toast.success(data.message);
+        // Revert the interface from processing back to the review step.
+        cancelProcessing();
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError: (error) => {
+      // Handle unexpected server errors.
+      toast.error("An unexpected error occurred while cancelling. Please try again.");
+      console.error("Cancellation error:", error);
+    },
+  });
 
   // Memoizes the final temperature value, defaulting to 0.
   const finalTemperatureValue = details.temperature?.value ?? 0;
@@ -183,6 +208,18 @@ export const AnalyzeReview = () => {
     // Transition the interface to the 'processing' state to begin polling.
     startProcessing();
     toast.success("Analysis submitted!");
+  };
+
+  /**
+   * Initiates the analysis cancellation process.
+   */
+  const handleCancel = () => {
+    // Safeguard to ensure caseId exists before attempting to cancel.
+    if (!caseId) {
+      toast.error("Cannot cancel: Case ID is missing.");
+      return;
+    }
+    cancelAnalysisMutation({ caseId });
   };
 
   /**
@@ -396,28 +433,33 @@ export const AnalyzeReview = () => {
         </div>
 
         {/* Footer containing navigation and submission buttons. */}
-        <CardFooter className="flex justify-between gap-x-4 px-0">
-          {/* Previous Button */}
-          <div className={cn("flex-1", (isPending || isProcessing) && "cursor-not-allowed")}>
+        <CardFooter className="relative z-20 flex justify-between gap-x-4 px-0">
+          {isProcessing ? (
+            // A full-width cancel button shown only during the processing state.
             <Button
-              onClick={prevStep}
-              className={cn(buttonClasses)}
-              disabled={isPending || isProcessing}
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className={cn(cancelButtonClasses)}
             >
-              Previous
+              {isCancelling ? "Cancelling..." : "Cancel"}
             </Button>
-          </div>
+          ) : (
+            <>
+              {/* Previous Button */}
+              <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
+                <Button onClick={prevStep} className={cn(buttonClasses)} disabled={isPending}>
+                  Previous
+                </Button>
+              </div>
 
-          {/* Submit Button */}
-          <div className={cn("flex-1", (isPending || isProcessing) && "cursor-not-allowed")}>
-            <Button
-              onClick={handleSubmit}
-              className={cn(buttonClasses)}
-              disabled={isPending || isProcessing}
-            >
-              {isProcessing ? "Processing..." : isPending ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
+              {/* Submit Button */}
+              <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
+                <Button onClick={handleSubmit} className={cn(buttonClasses)} disabled={isPending}>
+                  {isPending ? "Submitting..." : "Submit"}
+                </Button>
+              </div>
+            </>
+          )}
         </CardFooter>
       </Card>
     </>

@@ -124,6 +124,8 @@ type AnalyzeState = {
   prevStep: () => void;
   // Action to transition the store to the processing state after submission.
   startProcessing: () => void;
+  // Action to revert the wizard from 'processing' back to 'review'.
+  cancelProcessing: () => void;
   // Action to set the view mode.
   setViewMode: (viewMode: ViewMode) => void;
   // Action to set the sort option.
@@ -212,6 +214,12 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       },
       // Transitions the wizard to the final 'processing' state.
       startProcessing: () => set({ status: "processing" }),
+      // Reverts the wizard from 'processing' back to the 'review' state.
+      cancelProcessing: () => {
+        if (get().status === "processing") {
+          set({ status: "review" });
+        }
+      },
       // Sets the view mode for the upload preview.
       setViewMode: (viewMode) => set({ viewMode }),
       // Sets the sort option for the upload preview.
