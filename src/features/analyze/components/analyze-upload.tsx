@@ -492,25 +492,32 @@ export const AnalyzeUpload = () => {
         </CardContent>
 
         {/* Footer section containing the navigation buttons. */}
-        <CardFooter className="flex justify-between gap-x-4 px-0">
-          {/* Wrapper for Previous Button */}
-          <div className="flex-1">
-            <Button type="button" onClick={prevStep} className={cn(buttonClasses, "w-full")}>
-              Previous
-            </Button>
-          </div>
+        <motion.div
+          layout
+          transition={{
+            layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+          }}
+        >
+          <CardFooter className="flex justify-between gap-x-4 px-0">
+            {/* Wrapper for Previous Button */}
+            <div className="flex-1">
+              <Button type="button" onClick={prevStep} className={cn(buttonClasses, "w-full")}>
+                Previous
+              </Button>
+            </div>
 
-          {/* Wrapper for next button.*/}
-          <div className={cn("flex-1", isNextDisabled && "cursor-not-allowed")}>
-            <Button
-              onClick={nextStep}
-              disabled={isNextDisabled}
-              className="font-inter disabled:cursor-not--allowed relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
-            >
-              Next
-            </Button>
-          </div>
-        </CardFooter>
+            {/* Wrapper for next button.*/}
+            <div className={cn("flex-1", isNextDisabled && "cursor-not-allowed")}>
+              <Button
+                onClick={nextStep}
+                disabled={isNextDisabled}
+                className="font-inter disabled:cursor-not--allowed relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:before:left-0 disabled:opacity-50 disabled:before:left-full disabled:hover:shadow-none md:h-10 md:text-base"
+              >
+                Next
+              </Button>
+            </div>
+          </CardFooter>
+        </motion.div>
       </Card>
     </>
   );

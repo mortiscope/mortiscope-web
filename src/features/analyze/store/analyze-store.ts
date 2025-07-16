@@ -95,6 +95,8 @@ type AnalyzeState = {
   viewMode: ViewMode;
   // The current sort option for the upload preview.
   sortOption: SortOptionValue;
+  // The current search term for filtering files.
+  searchTerm: string;
   // The data collected throughout the analysis process.
   data: AnalyzeStateData;
   // The data for the analysis details form.
@@ -115,6 +117,8 @@ type AnalyzeState = {
   setViewMode: (viewMode: ViewMode) => void;
   // Action to set the sort option.
   setSortOption: (sortOption: SortOptionValue) => void;
+  // Action to set the search term.
+  setSearchTerm: (searchTerm: string) => void;
   // Action to add one or more files to the upload list.
   addFiles: (files: File[], source: "upload" | "camera") => void;
   // Action to update the file object for a given uploadable file, e.g., after rotation.
@@ -153,6 +157,7 @@ const initialState: {
   isHydrated: boolean;
   viewMode: ViewMode;
   sortOption: SortOptionValue;
+  searchTerm: string;
   data: AnalyzeStateData;
   details: Partial<DetailsFormData>;
   submissionStatus: "idle" | "success";
@@ -162,6 +167,7 @@ const initialState: {
   isHydrated: false,
   viewMode: "list",
   sortOption: "date-uploaded-desc",
+  searchTerm: "",
   data: {
     files: [],
   },
@@ -197,6 +203,8 @@ export const useAnalyzeStore = create<AnalyzeState>((set, get) => ({
   setViewMode: (viewMode) => set({ viewMode }),
   // Sets the sort option for the upload preview.
   setSortOption: (sortOption) => set({ sortOption }),
+  // Sets the search term for the upload preview.
+  setSearchTerm: (searchTerm) => set({ searchTerm }),
   // Adds new files, converting them to the UploadableFile format with a unique ID.
   addFiles: (newFiles, source) => {
     const uploadableFiles: UploadableFile[] = newFiles.map((file) => ({
