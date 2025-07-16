@@ -14,7 +14,6 @@ import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 export const AnalyzeDynamicMetatitle = () => {
   // Subscribes to the global store to get the current status and actions.
   const status = useAnalyzeStore((state) => state.status);
-  const resetAnalyzeStore = useAnalyzeStore((state) => state.reset);
 
   /**
    * Translates the wizard's string-based status into a number for the progress bar.
@@ -26,10 +25,6 @@ export const AnalyzeDynamicMetatitle = () => {
     if (status === "processing") return 4;
     return 1;
   }, [status]);
-
-  useEffect(() => {
-    resetAnalyzeStore();
-  }, [resetAnalyzeStore]);
 
   // Effect to dynamically update the page's metatitle based on the current step.
   useEffect(() => {
