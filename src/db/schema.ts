@@ -21,6 +21,9 @@ export const analysisStatusEnum = pgEnum("analysis_status", [
   "failed",
 ]);
 
+// Enum to define the lifecycle status of a case.
+export const caseStatusEnum = pgEnum("case_status", ["draft", "active"]);
+
 // Represents the core user profile in the application
 export const users = pgTable("users", {
   id: text("id")
@@ -130,6 +133,7 @@ export const cases = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     caseName: varchar("case_name", { length: 256 }).notNull(),
+    status: caseStatusEnum("status").notNull().default("draft"),
     temperatureCelsius: real("temperature_celsius").notNull(),
     locationRegion: text("location_region").notNull(),
     locationProvince: text("location_province").notNull(),
