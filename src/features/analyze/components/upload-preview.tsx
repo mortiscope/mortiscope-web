@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -223,8 +223,12 @@ const Thumbnail = ({
  * Renders a list of the currently uploaded files, with animations for adding and removing items.
  */
 export const UploadPreview = () => {
+  // Get the query client instance to manage server state cache.
+  const queryClient = useQueryClient();
+
   // Retrieves the list of files and the actions from the store.
   const files = useAnalyzeStore((state) => state.data.files);
+  const caseId = useAnalyzeStore((state) => state.caseId);
   const viewMode = useAnalyzeStore((state) => state.viewMode);
   const sortOption = useAnalyzeStore((state) => state.sortOption);
   const searchTerm = useAnalyzeStore((state) => state.searchTerm);
@@ -296,17 +300,16 @@ export const UploadPreview = () => {
       deleteUpload({ key: variables.key }),
     onSuccess: (data, variables) => {
       if (data.success) {
-        // Find the file in the store to get its name for the toast message.
+        // Find the file to display its name in the success toast.
         const deletedFile = files.find((f) => f.id === variables.fileId);
 
-        // On successful deletion from S3, remove the file from the local Zustand store.
+        // Synchronize the client state by removing the file from the Zustand store.
         removeFile(variables.fileId);
 
-        // Show a more specific toast message including the file name.
         if (deletedFile) {
           toast.success(`${deletedFile.name} deleted successfully.`);
         } else {
-          // Fallback message in case the file is not found (shouldn't happen).
+          // Fallback message in case the file is not found.
           toast.success("File deleted successfully.");
         }
       } else {
@@ -318,7 +321,9 @@ export const UploadPreview = () => {
       // Handle network errors or exceptions from the server action.
       toast.error(error.message || "An error occurred during deletion.");
     },
+    // Ensure cache invalidation happens reliably.
     onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["uploads", caseId] });
       // Clear the deleting state regardless of outcome.
       setDeletingFileId(null);
     },
@@ -335,7 +340,6 @@ export const UploadPreview = () => {
 
     // If there's no key, the file hasn't been uploaded to S3 yet.
     if (!fileKey) {
-      // Find the file before removing it to use its name in the toast.
       const fileToRemove = files.find((f) => f.id === fileId);
       removeFile(fileId);
       if (fileToRemove) {
@@ -377,233 +381,173 @@ export const UploadPreview = () => {
     }
   };
 
-  // If there are no files, this component renders nothing.
-  if (files.length === 0) {
-    return null;
-  }
-
   return (
     <>
       <TooltipProvider>
-        <motion.div
-          layout
-          transition={{ layout: { type: "tween", duration: 0.6, ease: "easeInOut" } }}
-          className="mt-6 w-full"
-        >
-          {/* View mode and sort controls */}
+        {/* Only render the container if there are files to show */}
+        {files.length > 0 && (
           <motion.div
             layout
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="mb-4 flex items-center justify-between gap-2"
+            transition={{ layout: { type: "tween", duration: 0.6, ease: "easeInOut" } }}
+            className="mt-6 w-full"
           >
-            {/* Search input field. */}
-            <div className="relative w-full max-w-sm">
-              <HiOutlineSearch className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-500" />
-              <Input
-                placeholder="Search files..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                maxLength={50}
-                className="font-inter h-10 border-none pl-10 text-sm shadow-none placeholder:!text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-              />
-            </div>
+            {/* View mode and sort controls */}
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+              className="mb-4 flex items-center justify-between gap-2"
+            >
+              {/* Search input field. */}
+              <div className="relative w-full max-w-sm">
+                <HiOutlineSearch className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-500" />
+                <Input
+                  placeholder="Search files..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  maxLength={50}
+                  className="font-inter h-10 border-none pl-10 text-sm shadow-none placeholder:!text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
 
-            {/* Container for the sort and view mode controls. */}
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    aria-label="Sort options"
-                    className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
-                  >
-                    <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
-                      {currentSortLabel}
-                    </span>
-                    <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {SORT_OPTIONS.map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onSelect={() => setSortOption(option.value as SortOptionValue)}
-                      className={cn(
-                        "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
-                      )}
+              {/* Container for the sort and view mode controls. */}
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      aria-label="Sort options"
+                      className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
                     >
-                      <SortIcon value={option.value as SortOptionValue} />
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
+                        {currentSortLabel}
+                      </span>
+                      <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    {SORT_OPTIONS.map((option) => (
+                      <DropdownMenuItem
+                        key={option.value}
+                        onSelect={() => setSortOption(option.value as SortOptionValue)}
+                        className={cn(
+                          "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                        )}
+                      >
+                        <SortIcon value={option.value as SortOptionValue} />
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                value={viewMode}
-                onValueChange={(value) => {
-                  if (value) setViewMode(value as ViewMode);
-                }}
-                aria-label="View mode"
-                className="border-2 border-slate-200 bg-white data-[variant=outline]:shadow-none"
-              >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem
-                      value="list"
-                      aria-label="List view"
-                      className="cursor-pointer border-none data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
-                    >
-                      <IoListOutline className="h-5 w-5" />
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-inter">List view</p>
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <ToggleGroupItem
-                      value="grid"
-                      aria-label="Grid view"
-                      className="cursor-pointer border-none data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
-                    >
-                      <IoGridOutline className="h-5 w-5" />
-                    </ToggleGroupItem>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="font-inter">Grid view</p>
-                  </TooltipContent>
-                </Tooltip>
-              </ToggleGroup>
-            </div>
-          </motion.div>
+                <ToggleGroup
+                  type="single"
+                  variant="outline"
+                  value={viewMode}
+                  onValueChange={(value) => {
+                    if (value) setViewMode(value as ViewMode);
+                  }}
+                  aria-label="View mode"
+                  className="border-2 border-slate-200 bg-white data-[variant=outline]:shadow-none"
+                >
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <ToggleGroupItem
+                        value="list"
+                        aria-label="List view"
+                        className="cursor-pointer border-none data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
+                      >
+                        <IoListOutline className="h-5 w-5" />
+                      </ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-inter">List view</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <ToggleGroupItem
+                        value="grid"
+                        aria-label="Grid view"
+                        className="cursor-pointer border-none data-[state=off]:hover:bg-slate-50 data-[state=on]:!bg-emerald-200 data-[state=on]:!text-emerald-600"
+                      >
+                        <IoGridOutline className="h-5 w-5" />
+                      </ToggleGroupItem>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-inter">Grid view</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </ToggleGroup>
+              </div>
+            </motion.div>
 
-          {/* Container for the file list, with view-switch animation. */}
-          <AnimatePresence mode="wait">
-            {sortedFiles.length > 0 ? (
-              <motion.div
-                layout
-                key={viewMode}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                  opacity: { duration: 0.3 },
-                }}
-                className={cn(
-                  "grid gap-3",
-                  viewMode === "list"
-                    ? "grid-cols-1 md:grid-cols-2"
-                    : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-                )}
-              >
-                <AnimatePresence>
-                  {sortedFiles.map((uploadableFile) => (
-                    <motion.div
-                      key={uploadableFile.id}
-                      layout
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{
-                        layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                        opacity: { duration: 0.4 },
-                        scale: { duration: 0.4 },
-                      }}
-                      className={cn(
-                        "font-inter group relative rounded-lg border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-xl",
-                        {
-                          "flex cursor-pointer items-center justify-between p-2 sm:p-3":
-                            viewMode === "list",
-                          "flex aspect-square cursor-pointer flex-col overflow-hidden":
-                            viewMode === "grid",
-                        }
-                      )}
-                    >
-                      {viewMode === "list" ? (
-                        <>
-                          {/* List View Layout */}
-                          <div
-                            className="flex min-w-0 flex-grow items-center gap-3"
-                            onClick={() => setViewingFile(uploadableFile)}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`View ${uploadableFile.name}`}
-                          >
-                            <Thumbnail uploadableFile={uploadableFile} />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
-                                {uploadableFile.name}
-                              </p>
-                              <p className="text-xs text-slate-500 sm:text-sm">
-                                {formatBytes(uploadableFile.size)}
-                              </p>
+            {/* Container for the file list, with view-switch animation. */}
+            <AnimatePresence mode="wait">
+              {sortedFiles.length > 0 ? (
+                <motion.div
+                  layout
+                  key={viewMode}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{
+                    layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+                    opacity: { duration: 0.3 },
+                  }}
+                  className={cn(
+                    "grid gap-3",
+                    viewMode === "list"
+                      ? "grid-cols-1 md:grid-cols-2"
+                      : "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+                  )}
+                >
+                  <AnimatePresence>
+                    {sortedFiles.map((uploadableFile) => (
+                      <motion.div
+                        key={uploadableFile.id}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{
+                          layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+                          opacity: { duration: 0.4 },
+                          scale: { duration: 0.4 },
+                        }}
+                        className={cn(
+                          "font-inter group relative rounded-lg border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-xl",
+                          {
+                            "flex cursor-pointer items-center justify-between p-2 sm:p-3":
+                              viewMode === "list",
+                            "flex aspect-square cursor-pointer flex-col overflow-hidden":
+                              viewMode === "grid",
+                          }
+                        )}
+                      >
+                        {viewMode === "list" ? (
+                          <>
+                            {/* List View Layout */}
+                            <div
+                              className="flex min-w-0 flex-grow items-center gap-3"
+                              onClick={() => setViewingFile(uploadableFile)}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View ${uploadableFile.name}`}
+                            >
+                              <Thumbnail uploadableFile={uploadableFile} />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-normal text-slate-700 sm:text-base">
+                                  {uploadableFile.name}
+                                </p>
+                                <p className="text-xs text-slate-500 sm:text-sm">
+                                  {formatBytes(uploadableFile.size)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex flex-shrink-0 items-center gap-1">
-                            <StatusIcon file={uploadableFile} onRetry={retryUpload} />
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setViewingFile(uploadableFile)}
-                                  aria-label={`View ${uploadableFile.name}`}
-                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                                  disabled={deletingFileId === uploadableFile.id}
-                                >
-                                  <MdOutlineRemoveRedEye className="h-5 w-5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="font-inter">View</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() =>
-                                    handleDeleteFile(uploadableFile.id, uploadableFile.key ?? null)
-                                  }
-                                  aria-label={`Remove ${uploadableFile.name}`}
-                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
-                                  disabled={deletingFileId === uploadableFile.id}
-                                >
-                                  {deletingFileId === uploadableFile.id ? (
-                                    <LuLoaderCircle className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <LuTrash2 className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="font-inter">Remove</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          {/* Grid View Layout */}
-                          <div
-                            className="min-h-0 flex-1"
-                            onClick={() => setViewingFile(uploadableFile)}
-                            role="button"
-                            tabIndex={0}
-                            aria-label={`View ${uploadableFile.name}`}
-                          >
-                            <Thumbnail uploadableFile={uploadableFile} className="h-full w-full" />
-                          </div>
-                          <div className="flex w-full flex-col items-center justify-center p-1">
-                            <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                            <div className="flex flex-shrink-0 items-center gap-1">
                               <StatusIcon file={uploadableFile} onRetry={retryUpload} />
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -649,33 +593,97 @@ export const UploadPreview = () => {
                                 </TooltipContent>
                               </Tooltip>
                             </div>
-                          </div>
-                        </>
-                      )}
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            ) : searchTerm ? (
-              <motion.div
-                key="no-results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="flex flex-1 flex-col items-center justify-center py-10 text-center"
-              >
-                <HiOutlineSearch className="h-12 w-12 text-slate-300" />
-                <h3 className="font-plus-jakarta-sans mt-4 text-xl font-semibold text-slate-800">
-                  No Files Found
-                </h3>
-                <p className="font-inter mt-1 max-w-sm text-sm break-all text-slate-500">
-                  Your search term did not match any files.
-                </p>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        </motion.div>
+                          </>
+                        ) : (
+                          <>
+                            {/* Grid View Layout */}
+                            <div
+                              className="min-h-0 flex-1"
+                              onClick={() => setViewingFile(uploadableFile)}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`View ${uploadableFile.name}`}
+                            >
+                              <Thumbnail
+                                uploadableFile={uploadableFile}
+                                className="h-full w-full"
+                              />
+                            </div>
+                            <div className="flex w-full flex-col items-center justify-center p-1">
+                              <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                                <StatusIcon file={uploadableFile} onRetry={retryUpload} />
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setViewingFile(uploadableFile)}
+                                      aria-label={`View ${uploadableFile.name}`}
+                                      className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                      disabled={deletingFileId === uploadableFile.id}
+                                    >
+                                      <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="font-inter">View</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleDeleteFile(
+                                          uploadableFile.id,
+                                          uploadableFile.key ?? null
+                                        )
+                                      }
+                                      aria-label={`Remove ${uploadableFile.name}`}
+                                      className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                                      disabled={deletingFileId === uploadableFile.id}
+                                    >
+                                      {deletingFileId === uploadableFile.id ? (
+                                        <LuLoaderCircle className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <LuTrash2 className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p className="font-inter">Remove</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              ) : searchTerm ? (
+                <motion.div
+                  key="no-results"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="flex flex-1 flex-col items-center justify-center py-10 text-center"
+                >
+                  <HiOutlineSearch className="h-12 w-12 text-slate-300" />
+                  <h3 className="font-plus-jakarta-sans mt-4 text-xl font-semibold text-slate-800">
+                    No Files Found
+                  </h3>
+                  <p className="font-inter mt-1 max-w-sm text-sm break-all text-slate-500">
+                    Your search term did not match any files.
+                  </p>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </TooltipProvider>
 
       {/* Render the modal component outside the list. */}

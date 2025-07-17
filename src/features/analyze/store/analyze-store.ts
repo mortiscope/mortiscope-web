@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
+import superjson from "superjson";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import superjson from "superjson";
 
 import { type DetailsFormData } from "@/features/analyze/schemas/details";
 import { type SortOptionValue } from "@/lib/constants";
@@ -350,7 +350,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       storage: {
         getItem: (name) => {
           const str = localStorage.getItem(name);
-          return str ? (superjson.parse(str) as any) : null;
+          return str ? superjson.parse(str) : null;
         },
         setItem: (name, value) => {
           localStorage.setItem(name, superjson.stringify(value));

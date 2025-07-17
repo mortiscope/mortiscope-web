@@ -17,7 +17,6 @@ export const AnalyzeWizard = () => {
   const caseId = useAnalyzeStore((state) => state.caseId);
   const hydrateFiles = useAnalyzeStore((state) => state.hydrateFiles);
   const isHydrated = useAnalyzeStore((state) => state.isHydrated);
-  const files = useAnalyzeStore((state) => state.data.files);
 
   /**
    * TanStack Query hook to fetch the uploads associated with the current caseId.
@@ -37,7 +36,6 @@ export const AnalyzeWizard = () => {
       return result.data;
     },
     enabled: isHydrated && !!caseId,
-    staleTime: Infinity,
     refetchOnWindowFocus: false,
   });
 
@@ -46,12 +44,11 @@ export const AnalyzeWizard = () => {
    * This runs whenever the `uploadsData` from the query changes.
    */
   useEffect(() => {
-    // Only hydrate if there is data and the store's file list is currently empty.
-    // This prevents re-hydrating and overwriting new filesthe user may have just added.
-    if (uploadsData && files.length === 0) {
+    // Hydrate with `uploadsData` even if it's an empty array.
+    if (uploadsData) {
       hydrateFiles(uploadsData);
     }
-  }, [uploadsData, hydrateFiles, files.length]);
+  }, [uploadsData, hydrateFiles]);
 
   /**
    * Resets the analysis store when the wizard is unmounted.
