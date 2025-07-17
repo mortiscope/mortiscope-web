@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import Image from "next/image";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cancelAnalysis } from "@/features/analyze/actions/cancel-analysis";
+import { submitAnalysis } from "@/features/analyze/actions/submit-analysis";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
@@ -44,7 +45,8 @@ const processingMessages: Record<AnalysisStatus, string> = {
  */
 export const AnalyzeReview = () => {
   // Provides a pending state to track the navigation.
-  const [isPending] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   // Retrieves state and actions from the global Zustand store using atomic selectors.
   const prevStep = useAnalyzeStore((state) => state.prevStep);
@@ -89,6 +91,26 @@ export const AnalyzeReview = () => {
       // Handle unexpected server errors.
       toast.error("An unexpected error occurred while cancelling. Please try again.");
       console.error("Cancellation error:", error);
+    },
+  });
+
+  // Mutation to handle the final analysis submission.
+  const { mutate: submitAnalysisMutation, isPending: isSubmitting } = useMutation({
+    mutationFn: submitAnalysis,
+    onSuccess: (data) => {
+      if (data.success) {
+        // Invalidate queries for the user's cases list to reflect the new submission.
+        void queryClient.invalidateQueries({ queryKey: ["cases"] });
+        // Transition the interface to the 'processing' state to begin polling.
+        startProcessing();
+        toast.success("Analysis submitted!");
+      } else {
+        toast.error(data.error || "Failed to submit analysis. Please try again.");
+      }
+    },
+    onError: (error) => {
+      toast.error("An unexpected error occurred. Please try again.");
+      console.error("Submission error:", error);
     },
   });
 
@@ -181,33 +203,34 @@ export const AnalyzeReview = () => {
   };
 
   /**
-   * Finalizes the analysis process.
+   * Finalizes the analysis process by calling the new submission action.
    */
   const handleSubmit = () => {
-    // Prevent the function from running if we are already in the processing state.
-    if (isProcessing) return;
+    startTransition(() => {
+      // Prevent the function from running if we are already in the processing state or submitting.
+      if (isProcessing || isSubmitting) return;
 
-    // Perform final client-side checks as a safeguard.
-    const validation = detailsSchema.safeParse(details);
-    if (!validation.success) {
-      toast.error("Form data is invalid. Please go back and check the details.");
-      return;
-    }
+      // Perform final client-side checks as a safeguard.
+      const validation = detailsSchema.safeParse(details);
+      if (!validation.success) {
+        toast.error("Form data is invalid. Please go back and check the details.");
+        return;
+      }
 
-    if (files.length === 0 || files.some((f) => f.status !== "success")) {
-      toast.error("Please ensure all images have been successfully uploaded.");
-      return;
-    }
+      if (files.length === 0 || files.some((f) => f.status !== "success")) {
+        toast.error("Please ensure all images have been successfully uploaded.");
+        return;
+      }
 
-    // Safeguard check to ensure the caseId exists before proceeding.
-    if (!caseId) {
-      toast.error("An error occurred. Could not find case ID to proceed.");
-      return;
-    }
+      // Safeguard check to ensure the caseId exists before proceeding.
+      if (!caseId) {
+        toast.error("An error occurred. Could not find case ID to proceed.");
+        return;
+      }
 
-    // Transition the interface to the 'processing' state to begin polling.
-    startProcessing();
-    toast.success("Analysis submitted!");
+      // Call the mutation to trigger the backend analysis.
+      submitAnalysisMutation({ caseId });
+    });
   };
 
   /**
@@ -453,9 +476,13 @@ export const AnalyzeReview = () => {
               </div>
 
               {/* Submit Button */}
-              <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
-                <Button onClick={handleSubmit} className={cn(buttonClasses)} disabled={isPending}>
-                  {isPending ? "Submitting..." : "Submit"}
+              <div className={cn("flex-1", isSubmitting && "cursor-not-allowed")}>
+                <Button
+                  onClick={handleSubmit}
+                  className={cn(buttonClasses)}
+                  disabled={isSubmitting || isPending}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
                 </Button>
               </div>
             </>
