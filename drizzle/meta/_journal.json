@@ -36,6 +36,13 @@
       "when": 1753346819220,
       "tag": "0004_analysis_status",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1753502108546,
+      "tag": "0005_case_status",
+      "breakpoints": true
     }
   ]
 }
