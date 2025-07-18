@@ -117,11 +117,13 @@ type AnalyzeState = {
   // Action to set the current status to a specific value.
   setStatus: (status: AnalyzeWizardStatus) => void;
   // Action to store the newly created case's ID.
-  setCaseId: (caseId: string) => void;
+  setCaseId: (caseId: string | null) => void;
   // Action to advance to the next step.
   nextStep: () => void;
   // Action to return to the previous step.
   prevStep: () => void;
+  // A new atomic action to set the case ID and advance the step simultaneously.
+  setCaseAndProceed: (caseId: string) => void;
   // Action to transition the store to the processing state after submission.
   startProcessing: () => void;
   // Action to revert the wizard from 'processing' back to 'review'.
@@ -151,7 +153,7 @@ type AnalyzeState = {
   // Action to populate the store with files from the database.
   hydrateFiles: (files: PersistedFile[]) => void;
   // Action to update the details form data with a validated payload.
-  updateDetailsData: (data: DetailsFormData) => void;
+  updateDetailsData: (data: Partial<DetailsFormData>) => void;
   // Action to reset the entire store back to its initial state.
   reset: () => void;
   // Action to flag a submission as successful.
@@ -198,7 +200,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       ...initialState,
       // Sets the status to a specific value.
       setStatus: (status) => set({ status }),
-      // Stores the ID of the newly created case.
+      // Stores the ID of the newly created case, or clears it.
       setCaseId: (caseId) => set({ caseId }),
       // Increments the current status based on the defined wizard flow.
       nextStep: () => {
@@ -211,6 +213,10 @@ export const useAnalyzeStore = create<AnalyzeState>()(
         const currentStatus = get().status;
         if (currentStatus === "review") set({ status: "upload" });
         if (currentStatus === "upload") set({ status: "details" });
+      },
+      // Guarantees that setting the caseId and advancing the step happen in a single, atomic state update.
+      setCaseAndProceed: (caseId: string) => {
+        set({ caseId, status: "upload" });
       },
       // Transitions the wizard to the final 'processing' state.
       startProcessing: () => set({ status: "processing" }),

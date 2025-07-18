@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { PiCalendarCheck } from "react-icons/pi";
-import { BeatLoader } from "react-spinners";
 import { barangays, cities, provinces, regions } from "select-philippines-address";
 import { toast } from "sonner";
 
@@ -86,7 +85,7 @@ const isDateToday = (date: Date | undefined): boolean => {
  * Manages state for case details and dynamically populates Philippine address dropdowns based on user selections.
  */
 export const AnalyzeDetails = () => {
-  // Get the query client instance.
+  // Get the query client instance to invalidate queries on success.
   const queryClient = useQueryClient();
 
   // Retrieves state and actions from the Zustand store.
@@ -94,11 +93,11 @@ export const AnalyzeDetails = () => {
     nextStep,
     prevStep,
     caseId,
-    setCaseId,
     status,
     details: persistedDetails,
     updateDetailsData,
     isHydrated,
+    setCaseAndProceed,
   } = useAnalyzeStore();
 
   // State variables to hold the dynamic lists for regions, provinces, cities, and barangays.
@@ -107,9 +106,6 @@ export const AnalyzeDetails = () => {
   const [cityList, setCityList] = useState<AddressPart[]>([]);
   const [barangayList, setBarangayList] = useState<AddressPart[]>([]);
 
-  // State to manage the initial loading of address data.
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-
   // Initializes `react-hook-form` with Zod for validation.
   const form = useForm<DetailsFormInput>({
     resolver: zodResolver(detailsSchema),
@@ -117,26 +113,23 @@ export const AnalyzeDetails = () => {
     defaultValues: persistedDetails,
   });
 
-  // This effect runs once the store has been rehydrated from localStorage.
+  // This effect synchronizes the form state with the persisted data from the Zustand store once it has been rehydrated from localStorage.
   useEffect(() => {
-    if (isHydrated && persistedDetails && Object.keys(persistedDetails).length > 0) {
+    if (persistedDetails && Object.keys(persistedDetails).length > 0) {
       form.reset(persistedDetails);
     }
-  }, [isHydrated, persistedDetails, form]);
+  }, [persistedDetails, form]);
 
-  // TanStack Query mutation for handling the async call to the `createCase` server action.
+  // Defines the TanStack Query mutation for creating a new case.
   const createCaseMutation = useMutation({
     mutationFn: createCase,
+    // On success, it updates the global store, shows a success toast, invalidates relevant queries, and proceeds to the next step using an atomic action.
     onSuccess: (result, variables) => {
       if (result.success && result.data) {
-        // This is crucial for the next step (upload) to work correctly.
-        setCaseId(result.data.caseId);
-
-        // Upon successful creation, update the store with the validated data to persist it.
         updateDetailsData(variables);
         toast.success("Case details have been saved.");
         queryClient.invalidateQueries({ queryKey: ["cases"] });
-        nextStep();
+        setCaseAndProceed(result.data.caseId);
       } else {
         toast.error(result.error || "An unknown error occurred while saving.");
       }
@@ -144,14 +137,17 @@ export const AnalyzeDetails = () => {
     onError: (error) => {
       toast.error(`An unexpected error occurred: ${error.message}`);
     },
+    // After the mutation is complete (success or error), reset it to allow for re-submission.
+    onSettled: () => {
+      createCaseMutation.reset();
+    },
   });
 
-  // A separate mutation for updating an existing case.
+  // Defines the TanStack Query mutation for updating an existing case.
   const updateCaseMutation = useMutation({
     mutationFn: updateCase,
     onSuccess: (result, variables) => {
       if (result.success) {
-        // Upon successful update, update the store with the validated data to persist it.
         updateDetailsData(variables.details);
         toast.success("Case details have been updated.");
         queryClient.invalidateQueries({ queryKey: ["cases"] });
@@ -163,6 +159,10 @@ export const AnalyzeDetails = () => {
     onError: (error) => {
       toast.error(`An unexpected error occurred: ${error.message}`);
     },
+    // Also reset the update mutation for consistency and robustness.
+    onSettled: () => {
+      updateCaseMutation.reset();
+    },
   });
 
   // Watches for changes in form fields to trigger dependent effects.
@@ -171,84 +171,113 @@ export const AnalyzeDetails = () => {
   const watchedProvince = form.watch("location.province");
   const watchedCity = form.watch("location.city");
 
-  // Fetch regions on mount
+  // Fetches the list of all regions on initial component mount.
   useEffect(() => {
     regions().then((data: Region[]) => {
-      const formatted = data.map((r) => ({ code: r.region_code, name: r.region_name }));
-      setRegionList(formatted);
+      if (Array.isArray(data)) {
+        const formatted = data.map((r) => ({ code: r.region_code, name: r.region_name }));
+        setRegionList(formatted);
+      }
     });
   }, []);
 
-  // Fetch provinces only when a region is selected and the region list is available.
+  // Fetches the list of provinces whenever the selected region changes, resetting downstream selections.
   useEffect(() => {
     const regionCode = watchedRegion?.code;
-    // Ensure regionList is populated to prevent a race condition on refresh.
-    if (regionCode && regionList.length > 0) {
+    if (regionCode) {
       provinces(regionCode).then((data: Province[]) => {
-        const formatted = data.map((p) => ({ code: p.province_code, name: p.province_name }));
-        const uniqueProvinces = Array.from(
-          new Map(formatted.map((item) => [item.code, item])).values()
-        );
-        setProvinceList(uniqueProvinces);
+        if (Array.isArray(data)) {
+          const formatted = data.map((p) => ({ code: p.province_code, name: p.province_name }));
+          const uniqueProvinces = Array.from(
+            new Map(formatted.map((item) => [item.code, item])).values()
+          );
+          setProvinceList(uniqueProvinces);
+        } else {
+          setProvinceList([]);
+        }
       });
     } else {
       setProvinceList([]);
     }
-  }, [watchedRegion?.code, regionList]);
+  }, [watchedRegion?.code]);
 
-  // Fetch cities when province changes and the province list is available
+  // Fetches the list of cities/municipalities whenever the selected province changes.
   useEffect(() => {
     const provinceCode = watchedProvince?.code;
-    if (provinceCode && provinceList.length > 0) {
+    if (provinceCode) {
       cities(provinceCode).then((data: City[]) => {
-        const formatted = data.map((c) => ({ code: c.city_code, name: c.city_name }));
-        setCityList(formatted);
+        if (Array.isArray(data)) {
+          const formatted = data.map((c) => ({ code: c.city_code, name: c.city_name }));
+          setCityList(formatted);
+        } else {
+          setCityList([]);
+        }
       });
     } else {
       setCityList([]);
     }
-  }, [watchedProvince?.code, provinceList]);
+  }, [watchedProvince?.code]);
 
-  // Fetch barangays when city changes and the city list is available
+  // Fetches the list of barangays whenever the selected city/municipality changes.
   useEffect(() => {
     const cityCode = watchedCity?.code;
-    if (cityCode && cityList.length > 0) {
+    if (cityCode) {
       barangays(cityCode).then((data: Barangay[]) => {
-        const formatted = data.map((b) => ({ code: b.brgy_code, name: b.brgy_name }));
-        setBarangayList(formatted);
+        if (Array.isArray(data)) {
+          const formatted = data.map((b) => ({ code: b.brgy_code, name: b.brgy_name }));
+          setBarangayList(formatted);
+        } else {
+          setBarangayList([]);
+        }
       });
     } else {
       setBarangayList([]);
     }
-  }, [watchedCity?.code, cityList]);
+  }, [watchedCity?.code]);
 
-  // Effect to manage the initial loading state.
+  // This effect and the ones following are crucial for re-populating the form with persisted data.
   useEffect(() => {
-    if (!isHydrated) return;
-
-    // If there are no persisted details, we are ready once the top-level region list is loaded.
-    if (!persistedDetails?.location?.region?.code) {
-      if (regionList.length > 0) setIsInitialLoading(false);
-      return;
+    const persistedRegionName = persistedDetails?.location?.region?.name;
+    if (persistedRegionName && regionList.length > 0) {
+      const matchedRegion = regionList.find((r) => r.name === persistedRegionName);
+      if (matchedRegion && form.getValues("location.region")?.code !== matchedRegion.code) {
+        form.setValue("location.region", matchedRegion, { shouldValidate: true });
+      }
     }
+  }, [regionList, persistedDetails, form]);
 
-    // Determine the deepest level of persisted address data.
-    const hasPersistedBarangay = !!persistedDetails.location.barangay?.code;
-    const hasPersistedCity = !!persistedDetails.location.city?.code;
-    const hasPersistedProvince = !!persistedDetails.location.province?.code;
-
-    // Check if the data for the deepest level has been loaded.
-    if (hasPersistedBarangay && barangayList.length > 0) {
-      setIsInitialLoading(false);
-    } else if (hasPersistedCity && !hasPersistedBarangay && cityList.length > 0) {
-      setIsInitialLoading(false);
-    } else if (hasPersistedProvince && !hasPersistedCity && provinceList.length > 0) {
-      setIsInitialLoading(false);
-    } else if (!hasPersistedProvince && provinceList.length > 0) {
-      // Handles case where only region was saved, and provinces are now loaded.
-      setIsInitialLoading(false);
+  // Effect to re-populate the province dropdown from persisted data.
+  useEffect(() => {
+    const persistedProvinceName = persistedDetails?.location?.province?.name;
+    if (persistedProvinceName && provinceList.length > 0) {
+      const matchedProvince = provinceList.find((p) => p.name === persistedProvinceName);
+      if (matchedProvince && form.getValues("location.province")?.code !== matchedProvince.code) {
+        form.setValue("location.province", matchedProvince, { shouldValidate: true });
+      }
     }
-  }, [isHydrated, persistedDetails, regionList, provinceList, cityList, barangayList]);
+  }, [provinceList, persistedDetails, form]);
+
+  // Effect to re-populate the city dropdown from persisted data.
+  useEffect(() => {
+    const persistedCityName = persistedDetails?.location?.city?.name;
+    if (persistedCityName && cityList.length > 0) {
+      const matchedCity = cityList.find((c) => c.name === persistedCityName);
+      if (matchedCity && form.getValues("location.city")?.code !== matchedCity.code) {
+        form.setValue("location.city", matchedCity, { shouldValidate: true });
+      }
+    }
+  }, [cityList, persistedDetails, form]);
+
+  // Effect to re-populate the barangay dropdown from persisted data.
+  useEffect(() => {
+    const persistedBarangayName = persistedDetails?.location?.barangay?.name;
+    if (persistedBarangayName && barangayList.length > 0) {
+      const matchedBarangay = barangayList.find((b) => b.name === persistedBarangayName);
+      if (matchedBarangay && form.getValues("location.barangay")?.code !== matchedBarangay.code) {
+        form.setValue("location.barangay", matchedBarangay, { shouldValidate: true });
+      }
+    }
+  }, [barangayList, persistedDetails, form]);
 
   /**
    * Handles form submission by deciding whether to create a new case or update an existing one.
@@ -257,6 +286,7 @@ export const AnalyzeDetails = () => {
   const onSubmit: SubmitHandler<DetailsFormInput> = (data) => {
     const validatedData = data as DetailsFormData;
 
+    // Decide whether to call the create or update mutation based on the presence of a caseId.
     if (caseId) {
       updateCaseMutation.mutate({ caseId, details: validatedData });
     } else {
@@ -264,14 +294,10 @@ export const AnalyzeDetails = () => {
     }
   };
 
-  // Determines if the form is being saved.
+  // Determines if the form is being saved or an update is in progress.
   const isSaving = createCaseMutation.isPending || updateCaseMutation.isPending;
 
-  // The main processing state combines initial loading and saving states to disable inputs.
-  const isProcessing = isInitialLoading || isSaving;
-
-  // Render nothing until the store has been hydrated from localStorage.
-  // This prevents hydration mismatches and UI flicker.
+  // Prevents rendering the form until the Zustand store is rehydrated from local storage.
   if (!isHydrated) {
     return null;
   }
@@ -286,16 +312,6 @@ export const AnalyzeDetails = () => {
     // The main container for the form layout, now with entrance animation.
     <motion.div initial="hidden" animate="visible" variants={formVariants}>
       <Card className="font-inter relative border-none py-2 shadow-none">
-        {/* Renders a loading overlay on top of the card ONLY during initial data load. */}
-        {isInitialLoading && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-2 rounded-lg bg-white/80 backdrop-blur-sm">
-            <BeatLoader color="#16a34a" size={12} />
-            <p className="font-plus-jakarta-sans p-2 text-center text-lg font-medium text-slate-700 md:text-xl">
-              Loading form data...
-            </p>
-          </div>
-        )}
-
         {/* Form header with title and description. */}
         <CardHeader className="px-0 text-center">
           <CardTitle className="font-plus-jakarta-sans text-xl">Analysis Details</CardTitle>
@@ -451,10 +467,11 @@ export const AnalyzeDetails = () => {
                 />
               </div>
 
-              {/* Location Section */}
+              {/* A section dedicated to the dynamic, dependent location dropdowns. */}
               <FormItem>
                 <FormLabel className={sectionTitle}>Location</FormLabel>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* Region selection dropdown. */}
                   <FormField
                     control={form.control}
                     name="location.region"
@@ -495,6 +512,7 @@ export const AnalyzeDetails = () => {
                     )}
                   />
 
+                  {/* Province selection dropdown. */}
                   <FormField
                     control={form.control}
                     name="location.province"
@@ -509,7 +527,7 @@ export const AnalyzeDetails = () => {
                             form.setValue("location.city", null);
                             form.setValue("location.barangay", null);
                           }}
-                          disabled={!watchedRegion || provinceList.length === 0}
+                          disabled={!watchedRegion?.code || provinceList.length === 0}
                         >
                           <FormControl>
                             <SelectTrigger
@@ -535,6 +553,7 @@ export const AnalyzeDetails = () => {
                     )}
                   />
 
+                  {/* City/Municipality selection dropdown. */}
                   <FormField
                     control={form.control}
                     name="location.city"
@@ -548,7 +567,7 @@ export const AnalyzeDetails = () => {
                             field.onChange(city);
                             form.setValue("location.barangay", null);
                           }}
-                          disabled={!watchedProvince || cityList.length === 0}
+                          disabled={!watchedProvince?.code || cityList.length === 0}
                         >
                           <FormControl>
                             <SelectTrigger
@@ -574,6 +593,7 @@ export const AnalyzeDetails = () => {
                     )}
                   />
 
+                  {/* Barangay selection dropdown. */}
                   <FormField
                     control={form.control}
                     name="location.barangay"
@@ -586,7 +606,7 @@ export const AnalyzeDetails = () => {
                             const barangay = barangayList.find((b) => b.code === code) || null;
                             field.onChange(barangay);
                           }}
-                          disabled={!watchedCity || barangayList.length === 0}
+                          disabled={!watchedCity?.code || barangayList.length === 0}
                         >
                           <FormControl>
                             <SelectTrigger
@@ -615,28 +635,30 @@ export const AnalyzeDetails = () => {
               </FormItem>
             </CardContent>
 
+            {/* The form's footer. */}
             <CardFooter className="flex justify-between gap-x-4 px-0 pt-6">
+              {/* The 'Previous' button is only rendered if it's not the first step. */}
               {status !== "details" && (
                 <Button
                   type="button"
                   onClick={prevStep}
-                  disabled={isProcessing}
+                  disabled={isSaving}
                   className={cn(buttonClasses)}
                 >
                   Previous
                 </Button>
               )}
 
-              {/* Wrapper for next button.*/}
+              {/* Wrapper for the 'Save and Continue' button. */}
               <div
                 className={cn("flex-1", {
-                  "cursor-not-allowed": !form.formState.isValid || isProcessing,
+                  "cursor-not-allowed": !form.formState.isValid || isSaving,
                   "w-full": status === "details",
                 })}
               >
                 <Button
                   type="submit"
-                  disabled={!form.formState.isValid || isProcessing}
+                  disabled={!form.formState.isValid || isSaving}
                   className={cn(buttonClasses, "w-full")}
                 >
                   {isSaving ? "Saving..." : "Save and Continue"}
