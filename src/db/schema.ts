@@ -1,5 +1,6 @@
 import type { AdapterAccount } from "@auth/core/adapters";
 import { createId } from "@paralleldrive/cuid2";
+import { relations } from "drizzle-orm";
 import {
   integer,
   jsonb,
@@ -205,3 +206,68 @@ export const detections = pgTable("detections", {
   xMax: real("x_max").notNull(),
   yMax: real("y_max").notNull(),
 });
+
+// Defines the relationships for the `users` table.
+export const usersRelations = relations(users, ({ many }) => ({
+  accounts: many(accounts),
+  sessions: many(sessions),
+  cases: many(cases),
+}));
+
+// Defines the relationship from an `account` back to its owning `user`.
+export const accountsRelations = relations(accounts, ({ one }) => ({
+  user: one(users, {
+    fields: [accounts.userId],
+    references: [users.id],
+  }),
+}));
+
+// Defines the relationship from a `session` back to its owning `user`.
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Defines the relationships for a `case`, linking it to its owner and related data.
+export const casesRelations = relations(cases, ({ one, many }) => ({
+  user: one(users, {
+    fields: [cases.userId],
+    references: [users.id],
+  }),
+  uploads: many(uploads),
+  analysisResult: one(analysisResults, {
+    fields: [cases.id],
+    references: [analysisResults.caseId],
+  }),
+}));
+
+// Defines the relationships for an `upload`, linking it to its parent entities.
+export const uploadsRelations = relations(uploads, ({ one, many }) => ({
+  case: one(cases, {
+    fields: [uploads.caseId],
+    references: [cases.id],
+  }),
+  user: one(users, {
+    fields: [uploads.userId],
+    references: [users.id],
+  }),
+  detections: many(detections),
+}));
+
+// Defines the one-to-one relationship from an `analysis result` back to its `case`.
+export const analysisResultsRelations = relations(analysisResults, ({ one }) => ({
+  case: one(cases, {
+    fields: [analysisResults.caseId],
+    references: [cases.id],
+  }),
+}));
+
+// Defines the relationship from a `detection` back to the single `upload` it belongs to.
+export const detectionsRelations = relations(detections, ({ one }) => ({
+  upload: one(uploads, {
+    fields: [detections.uploadId],
+    references: [uploads.id],
+  }),
+}));
