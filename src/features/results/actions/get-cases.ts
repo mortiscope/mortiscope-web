@@ -1,14 +1,15 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
 
 /**
- * Fetches all cases associated with the currently authenticated user.
- * The cases are ordered by their creation date in descending order by default.
+ * Fetches all active cases associated with the currently authenticated user.
+ * Draft cases are excluded. The cases are ordered by their creation date in descending order by default.
+ *
  * @returns A promise that resolves to an array of cases.
  * @throws An error if the user is not authenticated.
  */
@@ -19,9 +20,9 @@ export const getCases = async () => {
     throw new Error("User not authenticated");
   }
 
-  // Query the database for all cases belonging to the current user.
+  // Query the database for all cases belonging to the current user that are 'active'.
   const userCases = await db.query.cases.findMany({
-    where: eq(cases.userId, session.user.id),
+    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
     orderBy: (cases, { desc }) => [desc(cases.createdAt)],
   });
 

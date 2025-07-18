@@ -63,6 +63,7 @@ export async function createCase(values: DetailsFormData): Promise<ActionRespons
       .values({
         userId,
         caseName: data.caseName,
+        status: "draft",
         temperatureCelsius,
         locationRegion: data.location.region.name,
         locationProvince: data.location.province.name,
