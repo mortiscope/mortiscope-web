@@ -43,14 +43,6 @@ export const analysisEvent = inngest.createFunction(
   async ({ event, step }) => {
     const { caseId } = event.data;
 
-    // Create a 'pending' record in the database immediately.
-    await step.run("create-pending-analysis-record", async () => {
-      await db.insert(analysisResults).values({
-        caseId,
-        status: "pending",
-      });
-    });
-
     // A sleep step to give the user's browser time to upload files before the analysis process attempts to access them.
     await step.sleep("wait-for-uploads", "1m");
 

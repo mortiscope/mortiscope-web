@@ -1,11 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases } from "@/db/schema";
+import { analysisResults, cases } from "@/db/schema";
 import { inngest } from "@/lib/inngest";
 
 /**
@@ -49,19 +49,25 @@ export async function submitAnalysis(values: { caseId: string }): Promise<Action
   try {
     // Verify that the case exists and belongs to the authenticated user before proceeding.
     const existingCase = await db.query.cases.findFirst({
-      where: eq(cases.id, caseId),
-      columns: { userId: true },
+      where: and(eq(cases.id, caseId), eq(cases.userId, userId), eq(cases.status, "draft")),
+      columns: { id: true },
     });
 
     if (!existingCase) {
-      return { success: false, error: "Case not found." };
+      // If the case is not found, it's either already submitted or doesn't exist.
+      return { success: false, error: "Case not found or has already been submitted." };
     }
 
-    if (existingCase.userId !== userId) {
-      return { success: false, error: "You do not have permission to access this case." };
-    }
+    // Update the case status from 'draft' to 'active'.
+    await db.update(cases).set({ status: "active" }).where(eq(cases.id, caseId));
 
-    // Send the event to Inngest to start the asynchronous analysis workflow.
+    // Create the initial 'pending' record in the analysis_results table.
+    await db.insert(analysisResults).values({
+      caseId,
+      status: "pending",
+    });
+
+    // If the database operations were successful, send the event to Inngest.
     await inngest.send({
       name: "analysis/request.sent",
       data: { caseId },
@@ -70,6 +76,8 @@ export async function submitAnalysis(values: { caseId: string }): Promise<Action
     return { success: true, message: "Analysis has been successfully submitted." };
   } catch (error) {
     console.error("Error submitting analysis:", error);
+
+    // Return a generic error to the client instead of the specific database error.
     return { success: false, error: "An internal server error occurred." };
   }
 }
