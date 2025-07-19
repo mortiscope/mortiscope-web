@@ -9,21 +9,18 @@ import { ResultsAnalysis } from "@/features/results/components/results-analysis"
 import { ResultsDetails } from "@/features/results/components/results-details";
 import { ResultsImages } from "@/features/results/components/results-images";
 
-type Props = {
-  params: {
-    resultsId: string;
-  };
-};
-
 /**
  * Dynamically generates page metadata for SEO and browser tabs.
  *
  * @param {Props} props The component props containing the dynamic route parameters.
  * @returns {Promise<Metadata>} A promise resolving to the page's metadata object.
  */
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params: { resultsId },
+}: {
+  params: { resultsId: string };
+}): Promise<Metadata> {
   const session = await auth();
-  const { resultsId } = params;
 
   // A user must be logged in to view any case metadata.
   if (!session?.user?.id) {
@@ -67,9 +64,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * @param {Props} props The component props containing the dynamic route parameters.
  * @returns {Promise<JSX.Element>} The rendered page component.
  */
-export default async function ResultsPage({ params }: Props) {
+export default async function ResultsPage({
+  params: { resultsId },
+}: {
+  params: { resultsId: string };
+}) {
   const session = await auth();
-  const { resultsId } = params;
 
   // A user must be logged in to view the page.
   if (!session?.user?.id) {
