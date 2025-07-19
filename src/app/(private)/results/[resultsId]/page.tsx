@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { cases } from "@/db/schema";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
+import { ResultsImages } from "@/features/results/components/results-images";
 
 type Props = {
   params: {
@@ -78,6 +79,10 @@ export default async function ResultsPage({ params }: Props) {
   // Fetch all data associated with the specific case ID, ensuring the user owns it.
   const caseData = await db.query.cases.findFirst({
     where: and(eq(cases.id, resultsId), eq(cases.userId, session.user.id)),
+    // Fetch the related images (uploads) in the same query.
+    with: {
+      uploads: true,
+    },
   });
 
   // If no case data is found, if the user does not own it, or if it's a draft, render the standard 404 page.
@@ -89,6 +94,7 @@ export default async function ResultsPage({ params }: Props) {
     <div className="flex flex-1 flex-col gap-4 pt-2">
       <ResultsDetails caseData={caseData} />
       <ResultsAnalysis />
+      <ResultsImages initialImages={caseData.uploads} />
     </div>
   );
 }
