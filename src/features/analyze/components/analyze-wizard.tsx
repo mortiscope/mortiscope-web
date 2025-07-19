@@ -13,7 +13,11 @@ import { AnalyzeUpload } from "@/features/analyze/components/analyze-upload";
 import { type DetailsFormData } from "@/features/analyze/schemas/details";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 
+/**
+ * A client component that orchestrates the multi-step analysis process.
+ */
 export const AnalyzeWizard = () => {
+  // Retrieves state and actions from the store for analysis.
   const {
     status,
     reset: resetAnalyzeStore,
@@ -24,24 +28,37 @@ export const AnalyzeWizard = () => {
     updateDetailsData,
   } = useAnalyzeStore();
 
-  const [isDraftCheckComplete, setIsDraftCheckComplete] = useState(false);
+  // Local state to track the completion of the initial data synchronization.
+  const [isInitializationComplete, setIsInitializationComplete] = useState(false);
 
+  /**
+   * Hook to fetch an existing draft case from the server.
+   * This query is enabled only after the client-side store has been hydrated from persistent storage.
+   */
   const { data: draftCaseData, isFetching: isFetchingDraft } = useQuery({
     queryKey: ["draftCase"],
     queryFn: getDraftCase,
     enabled: isStoreHydrated,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: "always",
   });
 
+  /**
+   * A `useEffect` hook that handles the initial data synchronization.
+   */
   useEffect(() => {
-    // Wait until the initial query has finished.
-    if (isFetchingDraft) {
+    // Wait until the store is hydrated and the draft query has finished.
+    if (isFetchingDraft || !isStoreHydrated) {
+      return;
+    }
+
+    // Prevent this effect from re-running after the initial setup is complete.
+    if (isInitializationComplete) {
       return;
     }
 
     if (draftCaseData) {
-      // A draft was found in the database. Sync the store's state with it.
+      // A draft was found. Sync the store with its data.
       setCaseId(draftCaseData.id);
       const details: DetailsFormData = {
         caseName: draftCaseData.caseName,
@@ -59,17 +76,29 @@ export const AnalyzeWizard = () => {
       };
       updateDetailsData(details);
     } else {
-      // No draft was found. If the store has a stale caseId from local storage, clear it.
-      if (useAnalyzeStore.getState().caseId) {
-        setCaseId(null);
-        updateDetailsData({});
+      // No draft case was found on the server.
+      if (caseId) {
+        resetAnalyzeStore();
       }
     }
 
-    // Mark that the initial synchronization is complete.
-    setIsDraftCheckComplete(true);
-  }, [isFetchingDraft, draftCaseData, setCaseId, updateDetailsData]);
+    // Mark that the initial synchronization or reset is complete. This will stop the loader.
+    setIsInitializationComplete(true);
+  }, [
+    isFetchingDraft,
+    draftCaseData,
+    setCaseId,
+    updateDetailsData,
+    isStoreHydrated,
+    resetAnalyzeStore,
+    caseId,
+    isInitializationComplete,
+  ]);
 
+  /**
+   * Hook to fetch existing image uploads for the current case.
+   * This query is enabled only after a `caseId` is available and the initial draft synchronization is complete.
+   */
   const { data: uploadsData } = useQuery({
     queryKey: ["uploads", caseId],
     queryFn: async () => {
@@ -83,13 +112,12 @@ export const AnalyzeWizard = () => {
       }
       return result.data;
     },
-    enabled: !!caseId,
+    enabled: !!caseId && isInitializationComplete,
     refetchOnWindowFocus: false,
   });
 
   /**
    * An effect to hydrate the store with the fetched upload data.
-   * This runs whenever the `uploadsData` from the query changes.
    */
   useEffect(() => {
     // Hydrate with `uploadsData` even if it's an empty array.
@@ -98,16 +126,8 @@ export const AnalyzeWizard = () => {
     }
   }, [uploadsData, hydrateFiles]);
 
-  /**
-   * Resets the analysis store when the wizard is unmounted.
-   */
-  useEffect(() => {
-    return () => {
-      resetAnalyzeStore();
-    };
-  }, [resetAnalyzeStore]);
-
-  if (!isDraftCheckComplete) {
+  // Renders a loading indicator while the initial data synchronization is in progress.
+  if (!isInitializationComplete) {
     return (
       <div className="flex min-h-[450px] flex-col items-center justify-center space-y-2">
         <BeatLoader color="#16a34a" size={12} />
@@ -118,6 +138,7 @@ export const AnalyzeWizard = () => {
     );
   }
 
+  // Renders the appropriate component for the current step of the wizard.
   return (
     <div>
       {status === "details" && <AnalyzeDetails />}

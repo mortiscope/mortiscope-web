@@ -342,7 +342,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       updateDetailsData: (data) => set({ details: data }),
       // Resets the store to its initial default values, including clearing persisted data.
       reset: () => {
-        set(initialState);
+        set({ ...initialState, isHydrated: true });
         localStorage.removeItem("analyze-storage");
       },
       // Action to flag a submission as successful.
