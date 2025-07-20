@@ -103,3 +103,17 @@ export const MD_GRID_LIMIT = 4;
  * @constant {number}
  */
 export const SM_GRID_LIMIT = 2;
+
+/**
+ * A mapping of detection class names to their corresponding display colors.
+ * This ensures consistent and configurable styling for bounding boxes.
+ * @constant {Record<string, string>}
+ */
+export const DETECTION_CLASS_COLORS: Record<string, string> = {
+  adult: "#f43f5e",
+  pupa: "#f97316",
+  instar_1: "#eab308",
+  instar_2: "#84cc16",
+  instar_3: "#22c55e",
+  default: "#64748b",
+};

@@ -3,7 +3,7 @@ import { UseFormReturn } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
 import { DetailsFormInput } from "@/features/analyze/schemas/details";
-import { DETERMINISTIC_AVATARS } from "@/lib/constants";
+import { DETERMINISTIC_AVATARS, DETECTION_CLASS_COLORS } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -117,4 +117,14 @@ export function formatDate(date: Date): string {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+/**
+ * Retrieves the color for a given detection class name.
+ *
+ * @param className - The name of the detection class.
+ * @returns A hex color code as a string.
+ */
+export function getColorForClass(className: string): string {
+  return DETECTION_CLASS_COLORS[className] || DETECTION_CLASS_COLORS.default;
 }
