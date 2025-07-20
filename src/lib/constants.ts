@@ -85,3 +85,21 @@ export const SORT_OPTIONS = [
  * Type alias for the sort option values.
  */
 export type SortOptionValue = (typeof SORT_OPTIONS)[number]["value"];
+
+/**
+ * The maximum number of images to display in the large screen grid.
+ * @constant {number}
+ */
+export const LG_GRID_LIMIT = 5;
+
+/**
+ * The maximum number of images to display in the medium screen grid.
+ * @constant {number}
+ */
+export const MD_GRID_LIMIT = 4;
+
+/**
+ * The maximum number of images to display in the small screen grid.
+ * @constant {number}
+ */
+export const SM_GRID_LIMIT = 2;
