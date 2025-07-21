@@ -30,8 +30,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { type detections } from "@/db/schema";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn, formatBytes } from "@/lib/utils";
+import { cn, formatBytes, getColorForClass } from "@/lib/utils";
+
+// Define the shape of detection data.
+type Detection = typeof detections.$inferSelect;
 
 /**
  * The shape of the image data object used within this component and its parent.
@@ -42,6 +46,7 @@ interface ImageFile {
   url: string;
   size: number;
   dateUploaded: Date;
+  detections?: Detection[];
 }
 
 /**
@@ -214,7 +219,7 @@ export const ResultsImagesModal = ({
 }: ResultsImagesModalProps) => {
   // State to manage the currently displayed image within the modal.
   const [activeImage, setActiveImage] = useState<ImageFile | null>(image);
-  // State to store the dimensions of the image.
+  // State to store the natural dimensions of the image.
   const [imageDimensions, setImageDimensions] = useState<{
     width: number;
     height: number;
@@ -229,6 +234,14 @@ export const ResultsImagesModal = ({
   const titleInputRef = useRef<HTMLInputElement>(null);
   // Hook to determine if the device is mobile for responsive rendering.
   const isMobile = useIsMobile();
+
+  // Ref to the container that holds the image, to measure its size.
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  // State to store the dimensions of the container.
+  const [containerDimensions, setContainerDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   /**
    * Memoized index of the currently active image within the sorted list.
@@ -280,6 +293,9 @@ export const ResultsImagesModal = ({
       setIsRenaming(false);
       setIsSavingRename(false);
       setIsNameDirty(false);
+      // Reset dimensions when image changes
+      setImageDimensions(null);
+      setContainerDimensions(null);
     }
   }, [activeImage, isOpen]);
 
@@ -311,6 +327,23 @@ export const ResultsImagesModal = ({
     };
     img.src = activeImage.url;
   }, [activeImage]);
+
+  /**
+   * Effect to measure the image container's dimensions. This is used to
+   * correctly scale and position the bounding box overlay.
+   */
+  useEffect(() => {
+    const measureContainer = () => {
+      if (imageContainerRef.current) {
+        const { width, height } = imageContainerRef.current.getBoundingClientRect();
+        setContainerDimensions({ width, height });
+      }
+    };
+    // Measure initially and on window resize.
+    measureContainer();
+    window.addEventListener("resize", measureContainer);
+    return () => window.removeEventListener("resize", measureContainer);
+  }, [imageDimensions]);
 
   /**
    * Handles changes to the file name input and marks it as dirty.
@@ -378,6 +411,38 @@ export const ResultsImagesModal = ({
       });
   };
 
+  /**
+   * Memoized calculation for the final rendered size and position of the
+   * `object-contain` image. This is the core of the fix.
+   */
+  const renderedImageStyle = useMemo(() => {
+    if (!imageDimensions || !containerDimensions) return null;
+
+    const { width: naturalWidth, height: naturalHeight } = imageDimensions;
+    const { width: containerWidth, height: containerHeight } = containerDimensions;
+
+    const imageRatio = naturalWidth / naturalHeight;
+    const containerRatio = containerWidth / containerHeight;
+
+    let renderedWidth, renderedHeight, top, left;
+
+    if (imageRatio > containerRatio) {
+      // Image is wider than container, letterboxed (top/bottom bars)
+      renderedWidth = containerWidth;
+      renderedHeight = containerWidth / imageRatio;
+      top = (containerHeight - renderedHeight) / 2;
+      left = 0;
+    } else {
+      // Image is taller than or equal to container, pillarboxed (left/right bars)
+      renderedHeight = containerHeight;
+      renderedWidth = containerHeight * imageRatio;
+      left = (containerWidth - renderedWidth) / 2;
+      top = 0;
+    }
+
+    return { width: renderedWidth, height: renderedHeight, top, left };
+  }, [imageDimensions, containerDimensions]);
+
   // Guard clause to prevent rendering if the image is not available or the mobile hook hasn't run.
   if (activeImage === null || isMobile === undefined) {
     return null;
@@ -440,7 +505,6 @@ export const ResultsImagesModal = ({
                           aria-label="Rename image"
                           className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                         >
-                          {/* Removed loading spinner from this button */}
                           <GoPencil className="!h-5 !w-5" />
                         </Button>
                         <Button
@@ -532,7 +596,7 @@ export const ResultsImagesModal = ({
                               isMobile ? "flex-grow" : "mt-2 h-96 px-6"
                             )}
                           >
-                            {/* Desktop-only action buttons. */}
+                            {/* Desktop-only action buttons */}
                             {!isMobile && (
                               <div className="absolute top-2 right-8 z-10 flex w-auto items-center justify-around gap-2 rounded-lg bg-emerald-600/80 px-2 py-1 shadow-lg backdrop-blur-sm">
                                 <Tooltip>
@@ -544,7 +608,6 @@ export const ResultsImagesModal = ({
                                       aria-label="Rename image"
                                       className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
                                     >
-                                      {/* Removed loading spinner from this button */}
                                       <GoPencil className="!h-5 !w-5" />
                                     </Button>
                                   </TooltipTrigger>
@@ -598,14 +661,50 @@ export const ResultsImagesModal = ({
                               )}
                               contentClass="!w-full !h-full flex items-center justify-center"
                             >
-                              <Image
-                                key={activeImage.url}
-                                src={activeImage.url}
-                                alt={`Preview of ${displayFileName}`}
-                                fill
-                                className="object-contain"
-                                sizes="(max-width: 768px) 100vw, 560px"
-                              />
+                              {/* The container we measure */}
+                              <div ref={imageContainerRef} className="relative h-full w-full">
+                                <Image
+                                  key={activeImage.url}
+                                  src={activeImage.url}
+                                  alt={`Preview of ${displayFileName}`}
+                                  fill
+                                  className="object-contain"
+                                  sizes="(max-width: 768px) 100vw, 560px"
+                                  priority
+                                />
+
+                                {renderedImageStyle && (
+                                  <div
+                                    className="absolute"
+                                    style={{
+                                      width: `${renderedImageStyle.width}px`,
+                                      height: `${renderedImageStyle.height}px`,
+                                      top: `${renderedImageStyle.top}px`,
+                                      left: `${renderedImageStyle.left}px`,
+                                    }}
+                                  >
+                                    {/* Bounding boxes are now rendered inside this new overlay */}
+                                    {activeImage.detections?.map((det) => (
+                                      <div
+                                        key={det.id}
+                                        className="absolute box-border"
+                                        style={{
+                                          top: `${(det.yMin / imageDimensions!.height) * 100}%`,
+                                          left: `${(det.xMin / imageDimensions!.width) * 100}%`,
+                                          width: `${
+                                            ((det.xMax - det.xMin) / imageDimensions!.width) * 100
+                                          }%`,
+                                          height: `${
+                                            ((det.yMax - det.yMin) / imageDimensions!.height) * 100
+                                          }%`,
+                                          borderColor: getColorForClass(det.label),
+                                          borderWidth: "2px",
+                                        }}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </TransformComponent>
                           </motion.div>
 

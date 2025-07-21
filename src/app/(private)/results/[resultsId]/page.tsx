@@ -79,9 +79,13 @@ export default async function ResultsPage({
   // Fetch all data associated with the specific case ID, ensuring the user owns it.
   const caseData = await db.query.cases.findFirst({
     where: and(eq(cases.id, resultsId), eq(cases.userId, session.user.id)),
-    // Fetch the related images (uploads) in the same query.
+    // Fetch the related images and their associated detections in the same query.
     with: {
-      uploads: true,
+      uploads: {
+        with: {
+          detections: true,
+        },
+      },
     },
   });
 

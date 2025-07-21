@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { type uploads } from "@/db/schema";
+import { type detections, type uploads } from "@/db/schema";
 import { renameImage } from "@/features/results/actions/rename-image";
 import { ResultsImagesModal } from "@/features/results/components/results-images-modal";
 import {
@@ -38,12 +38,14 @@ import {
 import { cn } from "@/lib/utils";
 
 // Define local types for better state management within this component.
+type Detection = typeof detections.$inferSelect;
 type ImageFile = {
   id: string;
   name: string;
   url: string;
   size: number;
   dateUploaded: Date;
+  detections?: Detection[];
 };
 
 /**
@@ -99,7 +101,9 @@ const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className?:
 
 type ResultsImagesProps = {
   // The component receives images from the database as props.
-  initialImages: (typeof uploads.$inferSelect)[];
+  initialImages: (typeof uploads.$inferSelect & {
+    detections: Detection[];
+  })[];
 };
 
 /**
@@ -115,6 +119,7 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
         url: img.url,
         size: img.size,
         dateUploaded: img.createdAt,
+        detections: img.detections,
       })),
     [initialImages]
   );
