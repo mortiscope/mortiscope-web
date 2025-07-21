@@ -128,3 +128,25 @@ export function formatDate(date: Date): string {
 export function getColorForClass(className: string): string {
   return DETECTION_CLASS_COLORS[className] || DETECTION_CLASS_COLORS.default;
 }
+
+/**
+ * Formats a detection class label into a human-readable title.
+ *
+ * @param label - The raw label string from the database.
+ * @returns A formatted, capitalized string.
+ */
+export function formatLabel(label: string): string {
+  if (!label) return "";
+  return label.replace(/_/g, " ").split(" ").map(capitalize).join(" ");
+}
+
+/**
+ * Formats a confidence score (0-1) into a percentage string.
+ *
+ * @param confidence - The confidence score as a number.
+ * @returns A formatted string with two decimal places and a percent sign.
+ */
+export function formatConfidence(confidence: number): string {
+  if (typeof confidence !== "number") return "N/A";
+  return `${(confidence * 100).toFixed(2)}%`;
+}

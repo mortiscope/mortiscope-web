@@ -32,7 +32,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections } from "@/db/schema";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn, formatBytes, getColorForClass } from "@/lib/utils";
+import { cn, formatBytes, formatConfidence, formatLabel, getColorForClass } from "@/lib/utils";
 
 // Define the shape of detection data.
 type Detection = typeof detections.$inferSelect;
@@ -673,6 +673,7 @@ export const ResultsImagesModal = ({
                                   priority
                                 />
 
+                                {/* Conditionally renders the bounding box overlay. */}
                                 {renderedImageStyle && (
                                   <div
                                     className="absolute"
@@ -683,24 +684,38 @@ export const ResultsImagesModal = ({
                                       left: `${renderedImageStyle.left}px`,
                                     }}
                                   >
-                                    {/* Bounding boxes are now rendered inside this new overlay */}
+                                    {/* Iterates over each detection found in the active image to render its bounding box. */}
                                     {activeImage.detections?.map((det) => (
-                                      <div
-                                        key={det.id}
-                                        className="absolute box-border"
-                                        style={{
-                                          top: `${(det.yMin / imageDimensions!.height) * 100}%`,
-                                          left: `${(det.xMin / imageDimensions!.width) * 100}%`,
-                                          width: `${
-                                            ((det.xMax - det.xMin) / imageDimensions!.width) * 100
-                                          }%`,
-                                          height: `${
-                                            ((det.yMax - det.yMin) / imageDimensions!.height) * 100
-                                          }%`,
-                                          borderColor: getColorForClass(det.label),
-                                          borderWidth: "2px",
-                                        }}
-                                      />
+                                      <Tooltip key={det.id}>
+                                        <TooltipTrigger asChild>
+                                          {/* Represents the visual bounding box for a single detection. */}
+                                          <div
+                                            className="absolute box-border cursor-pointer"
+                                            style={{
+                                              top: `${(det.yMin / imageDimensions!.height) * 100}%`,
+                                              left: `${(det.xMin / imageDimensions!.width) * 100}%`,
+                                              width: `${
+                                                ((det.xMax - det.xMin) / imageDimensions!.width) *
+                                                100
+                                              }%`,
+                                              height: `${
+                                                ((det.yMax - det.yMin) / imageDimensions!.height) *
+                                                100
+                                              }%`,
+                                              borderColor: getColorForClass(det.label),
+                                              borderWidth: "2px",
+                                            }}
+                                          />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          {/* The content of the tooltip, displaying class and confidence score. */}
+                                          <p className="font-inter">
+                                            {`${formatLabel(det.label)}: ${formatConfidence(
+                                              det.confidence
+                                            )}`}
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     ))}
                                   </div>
                                 )}
