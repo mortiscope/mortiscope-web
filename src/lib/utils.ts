@@ -3,7 +3,7 @@ import { UseFormReturn } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
 import { DetailsFormInput } from "@/features/analyze/schemas/details";
-import { DETECTION_CLASS_COLORS,DETERMINISTIC_AVATARS } from "@/lib/constants";
+import { DETERMINISTIC_AVATARS, DETECTION_CLASS_COLORS } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -149,4 +149,32 @@ export function formatLabel(label: string): string {
 export function formatConfidence(confidence: number): string {
   if (typeof confidence !== "number") return "N/A";
   return `${(confidence * 100).toFixed(2)}%`;
+}
+
+/**
+ * Converts a total number of minutes into a human-readable string.
+ *
+ * @param totalMinutes - The total PMI in minutes.
+ * @returns A formatted, interpretable string.
+ */
+export function formatPmiToInterpretableString(totalMinutes: number | null | undefined): string {
+  if (typeof totalMinutes !== "number" || totalMinutes <= 0) {
+    return "No duration available.";
+  }
+
+  const days = Math.floor(totalMinutes / 1440);
+  const remainingMinutesAfterDays = totalMinutes % 1440;
+  const hours = Math.floor(remainingMinutesAfterDays / 60);
+  const minutes = Math.round(remainingMinutesAfterDays % 60);
+
+  const parts = [];
+  if (days > 0) parts.push(`${days} day${days > 1 ? "s" : ""}`);
+  if (hours > 0) parts.push(`${hours} hour${hours > 1 ? "s" : ""}`);
+  if (minutes > 0) parts.push(`${minutes} minute${minutes > 1 ? "s" : ""}`);
+
+  if (parts.length === 0) return "Less than a minute.";
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return parts.join(" and ");
+
+  return parts.slice(0, -1).join(", ") + ", and " + parts.slice(-1);
 }
