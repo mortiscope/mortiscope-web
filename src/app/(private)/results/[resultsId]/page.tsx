@@ -79,13 +79,14 @@ export default async function ResultsPage({
   // Fetch all data associated with the specific case ID, ensuring the user owns it.
   const caseData = await db.query.cases.findFirst({
     where: and(eq(cases.id, resultsId), eq(cases.userId, session.user.id)),
-    // Fetch the related images and their associated detections in the same query.
+    // Fetch related uploads, detections, and the final analysis result in the same query.
     with: {
       uploads: {
         with: {
           detections: true,
         },
       },
+      analysisResult: true,
     },
   });
 
@@ -97,7 +98,7 @@ export default async function ResultsPage({
   return (
     <div className="flex flex-1 flex-col gap-4 pt-2">
       <ResultsDetails caseData={caseData} />
-      <ResultsAnalysis />
+      <ResultsAnalysis analysisResult={caseData.analysisResult} />
       <ResultsImages initialImages={caseData.uploads} />
     </div>
   );

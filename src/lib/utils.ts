@@ -3,7 +3,7 @@ import { UseFormReturn } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
 import { DetailsFormInput } from "@/features/analyze/schemas/details";
-import { DETERMINISTIC_AVATARS, DETECTION_CLASS_COLORS } from "@/lib/constants";
+import { DETECTION_CLASS_COLORS,DETERMINISTIC_AVATARS } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
