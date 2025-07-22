@@ -1,6 +1,6 @@
 "use client";
 
-import { Pie, PieChart, ResponsiveContainer, Tooltip, Cell, Legend } from "recharts";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { type TooltipProps } from "recharts";
 
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -82,8 +82,19 @@ const renderCustomizedLabel = ({
   );
 };
 
+// Define the specific types for the custom legend props to avoid `any`.
+interface LegendPayloadItem {
+  value: string;
+  color: string;
+}
+
+interface CustomLegendProps {
+  payload?: LegendPayloadItem[];
+  isMobile: boolean;
+}
+
 // A custom legend component for responsive styling and spacing.
-const CustomLegend = ({ payload, isMobile }: { payload?: any[]; isMobile: boolean }) => {
+const CustomLegend = ({ payload, isMobile }: CustomLegendProps) => {
   if (!payload) return null;
   return (
     <ul className="mt-4 flex flex-wrap items-center justify-center">
