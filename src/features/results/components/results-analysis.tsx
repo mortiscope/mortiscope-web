@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import { FaGlasses, FaHourglassHalf } from "react-icons/fa";
 import { FaRegHourglass } from "react-icons/fa6";
-import { IoBarChartOutline, IoImagesOutline, IoInformation } from "react-icons/io5";
+import {
+  IoBarChartOutline,
+  IoGridOutline,
+  IoImagesOutline,
+  IoInformation,
+  IoPodiumOutline,
+} from "react-icons/io5";
 import { LuCalendarRange, LuChartLine, LuClock } from "react-icons/lu";
 import { TbChartAreaLine } from "react-icons/tb";
 
@@ -16,10 +22,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { type analysisResults } from "@/db/schema";
+import { type analysisResults, type detections, type uploads } from "@/db/schema";
 import { PmiExplanationModal } from "@/features/results/components/pmi-explanation-modal";
 import { cn } from "@/lib/utils";
 
@@ -33,23 +40,34 @@ type TimeUnit = "Minutes" | "Hours" | "Days";
  */
 type ChartType = "Bar Chart" | "Line Chart" | "Composed Chart" | "Pie Chart" | "Radar Chart";
 
+// Define a more specific type for uploads with their detections.
+type UploadWithDetections = typeof uploads.$inferSelect & {
+  detections: (typeof detections.$inferSelect)[];
+};
+
 interface ResultsAnalysisProps {
   /**
    * The analysis result data for the current case.
    */
   analysisResult: typeof analysisResults.$inferSelect | null | undefined;
+  /**
+   * The list of uploaded images and their associated detections for the current case.
+   */
+  uploads: UploadWithDetections[];
 }
 
 /**
  * A component that lays out the analysis section for the results page.
  */
-export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
+export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProps) => {
   // State to manage the currently selected time unit for PMI.
   const [selectedUnit, setSelectedUnit] = useState<TimeUnit>("Hours");
   // State to manage the currently selected chart type.
   const [selectedChart, setSelectedChart] = useState<ChartType>("Bar Chart");
   // State to manage the visibility of the PMI explanation modal.
   const [isPmiModalOpen, setIsPmiModalOpen] = useState(false);
+  // State to manage the selected data source for the chart.
+  const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
 
   // Defines the options for the time unit dropdown menu for clean mapping.
   const timeUnitOptions = [
@@ -87,6 +105,13 @@ export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
   // A clear flag to check if a valid PMI estimation exists.
   const hasEstimation = typeof displayedPmiValue === "number";
 
+  // A clear flag to check if the data source dropdown should be enabled.
+  const isDataSourceDisabled = !uploads || uploads.length === 0;
+
+  // A consistent style for all dropdown menu items.
+  const dropdownItemStyle =
+    "font-inter cursor-pointer border-2 border-transparent text-sm text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 [&_svg]:text-slate-800 hover:[&_svg]:!text-emerald-600";
+
   return (
     <>
       <TooltipProvider>
@@ -121,11 +146,9 @@ export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
                         <DropdownMenuItem
                           key={option.value}
                           onSelect={() => setSelectedChart(option.value)}
-                          className={cn(
-                            "font-inter cursor-pointer border-2 border-transparent text-sm text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 [&_svg]:text-slate-800 hover:[&_svg]:!text-emerald-600"
-                          )}
+                          className={cn(dropdownItemStyle)}
                         >
-                          <option.icon className="mr-2 h-4 w-4 text-slate-800" />
+                          <option.icon className="mr-2 h-4 w-4" />
                           <span>{option.label}</span>
                         </DropdownMenuItem>
                       ))}
@@ -139,18 +162,50 @@ export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          aria-label="Select image"
+                          aria-label="Select Data Source"
                           onClick={(e) => e.stopPropagation()}
-                          className="relative -ml-[2px] size-8 cursor-pointer rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500 focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9"
+                          disabled={isDataSourceDisabled}
+                          className={cn(
+                            "relative -ml-[2px] size-8 rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9",
+                            !isDataSourceDisabled &&
+                              "cursor-pointer hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500",
+                            isDataSourceDisabled && "cursor-not-allowed opacity-50"
+                          )}
                         >
                           <IoImagesOutline className="size-4 md:size-5" />
                         </Button>
                       </DropdownMenuTrigger>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p className="font-inter">Select image</p>
+                      <p className="font-inter">Select data source</p>
                     </TooltipContent>
-                    <DropdownMenuContent align="end"></DropdownMenuContent>
+                    <DropdownMenuContent align="end" className="w-64">
+                      <DropdownMenuItem
+                        onSelect={() => setSelectedDataSource("overall")}
+                        className={cn(dropdownItemStyle)}
+                      >
+                        <IoGridOutline className="mr-2 h-4 w-4" />
+                        Overall
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onSelect={() => setSelectedDataSource("maximum-stages")}
+                        className={cn(dropdownItemStyle)}
+                      >
+                        <IoPodiumOutline className="mr-2 h-4 w-4" />
+                        Maximum Stages
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {uploads.map((upload) => (
+                        <DropdownMenuItem
+                          key={upload.id}
+                          onSelect={() => setSelectedDataSource(upload.id)}
+                          className={cn(dropdownItemStyle)}
+                        >
+                          <IoImagesOutline className="mr-2 h-4 w-4 flex-shrink-0" />
+                          <span className="truncate">{upload.name}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
                   </DropdownMenu>
                 </Tooltip>
               </div>
@@ -201,11 +256,9 @@ export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
                         <DropdownMenuItem
                           key={option.value}
                           onSelect={() => setSelectedUnit(option.value)}
-                          className={cn(
-                            "font-inter cursor-pointer border-2 border-transparent text-sm text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 [&_svg]:text-slate-800 hover:[&_svg]:!text-emerald-600"
-                          )}
+                          className={cn(dropdownItemStyle)}
                         >
-                          <option.icon className="mr-2 h-4 w-4 text-slate-800" />
+                          <option.icon className="mr-2 h-4 w-4" />
                           <span>{option.label}</span>
                         </DropdownMenuItem>
                       ))}
@@ -237,25 +290,32 @@ export const ResultsAnalysis = ({ analysisResult }: ResultsAnalysisProps) => {
               </div>
             </div>
             <div className="font-plus-jakarta-sans relative">
-              {hasEstimation ? (
-                <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait">
+                {hasEstimation ? (
                   <motion.div
                     key={selectedUnit}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.25 }}
                     className="flex flex-wrap items-baseline gap-x-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
                   >
                     <span className="text-5xl font-medium text-slate-800">
                       {displayedPmiValue.toFixed(2)}
                     </span>
                     <span className="text-4xl text-slate-500">{selectedUnit}</span>
                   </motion.div>
-                </AnimatePresence>
-              ) : (
-                <p className="text-3xl text-slate-500 lg:text-4xl">No estimation.</p>
-              )}
+                ) : (
+                  <motion.p
+                    key="no-estimation"
+                    className="w-full text-3xl text-slate-500 lg:text-4xl"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    No estimation.
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </div>
           </Card>
 

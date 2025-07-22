@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases } from "@/db/schema";
+import { cases, type detections, type uploads } from "@/db/schema";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
 import { ResultsImages } from "@/features/results/components/results-images";
@@ -95,11 +95,16 @@ export default async function ResultsPage({
     notFound();
   }
 
+  // Define a more specific type for uploads with detections
+  const uploadsWithDetections: (typeof uploads.$inferSelect & {
+    detections: (typeof detections.$inferSelect)[];
+  })[] = caseData.uploads;
+
   return (
     <div className="flex flex-1 flex-col gap-4 pt-2">
       <ResultsDetails caseData={caseData} />
-      <ResultsAnalysis analysisResult={caseData.analysisResult} />
-      <ResultsImages initialImages={caseData.uploads} />
+      <ResultsAnalysis analysisResult={caseData.analysisResult} uploads={uploadsWithDetections} />
+      <ResultsImages initialImages={uploadsWithDetections} />
     </div>
   );
 }
