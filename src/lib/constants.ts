@@ -117,3 +117,9 @@ export const DETECTION_CLASS_COLORS: Record<string, string> = {
   instar_3: "#22c55e",
   default: "#64748b",
 };
+
+/**
+ * Defines the canonical order for detection classes for consistent display in charts and tables.
+ * @constant {string[]}
+ */
+export const DETECTION_CLASS_ORDER = ["instar_1", "instar_2", "instar_3", "pupa", "adult"];

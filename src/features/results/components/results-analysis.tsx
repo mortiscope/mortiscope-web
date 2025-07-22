@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import { FaGlasses, FaHourglassHalf } from "react-icons/fa";
@@ -28,6 +28,8 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type analysisResults, type detections, type uploads } from "@/db/schema";
 import { PmiExplanationModal } from "@/features/results/components/pmi-explanation-modal";
+import { ResultsBarChart } from "@/features/results/components/results-bar-chart";
+import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /**
@@ -112,12 +114,51 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
   const dropdownItemStyle =
     "font-inter cursor-pointer border-2 border-transparent text-sm text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 [&_svg]:text-slate-800 hover:[&_svg]:!text-emerald-600";
 
+  // Memoized data processing for the chart to prevent re-calculations on every render.
+  const chartData = useMemo(() => {
+    let counts: Record<string, number> = {};
+
+    if (selectedDataSource === "overall") {
+      counts = (analysisResult?.totalCounts as Record<string, number>) || {};
+    } else if (selectedDataSource === "maximum-stages") {
+      const maxCounts: Record<string, number> = {};
+      uploads.forEach((upload) => {
+        const countsInImage: Record<string, number> = {};
+        upload.detections.forEach((det) => {
+          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
+        });
+        Object.keys(countsInImage).forEach((label) => {
+          if (!maxCounts[label] || countsInImage[label] > maxCounts[label]) {
+            maxCounts[label] = countsInImage[label];
+          }
+        });
+      });
+      counts = maxCounts;
+    } else {
+      // Logic for individual images.
+      const selectedUpload = uploads.find((upload) => upload.id === selectedDataSource);
+      if (selectedUpload) {
+        const countsInImage: Record<string, number> = {};
+        selectedUpload.detections.forEach((det) => {
+          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
+        });
+        counts = countsInImage;
+      }
+    }
+
+    // Format and sort the data for Recharts
+    return DETECTION_CLASS_ORDER.map((className) => ({
+      name: className,
+      quantity: counts[className] || 0,
+    }));
+  }, [selectedDataSource, analysisResult, uploads]);
+
   return (
     <>
       <TooltipProvider>
         <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-2 lg:grid-cols-6 lg:grid-rows-2">
           {/* Case Summary Card */}
-          <Card className="col-span-1 flex h-52 flex-col rounded-3xl border-none bg-white p-4 shadow-none md:col-span-2 md:h-96 md:p-8 lg:col-span-4 lg:row-span-2 lg:h-auto">
+          <Card className="font-inter col-span-1 flex h-96 flex-col rounded-3xl border-none bg-white p-4 shadow-none md:col-span-2 md:p-8 lg:col-span-4 lg:row-span-2 lg:h-auto">
             {/* Card Header */}
             <div className="flex items-center justify-between">
               <h1 className="font-plus-jakarta-sans text-xl font-semibold text-slate-700 md:text-3xl">
@@ -210,6 +251,10 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                 </Tooltip>
               </div>
             </div>
+            {/* Chart Rendering Section */}
+            <div className="mt-4 flex-grow">
+              {selectedChart === "Bar Chart" && <ResultsBarChart data={chartData} />}
+            </div>
           </Card>
 
           {/* PMI Estimation Card */}
@@ -289,12 +334,12 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                 </Tooltip>
               </div>
             </div>
-            <div className="font-plus-jakarta-sans relative">
+            <div className="font-plus-jakarta-sans relative h-20 overflow-hidden">
               <AnimatePresence mode="wait">
                 {hasEstimation ? (
                   <motion.div
                     key={selectedUnit}
-                    className="flex flex-wrap items-baseline gap-x-2"
+                    className="absolute bottom-0 flex w-full flex-wrap items-baseline gap-x-2"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -308,7 +353,7 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                 ) : (
                   <motion.p
                     key="no-estimation"
-                    className="w-full text-3xl text-slate-500 lg:text-4xl"
+                    className="absolute bottom-0 w-full text-3xl text-slate-500 lg:text-4xl"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
