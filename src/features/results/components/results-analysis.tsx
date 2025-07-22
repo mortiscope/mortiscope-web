@@ -31,6 +31,7 @@ import { PmiExplanationModal } from "@/features/results/components/pmi-explanati
 import { ResultsBarChart } from "@/features/results/components/results-bar-chart";
 import { ResultsComposedChart } from "@/features/results/components/results-composed-chart";
 import { ResultsLineChart } from "@/features/results/components/results-line-chart";
+import { ResultsPieChart } from "@/features/results/components/results-pie-chart";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -258,6 +259,7 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
               {selectedChart === "Bar Chart" && <ResultsBarChart data={chartData} />}
               {selectedChart === "Line Chart" && <ResultsLineChart data={chartData} />}
               {selectedChart === "Composed Chart" && <ResultsComposedChart data={chartData} />}
+              {selectedChart === "Pie Chart" && <ResultsPieChart data={chartData} />}
             </div>
           </Card>
 
