@@ -29,6 +29,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { type analysisResults, type detections, type uploads } from "@/db/schema";
 import { PmiExplanationModal } from "@/features/results/components/pmi-explanation-modal";
 import { ResultsBarChart } from "@/features/results/components/results-bar-chart";
+import { ResultsLineChart } from "@/features/results/components/results-line-chart";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -254,6 +255,7 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
             {/* Chart Rendering Section */}
             <div className="mt-4 flex-grow">
               {selectedChart === "Bar Chart" && <ResultsBarChart data={chartData} />}
+              {selectedChart === "Line Chart" && <ResultsLineChart data={chartData} />}
             </div>
           </Card>
 
