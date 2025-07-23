@@ -191,7 +191,10 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                         <DropdownMenuItem
                           key={option.value}
                           onSelect={() => setSelectedChart(option.value)}
-                          className={cn(dropdownItemStyle)}
+                          className={cn(
+                            dropdownItemStyle,
+                            selectedChart === option.value && "bg-slate-200"
+                          )}
                         >
                           <option.icon className="mr-2 h-4 w-4" />
                           <span>{option.label}</span>
@@ -227,14 +230,20 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                     <DropdownMenuContent align="end" className="w-64">
                       <DropdownMenuItem
                         onSelect={() => setSelectedDataSource("overall")}
-                        className={cn(dropdownItemStyle)}
+                        className={cn(
+                          dropdownItemStyle,
+                          selectedDataSource === "overall" && "bg-slate-200"
+                        )}
                       >
                         <IoGridOutline className="mr-2 h-4 w-4" />
                         Overall
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => setSelectedDataSource("maximum-stages")}
-                        className={cn(dropdownItemStyle)}
+                        className={cn(
+                          dropdownItemStyle,
+                          selectedDataSource === "maximum-stages" && "bg-slate-200"
+                        )}
                       >
                         <IoPodiumOutline className="mr-2 h-4 w-4" />
                         Maximum Stages
@@ -244,7 +253,10 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                         <DropdownMenuItem
                           key={upload.id}
                           onSelect={() => setSelectedDataSource(upload.id)}
-                          className={cn(dropdownItemStyle)}
+                          className={cn(
+                            dropdownItemStyle,
+                            selectedDataSource === upload.id && "bg-slate-200"
+                          )}
                         >
                           <IoImagesOutline className="mr-2 h-4 w-4 flex-shrink-0" />
                           <span className="truncate">{upload.name}</span>
@@ -309,7 +321,10 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                         <DropdownMenuItem
                           key={option.value}
                           onSelect={() => setSelectedUnit(option.value)}
-                          className={cn(dropdownItemStyle)}
+                          className={cn(
+                            dropdownItemStyle,
+                            selectedUnit === option.value && "bg-slate-200"
+                          )}
                         >
                           <option.icon className="mr-2 h-4 w-4" />
                           <span>{option.label}</span>
