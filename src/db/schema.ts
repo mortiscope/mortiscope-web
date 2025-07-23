@@ -25,6 +25,17 @@ export const analysisStatusEnum = pgEnum("analysis_status", [
 // Enum to define the lifecycle status of a case.
 export const caseStatusEnum = pgEnum("case_status", ["draft", "active"]);
 
+// Enum to define the possible statuses of an export job.
+export const exportStatusEnum = pgEnum("export_status", [
+  "pending",
+  "processing",
+  "completed",
+  "failed",
+]);
+
+// Enum to define the possible formats for an export.
+export const exportFormatEnum = pgEnum("export_format", ["raw_data", "pdf", "labelled_images"]);
+
 // Represents the core user profile in the application
 export const users = pgTable("users", {
   id: text("id")
@@ -207,11 +218,33 @@ export const detections = pgTable("detections", {
   yMax: real("y_max").notNull(),
 });
 
+// Tracks the state and result of data export jobs initiated by a user.
+export const exports = pgTable("exports", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  caseId: text("case_id")
+    .notNull()
+    .references(() => cases.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: exportStatusEnum("status").notNull().default("pending"),
+  format: exportFormatEnum("format").notNull(),
+  s3Key: text("s3_key"),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
 // Defines the relationships for the `users` table.
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   cases: many(cases),
+  exports: many(exports),
 }));
 
 // Defines the relationship from an `account` back to its owning `user`.
@@ -241,6 +274,7 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
     fields: [cases.id],
     references: [analysisResults.caseId],
   }),
+  exports: many(exports),
 }));
 
 // Defines the relationships for an `upload`, linking it to its parent entities.
@@ -269,5 +303,17 @@ export const detectionsRelations = relations(detections, ({ one }) => ({
   upload: one(uploads, {
     fields: [detections.uploadId],
     references: [uploads.id],
+  }),
+}));
+
+// Defines the relationships for an `export` job, linking back to its parent entities.
+export const exportsRelations = relations(exports, ({ one }) => ({
+  case: one(cases, {
+    fields: [exports.caseId],
+    references: [cases.id],
+  }),
+  user: one(users, {
+    fields: [exports.userId],
+    references: [users.id],
   }),
 }));
