@@ -59,6 +59,8 @@ export type UploadableFile = {
   source: "upload" | "camera" | "db";
   // The date the file was added or initially uploaded.
   dateUploaded: Date;
+  // A number (timestamp) that changes when the file is edited, forcing a re-fetch.
+  version: number;
 };
 
 /**
@@ -246,6 +248,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
           status: "pending",
           source,
           dateUploaded: new Date(),
+          version: Date.now(),
         }));
         set((state) => ({
           data: {
@@ -267,6 +270,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
                     name: newFile.name,
                     size: newFile.size,
                     type: newFile.type,
+                    version: Date.now(),
                   }
                 : uploadableFile
             ),
@@ -335,6 +339,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
           status: "success",
           source: "db",
           dateUploaded: file.createdAt,
+          version: file.createdAt.getTime(),
         }));
         set({ data: { files: persistedFiles }, isHydrated: true });
       },

@@ -252,7 +252,10 @@ export const AnalyzeReview = () => {
    * @returns The appropriate URL string for the image source.
    */
   const getPreviewUrl = (file: UploadableFile) => {
-    return file.url || objectUrls.get(file.id) || "";
+    if (file.url) {
+      return `${file.url}?v=${file.version}`;
+    }
+    return objectUrls.get(file.id) || "";
   };
 
   return (

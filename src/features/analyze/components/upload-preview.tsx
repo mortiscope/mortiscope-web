@@ -178,9 +178,10 @@ const Thumbnail = ({
   const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
-    // If the file has a persisted URL, use it directly.
+    // If the file has a persisted URL, use it directly but with a cache-busting query.
     if (uploadableFile.url) {
-      setPreviewUrl(uploadableFile.url);
+      const cacheBustedUrl = `${uploadableFile.url}?v=${uploadableFile.version}`;
+      setPreviewUrl(cacheBustedUrl);
       return;
     }
 

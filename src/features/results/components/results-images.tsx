@@ -45,6 +45,7 @@ type ImageFile = {
   url: string;
   size: number;
   dateUploaded: Date;
+  version: number;
   detections?: Detection[];
 };
 
@@ -83,13 +84,16 @@ const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className?:
     );
   }
 
+  // Apply cache-busting to the thumbnail URL
+  const cacheBustedUrl = `${imageFile.url}?v=${imageFile.version}`;
+
   return (
     // Enforces the aspect ratio and clips the image.
     <div
       className={cn("relative flex-shrink-0 overflow-hidden", className || "h-10 w-10 rounded-md")}
     >
       <Image
-        src={imageFile.url}
+        src={cacheBustedUrl}
         alt={`Preview of ${imageFile.name}`}
         fill
         className="object-cover"
@@ -119,6 +123,7 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
         url: img.url,
         size: img.size,
         dateUploaded: img.createdAt,
+        version: img.createdAt.getTime(),
         detections: img.detections,
       })),
     [initialImages]
@@ -142,7 +147,12 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
         setFiles((currentFiles) =>
           currentFiles.map((file) =>
             file.id === variables.imageId
-              ? { ...file, name: variables.newName, url: response.data!.newUrl }
+              ? {
+                  ...file,
+                  name: variables.newName,
+                  url: response.data!.newUrl,
+                  version: Date.now(),
+                }
               : file
           )
         );
@@ -372,7 +382,9 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
                           className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                         >
                           <Image
-                            src={sortedFiles[LG_GRID_LIMIT - 1].url}
+                            src={`${sortedFiles[LG_GRID_LIMIT - 1].url}?v=${
+                              sortedFiles[LG_GRID_LIMIT - 1].version
+                            }`}
                             alt={`More images`}
                             fill
                             className={cn(
@@ -433,7 +445,9 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
                           className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                         >
                           <Image
-                            src={sortedFiles[MD_GRID_LIMIT - 1].url}
+                            src={`${sortedFiles[MD_GRID_LIMIT - 1].url}?v=${
+                              sortedFiles[MD_GRID_LIMIT - 1].version
+                            }`}
                             alt={`More images`}
                             fill
                             className={cn(
@@ -494,7 +508,9 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
                           className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                         >
                           <Image
-                            src={sortedFiles[SM_GRID_LIMIT - 1].url}
+                            src={`${sortedFiles[SM_GRID_LIMIT - 1].url}?v=${
+                              sortedFiles[SM_GRID_LIMIT - 1].version
+                            }`}
                             alt={`More images`}
                             fill
                             className={cn(

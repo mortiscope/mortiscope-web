@@ -42,6 +42,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { createUpload } from "@/features/analyze/actions/create-upload";
 import { deleteUpload } from "@/features/analyze/actions/delete-upload";
 import { renameUpload } from "@/features/analyze/actions/rename-upload";
+import { updateUpload } from "@/features/analyze/actions/update-upload";
 import { UploadPreviewMinimap } from "@/features/analyze/components/upload-preview-minimap";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -124,7 +125,8 @@ const PreviewThumbnail = ({
   useEffect(() => {
     let objectUrl: string | undefined;
     if (uploadableFile.url) {
-      setPreviewUrl(uploadableFile.url);
+      const cacheBustedUrl = `${uploadableFile.url}?v=${uploadableFile.version}`;
+      setPreviewUrl(cacheBustedUrl);
     } else if (uploadableFile.file) {
       objectUrl = URL.createObjectURL(uploadableFile.file);
       setPreviewUrl(objectUrl);
@@ -302,6 +304,11 @@ export const UploadPreviewModal = ({
     },
   });
 
+  // Add a mutation for the update upload action
+  const updateUploadMutation = useMutation({
+    mutationFn: updateUpload,
+  });
+
   // TanStack Query mutation for deleting the file on the server.
   const deleteMutation = useMutation({
     mutationFn: deleteUpload,
@@ -415,7 +422,7 @@ export const UploadPreviewModal = ({
     let currentPreviewUrl = "";
 
     if (activeFile.url) {
-      currentPreviewUrl = activeFile.url;
+      currentPreviewUrl = `${activeFile.url}?v=${activeFile.version}`;
     } else if (activeFile.file) {
       objectUrl = URL.createObjectURL(activeFile.file);
       currentPreviewUrl = objectUrl;
@@ -470,6 +477,7 @@ export const UploadPreviewModal = ({
     const currentFileState = useAnalyzeStore
       .getState()
       .data.files.find((f) => f.id === activeFile?.id);
+
     if (!currentFileState || (!isNameDirty && !isRotationDirty) || isSaving || isDeleting) {
       return;
     }
@@ -477,23 +485,22 @@ export const UploadPreviewModal = ({
     // Add a guard clause to ensure the case ID is present before saving.
     if (!caseId) {
       toast.error("Cannot save changes. Case ID is missing.");
-      setUploadStatus(currentFileState.id, "error");
       return;
     }
 
     setIsSaving(true);
     setUploadStatus(currentFileState.id, "uploading");
 
-    let finalFile = currentFileState.file;
-    let finalKey = currentFileState.key;
-    const finalUrl = currentFileState.url;
+    let tempFile = currentFileState.file;
+    let tempKey = currentFileState.key;
+    let tempUrl = currentFileState.url;
 
-    // Create a working file object if one doesn't exist
-    if (!finalFile && finalUrl) {
+    // Create a working file object from URL if it doesn't exist.
+    if (!tempFile && tempUrl) {
       try {
-        const response = await fetch(finalUrl);
+        const response = await fetch(tempUrl);
         const blob = await response.blob();
-        finalFile = new File([blob], currentFileState.name, { type: currentFileState.type });
+        tempFile = new File([blob], currentFileState.name, { type: currentFileState.type });
       } catch {
         toast.error("Could not fetch original image for editing.");
         setIsSaving(false);
@@ -502,55 +509,38 @@ export const UploadPreviewModal = ({
       }
     }
 
-    if (!finalFile) {
+    if (!tempFile) {
       toast.error("File data is missing.");
       setIsSaving(false);
       setUploadStatus(currentFileState.id, "error");
       return;
     }
 
-    // Handle Rename Operation
-    if (isNameDirty) {
-      if (!finalKey) {
-        toast.error("Cannot rename file: S3 key is missing.");
-        setIsSaving(false);
-        setUploadStatus(currentFileState.id, "error");
-        return;
-      }
-      const newName = `${fileNameBase.trim()}.${fileExtension}`;
-      try {
-        const result = await renameMutation.mutateAsync({
-          oldKey: finalKey,
-          newFileName: newName,
-        });
+    try {
+      // Handle rename operation
+      if (isNameDirty) {
+        if (!tempKey) throw new Error("Cannot rename file: S3 key is missing.");
 
+        const newName = `${fileNameBase.trim()}.${fileExtension}`;
+        const result = await renameMutation.mutateAsync({ oldKey: tempKey, newFileName: newName });
         if (!result.success || !result.data) {
           throw new Error(result.error || "Rename failed on server.");
         }
 
-        finalFile = new File([finalFile], newName, { type: finalFile.type });
-        finalKey = result.data.newKey;
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not rename file.");
-        setIsSaving(false);
-        setUploadStatus(currentFileState.id, "error");
-        return;
+        // Update temp variables with new name, key, and URL
+        tempFile = new File([tempFile], newName, { type: tempFile.type });
+        tempKey = result.data.newKey;
+        tempUrl = result.data.newUrl;
       }
-    }
 
-    // Handle Rotation Operation
-    if (isRotationDirty) {
-      if (!finalKey) {
-        toast.error("Cannot save rotation: S3 key is missing.");
-        setIsSaving(false);
-        setUploadStatus(currentFileState.id, "error");
-        return;
-      }
-      const image = new window.Image();
-      const url = URL.createObjectURL(finalFile);
-      image.crossOrigin = "anonymous";
-      try {
-        // Process the image on a canvas to apply the rotation.
+      // Handle rotation operation
+      if (isRotationDirty) {
+        if (!tempKey) throw new Error("Cannot save rotation: S3 key is missing.");
+
+        const image = new window.Image();
+        const url = URL.createObjectURL(tempFile);
+        image.crossOrigin = "anonymous";
+
         const rotatedBlob = await new Promise<Blob | null>((resolve) => {
           image.onload = () => {
             const canvas = document.createElement("canvas");
@@ -568,7 +558,7 @@ export const UploadPreviewModal = ({
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate((rotation * Math.PI) / 180);
             ctx.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
-            canvas.toBlob(resolve, finalFile!.type, 1.0);
+            canvas.toBlob(resolve, tempFile!.type, 1.0);
           };
           image.onerror = () => resolve(null);
           image.src = url;
@@ -577,41 +567,55 @@ export const UploadPreviewModal = ({
 
         if (!rotatedBlob) throw new Error("Could not process image for rotation.");
 
-        finalFile = new File([rotatedBlob], finalFile.name, { type: finalFile.type });
+        tempFile = new File([rotatedBlob], tempFile.name, { type: tempFile.type });
 
-        // Get a new presigned URL to re-upload the modified image.
-        const result = await presignedUrlMutation.mutateAsync({
-          fileName: finalFile.name,
-          fileType: finalFile.type,
-          fileSize: finalFile.size,
-          key: finalKey,
+        const presignResult = await presignedUrlMutation.mutateAsync({
+          fileName: tempFile.name,
+          fileType: tempFile.type,
+          fileSize: tempFile.size,
+          key: tempKey,
           caseId: caseId,
         });
 
-        if (!result.success || !result.data) throw new Error("Failed to prepare re-upload.");
+        if (!presignResult.success || !presignResult.data) {
+          throw new Error("Failed to prepare re-upload for rotated image.");
+        }
 
-        // Upload the new, rotated file to S3.
-        const s3Response = await fetch(result.data.url, { method: "PUT", body: finalFile });
+        const s3Response = await fetch(presignResult.data.url, { method: "PUT", body: tempFile });
         if (!s3Response.ok) throw new Error("Failed to upload rotated image.");
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Could not save rotation.");
-        setIsSaving(false);
-        setUploadStatus(currentFileState.id, "error");
-        return;
       }
+
+      // Update the database record
+      const updateDbResult = await updateUploadMutation.mutateAsync({
+        id: currentFileState.id,
+        name: tempFile.name,
+        size: tempFile.size,
+        type: tempFile.type,
+        key: tempKey,
+        url: tempUrl,
+      });
+
+      if (!updateDbResult.success) {
+        throw new Error(updateDbResult.error || "Failed to update file details in database.");
+      }
+
+      // Update client state and interface
+      updateFile(currentFileState.id, tempFile);
+      setUploadStatus(currentFileState.id, "success");
+      setDisplayFileName(tempFile.name);
+      toast.success(`${tempFile.name} changes saved.`);
+
+      setIsNameDirty(false);
+      setIsRotationDirty(false);
+      setIsRenaming(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "An unknown error occurred during save."
+      );
+      setUploadStatus(currentFileState.id, "error");
+    } finally {
+      setIsSaving(false);
     }
-
-    // Finalize State
-    updateFile(currentFileState.id, finalFile);
-    setUploadStatus(currentFileState.id, "success");
-    setDisplayFileName(finalFile.name);
-    toast.success(`${finalFile.name} changes saved.`);
-
-    // Reset all dirty and saving flags.
-    setIsNameDirty(false);
-    setIsRotationDirty(false);
-    setIsSaving(false);
-    setIsRenaming(false);
   };
 
   /**

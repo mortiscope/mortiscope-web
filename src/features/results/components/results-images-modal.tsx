@@ -46,6 +46,11 @@ interface ImageFile {
   url: string;
   size: number;
   dateUploaded: Date;
+  /**
+   * A version number, typically the `updatedAt` timestamp from the database.
+   * This is used for cache-busting to ensure the latest image is always displayed.
+   */
+  version: number;
   detections?: Detection[];
 }
 
@@ -113,8 +118,8 @@ const PreviewThumbnail = ({
   // A boolean to determine if the component should render in its mobile variant.
   isMobile: boolean;
 }) => {
-  // Directly use the URL from the prop, as it's already provided.
-  const previewUrl = imageFile.url;
+  // Apply cache-busting to thumbnail URL
+  const previewUrl = `${imageFile.url}?v=${imageFile.version}`;
 
   if (!previewUrl) {
     return (
@@ -325,7 +330,9 @@ export const ResultsImagesModal = ({
         height: img.naturalHeight,
       });
     };
-    img.src = activeImage.url;
+    // Use cache-busted URL to load image for dimensions
+    const cacheBustedUrl = `${activeImage.url}?v=${activeImage.version}`;
+    img.src = cacheBustedUrl;
   }, [activeImage]);
 
   /**
@@ -394,7 +401,8 @@ export const ResultsImagesModal = ({
   const handleDownload = () => {
     if (!activeImage?.url) return;
 
-    fetch(activeImage.url)
+    const cacheBustedUrl = `${activeImage.url}?v=${activeImage.version}`;
+    fetch(cacheBustedUrl)
       .then((res) => (res.ok ? res.blob() : Promise.reject(new Error("Network response error"))))
       .then((blob) => {
         const blobUrl = URL.createObjectURL(blob);
@@ -664,8 +672,8 @@ export const ResultsImagesModal = ({
                               {/* The container we measure */}
                               <div ref={imageContainerRef} className="relative h-full w-full">
                                 <Image
-                                  key={activeImage.url}
-                                  src={activeImage.url}
+                                  key={`${activeImage.url}?v=${activeImage.version}`}
+                                  src={`${activeImage.url}?v=${activeImage.version}`}
                                   alt={`Preview of ${displayFileName}`}
                                   fill
                                   className="object-contain"
