@@ -224,6 +224,8 @@ export const ResultsImagesModal = ({
 }: ResultsImagesModalProps) => {
   // State to manage the currently displayed image within the modal.
   const [activeImage, setActiveImage] = useState<ImageFile | null>(image);
+  // Add a loading state to prevent premature rendering
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   // State to store the natural dimensions of the image.
   const [imageDimensions, setImageDimensions] = useState<{
     width: number;
@@ -284,6 +286,9 @@ export const ResultsImagesModal = ({
    */
   useEffect(() => {
     if (activeImage) {
+      // Reset loading state when image changes
+      setIsImageLoaded(false);
+
       // Parse file name for editing.
       const name = activeImage.name;
       const parts = name.split(".");
@@ -320,8 +325,11 @@ export const ResultsImagesModal = ({
   useEffect(() => {
     if (!activeImage?.url) {
       setImageDimensions(null);
+      setIsImageLoaded(false);
       return;
     }
+
+    setIsImageLoaded(false);
 
     const img = new window.Image();
     img.onload = () => {
@@ -329,8 +337,13 @@ export const ResultsImagesModal = ({
         width: img.naturalWidth,
         height: img.naturalHeight,
       });
+      // Mark image as loaded only after dimensions are set
+      setIsImageLoaded(true);
     };
-    // Use cache-busted URL to load image for dimensions
+    img.onerror = () => {
+      setIsImageLoaded(false);
+    };
+
     const cacheBustedUrl = `${activeImage.url}?v=${activeImage.version}`;
     img.src = cacheBustedUrl;
   }, [activeImage]);
@@ -340,17 +353,60 @@ export const ResultsImagesModal = ({
    * correctly scale and position the bounding box overlay.
    */
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const measureContainer = () => {
-      if (imageContainerRef.current) {
-        const { width, height } = imageContainerRef.current.getBoundingClientRect();
-        setContainerDimensions({ width, height });
+      if (imageContainerRef.current && isImageLoaded) {
+        // Clear any pending measurements
+        if (timeoutId) clearTimeout(timeoutId);
+
+        // Debounce the measurement to ensure stability
+        timeoutId = setTimeout(() => {
+          if (imageContainerRef.current) {
+            const rect = imageContainerRef.current.getBoundingClientRect();
+            // Only update if dimensions are meaningful
+            if (rect.width > 0 && rect.height > 0) {
+              setContainerDimensions({
+                width: rect.width,
+                height: rect.height,
+              });
+            }
+          }
+        }, 50);
       }
     };
-    // Measure initially and on window resize.
+
+    // Initial measurement
     measureContainer();
+
+    // Listen for resize events
     window.addEventListener("resize", measureContainer);
-    return () => window.removeEventListener("resize", measureContainer);
-  }, [imageDimensions]);
+
+    return () => {
+      window.removeEventListener("resize", measureContainer);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isImageLoaded, imageDimensions]);
+
+  // Add a resize observer for more accurate container measurements
+  useEffect(() => {
+    if (!imageContainerRef.current || !isImageLoaded) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setContainerDimensions({ width, height });
+        }
+      }
+    });
+
+    resizeObserver.observe(imageContainerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isImageLoaded]);
 
   /**
    * Handles changes to the file name input and marks it as dirty.
@@ -424,10 +480,18 @@ export const ResultsImagesModal = ({
    * `object-contain` image. This is the core of the fix.
    */
   const renderedImageStyle = useMemo(() => {
-    if (!imageDimensions || !containerDimensions) return null;
+    // Only calculate if we have all required data and image is loaded
+    if (!imageDimensions || !containerDimensions || !isImageLoaded) {
+      return null;
+    }
 
     const { width: naturalWidth, height: naturalHeight } = imageDimensions;
     const { width: containerWidth, height: containerHeight } = containerDimensions;
+
+    // Validate dimensions
+    if (naturalWidth <= 0 || naturalHeight <= 0 || containerWidth <= 0 || containerHeight <= 0) {
+      return null;
+    }
 
     const imageRatio = naturalWidth / naturalHeight;
     const containerRatio = containerWidth / containerHeight;
@@ -448,8 +512,13 @@ export const ResultsImagesModal = ({
       top = 0;
     }
 
-    return { width: renderedWidth, height: renderedHeight, top, left };
-  }, [imageDimensions, containerDimensions]);
+    return {
+      width: renderedWidth,
+      height: renderedHeight,
+      top,
+      left,
+    };
+  }, [imageDimensions, containerDimensions, isImageLoaded]);
 
   // Guard clause to prevent rendering if the image is not available or the mobile hook hasn't run.
   if (activeImage === null || isMobile === undefined) {
@@ -669,8 +738,14 @@ export const ResultsImagesModal = ({
                               )}
                               contentClass="!w-full !h-full flex items-center justify-center"
                             >
-                              {/* The container we measure */}
                               <div ref={imageContainerRef} className="relative h-full w-full">
+                                {/* Small loading indicator while dimensions are being calculated */}
+                                {!isImageLoaded && (
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-100">
+                                    <LuLoaderCircle className="h-8 w-8 animate-spin text-slate-400" />
+                                  </div>
+                                )}
+                                {/* Enhanced image component with on load handler */}
                                 <Image
                                   key={`${activeImage.url}?v=${activeImage.version}`}
                                   src={`${activeImage.url}?v=${activeImage.version}`}
@@ -679,10 +754,15 @@ export const ResultsImagesModal = ({
                                   className="object-contain"
                                   sizes="(max-width: 768px) 100vw, 560px"
                                   priority
+                                  onLoad={() => {
+                                    if (!isImageLoaded) {
+                                      setIsImageLoaded(true);
+                                    }
+                                  }}
                                 />
 
-                                {/* Conditionally renders the bounding box overlay. */}
-                                {renderedImageStyle && (
+                                {/* Only render bounding boxes when everything is ready */}
+                                {renderedImageStyle && isImageLoaded && imageDimensions && (
                                   <div
                                     className="absolute"
                                     style={{
@@ -700,14 +780,14 @@ export const ResultsImagesModal = ({
                                           <div
                                             className="absolute box-border cursor-pointer"
                                             style={{
-                                              top: `${(det.yMin / imageDimensions!.height) * 100}%`,
-                                              left: `${(det.xMin / imageDimensions!.width) * 100}%`,
+                                              top: `${(det.yMin / imageDimensions.height) * 100}%`,
+                                              left: `${(det.xMin / imageDimensions.width) * 100}%`,
                                               width: `${
-                                                ((det.xMax - det.xMin) / imageDimensions!.width) *
+                                                ((det.xMax - det.xMin) / imageDimensions.width) *
                                                 100
                                               }%`,
                                               height: `${
-                                                ((det.yMax - det.yMin) / imageDimensions!.height) *
+                                                ((det.yMax - det.yMin) / imageDimensions.height) *
                                                 100
                                               }%`,
                                               borderColor: getColorForClass(det.label),
