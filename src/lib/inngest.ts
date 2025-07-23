@@ -3,13 +3,25 @@ import { EventSchemas, Inngest } from "inngest";
 /**
  * Defines the record of all events managed by Inngest.
  */
-type Events = {
+export type Events = {
   /**
    * Fired when a user successfully creates a new case.
    */
   "analysis/request.sent": {
     data: {
       caseId: string;
+    };
+  };
+
+  /**
+   * Fired when a user requests to export case data.
+   */
+  "export/case.data.requested": {
+    data: {
+      exportId: string;
+      caseId: string;
+      userId: string;
+      format: "raw_data" | "pdf" | "labelled_images";
     };
   };
 };

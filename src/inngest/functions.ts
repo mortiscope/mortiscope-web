@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { analysisResults } from "@/db/schema";
+import { analysisResults, exports } from "@/db/schema";
 import { inngest } from "@/lib/inngest";
 
 /**
@@ -20,23 +20,27 @@ export const analysisEvent = inngest.createFunction(
     retries: 2,
     // Add a failure handler to update the status in the database.
     onFailure: async ({ event, error }) => {
-      const data = event.data as Record<string, unknown>;
-      const caseId = data?.caseId;
+      const originalEvent = event.data.event;
 
-      // A safeguard to ensure we don't proceed if caseId is not a string.
-      if (typeof caseId !== "string") {
-        console.error("Could not find a valid caseId in onFailure event data.", event);
-        return;
+      // Type guard using the correct path.
+      if (originalEvent.name === "analysis/request.sent") {
+        const { caseId } = originalEvent.data;
+
+        // A safeguard to ensure we don't proceed if caseId is not a string.
+        if (typeof caseId !== "string") {
+          console.error("Could not find a valid caseId in onFailure event data.", event);
+          return;
+        }
+
+        await db
+          .update(analysisResults)
+          .set({
+            status: "failed",
+            explanation: `Analysis failed: ${error.message}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(analysisResults.caseId, caseId));
       }
-
-      await db
-        .update(analysisResults)
-        .set({
-          status: "failed",
-          explanation: `Analysis failed: ${error.message}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(analysisResults.caseId, caseId));
     },
   },
   { event: "analysis/request.sent" },
@@ -128,5 +132,90 @@ export const analysisEvent = inngest.createFunction(
 
     // The final return indicates the successful completion of the workflow.
     return { message: `Successfully completed analysis for case: ${caseId}` };
+  }
+);
+
+/**
+ * Triggers the backend worker to start an export process for a case.
+ *
+ * This function acts as a durable bridge between the Next.js frontend and the
+ * FastAPI backend. It ensures that the export request is reliably sent and
+ * handles failures by updating the export status in the database.
+ */
+export const exportCaseData = inngest.createFunction(
+  {
+    id: "fastapi-export-case-data",
+    name: "FastAPI Export Case Data",
+    retries: 2,
+    onFailure: async ({ error, event }) => {
+      const originalEvent = event.data.event;
+
+      // Type guard using the correct path.
+      if (originalEvent.name === "export/case.data.requested") {
+        const { exportId } = originalEvent.data;
+
+        // A safeguard to ensure we have a valid exportId.
+        if (typeof exportId !== "string") {
+          console.error("Could not find a valid exportId in onFailure event data.", event);
+          return;
+        }
+
+        // If the function fails, update the corresponding export record.
+        await db
+          .update(exports)
+          .set({
+            status: "failed",
+            failureReason: `Export failed: ${error.message}`,
+          })
+          .where(eq(exports.id, exportId));
+      }
+    },
+  },
+  { event: "export/case.data.requested" },
+  async ({ event, step }) => {
+    // In the main handler, the type is correctly inferred automatically.
+    const { exportId, caseId, format } = event.data;
+
+    // Update the export status to 'processing'.
+    await step.run("update-export-status-to-processing", async () => {
+      await db.update(exports).set({ status: "processing" }).where(eq(exports.id, exportId));
+    });
+
+    // Retrieve necessary secrets and configuration from environment variables.
+    const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL;
+    const fastApiSecret = process.env.FASTAPI_SECRET_KEY;
+
+    if (!fastApiUrl || !fastApiSecret) {
+      throw new Error("FastAPI URL or Secret Key is not configured in .env");
+    }
+
+    // Call the FastAPI worker to perform the actual export.
+    const result = await step.run("trigger-export-worker", async () => {
+      const endpoint = `${fastApiUrl}/v1/export/`;
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": fastApiSecret,
+        },
+        body: JSON.stringify({
+          export_id: exportId,
+          case_id: caseId,
+          format: format,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`FastAPI export worker failed: ${await response.text()}`);
+      }
+
+      return await response.json();
+    });
+
+    // Handle updating the final status to 'completed' or 'failed'.
+    return {
+      message: `Successfully dispatched export job to FastAPI for exportId: ${exportId}`,
+      result,
+    };
   }
 );
