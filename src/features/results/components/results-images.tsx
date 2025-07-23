@@ -28,6 +28,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { type detections, type uploads } from "@/db/schema";
 import { renameImage } from "@/features/results/actions/rename-image";
 import { ResultsImagesModal } from "@/features/results/components/results-images-modal";
+import { ResultsImagesSkeleton } from "@/features/results/components/results-skeleton";
 import {
   LG_GRID_LIMIT,
   MD_GRID_LIMIT,
@@ -105,19 +106,23 @@ const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className?:
 
 type ResultsImagesProps = {
   // The component receives images from the database as props.
-  initialImages: (typeof uploads.$inferSelect & {
+  initialImages?: (typeof uploads.$inferSelect & {
     detections: Detection[];
   })[];
+  /**
+   * If true, the component will render its skeleton state.
+   */
+  isLoading?: boolean;
 };
 
 /**
  * Renders a list of the case images, with controls for searching, sorting, and changing view mode.
  */
-export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
+export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) => {
   // Map initial database data to the local state format.
   const mappedImages: ImageFile[] = useMemo(
     () =>
-      initialImages.map((img) => ({
+      initialImages?.map((img) => ({
         id: img.id,
         name: img.name,
         url: img.url,
@@ -125,11 +130,11 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
         dateUploaded: img.createdAt,
         version: img.createdAt.getTime(),
         detections: img.detections,
-      })),
+      })) || [],
     [initialImages]
   );
 
-  // Use local state instead of a global store.
+  // All Hooks are called unconditionally at the top of the component.
   const [files, setFiles] = useState<ImageFile[]>(mappedImages);
   const [sortOption, setSortOption] = useState<SortOptionValue>("date-uploaded-desc");
   const [searchTerm, setSearchTerm] = useState("");
@@ -218,7 +223,11 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
     setFiles(mappedImages);
   }, [mappedImages]);
 
-  // Handlers for the preview modal.
+  // The conditional return now happens *after* all hooks have been called.
+  if (isLoading) {
+    return <ResultsImagesSkeleton />;
+  }
+
   const handleOpenModal = (imageId: string) => {
     setSelectedImageId(imageId);
     setIsModalOpen(true);
@@ -266,290 +275,287 @@ export const ResultsImages = ({ initialImages }: ResultsImagesProps) => {
   return (
     <>
       <TooltipProvider>
-        {/* Only render the container if there are files to show */}
-        {files.length > 0 && (
+        <motion.div
+          layout
+          transition={{ layout: { type: "tween", duration: 0.6, ease: "easeInOut" } }}
+          className="w-full"
+        >
+          {/* View mode and sort controls */}
           <motion.div
             layout
-            transition={{ layout: { type: "tween", duration: 0.6, ease: "easeInOut" } }}
-            className="w-full"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="mb-4 flex items-center justify-between gap-2"
           >
-            {/* View mode and sort controls */}
-            <motion.div
-              layout
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="mb-4 flex items-center justify-between gap-2"
-            >
-              {/* Search input field. */}
-              <div className="relative w-full max-w-sm">
-                <HiOutlineSearch className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-500" />
-                <Input
-                  placeholder="Search images..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  maxLength={50}
-                  className="font-inter h-10 border-none pl-10 text-sm shadow-none placeholder:!text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-                />
-              </div>
+            {/* Search input field. */}
+            <div className="relative w-full max-w-sm">
+              <HiOutlineSearch className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-slate-500" />
+              <Input
+                placeholder="Search images..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                maxLength={50}
+                className="font-inter h-10 border-none pl-10 text-sm shadow-none placeholder:!text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+            </div>
 
-              {/* Container for the sort and view mode controls. */}
-              <div className="flex items-center gap-2">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      aria-label="Sort options"
-                      className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
+            {/* Container for the sort and view mode controls. */}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    aria-label="Sort options"
+                    className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
+                  >
+                    <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
+                      {currentSortLabel}
+                    </span>
+                    <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  {SORT_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onSelect={() => setSortOption(option.value as SortOptionValue)}
+                      className={cn(
+                        "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                      )}
                     >
-                      <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
-                        {currentSortLabel}
-                      </span>
-                      <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-64">
-                    {SORT_OPTIONS.map((option) => (
-                      <DropdownMenuItem
-                        key={option.value}
-                        onSelect={() => setSortOption(option.value as SortOptionValue)}
-                        className={cn(
-                          "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
-                        )}
-                      >
-                        <SortIcon value={option.value as SortOptionValue} />
-                        {option.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </motion.div>
-
-            {/* Container for the file list, with view-switch animation. */}
-            <AnimatePresence mode="wait">
-              {sortedFiles.length > 0 ? (
-                <motion.div
-                  layout
-                  key="grid-view"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{
-                    layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                    opacity: { duration: 0.3 },
-                  }}
-                >
-                  {/* Large Screen Layout */}
-                  <div className="hidden grid-cols-5 gap-3 lg:grid">
-                    <AnimatePresence mode="wait">
-                      {sortedFiles.slice(0, LG_GRID_LIMIT - 1).map((imageFile) => (
-                        <motion.div
-                          key={`${sortOption}-${imageFile.id}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(imageFile.id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <div className="min-h-0 flex-1">
-                            <Thumbnail imageFile={imageFile} className="h-full w-full" />
-                          </div>
-                          <div className="flex w-full flex-col items-center justify-center p-1">
-                            <div className="mt-1 flex flex-shrink-0 items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={`View ${imageFile.name}`}
-                                    className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                                  >
-                                    <MdOutlineRemoveRedEye className="h-5 w-5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="font-inter">View</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                      {sortedFiles.length >= LG_GRID_LIMIT && (
-                        <motion.div
-                          key={`more-images-lg-${sortOption}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(sortedFiles[LG_GRID_LIMIT - 1].id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <Image
-                            src={`${sortedFiles[LG_GRID_LIMIT - 1].url}?v=${
-                              sortedFiles[LG_GRID_LIMIT - 1].version
-                            }`}
-                            alt={`More images`}
-                            fill
-                            className={cn(
-                              "object-cover transition-transform duration-300 group-hover:scale-105",
-                              sortedFiles.length > LG_GRID_LIMIT && "blur-sm"
-                            )}
-                            sizes="(max-width: 1024px) 33vw, 20vw"
-                          />
-                          {sortedFiles.length > LG_GRID_LIMIT && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
-                              +{sortedFiles.length - (LG_GRID_LIMIT - 1)}
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Medium Screen Layout */}
-                  <div className="hidden grid-cols-4 gap-3 md:grid lg:hidden">
-                    <AnimatePresence mode="wait">
-                      {sortedFiles.slice(0, MD_GRID_LIMIT - 1).map((imageFile) => (
-                        <motion.div
-                          key={`${sortOption}-${imageFile.id}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(imageFile.id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <div className="min-h-0 flex-1">
-                            <Thumbnail imageFile={imageFile} className="h-full w-full" />
-                          </div>
-                          <div className="flex w-full flex-col items-center justify-center p-1">
-                            <div className="mt-1 flex flex-shrink-0 items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={`View ${imageFile.name}`}
-                                    className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                                  >
-                                    <MdOutlineRemoveRedEye className="h-5 w-5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="font-inter">View</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                      {sortedFiles.length >= MD_GRID_LIMIT && (
-                        <motion.div
-                          key={`more-images-md-${sortOption}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(sortedFiles[MD_GRID_LIMIT - 1].id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <Image
-                            src={`${sortedFiles[MD_GRID_LIMIT - 1].url}?v=${
-                              sortedFiles[MD_GRID_LIMIT - 1].version
-                            }`}
-                            alt={`More images`}
-                            fill
-                            className={cn(
-                              "object-cover transition-transform duration-300 group-hover:scale-105",
-                              sortedFiles.length > MD_GRID_LIMIT && "blur-sm"
-                            )}
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
-                          />
-                          {sortedFiles.length > MD_GRID_LIMIT && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
-                              +{sortedFiles.length - (MD_GRID_LIMIT - 1)}
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-
-                  {/* Small Screen Layout */}
-                  <div className="grid grid-cols-2 gap-3 md:hidden">
-                    <AnimatePresence mode="wait">
-                      {sortedFiles.slice(0, SM_GRID_LIMIT - 1).map((imageFile) => (
-                        <motion.div
-                          key={`${sortOption}-${imageFile.id}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(imageFile.id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <div className="min-h-0 flex-1">
-                            <Thumbnail imageFile={imageFile} className="h-full w-full" />
-                          </div>
-                          <div className="flex w-full flex-col items-center justify-center p-1">
-                            <div className="mt-1 flex flex-shrink-0 items-center gap-1">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={`View ${imageFile.name}`}
-                                    className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
-                                  >
-                                    <MdOutlineRemoveRedEye className="h-5 w-5" />
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p className="font-inter">View</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                      {sortedFiles.length >= SM_GRID_LIMIT && (
-                        <motion.div
-                          key={`more-images-sm-${sortOption}`}
-                          {...motionItemProps}
-                          onClick={() => handleOpenModal(sortedFiles[SM_GRID_LIMIT - 1].id)}
-                          className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
-                        >
-                          <Image
-                            src={`${sortedFiles[SM_GRID_LIMIT - 1].url}?v=${
-                              sortedFiles[SM_GRID_LIMIT - 1].version
-                            }`}
-                            alt={`More images`}
-                            fill
-                            className={cn(
-                              "object-cover transition-transform duration-300 group-hover:scale-105",
-                              sortedFiles.length > SM_GRID_LIMIT && "blur-sm"
-                            )}
-                            sizes="(max-width: 768px) 50vw, 33vw"
-                          />
-                          {sortedFiles.length > SM_GRID_LIMIT && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
-                              +{sortedFiles.length - (SM_GRID_LIMIT - 1)}
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </motion.div>
-              ) : searchTerm ? (
-                <motion.div
-                  key="no-results"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="flex flex-1 flex-col items-center justify-center py-10 text-center"
-                >
-                  <HiOutlineSearch className="h-12 w-12 text-slate-300" />
-                  <h3 className="font-plus-jakarta-sans mt-4 text-xl font-semibold text-slate-800">
-                    No Images Found
-                  </h3>
-                  <p className="font-inter mt-1 max-w-sm text-sm break-all text-slate-500">
-                    Your search term did not match any images.
-                  </p>
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
+                      <SortIcon value={option.value as SortOptionValue} />
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </motion.div>
-        )}
+
+          {/* Container for the file list, with view-switch animation. */}
+          <AnimatePresence mode="wait">
+            {sortedFiles.length > 0 ? (
+              <motion.div
+                layout
+                key="grid-view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
+                  opacity: { duration: 0.3 },
+                }}
+              >
+                {/* Large Screen Layout */}
+                <div className="hidden grid-cols-5 gap-3 lg:grid">
+                  <AnimatePresence mode="wait">
+                    {sortedFiles.slice(0, LG_GRID_LIMIT - 1).map((imageFile) => (
+                      <motion.div
+                        key={`${sortOption}-${imageFile.id}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(imageFile.id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <div className="min-h-0 flex-1">
+                          <Thumbnail imageFile={imageFile} className="h-full w-full" />
+                        </div>
+                        <div className="flex w-full flex-col items-center justify-center p-1">
+                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`View ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                >
+                                  <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    {sortedFiles.length >= LG_GRID_LIMIT && (
+                      <motion.div
+                        key={`more-images-lg-${sortOption}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(sortedFiles[LG_GRID_LIMIT - 1].id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <Image
+                          src={`${sortedFiles[LG_GRID_LIMIT - 1].url}?v=${
+                            sortedFiles[LG_GRID_LIMIT - 1].version
+                          }`}
+                          alt={`More images`}
+                          fill
+                          className={cn(
+                            "object-cover transition-transform duration-300 group-hover:scale-105",
+                            sortedFiles.length > LG_GRID_LIMIT && "blur-sm"
+                          )}
+                          sizes="(max-width: 1024px) 33vw, 20vw"
+                        />
+                        {sortedFiles.length > LG_GRID_LIMIT && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
+                            +{sortedFiles.length - (LG_GRID_LIMIT - 1)}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Medium Screen Layout */}
+                <div className="hidden grid-cols-4 gap-3 md:grid lg:hidden">
+                  <AnimatePresence mode="wait">
+                    {sortedFiles.slice(0, MD_GRID_LIMIT - 1).map((imageFile) => (
+                      <motion.div
+                        key={`${sortOption}-${imageFile.id}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(imageFile.id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <div className="min-h-0 flex-1">
+                          <Thumbnail imageFile={imageFile} className="h-full w-full" />
+                        </div>
+                        <div className="flex w-full flex-col items-center justify-center p-1">
+                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`View ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                >
+                                  <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    {sortedFiles.length >= MD_GRID_LIMIT && (
+                      <motion.div
+                        key={`more-images-md-${sortOption}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(sortedFiles[MD_GRID_LIMIT - 1].id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <Image
+                          src={`${sortedFiles[MD_GRID_LIMIT - 1].url}?v=${
+                            sortedFiles[MD_GRID_LIMIT - 1].version
+                          }`}
+                          alt={`More images`}
+                          fill
+                          className={cn(
+                            "object-cover transition-transform duration-300 group-hover:scale-105",
+                            sortedFiles.length > MD_GRID_LIMIT && "blur-sm"
+                          )}
+                          sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 20vw"
+                        />
+                        {sortedFiles.length > MD_GRID_LIMIT && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
+                            +{sortedFiles.length - (MD_GRID_LIMIT - 1)}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Small Screen Layout */}
+                <div className="grid grid-cols-2 gap-3 md:hidden">
+                  <AnimatePresence mode="wait">
+                    {sortedFiles.slice(0, SM_GRID_LIMIT - 1).map((imageFile) => (
+                      <motion.div
+                        key={`${sortOption}-${imageFile.id}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(imageFile.id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <div className="min-h-0 flex-1">
+                          <Thumbnail imageFile={imageFile} className="h-full w-full" />
+                        </div>
+                        <div className="flex w-full flex-col items-center justify-center p-1">
+                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`View ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
+                                >
+                                  <MdOutlineRemoveRedEye className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    {sortedFiles.length >= SM_GRID_LIMIT && (
+                      <motion.div
+                        key={`more-images-sm-${sortOption}`}
+                        {...motionItemProps}
+                        onClick={() => handleOpenModal(sortedFiles[SM_GRID_LIMIT - 1].id)}
+                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                      >
+                        <Image
+                          src={`${sortedFiles[SM_GRID_LIMIT - 1].url}?v=${
+                            sortedFiles[SM_GRID_LIMIT - 1].version
+                          }`}
+                          alt={`More images`}
+                          fill
+                          className={cn(
+                            "object-cover transition-transform duration-300 group-hover:scale-105",
+                            sortedFiles.length > SM_GRID_LIMIT && "blur-sm"
+                          )}
+                          sizes="(max-width: 768px) 50vw, 33vw"
+                        />
+                        {sortedFiles.length > SM_GRID_LIMIT && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-3xl font-bold text-white">
+                            +{sortedFiles.length - (SM_GRID_LIMIT - 1)}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            ) : searchTerm ? (
+              <motion.div
+                key="no-results"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="flex flex-1 flex-col items-center justify-center py-10 text-center"
+              >
+                <HiOutlineSearch className="h-12 w-12 text-slate-300" />
+                <h3 className="font-plus-jakarta-sans mt-4 text-xl font-semibold text-slate-800">
+                  No Images Found
+                </h3>
+                <p className="font-inter mt-1 max-w-sm text-sm break-all text-slate-500">
+                  Your search term did not match any images.
+                </p>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </motion.div>
       </TooltipProvider>
 
       {/* The preview modal is rendered here, controlled by state. */}

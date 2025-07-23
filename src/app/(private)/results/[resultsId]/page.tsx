@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { type Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -8,6 +9,24 @@ import { cases, type detections, type uploads } from "@/db/schema";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
 import { ResultsImages } from "@/features/results/components/results-images";
+import {
+  ResultsAnalysisSkeleton,
+  ResultsDetailsSkeleton,
+  ResultsImagesSkeleton,
+} from "@/features/results/components/results-skeleton";
+
+/**
+ * The high-fidelity skeleton for the entire results page, composed of individual component skeletons.
+ */
+const ResultsIdPageSkeleton = () => {
+  return (
+    <div className="flex flex-1 flex-col gap-4 pt-2">
+      <ResultsDetailsSkeleton />
+      <ResultsAnalysisSkeleton />
+      <ResultsImagesSkeleton />
+    </div>
+  );
+};
 
 /**
  * Dynamically generates page metadata for SEO and browser tabs.
@@ -58,17 +77,12 @@ export async function generateMetadata({
 }
 
 /**
- * The main server component for the dynamic results page.
- * It fetches the complete data for a specific case to render the page content.
+ * A server component that fetches and prepares the data for the results page.
  *
  * @param {Props} props The component props containing the dynamic route parameters.
- * @returns {Promise<JSX.Element>} The rendered page component.
+ * @returns {Promise<JSX.Element>} The rendered page content.
  */
-export default async function ResultsPage({
-  params: { resultsId },
-}: {
-  params: { resultsId: string };
-}) {
+async function ResultsPageContent({ resultsId }: { resultsId: string }) {
   const session = await auth();
 
   // A user must be logged in to view the page.
@@ -106,5 +120,20 @@ export default async function ResultsPage({
       <ResultsAnalysis analysisResult={caseData.analysisResult} uploads={uploadsWithDetections} />
       <ResultsImages initialImages={uploadsWithDetections} />
     </div>
+  );
+}
+
+/**
+ * The main server component for the dynamic results page.
+ * It uses a Suspense boundary to show a skeleton while fetching data.
+ *
+ * @param {Props} props The component props containing the dynamic route parameters.
+ * @returns {JSX.Element} The rendered page component with a loading fallback.
+ */
+export default function ResultsPage({ params: { resultsId } }: { params: { resultsId: string } }) {
+  return (
+    <Suspense fallback={<ResultsIdPageSkeleton />}>
+      <ResultsPageContent resultsId={resultsId} />
+    </Suspense>
   );
 }

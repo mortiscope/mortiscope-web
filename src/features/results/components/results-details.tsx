@@ -9,6 +9,7 @@ import {
 
 import { Card, CardTitle } from "@/components/ui/card";
 import type { cases } from "@/db/schema";
+import { ResultsDetailsSkeleton } from "@/features/results/components/results-skeleton";
 
 /**
  * The props for the ResultsDetails component.
@@ -17,7 +18,11 @@ interface ResultsDetailsProps {
   /**
    * The case data object, inferred from the database schema.
    */
-  caseData: typeof cases.$inferSelect;
+  caseData?: typeof cases.$inferSelect;
+  /**
+   * If true, the component will render its skeleton state.
+   */
+  isLoading?: boolean;
 }
 
 /**
@@ -26,7 +31,12 @@ interface ResultsDetailsProps {
  * @param {ResultsDetailsProps} props The component props.
  * @returns {JSX.Element} The rendered details grid.
  */
-export const ResultsDetails = ({ caseData }: ResultsDetailsProps) => {
+export const ResultsDetails = ({ caseData, isLoading }: ResultsDetailsProps) => {
+  // If loading or data is not yet available, show the skeleton.
+  if (isLoading || !caseData) {
+    return <ResultsDetailsSkeleton />;
+  }
+
   // Array of detail items to be mapped into cards.
   const details = [
     {

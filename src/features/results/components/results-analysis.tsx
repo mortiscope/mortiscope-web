@@ -34,6 +34,7 @@ import { ResultsComposedChart } from "@/features/results/components/results-comp
 import { ResultsLineChart } from "@/features/results/components/results-line-chart";
 import { ResultsPieChart } from "@/features/results/components/results-pie-chart";
 import { ResultsRadarChart } from "@/features/results/components/results-radar-chart";
+import { ResultsAnalysisSkeleton } from "@/features/results/components/results-skeleton";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -56,18 +57,26 @@ interface ResultsAnalysisProps {
   /**
    * The analysis result data for the current case.
    */
-  analysisResult: typeof analysisResults.$inferSelect | null | undefined;
+  analysisResult?: typeof analysisResults.$inferSelect | null;
   /**
    * The list of uploaded images and their associated detections for the current case.
    */
-  uploads: UploadWithDetections[];
+  uploads?: UploadWithDetections[];
+  /**
+   * If true, the component will render its skeleton state.
+   */
+  isLoading?: boolean;
 }
 
 /**
  * A component that lays out the analysis section for the results page.
  */
-export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProps) => {
-  // State to manage the currently selected time unit for PMI.
+export const ResultsAnalysis = ({
+  analysisResult,
+  uploads = [],
+  isLoading,
+}: ResultsAnalysisProps) => {
+  // All Hooks are called unconditionally at the top of the component.
   const [selectedUnit, setSelectedUnit] = useState<TimeUnit>("Hours");
   // State to manage the currently selected chart type.
   const [selectedChart, setSelectedChart] = useState<ChartType>("Bar Chart");
@@ -77,6 +86,47 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   // State to manage the selected data source for the chart.
   const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
+
+  const chartData = useMemo(() => {
+    let counts: Record<string, number> = {};
+
+    if (selectedDataSource === "overall") {
+      counts = (analysisResult?.totalCounts as Record<string, number>) || {};
+    } else if (selectedDataSource === "maximum-stages") {
+      const maxCounts: Record<string, number> = {};
+      uploads.forEach((upload) => {
+        const countsInImage: Record<string, number> = {};
+        upload.detections.forEach((det) => {
+          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
+        });
+        Object.keys(countsInImage).forEach((label) => {
+          if (!maxCounts[label] || countsInImage[label] > maxCounts[label]) {
+            maxCounts[label] = countsInImage[label];
+          }
+        });
+      });
+      counts = maxCounts;
+    } else {
+      const selectedUpload = uploads.find((upload) => upload.id === selectedDataSource);
+      if (selectedUpload) {
+        const countsInImage: Record<string, number> = {};
+        selectedUpload.detections.forEach((det) => {
+          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
+        });
+        counts = countsInImage;
+      }
+    }
+
+    return DETECTION_CLASS_ORDER.map((className) => ({
+      name: className,
+      quantity: counts[className] || 0,
+    }));
+  }, [selectedDataSource, analysisResult, uploads]);
+
+  // The conditional return now happens *after* all hooks have been called.
+  if (isLoading || !analysisResult) {
+    return <ResultsAnalysisSkeleton />;
+  }
 
   // Defines the options for the time unit dropdown menu for clean mapping.
   const timeUnitOptions = [
@@ -120,45 +170,6 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
   // A consistent style for all dropdown menu items.
   const dropdownItemStyle =
     "font-inter cursor-pointer border-2 border-transparent text-sm text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 [&_svg]:text-slate-800 hover:[&_svg]:!text-emerald-600";
-
-  // Memoized data processing for the chart to prevent re-calculations on every render.
-  const chartData = useMemo(() => {
-    let counts: Record<string, number> = {};
-
-    if (selectedDataSource === "overall") {
-      counts = (analysisResult?.totalCounts as Record<string, number>) || {};
-    } else if (selectedDataSource === "maximum-stages") {
-      const maxCounts: Record<string, number> = {};
-      uploads.forEach((upload) => {
-        const countsInImage: Record<string, number> = {};
-        upload.detections.forEach((det) => {
-          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
-        });
-        Object.keys(countsInImage).forEach((label) => {
-          if (!maxCounts[label] || countsInImage[label] > maxCounts[label]) {
-            maxCounts[label] = countsInImage[label];
-          }
-        });
-      });
-      counts = maxCounts;
-    } else {
-      // Logic for individual images.
-      const selectedUpload = uploads.find((upload) => upload.id === selectedDataSource);
-      if (selectedUpload) {
-        const countsInImage: Record<string, number> = {};
-        selectedUpload.detections.forEach((det) => {
-          countsInImage[det.label] = (countsInImage[det.label] || 0) + 1;
-        });
-        counts = countsInImage;
-      }
-    }
-
-    // Format and sort the data for Recharts
-    return DETECTION_CLASS_ORDER.map((className) => ({
-      name: className,
-      quantity: counts[className] || 0,
-    }));
-  }, [selectedDataSource, analysisResult, uploads]);
 
   return (
     <>
