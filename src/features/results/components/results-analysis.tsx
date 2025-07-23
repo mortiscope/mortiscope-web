@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type analysisResults, type detections, type uploads } from "@/db/schema";
+import { CaseSummaryInformationModal } from "@/features/results/components/case-summary-information-modal";
 import { PmiExplanationModal } from "@/features/results/components/pmi-explanation-modal";
 import { ResultsBarChart } from "@/features/results/components/results-bar-chart";
 import { ResultsComposedChart } from "@/features/results/components/results-composed-chart";
@@ -72,6 +73,8 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
   const [selectedChart, setSelectedChart] = useState<ChartType>("Bar Chart");
   // State to manage the visibility of the PMI explanation modal.
   const [isPmiModalOpen, setIsPmiModalOpen] = useState(false);
+  // State to manage the visibility of the summary information modal.
+  const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   // State to manage the selected data source for the chart.
   const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
 
@@ -202,6 +205,22 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
                       ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      aria-label="Information"
+                      onClick={() => setIsSummaryModalOpen(true)}
+                      className="relative -ml-[2px] size-8 cursor-pointer rounded-none border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500 focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9"
+                    >
+                      <IoInformation className="size-4 md:size-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-inter">Information</p>
+                  </TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -417,6 +436,12 @@ export const ResultsAnalysis = ({ analysisResult, uploads }: ResultsAnalysisProp
         isOpen={isPmiModalOpen}
         onOpenChange={setIsPmiModalOpen}
         analysisResult={analysisResult}
+      />
+
+      {/* Render the case summary information modal */}
+      <CaseSummaryInformationModal
+        isOpen={isSummaryModalOpen}
+        onOpenChange={setIsSummaryModalOpen}
       />
     </>
   );
