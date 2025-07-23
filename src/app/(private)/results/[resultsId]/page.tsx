@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { cases, type detections, type uploads } from "@/db/schema";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
+import { ResultsHeader } from "@/features/results/components/results-header";
 import { ResultsImages } from "@/features/results/components/results-images";
 import {
   ResultsAnalysisSkeleton,
@@ -115,11 +116,14 @@ async function ResultsPageContent({ resultsId }: { resultsId: string }) {
   })[] = caseData.uploads;
 
   return (
-    <div className="flex flex-1 flex-col gap-4 pt-2">
-      <ResultsDetails caseData={caseData} />
-      <ResultsAnalysis analysisResult={caseData.analysisResult} uploads={uploadsWithDetections} />
-      <ResultsImages initialImages={uploadsWithDetections} />
-    </div>
+    <>
+      <ResultsHeader />
+      <div className="flex flex-1 flex-col gap-4 pt-2">
+        <ResultsDetails caseData={caseData} />
+        <ResultsAnalysis analysisResult={caseData.analysisResult} uploads={uploadsWithDetections} />
+        <ResultsImages initialImages={uploadsWithDetections} />
+      </div>
+    </>
   );
 }
 

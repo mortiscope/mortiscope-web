@@ -9,6 +9,7 @@ import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { useLayoutStore } from "@/stores/layout-store";
 
 interface Props {
   children: React.ReactNode;
@@ -26,6 +27,9 @@ const PrivateLayout = ({ children }: Props) => {
   // Get the submission status and the action to clear it from the store.
   const submissionStatus = useAnalyzeStore((state) => state.submissionStatus);
   const clearSubmissionStatus = useAnalyzeStore((state) => state.clearSubmissionStatus);
+
+  // Get the dynamic header content from the layout store.
+  const headerAdditionalContent = useLayoutStore((state) => state.headerAdditionalContent);
 
   /**
    * Shows a success toast on page load if a successful submission just occurred.
@@ -60,8 +64,9 @@ const PrivateLayout = ({ children }: Props) => {
           <main className="flex flex-1 flex-col bg-slate-200 p-6 md:p-8">
             {/* Conditionally render the breadcrumb. */}
             {isBreadcrumbVisible && (
-              <div className="mb-4">
+              <div className="mb-4 flex items-center justify-between">
                 <AppBreadcrumb />
+                {headerAdditionalContent}
               </div>
             )}
             {children}
