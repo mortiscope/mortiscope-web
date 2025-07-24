@@ -1,4 +1,10 @@
 /**
+ * The number of days after a deletion request before an account is permanently deleted.
+ * @constant {number}
+ */
+export const DELETION_GRACE_PERIOD_DAYS = 30;
+
+/**
  * A list of paths to deterministic SVG avatars used as fallbacks
  * @constant {object}
  */

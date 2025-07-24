@@ -5,7 +5,7 @@ import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { accountDeletionTokens, users } from "@/db/schema";
 import { getAccountDeletionTokenByToken } from "@/features/account/tokens/account-deletion-token";
-import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/config";
+import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/constants";
 import { sendAccountDeletionScheduled } from "@/lib/mail";
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;

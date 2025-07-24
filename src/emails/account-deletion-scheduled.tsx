@@ -16,7 +16,7 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/config";
+import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/constants";
 
 interface AccountDeletionScheduledProps {
   deletionWindowDays?: number;
