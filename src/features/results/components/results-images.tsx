@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections, type uploads } from "@/db/schema";
 import { renameImage } from "@/features/results/actions/rename-image";
+import { DeleteImageModal } from "@/features/results/components/delete-image-modal";
 import { ExportImageModal } from "@/features/results/components/export-image-modal";
 import { ResultsImagesModal } from "@/features/results/components/results-images-modal";
 import { ResultsImagesSkeleton } from "@/features/results/components/results-skeleton";
@@ -150,6 +151,10 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [imageToExport, setImageToExport] = useState<ImageFile | null>(null);
 
+  // State for managing the single delete image modal.
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<ImageFile | null>(null);
+
   // TanStack Query mutation for renaming an image.
   const renameMutation = useMutation({
     mutationFn: renameImage,
@@ -250,6 +255,12 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
   const handleOpenExportModal = (imageFile: ImageFile) => {
     setImageToExport(imageFile);
     setIsExportModalOpen(true);
+  };
+
+  // Handler to open the delete image modal with the correct image data.
+  const handleOpenDeleteModal = (imageFile: ImageFile) => {
+    setImageToDelete(imageFile);
+    setIsDeleteModalOpen(true);
   };
 
   const handleSelectImage = (imageId: string) => {
@@ -415,6 +426,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Delete ${imageFile.name}`}
+                                  onClick={() => handleOpenDeleteModal(imageFile)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
                                 >
                                   <LuTrash2 className="h-5 w-5" />
@@ -512,6 +524,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Delete ${imageFile.name}`}
+                                  onClick={() => handleOpenDeleteModal(imageFile)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
                                 >
                                   <LuTrash2 className="h-5 w-5" />
@@ -609,6 +622,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`Delete ${imageFile.name}`}
+                                  onClick={() => handleOpenDeleteModal(imageFile)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
                                 >
                                   <LuTrash2 className="h-5 w-5" />
@@ -690,6 +704,13 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
         isOpen={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
         image={imageToExport}
+      />
+
+      {/* The delete image modal, rendered here and controlled by its own state. */}
+      <DeleteImageModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={setIsDeleteModalOpen}
+        imageName={imageToDelete?.name ?? null}
       />
     </>
   );
