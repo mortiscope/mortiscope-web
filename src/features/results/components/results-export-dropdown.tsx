@@ -50,7 +50,7 @@ export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) =>
             )}
           >
             <FaRegFilePdf className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
-            <span className="truncate">Download as PDF</span>
+            <span className="truncate">Export as PDF</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => e.preventDefault()}
@@ -61,7 +61,7 @@ export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) =>
             )}
           >
             <FaRegFileImage className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
-            <span className="truncate">Download as Labelled Images</span>
+            <span className="truncate">Export as Labelled Images</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={(e) => {
@@ -73,7 +73,7 @@ export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) =>
             )}
           >
             <FaRegFileAlt className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
-            <span className="truncate">Download as Raw Data</span>
+            <span className="truncate">Export as Raw Data</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

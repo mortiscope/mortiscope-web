@@ -142,7 +142,7 @@ export const ExportResultsModal = ({ caseId, isOpen, onOpenChange }: ExportResul
           <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
             <DialogHeader>
               <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
-                Download as Raw Data
+                Export as Raw Data
               </DialogTitle>
             </DialogHeader>
           </motion.div>

@@ -8,7 +8,6 @@ import { GoPencil } from "react-icons/go";
 import {
   LuChevronLeft,
   LuChevronRight,
-  LuDownload,
   LuFocus,
   LuLoaderCircle,
   LuX,
@@ -16,7 +15,6 @@ import {
   LuZoomOut,
 } from "react-icons/lu";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -452,30 +450,6 @@ export const ResultsImagesModal = ({
   };
 
   /**
-   * Handles the download action by creating a temporary link.
-   */
-  const handleDownload = () => {
-    if (!activeImage?.url) return;
-
-    const cacheBustedUrl = `${activeImage.url}?v=${activeImage.version}`;
-    fetch(cacheBustedUrl)
-      .then((res) => (res.ok ? res.blob() : Promise.reject(new Error("Network response error"))))
-      .then((blob) => {
-        const blobUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.download = displayFileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(blobUrl);
-      })
-      .catch(() => {
-        toast.error("Failed to download image.");
-      });
-  };
-
-  /**
    * Memoized calculation for the final rendered size and position of the
    * `object-contain` image. This is the core of the fix.
    */
@@ -599,14 +573,6 @@ export const ResultsImagesModal = ({
                         </Button>
                         <Button
                           variant="ghost"
-                          onClick={handleDownload}
-                          aria-label="Download"
-                          className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200"
-                        >
-                          <LuDownload className="!h-5 !w-5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
                           size="icon"
                           onClick={onClose}
                           className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200"
@@ -710,21 +676,6 @@ export const ResultsImagesModal = ({
                                   </TooltipTrigger>
                                   <TooltipContent>
                                     <p className="font-inter">Save changes</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={handleDownload}
-                                      aria-label="Download"
-                                      className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200"
-                                    >
-                                      <LuDownload className="!h-5 !w-5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Download</p>
                                   </TooltipContent>
                                 </Tooltip>
                               </div>

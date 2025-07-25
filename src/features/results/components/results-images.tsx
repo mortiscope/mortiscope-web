@@ -11,7 +11,9 @@ import {
   LuArrowUpZA,
   LuCalendarClock,
   LuCalendarDays,
+  LuDownload,
   LuScaling,
+  LuTrash2,
 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { toast } from "sonner";
@@ -27,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections, type uploads } from "@/db/schema";
 import { renameImage } from "@/features/results/actions/rename-image";
+import { ExportImageModal } from "@/features/results/components/export-image-modal";
 import { ResultsImagesModal } from "@/features/results/components/results-images-modal";
 import { ResultsImagesSkeleton } from "@/features/results/components/results-skeleton";
 import {
@@ -143,6 +146,10 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
 
+  // State for managing the single-image export modal.
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [imageToExport, setImageToExport] = useState<ImageFile | null>(null);
+
   // TanStack Query mutation for renaming an image.
   const renameMutation = useMutation({
     mutationFn: renameImage,
@@ -237,6 +244,12 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     setIsModalOpen(false);
     // Delay clearing the selected image to allow for the modal's exit animation.
     setTimeout(() => setSelectedImageId(null), 300);
+  };
+
+  // Handler to open the export image modal with the correct image data.
+  const handleOpenExportModal = (imageFile: ImageFile) => {
+    setImageToExport(imageFile);
+    setIsExportModalOpen(true);
   };
 
   const handleSelectImage = (imageId: string) => {
@@ -354,20 +367,23 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                       <motion.div
                         key={`${sortOption}-${imageFile.id}`}
                         {...motionItemProps}
-                        onClick={() => handleOpenModal(imageFile.id)}
-                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                        className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                       >
-                        <div className="min-h-0 flex-1">
+                        <div
+                          className="min-h-0 flex-1 cursor-pointer"
+                          onClick={() => handleOpenModal(imageFile.id)}
+                        >
                           <Thumbnail imageFile={imageFile} className="h-full w-full" />
                         </div>
                         <div className="flex w-full flex-col items-center justify-center p-1">
-                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                          <div className="my-1 flex flex-shrink-0 items-center gap-1">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`View ${imageFile.name}`}
+                                  onClick={() => handleOpenModal(imageFile.id)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                 >
                                   <MdOutlineRemoveRedEye className="h-5 w-5" />
@@ -375,6 +391,37 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Download ${imageFile.name}`}
+                                  onClick={() => handleOpenExportModal(imageFile)}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-emerald-100 hover:text-emerald-600"
+                                >
+                                  <LuDownload className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Download</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Delete ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
+                                >
+                                  <LuTrash2 className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Delete</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -417,20 +464,23 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                       <motion.div
                         key={`${sortOption}-${imageFile.id}`}
                         {...motionItemProps}
-                        onClick={() => handleOpenModal(imageFile.id)}
-                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                        className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                       >
-                        <div className="min-h-0 flex-1">
+                        <div
+                          className="min-h-0 flex-1 cursor-pointer"
+                          onClick={() => handleOpenModal(imageFile.id)}
+                        >
                           <Thumbnail imageFile={imageFile} className="h-full w-full" />
                         </div>
                         <div className="flex w-full flex-col items-center justify-center p-1">
-                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                          <div className="my-1 flex flex-shrink-0 items-center gap-1">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`View ${imageFile.name}`}
+                                  onClick={() => handleOpenModal(imageFile.id)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                 >
                                   <MdOutlineRemoveRedEye className="h-5 w-5" />
@@ -438,6 +488,37 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Download ${imageFile.name}`}
+                                  onClick={() => handleOpenExportModal(imageFile)}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-emerald-100 hover:text-emerald-600"
+                                >
+                                  <LuDownload className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Download</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Delete ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
+                                >
+                                  <LuTrash2 className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Delete</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -480,20 +561,23 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                       <motion.div
                         key={`${sortOption}-${imageFile.id}`}
                         {...motionItemProps}
-                        onClick={() => handleOpenModal(imageFile.id)}
-                        className="font-inter group relative flex aspect-square cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+                        className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                       >
-                        <div className="min-h-0 flex-1">
+                        <div
+                          className="min-h-0 flex-1 cursor-pointer"
+                          onClick={() => handleOpenModal(imageFile.id)}
+                        >
                           <Thumbnail imageFile={imageFile} className="h-full w-full" />
                         </div>
                         <div className="flex w-full flex-col items-center justify-center p-1">
-                          <div className="mt-1 flex flex-shrink-0 items-center gap-1">
+                          <div className="my-1 flex flex-shrink-0 items-center gap-1">
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   aria-label={`View ${imageFile.name}`}
+                                  onClick={() => handleOpenModal(imageFile.id)}
                                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                                 >
                                   <MdOutlineRemoveRedEye className="h-5 w-5" />
@@ -501,6 +585,37 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p className="font-inter">View</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Download ${imageFile.name}`}
+                                  onClick={() => handleOpenExportModal(imageFile)}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-emerald-100 hover:text-emerald-600"
+                                >
+                                  <LuDownload className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Download</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Delete ${imageFile.name}`}
+                                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
+                                >
+                                  <LuTrash2 className="h-5 w-5" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="font-inter">Delete</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -568,6 +683,13 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
         onPrevious={handlePreviousImage}
         onSelectImage={handleSelectImage}
         onRename={handleRenameImage}
+      />
+
+      {/* The export image modal is rendered here, controlled by its own state. */}
+      <ExportImageModal
+        isOpen={isExportModalOpen}
+        onOpenChange={setIsExportModalOpen}
+        imageName={imageToExport?.name ?? null}
       />
     </>
   );
