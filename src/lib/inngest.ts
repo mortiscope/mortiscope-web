@@ -24,6 +24,18 @@ export type Events = {
       format: "raw_data" | "pdf" | "labelled_images";
     };
   };
+
+  /**
+   * Fired when a user requests to export a single image's data.
+   */
+  "export/image.data.requested": {
+    data: {
+      exportId: string;
+      uploadId: string;
+      userId: string;
+      format: "raw_data" | "labelled_images";
+    };
+  };
 };
 
 /**
