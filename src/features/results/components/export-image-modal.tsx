@@ -1,8 +1,10 @@
 "use client";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImSpinner2 } from "react-icons/im";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +16,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { getExportStatus } from "@/features/results/actions/get-export-status";
+import { requestImageExport } from "@/features/results/actions/request-image-export";
 import { cn } from "@/lib/utils";
 
 /**
@@ -51,8 +55,7 @@ const itemVariants = {
  * Defines the props for the export image modal component.
  */
 interface ExportImageModalProps {
-  /** The name of the image, displayed for confirmation. */
-  imageName: string | null;
+  image: { id: string; name: string } | null;
   /** Controls whether the modal is open or closed. */
   isOpen: boolean;
   /** Function to call when the modal's open state changes. */
@@ -65,19 +68,79 @@ interface ExportImageModalProps {
  *
  * @param {ExportImageModalProps} props The props for controlling the modal's state.
  */
-export const ExportImageModal = ({ imageName, isOpen, onOpenChange }: ExportImageModalProps) => {
+export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageModalProps) => {
   // State to manage the selected export option.
   const [exportOption, setExportOption] = useState<"raw_data" | "labelled_image">("raw_data");
-  // A placeholder for the mutation's pending state.
-  const isPending = false;
+  // State to hold the ID of the current export job.
+  const [exportId, setExportId] = useState<string | null>(null);
+
+  // Starts the job and sets the export id for polling.
+  const { mutate: startExport, isPending: isStarting } = useMutation({
+    mutationFn: requestImageExport,
+    onSuccess: (data) => {
+      if (data.success && data.exportId) {
+        toast.success("Export started successfully.");
+        setExportId(data.exportId);
+      } else if (data.error) {
+        toast.error(data.error);
+        onOpenChange(false);
+      }
+    },
+    onError: () => {
+      toast.error("An unexpected error occurred.");
+      onOpenChange(false);
+    },
+  });
+
+  // A useQuery to poll for the status of the specific export job.
+  const { data: exportStatusData } = useQuery({
+    queryKey: ["exportStatus", exportId],
+    queryFn: () => getExportStatus({ exportId: exportId! }),
+    enabled: !!exportId,
+    refetchInterval: 3000,
+    retry: false,
+  });
+
+  // A useEffect hook handles the side-effects of the polling data.
+  useEffect(() => {
+    if (exportStatusData?.status === "completed" && exportStatusData.url) {
+      toast.success("Export ready! Download will begin.");
+      window.location.href = exportStatusData.url;
+      onOpenChange(false);
+      setExportId(null);
+    } else if (exportStatusData?.status === "failed") {
+      toast.error(exportStatusData.failureReason || "Export failed during processing.");
+      onOpenChange(false);
+      setExportId(null);
+    }
+  }, [exportStatusData, onOpenChange]);
+
+  const isPending = isStarting || !!exportId;
 
   /**
    * Handles the click event for the export confirmation button.
    */
-  const handleExport = () => {};
+  const handleExport = () => {
+    if (image && !isPending) {
+      // Only the raw_data option is currently functional.
+      if (exportOption === "raw_data") {
+        startExport({ uploadId: image.id, format: "raw_data" });
+      }
+    }
+  };
+
+  /**
+   * Resets the polling state when the modal is closed manually.
+   */
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setExportId(null);
+    }
+    onOpenChange(open);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
         {/* Main wrapper for the modal content. */}
         <motion.div
@@ -94,7 +157,7 @@ export const ExportImageModal = ({ imageName, isOpen, onOpenChange }: ExportImag
               </DialogTitle>
               <p className="font-inter pt-2 text-center text-sm text-slate-500">
                 Choose a download option for&nbsp;
-                <strong className="font-semibold text-slate-800">{imageName}</strong>.
+                <strong className="font-semibold text-slate-800">{image?.name}</strong>.
               </p>
             </DialogHeader>
           </motion.div>
@@ -140,23 +203,12 @@ export const ExportImageModal = ({ imageName, isOpen, onOpenChange }: ExportImag
               <Label
                 htmlFor="labelled_image"
                 className={cn(
-                  "flex cursor-pointer flex-col rounded-2xl border-2 p-4 text-left transition-colors duration-300 ease-in-out",
-                  exportOption === "labelled_image"
-                    ? "border-emerald-400 bg-emerald-50"
-                    : "border-slate-200 bg-white hover:bg-slate-50"
+                  "flex flex-col rounded-2xl border-2 p-4 text-left transition-colors duration-300 ease-in-out",
+                  "cursor-not-allowed opacity-50"
                 )}
               >
                 <div className="flex items-start">
-                  <RadioGroupItem
-                    value="labelled_image"
-                    id="labelled_image"
-                    className={cn(
-                      "focus-visible:ring-emerald-500/50",
-                      exportOption === "labelled_image"
-                        ? "border-emerald-600 text-emerald-600 [&_svg]:fill-emerald-600"
-                        : ""
-                    )}
-                  />
+                  <RadioGroupItem value="labelled_image" id="labelled_image" disabled />
                   <div className="ml-3">
                     <span className="font-inter font-medium text-slate-800">Labelled Image</span>
                     <p className="font-inter mt-1.5 text-sm font-normal text-slate-600">
@@ -174,7 +226,7 @@ export const ExportImageModal = ({ imageName, isOpen, onOpenChange }: ExportImag
               <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
                 <Button
                   variant="outline"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => handleOpenChange(false)}
                   disabled={isPending}
                   className="font-inter h-10 w-full cursor-pointer uppercase transition-all duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed"
                 >

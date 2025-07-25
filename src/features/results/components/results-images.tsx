@@ -689,7 +689,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
       <ExportImageModal
         isOpen={isExportModalOpen}
         onOpenChange={setIsExportModalOpen}
-        imageName={imageToExport?.name ?? null}
+        image={imageToExport}
       />
     </>
   );
