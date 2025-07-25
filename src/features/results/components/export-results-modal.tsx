@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getExportStatus } from "@/features/results/actions/get-export-status";
-import { requestExport } from "@/features/results/actions/request-export";
+import { requestResultsExport } from "@/features/results/actions/request-results-export";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,7 +72,7 @@ export const ExportResultsModal = ({ caseId, isOpen, onOpenChange }: ExportResul
   const [exportId, setExportId] = useState<string | null>(null);
 
   const { mutate: startExport, isPending: isStarting } = useMutation({
-    mutationFn: requestExport,
+    mutationFn: requestResultsExport,
     onSuccess: (data) => {
       if (data.success && data.exportId) {
         toast.success("Export started successfully.");

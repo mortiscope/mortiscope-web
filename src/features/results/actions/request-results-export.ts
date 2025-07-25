@@ -16,7 +16,7 @@ import { inngest } from "@/lib/inngest";
  * @param {'raw_data' | 'pdf' | 'labelled_images'} params.format - The desired export format.
  * @returns {Promise<{success?: string; error?: string; exportId?: string}>} An object indicating the result.
  */
-export const requestExport = async ({
+export const requestResultsExport = async ({
   caseId,
   format,
 }: {
