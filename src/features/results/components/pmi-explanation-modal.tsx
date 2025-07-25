@@ -93,7 +93,10 @@ export function PmiExplanationModal({
           </motion.div>
 
           {/* Main container */}
-          <motion.div variants={itemVariants} className="flex-1 space-y-4 overflow-y-auto px-6">
+          <motion.div
+            variants={itemVariants}
+            className="flex-1 space-y-4 overflow-y-auto border-y border-slate-200 p-6"
+          >
             {/* Interpretable Summary Section */}
             <div>
               <h3 className="font-plus-jakarta-sans mb-2 text-lg font-semibold text-slate-800">
