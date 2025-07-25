@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -155,10 +156,10 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
               <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
                 Download Image
               </DialogTitle>
-              <p className="font-inter pt-2 text-center text-sm text-slate-500">
+              <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-500">
                 Choose a download option for&nbsp;
                 <strong className="font-semibold text-slate-800">{image?.name}</strong>.
-              </p>
+              </DialogDescription>
             </DialogHeader>
           </motion.div>
 

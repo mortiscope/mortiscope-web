@@ -36,10 +36,11 @@ const ResultsIdPageSkeleton = () => {
  * @returns {Promise<Metadata>} A promise resolving to the page's metadata object.
  */
 export async function generateMetadata({
-  params: { resultsId },
+  params,
 }: {
-  params: { resultsId: string };
+  params: Promise<{ resultsId: string }>;
 }): Promise<Metadata> {
+  const { resultsId } = await params;
   const session = await auth();
 
   // A user must be logged in to view any case metadata.
@@ -134,7 +135,9 @@ async function ResultsPageContent({ resultsId }: { resultsId: string }) {
  * @param {Props} props The component props containing the dynamic route parameters.
  * @returns {JSX.Element} The rendered page component with a loading fallback.
  */
-export default function ResultsPage({ params: { resultsId } }: { params: { resultsId: string } }) {
+export default async function ResultsPage({ params }: { params: Promise<{ resultsId: string }> }) {
+  const { resultsId } = await params;
+
   return (
     <Suspense fallback={<ResultsIdPageSkeleton />}>
       <ResultsPageContent resultsId={resultsId} />

@@ -142,7 +142,7 @@ const PreviewThumbnail = ({
       <button
         onClick={onClick}
         className={cn(
-          "h-full w-full cursor-pointer rounded-md transition-all duration-300 focus:outline-none disabled:cursor-default",
+          "relative h-full w-full cursor-pointer rounded-md transition-all duration-300 focus:outline-none disabled:cursor-default",
           // Desktop-specific styles for the thumbnail outline.
           !isMobile && [
             "ring-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-500",

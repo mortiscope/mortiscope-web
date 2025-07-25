@@ -366,9 +366,9 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                 }}
               >
                 {/* Scrollable container for the image grid. */}
-                <div className="w-full overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-slate-100">
+                <div className="group w-full overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent group-hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
                   <div className="grid auto-cols-[calc(50%-6px)] grid-flow-col gap-3 md:auto-cols-[calc(25%-9px)] lg:auto-cols-[calc(20%-9.6px)]">
-                    <AnimatePresence mode="wait">
+                    <AnimatePresence>
                       {sortedFiles.map((imageFile) => (
                         <motion.div
                           key={`${sortOption}-${imageFile.id}`}
@@ -376,7 +376,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                           className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                         >
                           <div
-                            className="min-h-0 flex-1 cursor-pointer"
+                            className="relative min-h-0 flex-1 cursor-pointer"
                             onClick={() => handleOpenModal(imageFile.id)}
                           >
                             <Thumbnail imageFile={imageFile} className="h-full w-full" />
