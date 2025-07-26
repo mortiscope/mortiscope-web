@@ -279,28 +279,15 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     await renameMutation.mutateAsync({ imageId, newName });
   };
 
-  // Props for motion elements for a fade and scale animation, without layout shuffling.
-  const motionItemProps = {
-    initial: { opacity: 0, scale: 0.95 },
-    animate: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 },
-    transition: {
-      duration: 0.3,
-      ease: "easeInOut",
-    },
-  };
+  // Disable sorting if there is only one or zero images.
+  const isSortDisabled = files.length <= 1;
 
   return (
     <>
       <TooltipProvider>
-        <motion.div
-          layout
-          transition={{ layout: { type: "tween", duration: 0.6, ease: "easeInOut" } }}
-          className="w-full"
-        >
+        <div className="w-full">
           {/* View mode and sort controls */}
           <motion.div
-            layout
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -320,34 +307,37 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
 
             {/* Container for the sort and view mode controls. */}
             <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    aria-label="Sort options"
-                    className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
-                  >
-                    <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
-                      {currentSortLabel}
-                    </span>
-                    <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  {SORT_OPTIONS.map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onSelect={() => setSortOption(option.value as SortOptionValue)}
-                      className={cn(
-                        "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
-                      )}
+              <div className={cn({ "cursor-not-allowed": isSortDisabled })}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      aria-label="Sort options"
+                      className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
+                      disabled={isSortDisabled}
                     >
-                      <SortIcon value={option.value as SortOptionValue} />
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">
+                        {currentSortLabel}
+                      </span>
+                      <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    {SORT_OPTIONS.map((option) => (
+                      <DropdownMenuItem
+                        key={option.value}
+                        onSelect={() => setSortOption(option.value as SortOptionValue)}
+                        className={cn(
+                          "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                        )}
+                      >
+                        <SortIcon value={option.value as SortOptionValue} />
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </motion.div>
 
@@ -355,15 +345,11 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
           <AnimatePresence mode="wait">
             {sortedFiles.length > 0 ? (
               <motion.div
-                layout
-                key="grid-view"
+                key={sortOption}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{
-                  layout: { type: "tween", duration: 0.6, ease: "easeInOut" },
-                  opacity: { duration: 0.3 },
-                }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
               >
                 {/* Scrollable container for the image grid. */}
                 <div className="group w-full overflow-x-auto pb-4 [-ms-overflow-style:none] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent group-hover:[&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-track]:bg-transparent">
@@ -372,7 +358,10 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                       {sortedFiles.map((imageFile) => (
                         <motion.div
                           key={`${sortOption}-${imageFile.id}`}
-                          {...motionItemProps}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
                           className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
                         >
                           <div
@@ -458,7 +447,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
               </motion.div>
             ) : null}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </TooltipProvider>
 
       {/* The preview modal is rendered here, controlled by state. */}
@@ -482,6 +471,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
 
       {/* The delete image modal, rendered here and controlled by its own state. */}
       <DeleteImageModal
+        key={imageToDelete?.id}
         isOpen={isDeleteModalOpen}
         onOpenChange={setIsDeleteModalOpen}
         imageId={imageToDelete?.id ?? null}
