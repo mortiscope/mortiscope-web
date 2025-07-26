@@ -476,6 +476,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
         onOpenChange={setIsDeleteModalOpen}
         imageId={imageToDelete?.id ?? null}
         imageName={imageToDelete?.name ?? null}
+        totalImages={files.length}
       />
     </>
   );

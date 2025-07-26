@@ -50,6 +50,8 @@ interface DeleteImageModalProps {
   isOpen: boolean;
   /** Function to call when the modal's open state changes. */
   onOpenChange: (isOpen: boolean) => void;
+  /** The total number of images in the case. */
+  totalImages: number;
 }
 
 /**
@@ -63,6 +65,7 @@ export const DeleteImageModal = ({
   imageName,
   isOpen,
   onOpenChange,
+  totalImages,
 }: DeleteImageModalProps) => {
   const queryClient = useQueryClient();
   const params = useParams();
@@ -122,6 +125,13 @@ export const DeleteImageModal = ({
    * Handles the click event for the delete confirmation button.
    */
   const handleDelete = () => {
+    // Prevent deletion if it's the last image.
+    if (totalImages <= 1) {
+      toast.error("A case must have at least one image.");
+      onOpenChange(false);
+      return;
+    }
+
     if (imageId && !isPending && !hasInitiatedDeletion.current) {
       mutate({ imageId });
     }

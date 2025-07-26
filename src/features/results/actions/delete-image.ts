@@ -1,7 +1,7 @@
 "use server";
 
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
@@ -44,6 +44,18 @@ export const deleteImage = async ({
 
     if (!imageRecord) {
       return { error: "Image not found or you do not have permission to delete it." };
+    }
+
+    // Server-side validation to prevent deleting the last image in a case.
+    if (imageRecord.caseId) {
+      const [{ imageCount }] = await db
+        .select({ imageCount: count() })
+        .from(uploads)
+        .where(eq(uploads.caseId, imageRecord.caseId));
+
+      if (imageCount <= 1) {
+        return { error: "A case must have at least one image." };
+      }
     }
 
     // Delete the object from S3 first.
