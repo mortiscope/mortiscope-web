@@ -1,0 +1,1 @@
+ALTER TABLE "cases" ADD COLUMN "recalculation_needed" boolean DEFAULT false NOT NULL;

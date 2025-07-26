@@ -2,6 +2,7 @@ import type { AdapterAccount } from "@auth/core/adapters";
 import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   jsonb,
   pgEnum,
@@ -161,6 +162,7 @@ export const cases = pgTable(
     })
       .notNull()
       .defaultNow(),
+    recalculationNeeded: boolean("recalculation_needed").notNull().default(false),
   },
   (table) => [uniqueIndex("case_name_idx").on(table.userId, table.caseName)]
 );
