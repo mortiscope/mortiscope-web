@@ -14,6 +14,7 @@ import {
   IoPodiumOutline,
 } from "react-icons/io5";
 import { LuCalendarRange, LuChartLine, LuClock } from "react-icons/lu";
+import { PiWarning } from "react-icons/pi";
 import { TbChartAreaLine } from "react-icons/tb";
 
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { type analysisResults, type detections, type uploads } from "@/db/schema";
+import { type analysisResults, type cases, type detections, type uploads } from "@/db/schema";
 import { CaseSummaryInformationModal } from "@/features/results/components/case-summary-information-modal";
 import { PmiExplanationModal } from "@/features/results/components/pmi-explanation-modal";
 import { ResultsBarChart } from "@/features/results/components/results-bar-chart";
@@ -54,6 +55,8 @@ type UploadWithDetections = typeof uploads.$inferSelect & {
 };
 
 interface ResultsAnalysisProps {
+  // Prop to receive the full case data, including the recalculation flag.
+  caseData?: typeof cases.$inferSelect;
   /**
    * The analysis result data for the current case.
    */
@@ -72,6 +75,7 @@ interface ResultsAnalysisProps {
  * A component that lays out the analysis section for the results page.
  */
 export const ResultsAnalysis = ({
+  caseData,
   analysisResult,
   uploads = [],
   isLoading,
@@ -129,7 +133,7 @@ export const ResultsAnalysis = ({
   }, [selectedDataSource, uploads]);
 
   // The conditional return now happens *after* all hooks have been called.
-  if (isLoading || !analysisResult) {
+  if (isLoading || !analysisResult || !caseData) {
     return <ResultsAnalysisSkeleton />;
   }
 
@@ -171,6 +175,9 @@ export const ResultsAnalysis = ({
 
   // A clear flag to check if the data source dropdown should be enabled.
   const isDataSourceDisabled = !uploads || uploads.length === 0;
+
+  // Get recalculation status from the case data prop.
+  const isRecalculationNeeded = caseData.recalculationNeeded;
 
   // A consistent style for all dropdown menu items.
   const dropdownItemStyle =
@@ -324,6 +331,32 @@ export const ResultsAnalysis = ({
               </div>
 
               <div className="flex items-center">
+                <AnimatePresence>
+                  {isRecalculationNeeded && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.2, ease: "easeInOut" }}
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            aria-label="PMI estimation outdated"
+                            className="relative mr-2 size-8 cursor-pointer rounded-md border-2 border-amber-300 bg-amber-50 text-amber-400 transition-all duration-300 ease-in-out hover:border-amber-400 hover:bg-amber-100 hover:text-amber-500 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9"
+                          >
+                            <PiWarning className="size-4 md:size-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-inter">PMI estimation outdated</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <Tooltip>
                   <DropdownMenu>
                     <TooltipTrigger asChild>

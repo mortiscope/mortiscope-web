@@ -178,7 +178,7 @@ export const DeleteImageModal = ({
                       <strong className="font-semibold text-rose-500">Note:</strong> To update the
                       PMI estimation with the remaining files, you need to click the&nbsp;
                       <strong className="font-semibold text-slate-800">recalculate</strong>
-                      &nbsp;button. Otherwise, the results in this case will remain outdated.
+                      &nbsp;button.
                     </p>
                   </div>
                 </div>

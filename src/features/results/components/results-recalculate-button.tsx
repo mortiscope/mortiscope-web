@@ -13,6 +13,8 @@ interface ResultsRecalculateButtonProps {
   caseId: string;
   /** Controls whether the button is disabled. */
   isDisabled?: boolean;
+  /** An optional click handler for the button. */
+  onClick?: () => void;
 }
 
 /**
@@ -22,8 +24,16 @@ interface ResultsRecalculateButtonProps {
  *
  * @param {ResultsRecalculateButtonProps} props The component props.
  */
-export const ResultsRecalculateButton = ({ isDisabled }: ResultsRecalculateButtonProps) => {
-  const handleRecalculate = () => {};
+export const ResultsRecalculateButton = ({
+  isDisabled,
+  onClick,
+}: ResultsRecalculateButtonProps) => {
+  const handleRecalculate = () => {
+    // If an onClick handler is provided, call it.
+    if (onClick) {
+      onClick();
+    }
+  };
 
   const ButtonComponent = (
     <span className={isDisabled ? "cursor-not-allowed" : ""} tabIndex={isDisabled ? -1 : undefined}>

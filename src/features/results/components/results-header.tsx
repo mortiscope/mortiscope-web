@@ -1,11 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import type { cases } from "@/db/schema";
 import { ResultsExportDropdown } from "@/features/results/components/results-export-dropdown";
 import { ResultsRecalculateButton } from "@/features/results/components/results-recalculate-button";
+import { ResultsRecalculateModal } from "@/features/results/components/results-recalculate-modal";
 import { useLayoutStore } from "@/stores/layout-store";
 
 /**
@@ -24,6 +25,8 @@ interface ResultsHeaderProps {
 export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
   const params = useParams();
   const caseId = typeof params.resultsId === "string" ? params.resultsId : null;
+  // State to control the visibility of the recalculate modal.
+  const [isRecalculateModalOpen, setIsRecalculateModalOpen] = useState(false);
 
   const setHeaderAdditionalContent = useLayoutStore((state) => state.setHeaderAdditionalContent);
   const clearHeaderAdditionalContent = useLayoutStore(
@@ -34,7 +37,11 @@ export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
     if (caseId) {
       setHeaderAdditionalContent(
         <div className="flex items-center gap-1 sm:gap-2">
-          <ResultsRecalculateButton caseId={caseId} isDisabled={!caseData.recalculationNeeded} />
+          <ResultsRecalculateButton
+            caseId={caseId}
+            isDisabled={!caseData.recalculationNeeded}
+            onClick={() => setIsRecalculateModalOpen(true)}
+          />
           <ResultsExportDropdown caseId={caseId} />
         </div>
       );
@@ -46,5 +53,14 @@ export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
     };
   }, [caseId, caseData, setHeaderAdditionalContent, clearHeaderAdditionalContent]);
 
-  return null;
+  // Return a fragment containing the modal to render the results recalculate modal.
+  return (
+    <>
+      <ResultsRecalculateModal
+        caseId={caseId}
+        isOpen={isRecalculateModalOpen}
+        onOpenChange={setIsRecalculateModalOpen}
+      />
+    </>
+  );
 };
