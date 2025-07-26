@@ -19,8 +19,6 @@ interface ResultsState {
   searchTerm: string;
   /** The ID of the case currently being renamed, or null if none. */
   renamingCaseId: string | null;
-  /** A flag indicating if the displayed results are out of sync with the server's authoritative PMI calculation. */
-  isRecalculationNeeded: boolean;
 
   setViewMode: (mode: ViewMode) => void;
   /**
@@ -38,10 +36,6 @@ interface ResultsState {
    * @param id The ID of the case to rename, or null to exit rename mode.
    */
   setRenamingCaseId: (id: string | null) => void;
-  /** 
-   * Action to set the recalculation status, typically after a data modification. 
-   */
-  setRecalculationNeeded: (isNeeded: boolean) => void;
 }
 
 /**
@@ -56,8 +50,6 @@ export const useResultsStore = create<ResultsState>((set) => ({
   searchTerm: "",
   // No case is being renamed by default.
   renamingCaseId: null,
-  // By default, the results are in sync.
-  isRecalculationNeeded: false,
 
   // Action to update the `viewMode` state.
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -67,6 +59,4 @@ export const useResultsStore = create<ResultsState>((set) => ({
   setSearchTerm: (term) => set({ searchTerm: term }),
   // Action to update the `renamingCaseId` state.
   setRenamingCaseId: (id) => set({ renamingCaseId: id }),
-  // Action to update the `isRecalculationNeeded` state.
-  setRecalculationNeeded: (isNeeded) => set({ isRecalculationNeeded: isNeeded }),
 }));

@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { uploads } from "@/db/schema";
+import { cases, uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
 import { config } from "@/lib/config";
 
@@ -68,6 +68,14 @@ export const deleteImage = async ({
 
     // If S3 deletion is successful, delete the record from the database.
     await db.delete(uploads).where(eq(uploads.id, imageId));
+
+    // If the image belonged to a case, mark that case as needing recalculation.
+    if (imageRecord.caseId) {
+      await db
+        .update(cases)
+        .set({ recalculationNeeded: true })
+        .where(eq(cases.id, imageRecord.caseId));
+    }
 
     // Revalidate the path to ensure server-rendered components are updated.
     if (imageRecord.caseId) {

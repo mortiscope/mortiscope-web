@@ -118,7 +118,7 @@ async function ResultsPageContent({ resultsId }: { resultsId: string }) {
 
   return (
     <>
-      <ResultsHeader />
+      <ResultsHeader caseData={caseData} />
       <div className="flex flex-1 flex-col gap-4 pt-2">
         <ResultsDetails caseData={caseData} />
         <ResultsAnalysis analysisResult={caseData.analysisResult} uploads={uploadsWithDetections} />

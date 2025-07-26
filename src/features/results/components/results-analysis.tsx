@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import { FaGlasses, FaHourglassHalf } from "react-icons/fa";
@@ -35,7 +35,6 @@ import { ResultsLineChart } from "@/features/results/components/results-line-cha
 import { ResultsPieChart } from "@/features/results/components/results-pie-chart";
 import { ResultsRadarChart } from "@/features/results/components/results-radar-chart";
 import { ResultsAnalysisSkeleton } from "@/features/results/components/results-skeleton";
-import { useResultsStore } from "@/features/results/store/results-store";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -87,16 +86,6 @@ export const ResultsAnalysis = ({
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   // State to manage the selected data source for the chart.
   const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
-
-  // Subscribe to the Zustand store for the recalculation needed flag.
-  const setRecalculationNeeded = useResultsStore((state) => state.setRecalculationNeeded);
-
-  // Reset the recalculation flag when the component unmounts.
-  useEffect(() => {
-    return () => {
-      setRecalculationNeeded(false);
-    };
-  }, [setRecalculationNeeded]);
 
   const chartData = useMemo(() => {
     let counts: Record<string, number> = {};
