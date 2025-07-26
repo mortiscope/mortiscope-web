@@ -14,7 +14,12 @@ import {
   LuZoomIn,
   LuZoomOut,
 } from "react-icons/lu";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import {
+  type ReactZoomPanPinchRef,
+  type ReactZoomPanPinchState,
+  TransformComponent,
+  TransformWrapper,
+} from "react-zoom-pan-pinch";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +34,20 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections } from "@/db/schema";
+import { ResultsImagesMinimap } from "@/features/results/components/results-images-minimap";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn, formatBytes, formatConfidence, formatLabel, getColorForClass } from "@/lib/utils";
 
 // Define the shape of detection data.
 type Detection = typeof detections.$inferSelect;
+
+/**
+ * Dimensions of the content and wrapper for calculating the minimap viewport.
+ */
+interface ViewingBox {
+  content?: { width: number; height: number };
+  wrapper?: { width: number; height: number };
+}
 
 /**
  * The shape of the image data object used within this component and its parent.
@@ -247,6 +261,15 @@ export const ResultsImagesModal = ({
     width: number;
     height: number;
   } | null>(null);
+  // State to hold the pan-and-zoom transformation data for the minimap.
+  const [transformState, setTransformState] = useState<ReactZoomPanPinchState>({
+    scale: 1,
+    positionX: 0,
+    positionY: 0,
+    previousScale: 1,
+  });
+  // State to hold the dynamic dimensions of the pan-zoom container for accurate minimap calculation.
+  const [viewingBox, setViewingBox] = useState<ViewingBox>({});
 
   /**
    * Memoized index of the currently active image within the sorted list.
@@ -304,6 +327,9 @@ export const ResultsImagesModal = ({
       // Reset dimensions when image changes
       setImageDimensions(null);
       setContainerDimensions(null);
+      // Reset transform state for the new file.
+      setTransformState({ scale: 1, positionX: 0, positionY: 0, previousScale: 1 });
+      setViewingBox({});
     }
   }, [activeImage, isOpen]);
 
@@ -494,6 +520,30 @@ export const ResultsImagesModal = ({
     };
   }, [imageDimensions, containerDimensions, isImageLoaded]);
 
+  /**
+   * Callback fired on any pan, zoom, or other transform.
+   * It updates local state to reflect the transform and captures container dimensions for the minimap.
+   */
+  const handleTransformed = (
+    ref: ReactZoomPanPinchRef,
+    state: { scale: number; positionX: number; positionY: number }
+  ) => {
+    setTransformState((prevState) => ({ ...prevState, ...state }));
+    const { contentComponent, wrapperComponent } = ref.instance;
+    if (contentComponent && wrapperComponent) {
+      setViewingBox({
+        content: {
+          width: contentComponent.clientWidth,
+          height: contentComponent.clientHeight,
+        },
+        wrapper: {
+          width: wrapperComponent.clientWidth,
+          height: wrapperComponent.clientHeight,
+        },
+      });
+    }
+  };
+
   // Guard clause to prevent rendering if the image is not available or the mobile hook hasn't run.
   if (activeImage === null || isMobile === undefined) {
     return null;
@@ -629,6 +679,7 @@ export const ResultsImagesModal = ({
                       maxScale={32}
                       limitToBounds={true}
                       wheel={{ step: 0.5 }}
+                      onTransformed={handleTransformed}
                     >
                       {({ zoomIn, zoomOut, resetTransform, centerView }) => (
                         <>
@@ -760,6 +811,16 @@ export const ResultsImagesModal = ({
                                 )}
                               </div>
                             </TransformComponent>
+
+                            {/* The minimap to show the current view context, visible only on desktop. */}
+                            {!isMobile && (
+                              <ResultsImagesMinimap
+                                previewUrl={`${activeImage.url}?v=${activeImage.version}`}
+                                alt={`Minimap preview of ${displayFileName}`}
+                                transformState={transformState}
+                                viewingBox={viewingBox}
+                              />
+                            )}
                           </motion.div>
 
                           {/* Displays a scrollable row of all image thumbnails. */}
