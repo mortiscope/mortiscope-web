@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import { FaGlasses, FaHourglassHalf } from "react-icons/fa";
@@ -35,6 +35,7 @@ import { ResultsLineChart } from "@/features/results/components/results-line-cha
 import { ResultsPieChart } from "@/features/results/components/results-pie-chart";
 import { ResultsRadarChart } from "@/features/results/components/results-radar-chart";
 import { ResultsAnalysisSkeleton } from "@/features/results/components/results-skeleton";
+import { useResultsStore } from "@/features/results/store/results-store";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -87,11 +88,26 @@ export const ResultsAnalysis = ({
   // State to manage the selected data source for the chart.
   const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
 
+  // Subscribe to the Zustand store for the recalculation needed flag.
+  const setRecalculationNeeded = useResultsStore((state) => state.setRecalculationNeeded);
+
+  // Reset the recalculation flag when the component unmounts.
+  useEffect(() => {
+    return () => {
+      setRecalculationNeeded(false);
+    };
+  }, [setRecalculationNeeded]);
+
   const chartData = useMemo(() => {
     let counts: Record<string, number> = {};
 
     if (selectedDataSource === "overall") {
-      counts = (analysisResult?.totalCounts as Record<string, number>) || {};
+      // Calculate overall counts directly from the 'uploads' prop.
+      uploads.forEach((upload) => {
+        upload.detections.forEach((detection) => {
+          counts[detection.label] = (counts[detection.label] || 0) + 1;
+        });
+      });
     } else if (selectedDataSource === "maximum-stages") {
       const maxCounts: Record<string, number> = {};
       uploads.forEach((upload) => {
@@ -121,7 +137,7 @@ export const ResultsAnalysis = ({
       name: className,
       quantity: counts[className] || 0,
     }));
-  }, [selectedDataSource, analysisResult, uploads]);
+  }, [selectedDataSource, uploads]);
 
   // The conditional return now happens *after* all hooks have been called.
   if (isLoading || !analysisResult) {
