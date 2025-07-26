@@ -484,6 +484,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
       <DeleteImageModal
         isOpen={isDeleteModalOpen}
         onOpenChange={setIsDeleteModalOpen}
+        imageId={imageToDelete?.id ?? null}
         imageName={imageToDelete?.name ?? null}
       />
     </>

@@ -1,7 +1,11 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useParams } from "next/navigation";
 import { ImSpinner2 } from "react-icons/im";
+import { PiWarning } from "react-icons/pi";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +16,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { type analysisResults, type cases, type detections, type uploads } from "@/db/schema";
+import { deleteImage } from "@/features/results/actions/delete-image";
 import { cn } from "@/lib/utils";
+
+// Create a precise type for a single case with its relations.
+type CaseWithRelations = typeof cases.$inferSelect & {
+  uploads: (typeof uploads.$inferSelect & {
+    detections: (typeof detections.$inferSelect)[];
+  })[];
+  analysisResult: typeof analysisResults.$inferSelect | null;
+};
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -49,6 +63,8 @@ const itemVariants = {
  * Defines the props for the DeleteImageModal component.
  */
 interface DeleteImageModalProps {
+  // The unique identifier of the image to be deleted.
+  imageId: string | null;
   /** The name of the image, displayed for confirmation. */
   imageName: string | null;
   /** Controls whether the modal is open or closed. */
@@ -59,19 +75,75 @@ interface DeleteImageModalProps {
 
 /**
  * A modal to confirm the deletion of a single image.
- * It warns the user about the irreversible nature of the action and the
- * subsequent PMI recalculation that will be triggered.
+ * It warns the user about the irreversible nature of the action and handles the deletion logic.
  *
  * @param {DeleteImageModalProps} props The props for controlling the modal's state.
  */
-export const DeleteImageModal = ({ imageName, isOpen, onOpenChange }: DeleteImageModalProps) => {
-  // A placeholder for the mutation's pending state.
-  const isPending = false;
+export const DeleteImageModal = ({
+  imageId,
+  imageName,
+  isOpen,
+  onOpenChange,
+}: DeleteImageModalProps) => {
+  const queryClient = useQueryClient();
+  const params = useParams();
+  const caseId = typeof params.resultsId === "string" ? params.resultsId : null;
+
+  // Implement the useMutation hook for deleting an image.
+  const { mutate, isPending } = useMutation({
+    mutationFn: deleteImage,
+    // Use onMutate for immediate optimistic updates and interface feedback.
+    onMutate: async (variables) => {
+      onOpenChange(false);
+      // The query key for fetching the data of a single case.
+      const queryKey = ["caseData", caseId];
+
+      await queryClient.cancelQueries({ queryKey });
+      // Use the new, more specific type for the cached data.
+      const previousCaseData = queryClient.getQueryData<CaseWithRelations>(queryKey);
+
+      // Optimistically remove the image from the case's uploads array in the cache.
+      queryClient.setQueryData<CaseWithRelations>(queryKey, (oldData) => {
+        if (!oldData) return undefined;
+        return {
+          ...oldData,
+          uploads: oldData.uploads.filter((img) => img.id !== variables.imageId),
+        };
+      });
+
+      return { previousCaseData, queryKey };
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        // Use the refined, more generic success message.
+        toast.success(data.success);
+      } else {
+        toast.error(data.error || "Failed to delete file.");
+      }
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, roll back to the previous state.
+      if (context?.previousCaseData) {
+        queryClient.setQueryData(context.queryKey, context.previousCaseData);
+      }
+      toast.error("Deletion failed. The file has been restored.");
+    },
+    onSettled: (data, error, variables, context) => {
+      // Always refetch to ensure data consistency with the server.
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
+    },
+  });
 
   /**
    * Handles the click event for the delete confirmation button.
    */
-  const handleDelete = () => {};
+  const handleDelete = () => {
+    if (imageId) {
+      mutate({ imageId });
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -89,10 +161,24 @@ export const DeleteImageModal = ({ imageName, isOpen, onOpenChange }: DeleteImag
               <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-rose-600 md:text-2xl">
                 Delete Image
               </DialogTitle>
-              <DialogDescription className="font-inter pt-4 text-center text-sm text-slate-600">
-                Are you sure you want to permanently delete the image named&nbsp;
-                <strong className="font-semibold text-slate-800">{`${imageName}`}</strong>? This
-                action will trigger a PMI recalculation for the case and is irreversible.
+              <DialogDescription asChild>
+                <div className="font-inter pt-4 text-center text-sm text-slate-600">
+                  <p>
+                    Are you sure you want to permanently delete the image named&nbsp;
+                    <strong className="font-semibold break-all text-slate-800">{imageName}</strong>?
+                    This action is irreversible.
+                  </p>
+
+                  <div className="mt-4 flex items-start gap-3 rounded-2xl border-2 border-rose-400 bg-rose-50 p-4 text-left">
+                    <PiWarning className="h-5 w-5 flex-shrink-0 text-rose-500" />
+                    <p className="flex-1 text-slate-700">
+                      <strong className="font-semibold text-rose-500">Note</strong>: To update the
+                      PMI estimation with the remaining files, you need to click the&nbsp;
+                      <strong className="font-semibold text-slate-800">recalculate</strong>
+                      &nbsp;button. Otherwise, the results in this case will remain outdated.
+                    </p>
+                  </div>
+                </div>
               </DialogDescription>
             </DialogHeader>
           </motion.div>
