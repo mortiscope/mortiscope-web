@@ -36,6 +36,15 @@ export type Events = {
       format: "raw_data" | "labelled_images";
     };
   };
+
+  /**
+   * Fired when a user requests a PMI recalculation for a case.
+   */
+  "recalculation/case.requested": {
+    data: {
+      caseId: string;
+    };
+  };
 };
 
 /**
