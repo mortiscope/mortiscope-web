@@ -36,6 +36,7 @@ import { ResultsLineChart } from "@/features/results/components/results-line-cha
 import { ResultsPieChart } from "@/features/results/components/results-pie-chart";
 import { ResultsRadarChart } from "@/features/results/components/results-radar-chart";
 import { ResultsAnalysisSkeleton } from "@/features/results/components/results-skeleton";
+import { useResultsStore } from "@/features/results/store/results-store";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -132,6 +133,9 @@ export const ResultsAnalysis = ({
     }));
   }, [selectedDataSource, uploads]);
 
+  // Get recalculation status from both server and local store
+  const pendingRecalculations = useResultsStore((state) => state.pendingRecalculations);
+
   // The conditional return now happens *after* all hooks have been called.
   if (isLoading || !analysisResult || !caseData) {
     return <ResultsAnalysisSkeleton />;
@@ -176,8 +180,8 @@ export const ResultsAnalysis = ({
   // A clear flag to check if the data source dropdown should be enabled.
   const isDataSourceDisabled = !uploads || uploads.length === 0;
 
-  // Get recalculation status from the case data prop.
-  const isRecalculationNeeded = caseData.recalculationNeeded;
+  const hasPendingChanges = caseData?.id ? pendingRecalculations.has(caseData.id) : false;
+  const isRecalculationNeeded = (caseData?.recalculationNeeded ?? false) || hasPendingChanges;
 
   // A consistent style for all dropdown menu items.
   const dropdownItemStyle =
