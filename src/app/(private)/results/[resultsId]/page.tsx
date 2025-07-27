@@ -9,6 +9,7 @@ import { cases, type detections, type uploads } from "@/db/schema";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
 import { ResultsHeader } from "@/features/results/components/results-header";
+import { ResultsHeaderSkeleton } from "@/features/results/components/results-header-skeleton";
 import { ResultsImages } from "@/features/results/components/results-images";
 import {
   ResultsAnalysisSkeleton,
@@ -21,11 +22,14 @@ import {
  */
 const ResultsIdPageSkeleton = () => {
   return (
-    <div className="flex flex-1 flex-col gap-4 pt-2">
-      <ResultsDetailsSkeleton />
-      <ResultsAnalysisSkeleton />
-      <ResultsImagesSkeleton />
-    </div>
+    <>
+      <ResultsHeaderSkeleton />
+      <div className="flex flex-1 flex-col gap-4 pt-2">
+        <ResultsDetailsSkeleton />
+        <ResultsAnalysisSkeleton />
+        <ResultsImagesSkeleton />
+      </div>
+    </>
   );
 };
 

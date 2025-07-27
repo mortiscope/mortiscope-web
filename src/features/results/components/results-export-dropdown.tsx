@@ -38,7 +38,7 @@ export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) =>
               <Button
                 variant="outline"
                 aria-label="Export results"
-                className="flex h-10 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:gap-2 sm:px-3"
+                className="flex h-10 w-11 shrink-0 cursor-pointer items-center justify-center border-2 border-slate-200 bg-white px-2 shadow-none hover:bg-slate-50 focus-visible:ring-0 focus-visible:ring-offset-0 sm:w-[150px] sm:gap-2 sm:px-3"
               >
                 <LuDownload className="h-4 w-4 shrink-0 text-slate-600" />
                 <span className="font-inter hidden text-sm font-normal text-slate-800 sm:inline">

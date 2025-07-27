@@ -2,6 +2,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LG_GRID_LIMIT, MD_GRID_LIMIT, SM_GRID_LIMIT } from "@/lib/constants";
 
 /**
+ * A skeleton loader that mimics the header buttons layout.
+ */
+export const ResultsHeaderSkeletonWrapper = () => (
+  <div className="flex items-center gap-1 sm:gap-2">
+    {/* Recalculate button skeleton */}
+    <Skeleton className="h-10 w-11 shrink-0 bg-white sm:w-[130px]" />
+    {/* Export dropdown button skeleton */}
+    <Skeleton className="h-10 w-11 shrink-0 bg-white sm:w-[150px]" />
+  </div>
+);
+
+/**
  * A skeleton loader that mimics the layout of the results details component.
  */
 export const ResultsDetailsSkeleton = () => (
