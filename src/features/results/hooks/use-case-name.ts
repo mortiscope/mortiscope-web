@@ -15,7 +15,8 @@ export const useCaseName = (caseId: string | null | undefined) => {
     queryKey: ["caseName", caseId],
     queryFn: async () => {
       if (!caseId) return null;
-      return getCaseName(caseId);
+      const caseName = await getCaseName(caseId);
+      return caseName ? { caseName } : null;
     },
     enabled: !!caseId,
     staleTime: 1000 * 60 * 5,

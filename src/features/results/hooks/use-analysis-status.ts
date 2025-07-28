@@ -3,8 +3,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { getAnalysisStatus } from "@/features/results/actions/get-analysis-status";
+import { getCaseName } from "@/features/results/actions/get-case-name";
 
 type UseAnalysisStatusProps = {
   caseId: string | null;
@@ -23,7 +23,6 @@ type UseAnalysisStatusProps = {
  */
 export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps) => {
   const router = useRouter();
-  const setSubmissionSuccess = useAnalyzeStore((state) => state.setSubmissionSuccess);
 
   const { data: status, error } = useQuery({
     // A unique query key for this specific case.
@@ -45,8 +44,22 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
   useEffect(() => {
     // Once the analysis is complete, redirect the user to the results page.
     if (status === "completed") {
-      setSubmissionSuccess();
-      toast.success("Analysis complete!");
+      // Fetch case name and show toast
+      const fetchCaseNameAndShowToast = async () => {
+        let displayName = "Case";
+        if (caseId) {
+          try {
+            const fetchedCaseName = await getCaseName(caseId);
+            displayName = fetchedCaseName || "Case";
+          } catch (error) {
+            console.warn("Failed to fetch case name:", error);
+          }
+        }
+        toast.success(`${displayName} analysis complete!`);
+      };
+
+      fetchCaseNameAndShowToast();
+
       // A small delay can make the UX feel smoother.
       setTimeout(() => {
         router.push(`/results/${caseId}`);
@@ -56,7 +69,7 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
     else if (status === "failed") {
       toast.error("Analysis failed. Please contact support or try again.");
     }
-  }, [status, caseId, router, setSubmissionSuccess]);
+  }, [status, caseId, router]);
 
   // This effect runs if the query itself throws an error.
   useEffect(() => {
