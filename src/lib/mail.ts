@@ -1,33 +1,47 @@
-import { AccountDeletionCancelled } from "@/emails/account-deletion-cancelled";
-import { AccountDeletionRequest } from "@/emails/account-deletion-request";
-import { AccountDeletionScheduled } from "@/emails/account-deletion-scheduled";
-import { EmailChangeVerification } from "@/emails/email-change-verification";
-import { EmailUpdated } from "@/emails/email-updated";
-import { EmailVerification } from "@/emails/email-verification";
-import { ForgotPassword } from "@/emails/forgot-password";
-import { GoodbyeEmail } from "@/emails/goodbye-email";
-import { PasswordUpdated } from "@/emails/password-updated";
-import { WelcomeEmail } from "@/emails/welcome-email";
-import { resend } from "@/lib/resend";
+import { config } from "@/lib/config";
 
-let domain: string;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+// Lazy load email components and resend to avoid Edge Runtime issues
+const getEmailComponents = async () => {
+  const [
+    { AccountDeletionCancelled },
+    { AccountDeletionRequest },
+    { AccountDeletionScheduled },
+    { EmailChangeVerification },
+    { EmailUpdated },
+    { EmailVerification },
+    { ForgotPassword },
+    { GoodbyeEmail },
+    { PasswordUpdated },
+    { WelcomeEmail },
+    { resend },
+  ] = await Promise.all([
+    import("@/emails/account-deletion-cancelled"),
+    import("@/emails/account-deletion-request"),
+    import("@/emails/account-deletion-scheduled"),
+    import("@/emails/email-change-verification"),
+    import("@/emails/email-updated"),
+    import("@/emails/email-verification"),
+    import("@/emails/forgot-password"),
+    import("@/emails/goodbye-email"),
+    import("@/emails/password-updated"),
+    import("@/emails/welcome-email"),
+    import("@/lib/resend"),
+  ]);
 
-// Dynamically construct the 'from' address for emails using the application's public URL
-try {
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is not set in environment variables.");
-  }
-  domain = new URL(appUrl).hostname;
-} catch (error) {
-  console.error(
-    "FATAL: Invalid or missing NEXT_PUBLIC_APP_URL. Cannot create 'from' address for emails.",
-    error
-  );
-  domain = "invalid-configuration.local";
-}
-
-const fromAddress = `MortiScope <noreply@${domain}>`;
+  return {
+    AccountDeletionCancelled,
+    AccountDeletionRequest,
+    AccountDeletionScheduled,
+    EmailChangeVerification,
+    EmailUpdated,
+    EmailVerification,
+    ForgotPassword,
+    GoodbyeEmail,
+    PasswordUpdated,
+    WelcomeEmail,
+    resend,
+  };
+};
 
 /**
  * Sends an email verification link for new user registration.
@@ -35,8 +49,9 @@ const fromAddress = `MortiScope <noreply@${domain}>`;
  * @param token The unique verification token.
  */
 export const sendEmailVerification = async (email: string, token: string) => {
+  const { EmailVerification, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Verify Your Email Address",
     react: EmailVerification({ token }),
@@ -49,8 +64,9 @@ export const sendEmailVerification = async (email: string, token: string) => {
  * @param username The user's name for personalization (optional).
  */
 export const sendWelcomeEmail = async (email: string, username?: string | null) => {
+  const { WelcomeEmail, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Getting Started",
     react: WelcomeEmail({ username }),
@@ -63,8 +79,9 @@ export const sendWelcomeEmail = async (email: string, username?: string | null) 
  * @param token The unique verification token for the email change.
  */
 export const sendEmailChangeVerificationLink = async (email: string, token: string) => {
+  const { EmailChangeVerification, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Confirm New Email Address",
     react: EmailChangeVerification({ token }),
@@ -78,9 +95,10 @@ export const sendEmailChangeVerificationLink = async (email: string, token: stri
  */
 export const sendEmailChangeNotification = async (email: string, type: "old" | "new") => {
   const subject = type === "old" ? "MortiScope: Email Change Request" : "MortiScope: Email Updated";
+  const { EmailUpdated, resend } = await getEmailComponents();
 
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject,
     react: EmailUpdated({ notificationType: type }),
@@ -93,8 +111,9 @@ export const sendEmailChangeNotification = async (email: string, type: "old" | "
  * @param token The unique password reset token.
  */
 export const sendForgotPassword = async (email: string, token: string) => {
+  const { ForgotPassword, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Forgot Password",
     react: ForgotPassword({ token }),
@@ -106,8 +125,9 @@ export const sendForgotPassword = async (email: string, token: string) => {
  * @param email The recipient's email address.
  */
 export const sendPasswordUpdatedEmail = async (email: string) => {
+  const { PasswordUpdated, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Password Updated",
     react: PasswordUpdated(),
@@ -120,8 +140,9 @@ export const sendPasswordUpdatedEmail = async (email: string) => {
  * @param token The unique token to authorize deletion.
  */
 export const sendAccountDeletionRequest = async (email: string, token: string) => {
+  const { AccountDeletionRequest, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Account Deletion Request",
     react: AccountDeletionRequest({ token }),
@@ -134,8 +155,9 @@ export const sendAccountDeletionRequest = async (email: string, token: string) =
  * @param deletionWindowDays The number of days in the grace period.
  */
 export const sendAccountDeletionScheduled = async (email: string, deletionWindowDays: number) => {
+  const { AccountDeletionScheduled, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Account Deletion Schedule",
     react: AccountDeletionScheduled({ deletionWindowDays }),
@@ -148,8 +170,9 @@ export const sendAccountDeletionScheduled = async (email: string, deletionWindow
  * @param username The user's name for personalization (optional).
  */
 export const sendAccountDeletionCancelled = async (email: string, username?: string | null) => {
+  const { AccountDeletionCancelled, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Account Deletion Cancelled",
     react: AccountDeletionCancelled({ username }),
@@ -162,8 +185,9 @@ export const sendAccountDeletionCancelled = async (email: string, username?: str
  * @param username The user's name for personalization (optional).
  */
 export const sendGoodbyeEmail = async (email: string, username?: string | null) => {
+  const { GoodbyeEmail, resend } = await getEmailComponents();
   await resend.emails.send({
-    from: fromAddress,
+    from: config.mail.fromAddress,
     to: email,
     subject: "MortiScope: Account Permanently Deleted",
     react: GoodbyeEmail({ username }),

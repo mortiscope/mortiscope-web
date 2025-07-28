@@ -1,4 +1,6 @@
-import { auth } from "@/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+
 import {
   apiAuthPrefix,
   authRoutes,
@@ -13,9 +15,16 @@ import {
  * 
  * @param req The incoming Next.js request object.
  */
-export default auth((req) => {
+export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+
+  // Get JWT token directly
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+  });
+
+  const isLoggedIn = !!token;
 
   // Categorize the current route to apply specific rules
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
@@ -25,31 +34,31 @@ export default auth((req) => {
 
   // Allow all public API routes to pass through without checks
   if (isApiAuthRoute || isPublicApiRoute) {
-    return;
+    return NextResponse.next();
   }
 
   // Handle authentication-related routes
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
     // If not logged in, allow them to access the auth page.
-    return;
+    return NextResponse.next();
   }
 
   // If a logged-in user tries to access a public route, redirect them to the dashboard
   if (isPublicRoute && isLoggedIn) {
-    return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
   }
 
   // Protect all non-public routes
   if (!isLoggedIn && !isPublicRoute) {
-    return Response.redirect(new URL("/signin", nextUrl));
+    return NextResponse.redirect(new URL("/signin", nextUrl));
   }
 
   // If none of the above conditions are met, allow the request to proceed
-  return;
-});
+  return NextResponse.next();
+}
 
 /**
  * Configures the middleware to run on specific paths
