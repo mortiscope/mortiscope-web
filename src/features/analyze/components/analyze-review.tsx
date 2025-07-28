@@ -103,7 +103,6 @@ export const AnalyzeReview = () => {
         void queryClient.invalidateQueries({ queryKey: ["cases"] });
         // Transition the interface to the 'processing' state to begin polling.
         startProcessing();
-        toast.success("Analysis submitted!");
       } else {
         toast.error(data.error || "Failed to submit analysis. Please try again.");
       }

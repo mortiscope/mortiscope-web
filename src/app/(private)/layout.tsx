@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
-import { toast } from "sonner";
 
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { AppHeader } from "@/components/app-header";
@@ -32,11 +31,10 @@ const PrivateLayout = ({ children }: Props) => {
   const headerAdditionalContent = useLayoutStore((state) => state.headerAdditionalContent);
 
   /**
-   * Shows a success toast on page load if a successful submission just occurred.
+   * Clear submission status when navigating to prevent stale state.
    */
   useEffect(() => {
     if (submissionStatus === "success") {
-      toast.success("Case successfully submitted!");
       clearSubmissionStatus();
     }
     // This effect runs when the status changes or when the user navigates to a new page.
