@@ -3,8 +3,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AiOutlineSave } from "react-icons/ai";
-import { GoPencil } from "react-icons/go";
 import {
   LuChevronLeft,
   LuChevronRight,
@@ -30,7 +28,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections } from "@/db/schema";
@@ -213,16 +210,11 @@ interface ResultsImagesModalProps {
    * Callback function to jump to a specific image by its ID.
    */
   onSelectImage?: (imageId: string) => void;
-  /**
-   * Callback to handle the rename action. The modal will manage the UI state,
-   * while the parent component handles the async logic.
-   */
-  onRename: (imageId: string, newName: string) => Promise<void>;
 }
 
 /**
  * Renders an interactive modal for previewing a result image.
- * It features responsive layouts, pan-and-zoom functionality, and renaming.
+ * It features responsive layouts and pan-and-zoom functionality.
  */
 export const ResultsImagesModal = ({
   image,
@@ -232,7 +224,6 @@ export const ResultsImagesModal = ({
   onNext,
   onPrevious,
   onSelectImage,
-  onRename,
 }: ResultsImagesModalProps) => {
   // State to manage the currently displayed image within the modal.
   const [activeImage, setActiveImage] = useState<ImageFile | null>(image);
@@ -243,14 +234,6 @@ export const ResultsImagesModal = ({
     width: number;
     height: number;
   } | null>(null);
-  // State for rename functionality.
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [isSavingRename, setIsSavingRename] = useState(false);
-  const [isNameDirty, setIsNameDirty] = useState(false);
-  const [fileNameBase, setFileNameBase] = useState("");
-  const [fileExtension, setFileExtension] = useState("");
-  const [displayFileName, setDisplayFileName] = useState("");
-  const titleInputRef = useRef<HTMLInputElement>(null);
   // Hook to determine if the device is mobile for responsive rendering.
   const isMobile = useIsMobile();
 
@@ -310,20 +293,6 @@ export const ResultsImagesModal = ({
       // Reset loading state when image changes
       setIsImageLoaded(false);
 
-      // Parse file name for editing.
-      const name = activeImage.name;
-      const parts = name.split(".");
-      const extension = parts.pop() ?? "";
-      const nameBase = parts.join(".");
-
-      setFileNameBase(nameBase);
-      setFileExtension(extension);
-      setDisplayFileName(name);
-
-      // Reset other states.
-      setIsRenaming(false);
-      setIsSavingRename(false);
-      setIsNameDirty(false);
       // Reset dimensions when image changes
       setImageDimensions(null);
       setContainerDimensions(null);
@@ -332,16 +301,6 @@ export const ResultsImagesModal = ({
       setViewingBox({});
     }
   }, [activeImage, isOpen]);
-
-  /**
-   * Effect to automatically focus and select the text in the rename input.
-   */
-  useEffect(() => {
-    if (isRenaming && titleInputRef.current) {
-      titleInputRef.current.focus();
-      titleInputRef.current.select();
-    }
-  }, [isRenaming]);
 
   /**
    * Effect to load the image and extract its natural dimensions for display.
@@ -433,49 +392,6 @@ export const ResultsImagesModal = ({
   }, [isImageLoaded]);
 
   /**
-   * Handles changes to the file name input and marks it as dirty.
-   */
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileNameBase(e.target.value);
-    if (!isNameDirty) {
-      setIsNameDirty(true);
-    }
-  };
-
-  /**
-   * Handles saving the new name by calling the `onRename` prop.
-   */
-  const handleSaveRename = async () => {
-    if (!activeImage || isSavingRename || !isNameDirty) return;
-
-    const originalNameBase = activeImage.name.split(".").slice(0, -1).join(".");
-    const newNameBase = fileNameBase.trim();
-
-    // Do nothing if name is empty or unchanged.
-    if (!newNameBase || newNameBase === originalNameBase) {
-      setIsRenaming(false);
-      setFileNameBase(originalNameBase);
-      setIsNameDirty(false);
-      return;
-    }
-
-    setIsSavingRename(true);
-    const newName = `${newNameBase}.${fileExtension}`;
-
-    try {
-      await onRename(activeImage.id, newName);
-      setDisplayFileName(newName);
-      setIsNameDirty(false);
-    } catch (error) {
-      console.error("Failed to rename image:", error);
-      setFileNameBase(originalNameBase);
-    } finally {
-      setIsSavingRename(false);
-      setIsRenaming(false);
-    }
-  };
-
-  /**
    * Memoized calculation for the final rendered size and position of the
    * `object-contain` image. This is the core of the fix.
    */
@@ -562,7 +478,6 @@ export const ResultsImagesModal = ({
             )}
             onInteractOutside={(e) => {
               if (isMobile) e.preventDefault();
-              if (isRenaming) handleSaveRename();
             }}
           >
             {/* AnimatePresence with a unique key for the main content div to trigger animations on image change. */}
@@ -583,44 +498,11 @@ export const ResultsImagesModal = ({
                       className="absolute top-4 right-4 left-4 z-20 flex items-center justify-between gap-4 rounded-lg bg-emerald-600/80 p-3 shadow-lg backdrop-blur-sm"
                     >
                       <div className="min-w-0 flex-grow">
-                        {isRenaming ? (
-                          <Input
-                            ref={titleInputRef}
-                            value={fileNameBase}
-                            onChange={handleNameChange}
-                            onKeyDown={(e) => e.key === "Enter" && handleSaveRename()}
-                            onBlur={() => setIsRenaming(false)}
-                            className="h-auto w-full truncate border-none bg-transparent p-0 text-lg font-bold text-white shadow-none placeholder:text-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0"
-                          />
-                        ) : (
-                          <h2 className="font-plus-jakarta-sans truncate text-lg font-bold text-white">
-                            {displayFileName}
-                          </h2>
-                        )}
+                        <h2 className="font-plus-jakarta-sans truncate text-lg font-bold text-white">
+                          {activeImage.name}
+                        </h2>
                       </div>
                       <div className="flex flex-shrink-0 items-center">
-                        <Button
-                          variant="ghost"
-                          onClick={() => setIsRenaming(true)}
-                          disabled={isRenaming || isSavingRename}
-                          aria-label="Rename image"
-                          className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
-                        >
-                          <GoPencil className="!h-5 !w-5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          onClick={handleSaveRename}
-                          disabled={!isNameDirty || isSavingRename}
-                          aria-label="Save"
-                          className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
-                        >
-                          {isSavingRename ? (
-                            <LuLoaderCircle className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <AiOutlineSave className="!h-5 !w-5" />
-                          )}
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -637,23 +519,9 @@ export const ResultsImagesModal = ({
                   {/* The main dialog header, visible on desktop and used for accessibility on mobile. */}
                   <motion.div variants={itemVariants} className="px-6 pt-0 pb-0 md:pt-6">
                     <DialogHeader className={cn(isMobile && "sr-only")}>
-                      {isRenaming ? (
-                        <Input
-                          ref={titleInputRef}
-                          value={fileNameBase}
-                          onChange={handleNameChange}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleSaveRename();
-                            if (e.key === "Escape") setIsRenaming(false);
-                          }}
-                          onBlur={() => setIsRenaming(false)}
-                          className="font-plus-jakarta-sans mx-auto h-auto w-full max-w-sm truncate border-none bg-transparent p-0 text-center text-xl font-bold text-emerald-600 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 md:max-w-md md:text-2xl"
-                        />
-                      ) : (
-                        <DialogTitle className="font-plus-jakarta-sans mx-auto w-full max-w-sm truncate text-center text-xl font-bold text-emerald-600 md:max-w-md md:text-2xl">
-                          {displayFileName}
-                        </DialogTitle>
-                      )}
+                      <DialogTitle className="font-plus-jakarta-sans mx-auto w-full max-w-sm truncate text-center text-xl font-bold text-emerald-600 md:max-w-md md:text-2xl">
+                        {activeImage.name}
+                      </DialogTitle>
                       <DialogDescription className="font-inter flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-slate-600">
                         <span>{new Date(activeImage.dateUploaded).toLocaleDateString()}</span>
                         {imageDimensions && (
@@ -690,47 +558,7 @@ export const ResultsImagesModal = ({
                               isMobile ? "flex-grow" : "mt-2 h-96 px-6"
                             )}
                           >
-                            {/* Desktop-only action buttons */}
-                            {!isMobile && (
-                              <div className="absolute top-2 right-8 z-10 flex w-auto items-center justify-around gap-2 rounded-lg bg-emerald-600/80 px-2 py-1 shadow-lg backdrop-blur-sm">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => setIsRenaming(true)}
-                                      disabled={isRenaming || isSavingRename}
-                                      aria-label="Rename image"
-                                      className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
-                                    >
-                                      <GoPencil className="!h-5 !w-5" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Rename</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={handleSaveRename}
-                                      disabled={!isNameDirty || isSavingRename}
-                                      aria-label="Save"
-                                      className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200 disabled:cursor-not-allowed disabled:text-white/50"
-                                    >
-                                      {isSavingRename ? (
-                                        <LuLoaderCircle className="h-5 w-5 animate-spin" />
-                                      ) : (
-                                        <AiOutlineSave className="!h-5 !w-5" />
-                                      )}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Save changes</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-                            )}
+                            {/* Desktop-only action buttons removed */}
 
                             {/* The interactive image component itself. */}
                             <TransformComponent
@@ -751,7 +579,7 @@ export const ResultsImagesModal = ({
                                 <Image
                                   key={`${activeImage.url}?v=${activeImage.version}`}
                                   src={`${activeImage.url}?v=${activeImage.version}`}
-                                  alt={`Preview of ${displayFileName}`}
+                                  alt={`Preview of ${activeImage.name}`}
                                   fill
                                   className="object-contain"
                                   sizes="(max-width: 768px) 100vw, 560px"
@@ -816,7 +644,7 @@ export const ResultsImagesModal = ({
                             {!isMobile && (
                               <ResultsImagesMinimap
                                 previewUrl={`${activeImage.url}?v=${activeImage.version}`}
-                                alt={`Minimap preview of ${displayFileName}`}
+                                alt={`Minimap preview of ${activeImage.name}`}
                                 transformState={transformState}
                                 viewingBox={viewingBox}
                               />

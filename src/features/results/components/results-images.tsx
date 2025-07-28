@@ -1,6 +1,5 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
@@ -16,7 +15,6 @@ import {
   LuTrash2,
 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +26,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { type detections, type uploads } from "@/db/schema";
-import { renameImage } from "@/features/results/actions/rename-image";
 import { DeleteImageModal } from "@/features/results/components/delete-image-modal";
 import { ExportImageModal } from "@/features/results/components/export-image-modal";
 import { ResultsImagesModal } from "@/features/results/components/results-images-modal";
@@ -149,34 +146,6 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<ImageFile | null>(null);
 
-  // TanStack Query mutation for renaming an image.
-  const renameMutation = useMutation({
-    mutationFn: renameImage,
-    onSuccess: (response, variables) => {
-      if (response.success && response.data) {
-        // Update the local state to reflect the change immediately.
-        setFiles((currentFiles) =>
-          currentFiles.map((file) =>
-            file.id === variables.imageId
-              ? {
-                  ...file,
-                  name: variables.newName,
-                  url: response.data!.newUrl,
-                  version: Date.now(),
-                }
-              : file
-          )
-        );
-        toast.success("Image renamed successfully.");
-      } else {
-        toast.error(response.error || "Failed to rename image. Please try again.");
-      }
-    },
-    onError: (error) => {
-      toast.error(error.message || "An unexpected error occurred.");
-    },
-  });
-
   /**
    * Memoize the current sort option's label to display in the trigger.
    * This avoids re-calculating the label on every render.
@@ -273,10 +242,6 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     if (currentIndex > 0) {
       setSelectedImageId(sortedFiles[currentIndex - 1].id);
     }
-  };
-
-  const handleRenameImage = async (imageId: string, newName: string) => {
-    await renameMutation.mutateAsync({ imageId, newName });
   };
 
   // Disable sorting if there is only one or zero images.
@@ -459,7 +424,6 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
         onNext={handleNextImage}
         onPrevious={handlePreviousImage}
         onSelectImage={handleSelectImage}
-        onRename={handleRenameImage}
       />
 
       {/* The export image modal is rendered here, controlled by its own state. */}
