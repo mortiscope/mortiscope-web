@@ -126,7 +126,7 @@ export const DeleteCaseModal = ({
    */
   const handleDelete = () => {
     if (caseId) {
-      mutate({ caseId });
+      mutate({ caseId, caseName: caseName || undefined });
     }
   };
 

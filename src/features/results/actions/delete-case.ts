@@ -11,6 +11,7 @@ import { cases } from "@/db/schema";
 // Schema for input validation using Zod.
 const deleteCaseSchema = z.object({
   caseId: z.string().cuid2("Invalid case ID format."),
+  caseName: z.string().optional(),
 });
 
 /**
@@ -19,6 +20,7 @@ const deleteCaseSchema = z.object({
  *
  * @param {object} values - The values for deleting the case.
  * @param {string} values.caseId - The ID of the case to delete.
+ * @param {string} [values.caseName] - The name of the case for the success message.
  * @returns An object with a success or error message.
  */
 export const deleteCase = async (values: z.infer<typeof deleteCaseSchema>) => {
@@ -28,7 +30,7 @@ export const deleteCase = async (values: z.infer<typeof deleteCaseSchema>) => {
     return { error: "Invalid input provided." };
   }
 
-  const { caseId } = validatedFields.data;
+  const { caseId, caseName } = validatedFields.data;
   const session = await auth();
   const userId = session?.user?.id;
 
@@ -50,7 +52,11 @@ export const deleteCase = async (values: z.infer<typeof deleteCaseSchema>) => {
     // Invalidate the cache for the results page to reflect the change.
     revalidatePath("/results");
 
-    return { success: "Case successfully deleted." };
+    const successMessage = caseName
+      ? `${caseName} successfully deleted.`
+      : "Case successfully deleted.";
+
+    return { success: successMessage };
   } catch (error) {
     console.error("Database error while deleting case:", error);
     return { error: "An unexpected error occurred. Please try again." };
