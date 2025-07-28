@@ -250,8 +250,8 @@ importers:
         specifier: ^12.1.1
         version: 12.1.1(eslint@9.27.0(jiti@2.4.2))
       inngest-cli:
-        specifier: ^1.11.5
-        version: 1.11.5
+        specifier: ^1.11.7
+        version: 1.11.7
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
@@ -3970,8 +3970,8 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  inngest-cli@1.11.5:
-    resolution: {integrity: sha512-1qBzH5fkqygKOmj4Ro6NItLwnF2vWn/jCDxyTTOsc2oWi2bEVoLar7jW/yLHlIW62St948BtybRG6gXA/w5paQ==}
+  inngest-cli@1.11.7:
+    resolution: {integrity: sha512-mdXuPMtvO+EQgMw0r/CNnjrmSfBMna1fZ4qnnoKsQ6bJF0kBnI4mxqcJN6amktg1Qre05VZLutijBPocQPS93g==}
     hasBin: true
 
   inngest@3.40.1:
@@ -9622,7 +9622,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  inngest-cli@1.11.5:
+  inngest-cli@1.11.7:
     dependencies:
       adm-zip: 0.5.16
       debug: 4.4.1

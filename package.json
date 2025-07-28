@@ -19,7 +19,7 @@
     "db:push": "tsx node_modules/drizzle-kit/bin.cjs push",
     "db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
     "db:studio": "tsx node_modules/drizzle-kit/bin.cjs studio",
-    "inngest:dev": "pnpm dlx inngest-cli@latest -- dev -u http://localhost:3000/api/inngest",
+    "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
     "email": "dotenv -- email dev --dir src/emails"
   },
   "dependencies": {
@@ -105,7 +105,7 @@
     "eslint-config-next": "15.4.0-canary.51",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "inngest-cli": "^1.11.5",
+    "inngest-cli": "^1.11.9",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "react-email": "^4.0.16",

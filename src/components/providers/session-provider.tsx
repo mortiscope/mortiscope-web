@@ -13,5 +13,9 @@ type Props = {
  * @returns The children nodes wrapped within the SessionProvider.
  */
 export const NextAuthSessionProvider = ({ children }: Props) => {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider refetchInterval={30} refetchOnWindowFocus={true} refetchWhenOffline={false}>
+      {children}
+    </SessionProvider>
+  );
 };

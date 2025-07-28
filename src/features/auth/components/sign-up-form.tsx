@@ -63,10 +63,14 @@ export default function SignUpForm() {
 
   // Function to handle OAuth sign-in
   const handleOAuthSignIn = (provider: "google" | "orcid" | "microsoft-entra-id") => {
-    startSocialTransition(() => {
-      socialSignIn(provider, {
-        callbackUrl: "/dashboard",
-      });
+    startSocialTransition(async () => {
+      try {
+        await socialSignIn(provider, {
+          callbackUrl: "/dashboard",
+        });
+      } catch (error) {
+        console.error("OAuth sign-in error:", error);
+      }
     });
   };
 

@@ -410,12 +410,12 @@ export const AnalyzeDetails = () => {
                   name="temperature.value"
                   render={({ field: { value, ...rest } }) => (
                     <FormItem>
-                      <FormLabel className={sectionTitle}>Temperature</FormLabel>
+                      <FormLabel className={sectionTitle}>Ambient Temperature</FormLabel>
                       <div className="flex items-start gap-2">
                         <div className="flex-grow">
                           <FormControl>
                             <Input
-                              placeholder="Enter temperature"
+                              placeholder="Enter ambient temperature"
                               type="text"
                               inputMode="decimal"
                               {...rest}
