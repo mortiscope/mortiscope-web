@@ -87,7 +87,7 @@ export const DeleteImageModal = ({
 
   // Implement the useMutation hook for deleting an image with synchronous feedback.
   const { mutate, isPending } = useMutation({
-    mutationFn: deleteImage,
+    mutationFn: (params: { imageId: string; imageName?: string }) => deleteImage(params),
     onMutate: () => {
       // Mark that we've initiated deletion
       hasInitiatedDeletion.current = true;
@@ -137,7 +137,7 @@ export const DeleteImageModal = ({
     }
 
     if (imageId && !isPending && !hasInitiatedDeletion.current) {
-      mutate({ imageId });
+      mutate({ imageId, imageName: imageName || undefined });
     }
   };
 

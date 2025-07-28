@@ -19,12 +19,15 @@ import { config } from "@/lib/config";
  *
  * @param {object} params - The parameters for the deletion.
  * @param {string} params.imageId - The ID of the image upload to delete.
+ * @param {string} [params.imageName] - Optional name of the image for success message.
  * @returns {Promise<{success?: string; error?: string}>} An object indicating the result.
  */
 export const deleteImage = async ({
   imageId,
+  imageName,
 }: {
   imageId: string;
+  imageName?: string;
 }): Promise<{ success?: string; error?: string }> => {
   const session = await auth();
 
@@ -39,6 +42,7 @@ export const deleteImage = async ({
       columns: {
         key: true,
         caseId: true,
+        name: true,
       },
     });
 
@@ -82,7 +86,9 @@ export const deleteImage = async ({
       revalidatePath(`/results/${imageRecord.caseId}`);
     }
 
-    return { success: "File deleted successfully." };
+    // Use provided name or fallback to database name or generic message
+    const displayName = imageName || imageRecord.name || "File";
+    return { success: `${displayName} successfully deleted.` };
   } catch (error) {
     console.error("Failed to delete image:", error);
     // Provide a generic error to the user for security.
