@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { deleteImage } from "@/features/results/actions/delete-image";
+import { useResultsStore } from "@/features/results/store/results-store";
 import { cn } from "@/lib/utils";
 
 /**
@@ -70,6 +71,8 @@ export const DeleteImageModal = ({
   const params = useParams();
   const caseId = typeof params.resultsId === "string" ? params.resultsId : null;
 
+  const { markForRecalculation } = useResultsStore();
+
   // Track if we've successfully initiated a deletion to prevent modal flickering
   const hasInitiatedDeletion = useRef(false);
   const isDeleting = useRef(false);
@@ -97,6 +100,11 @@ export const DeleteImageModal = ({
       if (data.success) {
         // Use the refined, more generic success message.
         toast.success(data.success);
+
+        // Mark case for recalculation since image deletion affects PMI
+        if (caseId) {
+          markForRecalculation(caseId);
+        }
 
         // Use setTimeout to ensure the invalidation happens after the modal is fully closed
         setTimeout(() => {
