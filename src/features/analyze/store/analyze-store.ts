@@ -3,7 +3,7 @@ import superjson from "superjson";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import { type DetailsFormData } from "@/features/analyze/schemas/details";
+import { type CaseDetailsFormData } from "@/features/cases/schemas/case-details";
 import { type SortOptionValue } from "@/lib/constants";
 
 /**
@@ -91,7 +91,7 @@ type AnalyzeStateData = {
 type PersistedAnalyzeState = {
   status: AnalyzeWizardStatus;
   caseId: string | null;
-  details: Partial<DetailsFormData>;
+  details: Partial<CaseDetailsFormData>;
 };
 
 /**
@@ -113,7 +113,7 @@ type AnalyzeState = {
   // The data collected throughout the analysis process.
   data: AnalyzeStateData;
   // The data for the analysis details form.
-  details: Partial<DetailsFormData>;
+  details: Partial<CaseDetailsFormData>;
   // State to track if a submission was just successfully fired.
   submissionStatus: "idle" | "success";
   // Action to set the current status to a specific value.
@@ -155,7 +155,7 @@ type AnalyzeState = {
   // Action to populate the store with files from the database.
   hydrateFiles: (files: PersistedFile[]) => void;
   // Action to update the details form data with a validated payload.
-  updateDetailsData: (data: Partial<DetailsFormData>) => void;
+  updateDetailsData: (data: Partial<CaseDetailsFormData>) => void;
   // Action to reset the entire store back to its initial state.
   reset: () => void;
   // Action to flag a submission as successful.
@@ -176,7 +176,7 @@ const initialState: {
   sortOption: SortOptionValue;
   searchTerm: string;
   data: AnalyzeStateData;
-  details: Partial<DetailsFormData>;
+  details: Partial<CaseDetailsFormData>;
   submissionStatus: "idle" | "success";
 } = {
   status: "details",

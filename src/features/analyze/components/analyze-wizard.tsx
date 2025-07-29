@@ -10,8 +10,8 @@ import { getDraftCase } from "@/features/analyze/actions/get-draft-case";
 import { AnalyzeDetails } from "@/features/analyze/components/analyze-details";
 import { AnalyzeReview } from "@/features/analyze/components/analyze-review";
 import { AnalyzeUpload } from "@/features/analyze/components/analyze-upload";
-import { type DetailsFormData } from "@/features/analyze/schemas/details";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { type CaseDetailsFormData } from "@/features/cases/schemas/case-details";
 
 /**
  * A client component that orchestrates the multi-step analysis process.
@@ -60,7 +60,7 @@ export const AnalyzeWizard = () => {
     if (draftCaseData) {
       // A draft was found. Sync the store with its data.
       setCaseId(draftCaseData.id);
-      const details: DetailsFormData = {
+      const details: CaseDetailsFormData = {
         caseName: draftCaseData.caseName,
         caseDate: draftCaseData.caseDate,
         temperature: {

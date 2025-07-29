@@ -11,7 +11,7 @@ const locationValueSchema = z.object({
 /**
  * The main schema for validating all fields in the case details form.
  */
-export const detailsSchema = z.object({
+export const caseDetailsSchema = z.object({
   // Validates the case name for required length.
   caseName: z
     .string()
@@ -90,5 +90,5 @@ export const detailsSchema = z.object({
   }),
 });
 
-export type DetailsFormInput = z.input<typeof detailsSchema>;
-export type DetailsFormData = z.infer<typeof detailsSchema>;
+export type CaseDetailsFormInput = z.input<typeof caseDetailsSchema>;
+export type CaseDetailsFormData = z.infer<typeof caseDetailsSchema>;

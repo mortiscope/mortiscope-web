@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from "clsx";
 import { UseFormReturn } from "react-hook-form";
 import { twMerge } from "tailwind-merge";
 
-import { DetailsFormInput } from "@/features/analyze/schemas/details";
+import { CaseDetailsFormInput } from "@/features/cases/schemas/case-details";
 import { DETECTION_CLASS_COLORS, DETERMINISTIC_AVATARS } from "@/lib/constants";
 
 export function cn(...inputs: ClassValue[]) {
@@ -75,7 +75,7 @@ type LocationLevel = "province" | "city" | "barangay";
  * @param setCodeFns - An object with optional state setters for 'province', 'city', and 'barangay' codes.
  */
 export function resetLocationFields(
-  form: UseFormReturn<DetailsFormInput>,
+  form: UseFormReturn<CaseDetailsFormInput>,
   levelsToReset: LocationLevel[],
   setCodeFns: Partial<Record<LocationLevel, (val: string | null) => void>>
 ): void {

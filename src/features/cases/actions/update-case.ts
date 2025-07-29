@@ -6,7 +6,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
-import { type DetailsFormData, detailsSchema } from "@/features/analyze/schemas/details";
+import { type CaseDetailsFormData, caseDetailsSchema } from "@/features/cases/schemas/case-details";
 
 /**
  * Defines the structured return type for the server action for clarity and type safety.
@@ -33,7 +33,7 @@ function fahrenheitToCelsius(fahrenheit: number): number {
  */
 export async function updateCase(values: {
   caseId: string;
-  details: DetailsFormData;
+  details: CaseDetailsFormData;
 }): Promise<ActionResponse> {
   // Authenticate the user session.
   const session = await auth();
@@ -43,7 +43,7 @@ export async function updateCase(values: {
   const userId = session.user.id;
 
   // Perform server-side validation to ensure data integrity.
-  const parseResult = detailsSchema.safeParse(values.details);
+  const parseResult = caseDetailsSchema.safeParse(values.details);
   if (!parseResult.success) {
     return { success: false, error: "Invalid input.", details: parseResult.error.issues };
   }

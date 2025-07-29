@@ -17,8 +17,8 @@ import {
 import { cancelAnalysis } from "@/features/analyze/actions/cancel-analysis";
 import { submitAnalysis } from "@/features/analyze/actions/submit-analysis";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
-import { detailsSchema } from "@/features/analyze/schemas/details";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { caseDetailsSchema } from "@/features/cases/schemas/case-details";
 import { type AnalysisStatus } from "@/features/results/actions/get-analysis-status";
 import { useAnalysisStatus } from "@/features/results/hooks/use-analysis-status";
 import { cn } from "@/lib/utils";
@@ -210,7 +210,7 @@ export const AnalyzeReview = () => {
       if (isProcessing || isSubmitting) return;
 
       // Perform final client-side checks as a safeguard.
-      const validation = detailsSchema.safeParse(details);
+      const validation = caseDetailsSchema.safeParse(details);
       if (!validation.success) {
         toast.error("Form data is invalid. Please go back and check the details.");
         return;
