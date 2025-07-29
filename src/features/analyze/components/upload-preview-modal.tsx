@@ -39,12 +39,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { createUpload } from "@/features/analyze/actions/create-upload";
-import { deleteUpload } from "@/features/analyze/actions/delete-upload";
 import { renameUpload } from "@/features/analyze/actions/rename-upload";
 import { updateUpload } from "@/features/analyze/actions/update-upload";
 import { UploadPreviewMinimap } from "@/features/analyze/components/upload-preview-minimap";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { createUpload } from "@/features/cases/actions/create-upload";
+import { deleteUpload } from "@/features/cases/actions/delete-upload";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn, formatBytes } from "@/lib/utils";
 

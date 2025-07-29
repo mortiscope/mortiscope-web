@@ -31,13 +31,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { deleteUpload } from "@/features/analyze/actions/delete-upload";
 import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import {
   type UploadableFile,
   useAnalyzeStore,
   type ViewMode,
 } from "@/features/analyze/store/analyze-store";
+import { deleteUpload } from "@/features/cases/actions/delete-upload";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 import { cn, formatBytes } from "@/lib/utils";
 

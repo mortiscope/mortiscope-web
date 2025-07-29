@@ -7,3 +7,13 @@ export const selectTriggerStyles = "data-[placeholder]:!text-slate-400";
 export const selectItemStyles =
   "font-inter cursor-pointer border-2 border-transparent text-xs transition-colors duration-300 ease-in-out focus:border-emerald-200 focus:bg-emerald-100 focus:text-emerald-400 md:text-sm whitespace-nownowrap";
 export const sectionTitle = "text-medium font-inter font-normal text-slate-800";
+
+// Styles for the file uploader component
+export const dropzoneBaseClasses =
+  "mt-4 group flex h-96 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 text-center transition-all duration-300 ease-in-out";
+export const iconClasses =
+  "h-12 w-12 text-emerald-500 transition-transform duration-300 ease-in-out group-hover:-translate-y-2 group-hover:scale-110";
+export const largeTextClasses =
+  "font-plus-jakarta-sans mt-4 font-semibold md:text-xl text-lg transition-colors duration-300 ease-in-out group-hover:group-enabled:text-slate-900";
+export const descriptionTextClasses =
+  "font-inter mt-1 max-w-sm text-sm text-slate-500 transition-colors duration-300 ease-in-out group-hover:group-enabled:text-slate-600";
