@@ -4,10 +4,9 @@ import * as React from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { type UploadableFile } from "@/features/analyze/store/analyze-store";
+import { CaptureImageThumbnail } from "@/features/cases/components/capture-image-thumbnail";
 import { type ServerActionResponse } from "@/features/cases/constants/types";
 import { cn } from "@/lib/utils";
-
-import { CaptureImageThumbnail } from "./capture-image-thumbnail";
 
 /**
  * Defines the props required by the CaptureThumbnailList component.

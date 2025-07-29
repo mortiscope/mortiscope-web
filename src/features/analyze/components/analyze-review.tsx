@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/card";
 import { cancelAnalysis } from "@/features/analyze/actions/cancel-analysis";
 import { submitAnalysis } from "@/features/analyze/actions/submit-analysis";
-import { UploadPreviewModal } from "@/features/analyze/components/upload-preview-modal";
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { UploadPreviewModal } from "@/features/cases/components/upload-preview-modal";
 import { caseDetailsSchema } from "@/features/cases/schemas/case-details";
 import { type AnalysisStatus } from "@/features/results/actions/get-analysis-status";
 import { useAnalysisStatus } from "@/features/results/hooks/use-analysis-status";
