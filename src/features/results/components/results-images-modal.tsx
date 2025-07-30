@@ -1,67 +1,25 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  LuChevronLeft,
-  LuChevronRight,
-  LuFocus,
-  LuLoaderCircle,
-  LuX,
-  LuZoomIn,
-  LuZoomOut,
-} from "react-icons/lu";
+import { useState } from "react";
 import {
   type ReactZoomPanPinchRef,
   type ReactZoomPanPinchState,
-  TransformComponent,
   TransformWrapper,
 } from "react-zoom-pan-pinch";
 
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { ResultsImageViewer } from "@/features/results/components/results-image-viewer";
+import { ResultsModalHeader } from "@/features/results/components/results-modal-header";
+import { ResultsThumbnailList } from "@/features/results/components/results-thumbnail-list";
+import { ResultsViewControls } from "@/features/results/components/results-view-controls";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { type detections } from "@/db/schema";
-import { ResultsImagesMinimap } from "@/features/results/components/results-images-minimap";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { cn, formatBytes, formatConfidence, formatLabel, getColorForClass } from "@/lib/utils";
-
-// Define the shape of detection data.
-type Detection = typeof detections.$inferSelect;
-
-/**
- * Dimensions of the content and wrapper for calculating the minimap viewport.
- */
-interface ViewingBox {
-  content?: { width: number; height: number };
-  wrapper?: { width: number; height: number };
-}
-
-/**
- * The shape of the image data object used within this component and its parent.
- */
-interface ImageFile {
-  id: string;
-  name: string;
-  url: string;
-  size: number;
-  dateUploaded: Date;
-  /**
-   * A version number, typically the `updatedAt` timestamp from the database.
-   * This is used for cache-busting to ensure the latest image is always displayed.
-   */
-  version: number;
-  detections?: Detection[];
-}
+  type ImageFile,
+  useResultsImageViewer,
+  type ViewingBox,
+} from "@/features/results/hooks/use-results-image-viewer";
+import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main dialog container.
@@ -69,19 +27,8 @@ interface ImageFile {
  */
 const dialogContentVariants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      delayChildren: 0.1,
-      staggerChildren: 0.15,
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-    },
-  },
+  show: { opacity: 1, transition: { delayChildren: 0.1, staggerChildren: 0.15 } },
+  exit: { opacity: 0, transition: { duration: 0.2 } },
 };
 
 /**
@@ -90,95 +37,8 @@ const dialogContentVariants = {
  */
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
-  show: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: "spring",
-      damping: 20,
-      stiffness: 150,
-    },
-  },
-  exit: {
-    y: 20,
-    opacity: 0,
-    transition: {
-      duration: 0.15,
-    },
-  },
-};
-
-/**
- * A thumbnail component for the preview modal, displaying an image from the list.
- * It highlights the currently active image and allows switching to it on click.
- */
-const PreviewThumbnail = ({
-  imageFile,
-  onClick,
-  isActive,
-  isMobile,
-}: {
-  // The image file to be displayed.
-  imageFile: ImageFile;
-  // Callback function to trigger when the thumbnail is clicked.
-  onClick: () => void;
-  // A boolean to indicate if this thumbnail represents the currently active image.
-  isActive: boolean;
-  // A boolean to determine if the component should render in its mobile variant.
-  isMobile: boolean;
-}) => {
-  // Apply cache-busting to thumbnail URL
-  const previewUrl = `${imageFile.url}?v=${imageFile.version}`;
-
-  if (!previewUrl) {
-    return (
-      <div
-        className={cn(
-          "h-16 w-16 flex-shrink-0 animate-pulse rounded-lg",
-          isMobile ? "bg-slate-800" : "bg-slate-200"
-        )}
-      />
-    );
-  }
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.8 }}
-      transition={{ type: "tween", duration: 0.4, ease: "easeInOut" }}
-      className="relative h-16 w-16 flex-shrink-0"
-    >
-      <button
-        onClick={onClick}
-        className={cn(
-          "relative h-full w-full cursor-pointer rounded-md transition-all duration-300 focus:outline-none disabled:cursor-default",
-          // Desktop-specific styles for the thumbnail outline.
-          !isMobile && [
-            "ring-offset-2 focus-visible:ring-2 focus-visible:ring-emerald-500",
-            isActive && "ring-offset-background ring-2 ring-emerald-500 ring-offset-2",
-          ],
-          // Mobile-specific styles for the thumbnail outline.
-          isMobile && [
-            "ring-2",
-            isActive ? "ring-amber-400" : "ring-emerald-500",
-            "focus-visible:ring-amber-400",
-          ]
-        )}
-        aria-label={`View ${imageFile.name}`}
-        disabled={isActive}
-      >
-        <Image
-          src={previewUrl}
-          alt={`Thumbnail of ${imageFile.name}`}
-          fill
-          className="rounded-lg object-cover"
-          sizes="64px"
-        />
-      </button>
-    </motion.div>
-  );
+  show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
+  exit: { y: 20, opacity: 0, transition: { duration: 0.15 } },
 };
 
 interface ResultsImagesModalProps {
@@ -212,39 +72,18 @@ interface ResultsImagesModalProps {
   onSelectImage?: (imageId: string) => void;
 }
 
-/**
- * Renders an interactive modal for previewing a result image.
- * It features responsive layouts and pan-and-zoom functionality.
- */
-export const ResultsImagesModal = ({
-  image,
-  images,
-  isOpen,
-  onClose,
-  onNext,
-  onPrevious,
-  onSelectImage,
-}: ResultsImagesModalProps) => {
-  // State to manage the currently displayed image within the modal.
-  const [activeImage, setActiveImage] = useState<ImageFile | null>(image);
-  // Add a loading state to prevent premature rendering
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  // State to store the natural dimensions of the image.
-  const [imageDimensions, setImageDimensions] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  // Hook to determine if the device is mobile for responsive rendering.
-  const isMobile = useIsMobile();
-
-  // Ref to the container that holds the image, to measure its size.
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-  // State to store the dimensions of the container.
-  const [containerDimensions, setContainerDimensions] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-  // State to hold the pan-and-zoom transformation data for the minimap.
+export const ResultsImagesModal = (props: ResultsImagesModalProps) => {
+  const { image, images, isOpen, onClose, onNext, onPrevious, onSelectImage } = props;
+  const {
+    activeImage,
+    isImageLoaded,
+    imageDimensions,
+    isMobile,
+    imageContainerRef,
+    renderedImageStyle,
+    hasNext,
+    hasPrevious,
+  } = useResultsImageViewer({ image, images, isOpen });
   const [transformState, setTransformState] = useState<ReactZoomPanPinchState>({
     scale: 1,
     positionX: 0,
@@ -253,188 +92,6 @@ export const ResultsImagesModal = ({
   });
   // State to hold the dynamic dimensions of the pan-zoom container for accurate minimap calculation.
   const [viewingBox, setViewingBox] = useState<ViewingBox>({});
-
-  /**
-   * Memoized index of the currently active image within the sorted list.
-   * This is crucial for determining navigation capabilities (next/previous).
-   */
-  const currentIndex = useMemo(() => {
-    if (!activeImage) return -1;
-    return images.findIndex((f) => f.id === activeImage.id);
-  }, [activeImage, images]);
-
-  /**
-   * Determines if a "next" image is available for navigation.
-   */
-  const hasNext = useMemo(() => {
-    if (currentIndex === -1) return false;
-    return currentIndex < images.length - 1;
-  }, [currentIndex, images.length]);
-
-  /**
-   * Determines if a "previous" image is available for navigation.
-   */
-  const hasPrevious = useMemo(() => {
-    return currentIndex > 0;
-  }, [currentIndex]);
-
-  /**
-   * Effect to synchronize the internal `activeImage` state with the `image` prop.
-   */
-  useEffect(() => {
-    setActiveImage(image);
-  }, [image]);
-
-  /**
-   * Effect to reset the component's local state when a new image is shown.
-   */
-  useEffect(() => {
-    if (activeImage) {
-      // Reset loading state when image changes
-      setIsImageLoaded(false);
-
-      // Reset dimensions when image changes
-      setImageDimensions(null);
-      setContainerDimensions(null);
-      // Reset transform state for the new file.
-      setTransformState({ scale: 1, positionX: 0, positionY: 0, previousScale: 1 });
-      setViewingBox({});
-    }
-  }, [activeImage, isOpen]);
-
-  /**
-   * Effect to load the image and extract its natural dimensions for display.
-   */
-  useEffect(() => {
-    if (!activeImage?.url) {
-      setImageDimensions(null);
-      setIsImageLoaded(false);
-      return;
-    }
-
-    setIsImageLoaded(false);
-
-    const img = new window.Image();
-    img.onload = () => {
-      setImageDimensions({
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-      });
-      // Mark image as loaded only after dimensions are set
-      setIsImageLoaded(true);
-    };
-    img.onerror = () => {
-      setIsImageLoaded(false);
-    };
-
-    const cacheBustedUrl = `${activeImage.url}?v=${activeImage.version}`;
-    img.src = cacheBustedUrl;
-  }, [activeImage]);
-
-  /**
-   * Effect to measure the image container's dimensions. This is used to
-   * correctly scale and position the bounding box overlay.
-   */
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const measureContainer = () => {
-      if (imageContainerRef.current && isImageLoaded) {
-        // Clear any pending measurements
-        if (timeoutId) clearTimeout(timeoutId);
-
-        // Debounce the measurement to ensure stability
-        timeoutId = setTimeout(() => {
-          if (imageContainerRef.current) {
-            const rect = imageContainerRef.current.getBoundingClientRect();
-            // Only update if dimensions are meaningful
-            if (rect.width > 0 && rect.height > 0) {
-              setContainerDimensions({
-                width: rect.width,
-                height: rect.height,
-              });
-            }
-          }
-        }, 50);
-      }
-    };
-
-    // Initial measurement
-    measureContainer();
-
-    // Listen for resize events
-    window.addEventListener("resize", measureContainer);
-
-    return () => {
-      window.removeEventListener("resize", measureContainer);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isImageLoaded, imageDimensions]);
-
-  // Add a resize observer for more accurate container measurements
-  useEffect(() => {
-    if (!imageContainerRef.current || !isImageLoaded) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setContainerDimensions({ width, height });
-        }
-      }
-    });
-
-    resizeObserver.observe(imageContainerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [isImageLoaded]);
-
-  /**
-   * Memoized calculation for the final rendered size and position of the
-   * `object-contain` image. This is the core of the fix.
-   */
-  const renderedImageStyle = useMemo(() => {
-    // Only calculate if we have all required data and image is loaded
-    if (!imageDimensions || !containerDimensions || !isImageLoaded) {
-      return null;
-    }
-
-    const { width: naturalWidth, height: naturalHeight } = imageDimensions;
-    const { width: containerWidth, height: containerHeight } = containerDimensions;
-
-    // Validate dimensions
-    if (naturalWidth <= 0 || naturalHeight <= 0 || containerWidth <= 0 || containerHeight <= 0) {
-      return null;
-    }
-
-    const imageRatio = naturalWidth / naturalHeight;
-    const containerRatio = containerWidth / containerHeight;
-
-    let renderedWidth, renderedHeight, top, left;
-
-    if (imageRatio > containerRatio) {
-      // Image is wider than container, letterboxed (top/bottom bars)
-      renderedWidth = containerWidth;
-      renderedHeight = containerWidth / imageRatio;
-      top = (containerHeight - renderedHeight) / 2;
-      left = 0;
-    } else {
-      // Image is taller than or equal to container, pillarboxed (left/right bars)
-      renderedHeight = containerHeight;
-      renderedWidth = containerHeight * imageRatio;
-      left = (containerWidth - renderedWidth) / 2;
-      top = 0;
-    }
-
-    return {
-      width: renderedWidth,
-      height: renderedHeight,
-      top,
-      left,
-    };
-  }, [imageDimensions, containerDimensions, isImageLoaded]);
 
   /**
    * Callback fired on any pan, zoom, or other transform.
@@ -448,22 +105,13 @@ export const ResultsImagesModal = ({
     const { contentComponent, wrapperComponent } = ref.instance;
     if (contentComponent && wrapperComponent) {
       setViewingBox({
-        content: {
-          width: contentComponent.clientWidth,
-          height: contentComponent.clientHeight,
-        },
-        wrapper: {
-          width: wrapperComponent.clientWidth,
-          height: wrapperComponent.clientHeight,
-        },
+        content: { width: contentComponent.clientWidth, height: contentComponent.clientHeight },
+        wrapper: { width: wrapperComponent.clientWidth, height: wrapperComponent.clientHeight },
       });
     }
   };
 
-  // Guard clause to prevent rendering if the image is not available or the mobile hook hasn't run.
-  if (activeImage === null || isMobile === undefined) {
-    return null;
-  }
+  if (!activeImage || isMobile === undefined) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -476,9 +124,7 @@ export const ResultsImagesModal = ({
                 ? "h-dvh w-screen max-w-none rounded-none border-none bg-black"
                 : "rounded-3xl sm:max-w-2xl"
             )}
-            onInteractOutside={(e) => {
-              if (isMobile) e.preventDefault();
-            }}
+            onInteractOutside={isMobile ? (e) => e.preventDefault() : undefined}
           >
             {/* AnimatePresence with a unique key for the main content div to trigger animations on image change. */}
             <AnimatePresence mode="wait">
@@ -491,54 +137,13 @@ export const ResultsImagesModal = ({
                 exit="exit"
               >
                 <TooltipProvider delayDuration={300}>
-                  {/* A consolidated header for the mobile view. */}
-                  {isMobile && (
-                    <motion.div
-                      variants={itemVariants}
-                      className="absolute top-4 right-4 left-4 z-20 flex items-center justify-between gap-4 rounded-lg bg-emerald-600/80 p-3 shadow-lg backdrop-blur-sm"
-                    >
-                      <div className="min-w-0 flex-grow">
-                        <h2 className="font-plus-jakarta-sans truncate text-lg font-bold text-white">
-                          {activeImage.name}
-                        </h2>
-                      </div>
-                      <div className="flex flex-shrink-0 items-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={onClose}
-                          className="h-8 w-8 cursor-pointer p-0 text-white transition-colors duration-300 ease-in-out hover:bg-transparent hover:text-emerald-200"
-                          aria-label="Close"
-                        >
-                          <LuX className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* The main dialog header, visible on desktop and used for accessibility on mobile. */}
-                  <motion.div variants={itemVariants} className="px-6 pt-0 pb-0 md:pt-6">
-                    <DialogHeader className={cn(isMobile && "sr-only")}>
-                      <DialogTitle className="font-plus-jakarta-sans mx-auto w-full max-w-sm truncate text-center text-xl font-bold text-emerald-600 md:max-w-md md:text-2xl">
-                        {activeImage.name}
-                      </DialogTitle>
-                      <DialogDescription className="font-inter flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-slate-600">
-                        <span>{new Date(activeImage.dateUploaded).toLocaleDateString()}</span>
-                        {imageDimensions && (
-                          <>
-                            <span className="hidden text-slate-400 sm:inline">•</span>
-                            <span>
-                              {imageDimensions.width} x {imageDimensions.height}
-                            </span>
-                          </>
-                        )}
-                        <span className="hidden text-slate-400 sm:inline">•</span>
-                        <span>{formatBytes(activeImage.size)}</span>
-                      </DialogDescription>
-                    </DialogHeader>
-                  </motion.div>
-
-                  {/* The main image preview area, wrapped in a pan-and-zoom component. */}
+                  <ResultsModalHeader
+                    activeImage={activeImage}
+                    imageDimensions={imageDimensions}
+                    isMobile={isMobile}
+                    onClose={onClose}
+                    variants={itemVariants}
+                  />
                   {activeImage.url && (
                     <TransformWrapper
                       key={activeImage.id}
@@ -551,248 +156,38 @@ export const ResultsImagesModal = ({
                     >
                       {({ zoomIn, zoomOut, resetTransform, centerView }) => (
                         <>
-                          <motion.div
+                          <ResultsImageViewer
+                            activeImage={activeImage}
+                            isImageLoaded={isImageLoaded}
+                            imageContainerRef={imageContainerRef}
+                            imageDimensions={imageDimensions}
+                            renderedImageStyle={renderedImageStyle}
+                            isMobile={isMobile}
+                            transformState={transformState}
+                            viewingBox={viewingBox}
                             variants={itemVariants}
-                            className={cn(
-                              "relative w-full cursor-grab overflow-hidden",
-                              isMobile ? "flex-grow" : "mt-2 h-96 px-6"
-                            )}
-                          >
-                            {/* Desktop-only action buttons removed */}
-
-                            {/* The interactive image component itself. */}
-                            <TransformComponent
-                              wrapperClass={cn(
-                                "!w-full !h-full",
-                                !isMobile && "bg-slate-100 rounded-2xl"
-                              )}
-                              contentClass="!w-full !h-full flex items-center justify-center"
-                            >
-                              <div ref={imageContainerRef} className="relative h-full w-full">
-                                {/* Small loading indicator while dimensions are being calculated */}
-                                {!isImageLoaded && (
-                                  <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-slate-100">
-                                    <LuLoaderCircle className="h-8 w-8 animate-spin text-slate-400" />
-                                  </div>
-                                )}
-                                {/* Enhanced image component with on load handler */}
-                                <Image
-                                  key={`${activeImage.url}?v=${activeImage.version}`}
-                                  src={`${activeImage.url}?v=${activeImage.version}`}
-                                  alt={`Preview of ${activeImage.name}`}
-                                  fill
-                                  className="object-contain"
-                                  sizes="(max-width: 768px) 100vw, 560px"
-                                  priority
-                                  onLoad={() => {
-                                    if (!isImageLoaded) {
-                                      setIsImageLoaded(true);
-                                    }
-                                  }}
-                                />
-
-                                {/* Only render bounding boxes when everything is ready */}
-                                {renderedImageStyle && isImageLoaded && imageDimensions && (
-                                  <div
-                                    className="absolute"
-                                    style={{
-                                      width: `${renderedImageStyle.width}px`,
-                                      height: `${renderedImageStyle.height}px`,
-                                      top: `${renderedImageStyle.top}px`,
-                                      left: `${renderedImageStyle.left}px`,
-                                    }}
-                                  >
-                                    {/* Iterates over each detection found in the active image to render its bounding box. */}
-                                    {activeImage.detections?.map((det) => (
-                                      <Tooltip key={det.id}>
-                                        <TooltipTrigger asChild>
-                                          {/* Represents the visual bounding box for a single detection. */}
-                                          <div
-                                            className="absolute box-border cursor-pointer"
-                                            style={{
-                                              top: `${(det.yMin / imageDimensions.height) * 100}%`,
-                                              left: `${(det.xMin / imageDimensions.width) * 100}%`,
-                                              width: `${
-                                                ((det.xMax - det.xMin) / imageDimensions.width) *
-                                                100
-                                              }%`,
-                                              height: `${
-                                                ((det.yMax - det.yMin) / imageDimensions.height) *
-                                                100
-                                              }%`,
-                                              borderColor: getColorForClass(det.label),
-                                              borderWidth: "2px",
-                                            }}
-                                          />
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          {/* The content of the tooltip, displaying class and confidence score. */}
-                                          <p className="font-inter">
-                                            {`${formatLabel(det.label)}: ${formatConfidence(
-                                              det.confidence
-                                            )}`}
-                                          </p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </TransformComponent>
-
-                            {/* The minimap to show the current view context, visible only on desktop. */}
-                            {!isMobile && (
-                              <ResultsImagesMinimap
-                                previewUrl={`${activeImage.url}?v=${activeImage.version}`}
-                                alt={`Minimap preview of ${activeImage.name}`}
-                                transformState={transformState}
-                                viewingBox={viewingBox}
-                              />
-                            )}
-                          </motion.div>
-
-                          {/* Displays a scrollable row of all image thumbnails. */}
+                          />
                           {images.length > 1 && (
-                            <motion.div
+                            <ResultsThumbnailList
+                              images={images}
+                              activeImage={activeImage}
+                              isMobile={isMobile}
+                              onSelectImage={onSelectImage}
                               variants={itemVariants}
-                              className={cn(
-                                "shrink-0",
-                                isMobile
-                                  ? "absolute bottom-[88px] left-0 z-10 w-full px-4"
-                                  : "px-6 pt-2"
-                              )}
-                            >
-                              <ScrollArea className="w-full whitespace-nowrap">
-                                <div className="flex w-max space-x-4 p-3">
-                                  <AnimatePresence>
-                                    {images.map((img) => (
-                                      <PreviewThumbnail
-                                        key={img.id}
-                                        imageFile={img}
-                                        isActive={img.id === activeImage.id}
-                                        isMobile={isMobile}
-                                        onClick={() => onSelectImage?.(img.id)}
-                                      />
-                                    ))}
-                                  </AnimatePresence>
-                                </div>
-                                <ScrollBar orientation="horizontal" />
-                              </ScrollArea>
-                            </motion.div>
+                            />
                           )}
-
-                          {/* A shared set of controls for pan-and-zoom functionality. */}
-                          <motion.div
+                          <ResultsViewControls
+                            isMobile={isMobile}
+                            hasPrevious={hasPrevious}
+                            hasNext={hasNext}
+                            onPrevious={onPrevious}
+                            onNext={onNext}
+                            zoomIn={zoomIn}
+                            zoomOut={zoomOut}
+                            resetTransform={resetTransform}
+                            centerView={centerView}
                             variants={itemVariants}
-                            className={cn(
-                              isMobile
-                                ? "absolute bottom-0 left-0 z-10 w-full"
-                                : "shrink-0 px-6 pt-0 pb-6 md:pt-4"
-                            )}
-                          >
-                            <DialogFooter
-                              className={cn(
-                                "flex-row items-center !justify-between",
-                                isMobile && "bg-black/75 px-2 py-4"
-                              )}
-                            >
-                              {/* Button to navigate to the previous image. */}
-                              {hasPrevious ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={onPrevious}
-                                      aria-label="Previous image"
-                                      className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
-                                    >
-                                      <LuChevronLeft className="!h-6 !w-6" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Previous</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <div className="h-10 w-10" />
-                              )}
-
-                              {/* Group for main view controls */}
-                              <div className="flex flex-row items-center justify-center">
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => zoomOut()}
-                                      aria-label="Zoom out"
-                                      className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
-                                    >
-                                      <LuZoomOut className="!h-6 !w-6" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Zoom out</p>
-                                  </TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => {
-                                        resetTransform();
-                                        centerView();
-                                      }}
-                                      aria-label="Reset view"
-                                      className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
-                                    >
-                                      <LuFocus className="!h-6 !w-6" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Reset view</p>
-                                  </TooltipContent>
-                                </Tooltip>
-
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() => zoomIn()}
-                                      aria-label="Zoom in"
-                                      className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
-                                    >
-                                      <LuZoomIn className="!h-6 !w-6" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Zoom in</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </div>
-
-                              {/* Button to navigate to the next image. */}
-                              {hasNext ? (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      onClick={onNext}
-                                      aria-label="Next image"
-                                      className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
-                                    >
-                                      <LuChevronRight className="!h-6 !w-6" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p className="font-inter">Next</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              ) : (
-                                <div className="h-10 w-10" />
-                              )}
-                            </DialogFooter>
-                          </motion.div>
+                          />
                         </>
                       )}
                     </TransformWrapper>
