@@ -225,7 +225,10 @@ export const ResultsPreview = () => {
             />
           ) : (
             // Renders a "no results" message if filtering/searching yields no cases.
-            <ResultsNoSearchResults />
+            <ResultsNoSearchResults
+              title="No Cases Found"
+              description="Your search term did not match any cases."
+            />
           )}
         </div>
       </div>
