@@ -1,9 +1,9 @@
-"use client";
+"use-client";
 
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -19,9 +19,12 @@ interface ChartDataPoint {
   quantity: number;
 }
 
+// Defines the props for the ResultsLineChart component.
 interface ResultsLineChartProps {
   /** The processed data array to be rendered by the chart. */
   data: ChartDataPoint[];
+  /** The optional primary color for the chart's line, gradient, and shadow. */
+  strokeColor?: string;
 }
 
 /**
@@ -43,42 +46,102 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>)
 /**
  * A reusable line chart component for displaying data distribution.
  */
-export const ResultsLineChart = ({ data }: ResultsLineChartProps) => {
+export const ResultsLineChart = ({ data, strokeColor = "#10b981" }: ResultsLineChartProps) => {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart
+      <AreaChart
         data={data}
         margin={{
-          top: 5,
-          right: 20,
+          top: 10,
+          right: 30,
           bottom: 5,
-          left: 0,
+          left: 10,
         }}
       >
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        {/* SVG definitions for reusable gradients and filters. */}
+        <defs>
+          {/* A gradient for the filled area under the line. */}
+          <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={strokeColor} stopOpacity={0.4} />
+            <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
+          </linearGradient>
+          {/* A filter to apply a subtle drop shadow to the line for better visual separation. */}
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow
+              dx="0"
+              dy="2"
+              stdDeviation="3"
+              floodColor={strokeColor}
+              floodOpacity="0.3"
+            />
+          </filter>
+        </defs>
+
+        {/* Chart components for axes, grid, and tooltips. */}
+        <CartesianGrid
+          strokeDasharray="4 4"
+          vertical={false}
+          strokeOpacity={0.5}
+          className="stroke-slate-300"
+        />
         <XAxis
           dataKey="name"
           tickFormatter={(value) => formatLabel(value)}
           tickLine={false}
           axisLine={false}
           fontSize={12}
+          className="fill-slate-500"
         />
         <YAxis
-          label={{ value: "Quantity", angle: -90, position: "insideLeft", offset: 10 }}
+          label={{
+            value: "Quantity",
+            angle: -90,
+            position: "insideLeft",
+            offset: 0,
+            className: "fill-slate-600",
+          }}
           axisLine={false}
           tickLine={false}
           fontSize={12}
+          className="fill-slate-500"
         />
-        <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.1)" }} content={<CustomTooltip />} />
-        <Line
+        <Tooltip
+          cursor={{ stroke: strokeColor, strokeWidth: 1.5, strokeDasharray: "4 4" }}
+          content={<CustomTooltip />}
+        />
+
+        {/* The filled gradient area. */}
+        <Area
           type="monotone"
           dataKey="quantity"
-          stroke="#10b981"
-          strokeWidth={2.5}
-          activeDot={{ r: 8 }}
-          dot={{ r: 4, fill: "#10b981" }}
+          stroke="transparent"
+          fillOpacity={1}
+          fill="url(#colorGradient)"
         />
-      </LineChart>
+
+        {/* The visible trend line with its shadow and interactive dots. */}
+        <Area
+          type="monotone"
+          dataKey="quantity"
+          stroke={strokeColor}
+          strokeWidth={3}
+          fill="none"
+          filter="url(#shadow)"
+          activeDot={{
+            r: 6,
+            style: {
+              stroke: strokeColor,
+              strokeWidth: 2,
+              fill: "white",
+            },
+          }}
+          dot={{
+            r: 4,
+            fill: strokeColor,
+            strokeWidth: 0,
+          }}
+        />
+      </AreaChart>
     </ResponsiveContainer>
   );
 };
