@@ -31,7 +31,7 @@ export const signUp = async (values: SignUpFormValues) => {
   const validatedFields = SignUpSchema.safeParse(values);
   if (!validatedFields.success) {
     return {
-      error: validatedFields.error.errors[0]?.message || "Invalid details.",
+      error: validatedFields.error.issues[0]?.message || "Invalid details.",
     };
   }
 

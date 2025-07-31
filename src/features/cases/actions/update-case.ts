@@ -55,6 +55,11 @@ export async function updateCase(values: {
       ? fahrenheitToCelsius(data.temperature.value)
       : data.temperature.value;
 
+  // Additional runtime safety checks (should never fail after validation)
+  if (!data.location.province || !data.location.city || !data.location.barangay) {
+    return { success: false, error: "Missing required location information." };
+  }
+
   try {
     // Execute the database update for the specified case.
     const result = await db

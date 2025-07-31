@@ -9,10 +9,9 @@ const locationValueSchema = z.object({
 });
 
 /**
- * The main schema for validating all fields in the case details form.
+ * Schema for the raw form input where some location fields can be null
  */
-export const caseDetailsSchema = z.object({
-  // Validates the case name for required length.
+const rawCaseDetailsSchema = z.object({
   caseName: z
     .string()
     .min(8, { message: "Case name must be at least 8 characters." })
@@ -26,8 +25,7 @@ export const caseDetailsSchema = z.object({
         (val) => (val === "" ? undefined : val),
         // Coerces the value to a number.
         z.coerce.number({
-          required_error: "Temperature is required.",
-          invalid_type_error: "Enter a valid number for temperature.",
+          message: "Temperature is required.",
         })
       ),
       unit: z.enum(["C", "F"]),
@@ -43,52 +41,77 @@ export const caseDetailsSchema = z.object({
         const ranges = {
           C: { min: -50, max: 60 },
           F: { min: -58, max: 140 },
-        };
+        } as const;
         const { min, max } = ranges[data.unit];
 
         return data.value >= min && data.value <= max;
       },
-      // Provides a dynamic error message that includes the correct range.
-      (data) => {
-        const ranges = {
-          C: { min: -50, max: 60 },
-          F: { min: -58, max: 140 },
-        };
-        const { min, max } = ranges[data.unit];
-        return {
-          message: `Temperature must be between ${min}° and ${max}°.`,
-          path: ["value"],
-        };
+      {
+        message: "Temperature must be within valid range.",
+        path: ["value"],
       }
     ),
 
   // Validates the hierarchical location data.
   location: z.object({
     region: locationValueSchema,
-    // Refines nullable fields to ensure a value is required for dependent dropdowns.
-    province: z
-      .nullable(locationValueSchema)
-      .refine((val): val is NonNullable<typeof val> => val !== null, {
-        message: "Province is required.",
-      }),
-    city: z
-      .nullable(locationValueSchema)
-      .refine((val): val is NonNullable<typeof val> => val !== null, {
-        message: "City/Municipality is required.",
-      }),
-    barangay: z
-      .nullable(locationValueSchema)
-      .refine((val): val is NonNullable<typeof val> => val !== null, {
-        message: "Barangay is required.",
-      }),
+    province: z.nullable(locationValueSchema),
+    city: z.nullable(locationValueSchema),
+    barangay: z.nullable(locationValueSchema),
   }),
 
-  // Ensures a valid date is provided for the case.
   caseDate: z.date({
-    required_error: "A case date is required.",
-    invalid_type_error: "That's not a valid date.",
+    message: "A valid case date is required.",
   }),
 });
 
-export type CaseDetailsFormInput = z.input<typeof caseDetailsSchema>;
-export type CaseDetailsFormData = z.infer<typeof caseDetailsSchema>;
+/**
+ * The main schema that transforms nullable location fields to required ones
+ */
+export const caseDetailsSchema = rawCaseDetailsSchema.transform((data, ctx) => {
+  // Check if province is null
+  if (!data.location.province) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Province is required.",
+      path: ["location", "province"],
+    });
+    return z.NEVER;
+  }
+
+  // Check if city is null
+  if (!data.location.city) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "City/Municipality is required.",
+      path: ["location", "city"],
+    });
+    return z.NEVER;
+  }
+
+  // Check if barangay is null
+  if (!data.location.barangay) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Barangay is required.",
+      path: ["location", "barangay"],
+    });
+    return z.NEVER;
+  }
+
+  // Return the data with proper typing
+  return {
+    caseName: data.caseName,
+    temperature: data.temperature,
+    location: {
+      region: data.location.region,
+      province: data.location.province,
+      city: data.location.city,
+      barangay: data.location.barangay,
+    },
+    caseDate: data.caseDate,
+  };
+});
+
+export type CaseDetailsFormInput = z.input<typeof rawCaseDetailsSchema>;
+export type CaseDetailsFormData = z.output<typeof caseDetailsSchema>;
