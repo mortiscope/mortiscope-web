@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import type { cases } from "@/db/schema";
-import { ResultsExportDropdown } from "@/features/results/components/results-export-dropdown";
+import { ExportDropdown } from "@/features/export/components/export-dropdown";
 import { ResultsRecalculateButton } from "@/features/results/components/results-recalculate-button";
 import { ResultsRecalculateModal } from "@/features/results/components/results-recalculate-modal";
 import { useRecalculationPoller } from "@/features/results/hooks/use-recalculation-poller";
@@ -82,7 +82,7 @@ export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
             isDisabled={!shouldEnableRecalculation || isPolling}
             onClick={() => setIsRecalculateModalOpen(true)}
           />
-          <ResultsExportDropdown caseId={caseId} />
+          <ExportDropdown caseId={caseId} />
         </div>
       );
     }

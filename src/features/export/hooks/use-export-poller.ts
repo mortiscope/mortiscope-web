@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
-import { getRecentExports } from "@/features/results/actions/get-recent-exports";
+import { getRecentExports } from "@/features/export/actions/get-recent-exports";
 
 /**
  * A custom hook that polls for the status of recent export jobs.

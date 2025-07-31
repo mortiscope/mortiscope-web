@@ -12,7 +12,6 @@ import { config } from "@/lib/config";
 
 /**
  * Fetches the status of a single export job by its ID.
- *
  * For a completed job, it generates a secure, short-lived S3 download URL.
  *
  * @param {string} exportId - The unique identifier of the export job to check.

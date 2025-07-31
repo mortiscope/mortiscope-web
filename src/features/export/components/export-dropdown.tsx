@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useState } from "react";
 import { FaRegFileAlt, FaRegFileImage, FaRegFilePdf } from "react-icons/fa";
 import { LuDownload } from "react-icons/lu";
 
@@ -12,21 +13,24 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ExportResultsModal } from "@/features/results/components/export-results-modal";
 import { cn } from "@/lib/utils";
 
+// Lazy-loaded version of the modal.
+const ExportResultsModal = dynamic(() =>
+  import("@/features/export/components/export-results-modal").then((mod) => mod.ExportResultsModal)
+);
+
 /**
- * Defines the props for the results export dropdown component.
+ * Defines the props for the export dropdown component.
  */
-interface ResultsExportDropdownProps {
+interface ExportDropdownProps {
   caseId: string;
 }
 
 /**
  * Renders a dropdown menu for exporting results in various formats.
- * @param {ResultsExportDropdownProps} props - The component props.
  */
-export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) => {
+export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
   const [isRawDataModalOpen, setIsRawDataModalOpen] = useState(false);
 
   return (
@@ -89,12 +93,16 @@ export const ResultsExportDropdown = ({ caseId }: ResultsExportDropdownProps) =>
         </TooltipContent>
       </Tooltip>
 
-      {/* The modal component, controlled by state. */}
-      <ExportResultsModal
-        caseId={caseId}
-        isOpen={isRawDataModalOpen}
-        onOpenChange={setIsRawDataModalOpen}
-      />
+      {/* Wrap the modal in a Suspense boundary. */}
+      <Suspense fallback={null}>
+        {isRawDataModalOpen && (
+          <ExportResultsModal
+            caseId={caseId}
+            isOpen={isRawDataModalOpen}
+            onOpenChange={setIsRawDataModalOpen}
+          />
+        )}
+      </Suspense>
     </>
   );
 };

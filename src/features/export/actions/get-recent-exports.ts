@@ -13,7 +13,6 @@ import { config } from "@/lib/config";
 
 /**
  * Fetches recent export jobs for the current user that are either pending, processing, or have just completed.
- *
  * For completed jobs, it generates a secure, short-lived S3 download URL.
  *
  * @returns {Promise<Array<{id: string; status: string; url?: string; failureReason?: string | null}>>} A list of recent exports.

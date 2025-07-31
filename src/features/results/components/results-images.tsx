@@ -22,7 +22,7 @@ const ResultsImagesModal = dynamic(
 );
 const ExportImageModal = dynamic(
   () =>
-    import("@/features/results/components/export-image-modal").then(
+    import("@/features/export/components/export-image-modal").then(
       (module) => module.ExportImageModal
     ),
   { loading: () => null }
