@@ -1,3 +1,5 @@
+"use client";
+
 import { type UploadableFile } from "@/features/analyze/store/analyze-store";
 import { usePreviewActions } from "@/features/cases/hooks/use-preview-actions";
 import { usePreviewEditing } from "@/features/cases/hooks/use-preview-editing";
@@ -61,14 +63,10 @@ export const usePreviewModal = ({
   const { rotation, isRotationDirty, setIsRotationDirty, handleRotate, resetRotation } =
     usePreviewRotation(activeFile, isOpen);
 
-  // Handles all editing-related states like renaming, saving, and deleting statuses.
+  // Handles all editing-related states like renaming status. It no longer manages isSaving/isDeleting.
   const {
     isNameDirty,
     setIsNameDirty,
-    isSaving,
-    setIsSaving,
-    isDeleting,
-    setIsDeleting,
     isRenaming,
     setIsRenaming,
     titleInputRef,
@@ -85,28 +83,37 @@ export const usePreviewModal = ({
   const { sortedFiles, hasNext, hasPrevious } = usePreviewNavigation(activeFile);
 
   // Contains the implementation of server-side actions like save, delete, and download.
-  const { handleSave, handleDelete, handleDownload, renameMutation } = usePreviewActions({
+  const { save, remove, download, isSaving, isDeleting, renameMutation } = usePreviewActions({
     activeFile,
     previewUrl,
     rotation,
-    fileNameBase,
-    fileExtension,
-    isNameDirty,
     isRotationDirty,
-    isSaving,
-    isDeleting,
-    setIsSaving,
-    setIsDeleting,
-    setIsNameDirty,
-    setIsRotationDirty,
-    setIsRenaming,
-    setDisplayFileName,
+    newName: isNameDirty ? `${fileNameBase.trim()}.${fileExtension}` : null,
+    onSuccess: () => {
+      // After a successful save, the orchestrator is responsible for resetting its own UI state.
+      setIsNameDirty(false);
+      setIsRotationDirty(false);
+      setIsRenaming(false);
+      // Update the display name if it was changed.
+      if (activeFile && isNameDirty) {
+        setDisplayFileName(`${fileNameBase.trim()}.${fileExtension}`);
+      }
+    },
     onClose,
   });
 
   // A wrapper function to connect the generic `handleNameChange` from the editing hook.
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     baseHandleNameChange(e, setFileNameBase);
+  };
+
+  /**
+   * A simplified save handler that only calls the decoupled save action if changes are pending.
+   */
+  const handleSave = () => {
+    if (isNameDirty || isRotationDirty) {
+      void save();
+    }
   };
 
   // Exposes a single, unified API by aggregating all state and handlers from the constituent hooks.
@@ -138,8 +145,8 @@ export const usePreviewModal = ({
     resetRotation,
     handleNameChange,
     handleSave,
-    handleDelete,
-    handleDownload,
+    handleDelete: remove,
+    handleDownload: download,
     onNext,
     onPrevious,
   };

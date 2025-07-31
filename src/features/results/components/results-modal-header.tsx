@@ -10,7 +10,7 @@ import { type ImageFile } from "@/features/results/hooks/use-results-image-viewe
 import { formatBytes } from "@/lib/utils";
 
 /**
- * Defines the props for the ResultsModalHeader component.
+ * Defines the props for the results modal header component.
  */
 interface ResultsModalHeaderProps {
   /** The currently active image file whose details are to be displayed. */

@@ -2,7 +2,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { lazy, Suspense, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,11 +18,13 @@ import { UploadNoResults } from "@/features/cases/components/upload-no-results";
 import { UploadToolbar } from "@/features/cases/components/upload-toolbar";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 
-// Lazily load the upload preview modal.
-const UploadPreviewModal = lazy(() =>
-  import("@/features/cases/components/upload-preview-modal").then((module) => ({
-    default: module.UploadPreviewModal,
-  }))
+// Dynamically load the upload preview modal.
+const UploadPreviewModal = dynamic(
+  () =>
+    import("@/features/cases/components/upload-preview-modal").then((module) => ({
+      default: module.UploadPreviewModal,
+    })),
+  { ssr: false }
 );
 
 /**
@@ -117,7 +120,7 @@ export const UploadPreview = () => {
   /**
    * Handles the deletion of a file. It removes locally for non-uploaded files or
    * triggers the server mutation for already uploaded files.
-   * 
+   *
    * @param fileId The local ID of the file to remove.
    * @param fileKey The server-side key of the file to delete (if uploaded).
    */
@@ -154,7 +157,7 @@ export const UploadPreview = () => {
   /**
    * Handles selecting a file directly from the modal's thumbnail strip.
    * This keeps the parent's `viewingFile` state in sync with the modal's internal state.
-   * 
+   *
    * @param fileId - The unique ID of the file selected in the modal.
    */
   const handleSelectFile = (fileId: string) => {
@@ -212,17 +215,15 @@ export const UploadPreview = () => {
         </motion.div>
       </TooltipProvider>
 
-      {/* The Suspense boundary handles the lazy loading of the modal component. */}
-      <Suspense fallback={null}>
-        <UploadPreviewModal
-          file={viewingFile}
-          isOpen={!!viewingFile}
-          onClose={() => setViewingFile(null)}
-          onNext={() => handleNavigate("next")}
-          onPrevious={() => handleNavigate("previous")}
-          onSelectFile={handleSelectFile}
-        />
-      </Suspense>
+      {/* Dynamic import handles the loading of the modal component. */}
+      <UploadPreviewModal
+        file={viewingFile}
+        isOpen={!!viewingFile}
+        onClose={() => setViewingFile(null)}
+        onNext={() => handleNavigate("next")}
+        onPrevious={() => handleNavigate("previous")}
+        onSelectFile={handleSelectFile}
+      />
     </>
   );
 };

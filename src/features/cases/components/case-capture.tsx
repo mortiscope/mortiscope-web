@@ -3,7 +3,7 @@
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { AnimatePresence, motion } from "framer-motion";
 import * as React from "react";
-import type Webcam from "react-webcam";
+import Webcam from "react-webcam";
 
 import {
   Dialog,

@@ -1,7 +1,8 @@
 "use client";
 
 import { fileTypeFromBlob } from "file-type";
-import { lazy, Suspense, useCallback, useState } from "react";
+import dynamic from "next/dynamic";
+import { useCallback, useState } from "react";
 import { type FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
@@ -15,21 +16,27 @@ import { useFileProcessor } from "@/features/cases/hooks/use-file-processor";
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE, MAX_FILES } from "@/lib/constants";
 import { formatBytes } from "@/lib/utils";
 
-// Lazy load heavy modal components
-const SupportedFormatsModal = lazy(() =>
-  import("@/features/cases/components/supported-formats-modal").then((module) => ({
-    default: module.SupportedFormatsModal,
-  }))
+// Dynamically load heavy modal components
+const SupportedFormatsModal = dynamic(
+  () =>
+    import("@/features/cases/components/supported-formats-modal").then((module) => ({
+      default: module.SupportedFormatsModal,
+    })),
+  { ssr: false }
 );
-const CaseCapture = lazy(() =>
-  import("@/features/cases/components/case-capture").then((module) => ({
-    default: module.CaseCapture,
-  }))
+const CaseCapture = dynamic(
+  () =>
+    import("@/features/cases/components/case-capture").then((module) => ({
+      default: module.CaseCapture,
+    })),
+  { ssr: false }
 );
-const UploadPreview = lazy(() =>
-  import("@/features/cases/components/upload-preview").then((module) => ({
-    default: module.UploadPreview,
-  }))
+const UploadPreview = dynamic(
+  () =>
+    import("@/features/cases/components/upload-preview").then((module) => ({
+      default: module.UploadPreview,
+    })),
+  { ssr: false }
 );
 
 /**
@@ -114,10 +121,8 @@ export const CaseUpload = () => {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <SupportedFormatsModal isOpen={isFormatsModalOpen} onOpenChange={setIsFormatsModalOpen} />
-        <CaseCapture isOpen={isCameraOpen} onOpenChange={setIsCameraOpen} />
-      </Suspense>
+      <SupportedFormatsModal isOpen={isFormatsModalOpen} onOpenChange={setIsFormatsModalOpen} />
+      <CaseCapture isOpen={isCameraOpen} onOpenChange={setIsCameraOpen} />
 
       <Card className="border-none py-2 shadow-none">
         <UploadFormHeader />
@@ -136,9 +141,7 @@ export const CaseUpload = () => {
             onOpenFormatsModal={() => setIsFormatsModalOpen(true)}
             onOpenCamera={() => setIsCameraOpen(true)}
           />
-          <Suspense fallback={null}>
-            <UploadPreview />
-          </Suspense>
+          <UploadPreview />
         </CardContent>
         <UploadFormActions onPrev={prevStep} onNext={nextStep} isNextDisabled={isNextDisabled} />
       </Card>

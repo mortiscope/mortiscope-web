@@ -41,12 +41,12 @@ export const CaptureThumbnailList = React.memo(
         exit={{ opacity: 0, y: 10 }}
         className={cn(
           "shrink-0",
-          isMobile ? "absolute bottom-[88px] left-0 z-10 w-full px-4" : "px-6 pb-0 md:pb-4"
+          isMobile ? "absolute bottom-[88px] left-0 z-10 w-full px-4" : "px-6 pb-0"
         )}
       >
         <ScrollArea className="w-full whitespace-nowrap">
           <div className="flex w-max space-x-4 p-3">
-            {/* AnimatePresence enables exit animations for items when they are removed from the list. */}
+            {/* Enables exit animations for items when they are removed from the list. */}
             <AnimatePresence>
               {cameraFiles.map((uploadableFile) => (
                 <CaptureImageThumbnail
