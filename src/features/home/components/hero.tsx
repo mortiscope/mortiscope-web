@@ -1,9 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { CustomCursor } from "@/components/custom-cursor";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,15 @@ import { Button } from "@/components/ui/button";
 const Hero = () => {
   // Reference for the hero section, used by the custom cursor component
   const heroSectionRef = useRef<HTMLElement>(null);
+  // State to track if component is mounted to prevent layout issues
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Defines the main fade-in animation for the entire hero section
-  const heroVariant = {
+  const heroVariant: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -22,7 +28,7 @@ const Hero = () => {
   };
 
   // A container variant for staggering the animation of child elements
-  const contentStaggerContainer = {
+  const contentStaggerContainer: Variants = {
     hidden: {},
     show: {
       transition: {
@@ -33,7 +39,7 @@ const Hero = () => {
   };
 
   // A reusable variant for animating elements sliding in from the left
-  const slideInFromLeft = {
+  const slideInFromLeft: Variants = {
     hidden: { x: -50, opacity: 0 },
     show: {
       x: 0,
@@ -43,7 +49,7 @@ const Hero = () => {
   };
 
   // Defines the animation for the hand image, making it scale and fade into view
-  const handVariant = {
+  const handVariant: Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 40 },
     show: {
       opacity: 1,
@@ -58,7 +64,7 @@ const Hero = () => {
   };
 
   // Defines the animation for the fly image, making it appear after the hand
-  const flyVariant = {
+  const flyVariant: Variants = {
     hidden: { opacity: 0, scale: 0.5 },
     show: {
       opacity: 1,
@@ -72,7 +78,7 @@ const Hero = () => {
   };
 
   // A container variant for staggering the animation of navigation bar elements
-  const navStaggerContainer = {
+  const navStaggerContainer: Variants = {
     hidden: {},
     show: {
       transition: {
@@ -83,7 +89,7 @@ const Hero = () => {
   };
 
   // A reusable variant for animating elements sliding in from the top
-  const slideInFromTop = {
+  const slideInFromTop: Variants = {
     hidden: { y: -30, opacity: 0 },
     show: {
       y: 0,
@@ -91,6 +97,31 @@ const Hero = () => {
       transition: { duration: 0.8, ease: "easeOut" },
     },
   };
+
+  // Prevent rendering until mounted to avoid layout issues
+  if (!isMounted) {
+    return (
+      <section className="flex min-h-auto w-full flex-col overflow-hidden bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat opacity-0">
+        <div className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6">
+          <div className="flex items-center">
+            <Image
+              src="/logos/logo.svg"
+              alt="Mortiscope Logo"
+              width={50}
+              height={50}
+              priority
+              style={{ width: "auto", height: "auto" }}
+            />
+            <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
+              <span className="text-green-800">MORTI</span>
+              <span className="text-slate-800">SCOPE</span>
+              <span className="text-amber-400">.</span>
+            </span>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <>
@@ -100,7 +131,7 @@ const Hero = () => {
         aria-label="Hero background image"
         variants={heroVariant}
         initial="hidden"
-        animate="show"
+        animate={isMounted ? "show" : "hidden"}
       >
         {/* Navigation bar wrapper */}
         <div className="w-full">
@@ -108,10 +139,16 @@ const Hero = () => {
             className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6"
             variants={navStaggerContainer}
             initial="hidden"
-            animate="show"
+            animate={isMounted ? "show" : "hidden"}
           >
             <motion.div className="flex items-center" variants={slideInFromTop}>
-              <Image src="/logos/logo.svg" alt="Mortiscope Logo" width={50} height={50} />
+              <Image
+                src="/logos/logo.svg"
+                alt="Mortiscope Logo"
+                width={50}
+                height={50}
+                priority
+              />
               {/* Site title */}
               <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
                 <span className="text-green-800">MORTI</span>
@@ -153,7 +190,7 @@ const Hero = () => {
               className="flex flex-col justify-center space-y-6 text-center md:space-y-8 md:text-left"
               variants={contentStaggerContainer}
               initial="hidden"
-              animate="show"
+              animate={isMounted ? "show" : "hidden"}
             >
               <motion.h1
                 className="font-plus-jakarta-sans cursor-text text-5xl font-black uppercase lg:text-7xl"
@@ -190,7 +227,7 @@ const Hero = () => {
                   className="relative z-10 -rotate-12 transform md:-rotate-15"
                   variants={handVariant}
                   initial="hidden"
-                  animate="show"
+                  animate={isMounted ? "show" : "hidden"}
                 >
                   <Image
                     src="/images/hand.png"
@@ -206,10 +243,10 @@ const Hero = () => {
                   className="absolute bottom-[80%] left-[55%] z-20 w-[45%] max-w-md -translate-x-1/2 sm:bottom-[55%] sm:w-[50%] md:bottom-[85%] md:w-[55%] lg:bottom-[85%] lg:w-[45%] xl:bottom-[90%] xl:w-[50%] 2xl:bottom-[90%] 2xl:w-[55%]"
                   variants={flyVariant}
                   initial="hidden"
-                  animate="show"
+                  animate={isMounted ? "show" : "hidden"}
                 >
                   <motion.div
-                    animate={{ y: [0, -10, 0] }}
+                    animate={isMounted ? { y: [0, -10, 0] } : { y: 0 }}
                     transition={{
                       duration: 3.5,
                       ease: "easeInOut",
