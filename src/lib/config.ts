@@ -59,6 +59,9 @@ const ORCIDProvider = {
 let mailDomain: string;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
+// Determine if the application is running in a development environment.
+const isDevelopment = process.env.NODE_ENV === "development";
+
 try {
   if (!appUrl) {
     throw new Error("NEXT_PUBLIC_APP_URL is not set in environment variables.");
@@ -78,7 +81,9 @@ const serverConfig = {
   },
   mail: {
     domain: mailDomain,
-    fromAddress: `MortiScope <noreply@${mailDomain}>`,
+    fromAddress: isDevelopment
+      ? "MortiScope <onboarding@resend.dev>"
+      : `MortiScope <noreply@${mailDomain}>`,
   },
   auth: {
     /**

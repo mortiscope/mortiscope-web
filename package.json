@@ -1,29 +1,129 @@
 {
   "name": "mortiscope-web",
   "version": "0.1.0",
+  "description": "A web application for a deep learning system that analyzes Chrysomya megacephala images to assist in forensic Post-Mortem Interval (PMI) estimation.",
+  "keywords": [
+    "typescript",
+    "computer vision",
+    "deep learning",
+    "nextjs",
+    "tailwindcss",
+    "authjs",
+    "drizzle-orm",
+    "typescript",
+    "forensic science",
+    "forensic entomology"
+  ],
   "contributors": [
     {
-      "name": "Precious Rowelyn Andal"
+      "name": "Precious Rowelyn Andal",
+      "url": "https://github.com/cinnamongirl29"
     },
     {
-      "name": "Neil Ivan Orencia"
+      "name": "Neil Ivan Orencia",
+      "url": "https://github.com/neilivanorencia"
     }
   ],
   "private": true,
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mortiscope/mortiscope-web.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:web": "concurrently \"pnpm:dev\" \"pnpm:inngest:dev\"",
+    "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
+    "email": "dotenv -- email dev --dir src/emails",
     "build": "next build",
     "build:analyze": "cross-env ANALYZE=true next build",
+    "build:validate": "pnpm run quality && pnpm run build",
+    "build:production": "cross-env NODE_ENV=production pnpm run build:validate",
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "lint:strict": "next lint --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "quality": "pnpm run lint:strict && pnpm run typecheck",
+    "quality:fix": "pnpm run lint:fix && pnpm run typecheck",
+    "pre-commit": "lint-staged",
+    "prepare": "husky",
     "db:push": "tsx node_modules/drizzle-kit/bin.cjs push",
     "db:generate": "tsx node_modules/drizzle-kit/bin.cjs generate",
     "db:studio": "tsx node_modules/drizzle-kit/bin.cjs studio",
-    "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
-    "email": "dotenv -- email dev --dir src/emails"
+    "audit": "pnpm audit --audit-level moderate",
+    "audit:fix": "pnpm audit fix",
+    "deps:check": "pnpm outdated",
+    "deps:update": "npx npm-check-updates -i",
+    "bundle:analyze": "cross-env ANALYZE=true next build",
+    "bundle:size": "npx size-limit",
+    "lighthouse": "lighthouse http://localhost:3000 --view --chrome-flags=\"--headless\"",
+    "clean": "rimraf .next out dist",
+    "clean:deps": "rimraf node_modules && pnpm install"
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "next lint --fix --file"
+    ]
+  },
+  "size-limit": [
+    {
+      "name": "Core App Logic (Shared Baseline)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js"
+      ],
+      "limit": "110 kB"
+    },
+    {
+      "name": "Analyze (/analyze)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(private\\)/analyze/page-*.js"
+      ],
+      "limit": "370 kB"
+    },
+    {
+      "name": "Results (/results)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(private\\)/results/**/page-*.js"
+      ],
+      "limit": "240 kB"
+    },
+    {
+      "name": "Authentication Pages",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(auth\\)/**/page-*.js"
+      ],
+      "limit": "170 kB"
+    },
+    {
+      "name": "Middleware",
+      "path": ".next/server/src/middleware.js",
+      "limit": "50 kB",
+      "webpack": false
+    },
+    {
+      "name": "Global CSS",
+      "path": ".next/static/css/**/*.css",
+      "limit": "25 kB",
+      "webpack": false
+    }
+  ],
   "dependencies": {
     "@auth/core": "^0.39.1",
     "@auth/drizzle-adapter": "^1.9.1",
@@ -94,6 +194,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/bundle-analyzer": "^15.5.2",
+    "@size-limit/file": "^11.2.0",
+    "@size-limit/preset-big-lib": "^11.2.0",
     "@tailwindcss/postcss": "^4.1.7",
     "@tanstack/eslint-plugin-query": "^5.81.2",
     "@types/bcrypt": "^5.0.2",
@@ -101,18 +203,28 @@
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "concurrently": "^9.2.0",
     "cross-env": "^10.0.0",
     "dotenv-cli": "^8.0.0",
     "drizzle-kit": "^0.31.4",
     "eslint": "^9.27.0",
     "eslint-config-next": "15.4.0-canary.51",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "husky": "^9.1.7",
     "inngest-cli": "^1.11.10",
+    "lighthouse": "^12.8.2",
+    "lint-staged": "^16.1.6",
+    "npm-check-updates": "^18.1.0",
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "react-email": "^4.0.16",
+    "rimraf": "^6.0.1",
+    "size-limit": "^11.2.0",
     "tailwindcss": "^4.1.7",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
