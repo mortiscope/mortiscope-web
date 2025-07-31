@@ -45,7 +45,7 @@ export const CaptureThumbnailList = React.memo(
         )}
       >
         <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex w-max space-x-4 p-3">
+          <div className="flex w-max space-x-3 px-1 py-3">
             {/* Enables exit animations for items when they are removed from the list. */}
             <AnimatePresence>
               {cameraFiles.map((uploadableFile) => (

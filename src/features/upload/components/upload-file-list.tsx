@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 
 import { type UploadableFile, type ViewMode } from "@/features/analyze/store/analyze-store";
-import { UploadFileItem } from "@/features/cases/components/upload-file-item";
+import { UploadFileItem } from "@/features/upload/components/upload-file-item";
 import { cn } from "@/lib/utils";
 
 /**

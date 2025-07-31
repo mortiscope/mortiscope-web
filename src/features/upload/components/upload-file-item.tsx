@@ -6,8 +6,8 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type UploadableFile, type ViewMode } from "@/features/analyze/store/analyze-store";
-import { UploadStatusIcon } from "@/features/cases/components/upload-status-icon";
-import { UploadThumbnail } from "@/features/cases/components/upload-thumbnail";
+import { UploadStatusIcon } from "@/features/upload/components/upload-status-icon";
+import { UploadThumbnail } from "@/features/upload/components/upload-thumbnail";
 import { cn, formatBytes } from "@/lib/utils";
 
 /**

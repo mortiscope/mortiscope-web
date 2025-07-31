@@ -2,8 +2,8 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { useClientFileProcessor } from "@/features/cases/hooks/use-client-file-processor";
 import { usePreviewMutations } from "@/features/cases/hooks/use-preview-mutations";
+import { useClientFileProcessor } from "@/features/upload/hooks/use-client-file-processor";
 
 /**
  * Defines the props required by the use preview actions hook.

@@ -58,7 +58,7 @@ export const ResultsThumbnailList = memo(
             onScroll={(e) => {
               lastScrollPosition.current = e.currentTarget.scrollLeft;
             }}
-            className="flex w-max space-x-4 p-3"
+            className="flex w-max space-x-3 px-1 py-3"
           >
             {/* Enables exit animations for individual thumbnails when they are removed. */}
             <AnimatePresence>

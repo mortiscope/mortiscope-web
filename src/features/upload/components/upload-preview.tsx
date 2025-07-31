@@ -12,16 +12,16 @@ import {
   useAnalyzeStore,
   type ViewMode,
 } from "@/features/analyze/store/analyze-store";
-import { deleteUpload } from "@/features/cases/actions/delete-upload";
-import { UploadFileList } from "@/features/cases/components/upload-file-list";
-import { UploadNoResults } from "@/features/cases/components/upload-no-results";
-import { UploadToolbar } from "@/features/cases/components/upload-toolbar";
+import { deleteUpload } from "@/features/upload/actions/delete-upload";
+import { UploadFileList } from "@/features/upload/components/upload-file-list";
+import { UploadNoResults } from "@/features/upload/components/upload-no-results";
+import { UploadToolbar } from "@/features/upload/components/upload-toolbar";
 import { SORT_OPTIONS, type SortOptionValue } from "@/lib/constants";
 
 // Dynamically load the upload preview modal.
 const UploadPreviewModal = dynamic(
   () =>
-    import("@/features/cases/components/upload-preview-modal").then((module) => ({
+    import("@/features/upload/components/upload-preview-modal").then((module) => ({
       default: module.UploadPreviewModal,
     })),
   { ssr: false }

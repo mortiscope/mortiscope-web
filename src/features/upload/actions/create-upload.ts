@@ -10,7 +10,7 @@ import { auth } from "@/auth";
 import {
   GeneratePresignedUrlInput,
   generatePresignedUrlSchema,
-} from "@/features/analyze/schemas/upload";
+} from "@/features/upload/schemas/upload";
 import { s3 } from "@/lib/aws";
 import {
   ACCEPTED_IMAGE_TYPES,

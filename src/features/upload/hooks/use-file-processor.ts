@@ -2,9 +2,9 @@ import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 
-import { type UploadableFile,useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { createUpload } from "@/features/cases/actions/create-upload";
-import { saveUpload } from "@/features/cases/actions/save-upload";
+import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { createUpload } from "@/features/upload/actions/create-upload";
+import { saveUpload } from "@/features/upload/actions/save-upload";
 
 type UseFileProcessorProps = {
   files: UploadableFile[];

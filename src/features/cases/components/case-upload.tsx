@@ -8,11 +8,11 @@ import { toast } from "sonner";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { UploadDropzone } from "@/features/cases/components/upload-dropzone";
-import { UploadFormActions } from "@/features/cases/components/upload-form-actions";
-import { UploadFormHeader } from "@/features/cases/components/upload-form-header";
-import { UploadMethodTabs } from "@/features/cases/components/upload-method-tabs";
-import { useFileProcessor } from "@/features/cases/hooks/use-file-processor";
+import { UploadDropzone } from "@/features/upload/components/upload-dropzone";
+import { UploadFormActions } from "@/features/upload/components/upload-form-actions";
+import { UploadFormHeader } from "@/features/upload/components/upload-form-header";
+import { UploadMethodTabs } from "@/features/upload/components/upload-method-tabs";
+import { useFileProcessor } from "@/features/upload/hooks/use-file-processor";
 import { ACCEPTED_IMAGE_TYPES, MAX_FILE_SIZE, MAX_FILES } from "@/lib/constants";
 import { formatBytes } from "@/lib/utils";
 
@@ -33,7 +33,7 @@ const CaseCapture = dynamic(
 );
 const UploadPreview = dynamic(
   () =>
-    import("@/features/cases/components/upload-preview").then((module) => ({
+    import("@/features/upload/components/upload-preview").then((module) => ({
       default: module.UploadPreview,
     })),
   { ssr: false }

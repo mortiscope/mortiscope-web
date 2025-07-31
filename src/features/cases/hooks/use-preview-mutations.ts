@@ -2,10 +2,10 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { createUpload } from "@/features/cases/actions/create-upload";
-import { deleteUpload } from "@/features/cases/actions/delete-upload";
-import { renameUpload } from "@/features/cases/actions/rename-upload";
-import { updateUpload } from "@/features/cases/actions/update-upload";
+import { createUpload } from "@/features/upload/actions/create-upload";
+import { deleteUpload } from "@/features/upload/actions/delete-upload";
+import { renameUpload } from "@/features/upload/actions/rename-upload";
+import { updateUpload } from "@/features/upload/actions/update-upload";
 
 /**
  * A custom hook that encapsulates all TanStack Query mutations for the preview modal.

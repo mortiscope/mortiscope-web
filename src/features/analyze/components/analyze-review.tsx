@@ -6,8 +6,8 @@ import { ReviewDetailsSummary } from "@/features/cases/components/review-details
 import { ReviewHeader } from "@/features/cases/components/review-header";
 import { ReviewImageSummary } from "@/features/cases/components/review-image-summary";
 import { ReviewProcessingOverlay } from "@/features/cases/components/review-processing-overlay";
-import { UploadPreviewModal } from "@/features/cases/components/upload-preview-modal";
 import { useAnalyzeReview } from "@/features/cases/hooks/use-analyze-review";
+import { UploadPreviewModal } from "@/features/upload/components/upload-preview-modal";
 
 /**
  * Framer Motion variants for the main content container.

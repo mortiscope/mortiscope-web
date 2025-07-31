@@ -6,9 +6,9 @@ import type Webcam from "react-webcam";
 import { toast } from "sonner";
 
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { deleteUpload } from "@/features/cases/actions/delete-upload";
 import { useCameraProcessor } from "@/features/cases/hooks/use-camera-processor";
 import { useCameraSettings } from "@/features/cases/hooks/use-camera-settings";
+import { deleteUpload } from "@/features/upload/actions/delete-upload";
 import { MAX_FILES } from "@/lib/constants";
 
 /**
