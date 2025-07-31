@@ -106,7 +106,7 @@ export const ImageToolbar = memo(
         <div className="flex items-center gap-2">
           {/* A wrapper div to apply the 'cursor-not-allowed' style to the entire dropdown when disabled. */}
           <div className={cn({ "cursor-not-allowed": isSortDisabled })}>
-            <DropdownMenu>
+            <DropdownMenu key="image-sort-dropdown">
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"

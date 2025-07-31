@@ -85,10 +85,10 @@ export const SummaryChartToolbar = memo(
       chartOptions.find((o) => o.value === selectedChart)?.icon ?? IoBarChartOutline;
 
     return (
-      <div className="flex items-center">
+      <div className="flex items-center" suppressHydrationWarning>
         {/* The chart type selection dropdown menu. */}
-        <Tooltip>
-          <DropdownMenu>
+        <Tooltip key="chart-type-tooltip">
+          <DropdownMenu key="chart-type-dropdown">
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -122,7 +122,7 @@ export const SummaryChartToolbar = memo(
           </DropdownMenu>
         </Tooltip>
         {/* The information button. */}
-        <Tooltip>
+        <Tooltip key="info-tooltip">
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
@@ -138,8 +138,8 @@ export const SummaryChartToolbar = memo(
           </TooltipContent>
         </Tooltip>
         {/* The data source selection dropdown menu. */}
-        <Tooltip>
-          <DropdownMenu>
+        <Tooltip key="data-source-tooltip">
+          <DropdownMenu key="data-source-dropdown">
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
                 <Button

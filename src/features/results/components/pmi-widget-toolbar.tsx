@@ -70,7 +70,7 @@ export const PmiWidgetToolbar = memo(
       timeUnitOptions.find((o) => o.value === selectedUnit)?.icon ?? FaRegHourglass;
 
     return (
-      <div className="flex items-center">
+      <div className="flex items-center" suppressHydrationWarning>
         {/* Manages the smooth entry and exit of the warning icon. */}
         <AnimatePresence>
           {isRecalculationNeeded && (
@@ -80,7 +80,7 @@ export const PmiWidgetToolbar = memo(
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-              <Tooltip>
+              <Tooltip key="warning-tooltip">
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
@@ -98,8 +98,8 @@ export const PmiWidgetToolbar = memo(
           )}
         </AnimatePresence>
         {/* The time unit selection dropdown menu. */}
-        <Tooltip>
-          <DropdownMenu>
+        <Tooltip key="time-unit-tooltip">
+          <DropdownMenu key="time-unit-dropdown">
             <TooltipTrigger asChild>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -140,7 +140,7 @@ export const PmiWidgetToolbar = memo(
           </DropdownMenu>
         </Tooltip>
         {/* The information button. */}
-        <Tooltip>
+        <Tooltip key="pmi-info-tooltip">
           <TooltipTrigger asChild>
             <Button
               variant="ghost"

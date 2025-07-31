@@ -30,35 +30,35 @@ const ChartComponents = {
       import("@/features/results/components/results-bar-chart").then(
         (module) => module.ResultsBarChart
       ),
-    { loading: () => <ChartLoader /> }
+    { loading: () => <ChartLoader />, ssr: false }
   ),
   "Line Chart": dynamic(
     () =>
       import("@/features/results/components/results-line-chart").then(
         (module) => module.ResultsLineChart
       ),
-    { loading: () => <ChartLoader /> }
+    { loading: () => <ChartLoader />, ssr: false }
   ),
   "Composed Chart": dynamic(
     () =>
       import("@/features/results/components/results-composed-chart").then(
         (module) => module.ResultsComposedChart
       ),
-    { loading: () => <ChartLoader /> }
+    { loading: () => <ChartLoader />, ssr: false }
   ),
   "Pie Chart": dynamic(
     () =>
       import("@/features/results/components/results-pie-chart").then(
         (module) => module.ResultsPieChart
       ),
-    { loading: () => <ChartLoader /> }
+    { loading: () => <ChartLoader />, ssr: false }
   ),
   "Radar Chart": dynamic(
     () =>
       import("@/features/results/components/results-radar-chart").then(
         (module) => module.ResultsRadarChart
       ),
-    { loading: () => <ChartLoader /> }
+    { loading: () => <ChartLoader />, ssr: false }
   ),
 };
 

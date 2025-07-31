@@ -115,9 +115,9 @@ export const ResultsToolbar = memo(
         </div>
 
         {/* Action Controls Section (Sort and View Mode) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" suppressHydrationWarning>
           {/* Sort Options Dropdown */}
-          <DropdownMenu>
+          <DropdownMenu key="sort-dropdown">
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
@@ -157,7 +157,7 @@ export const ResultsToolbar = memo(
             aria-label="View mode"
             className="border-2 border-slate-200 bg-white data-[variant=outline]:shadow-none"
           >
-            <Tooltip>
+            <Tooltip key="list-view-tooltip">
               <TooltipTrigger asChild>
                 <ToggleGroupItem
                   value="list"
@@ -171,7 +171,7 @@ export const ResultsToolbar = memo(
                 <p className="font-inter">List view</p>
               </TooltipContent>
             </Tooltip>
-            <Tooltip>
+            <Tooltip key="grid-view-tooltip">
               <TooltipTrigger asChild>
                 <ToggleGroupItem
                   value="grid"

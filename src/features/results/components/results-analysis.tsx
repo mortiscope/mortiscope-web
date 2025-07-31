@@ -147,7 +147,7 @@ export const ResultsAnalysis = ({
 
   return (
     <>
-      <TooltipProvider>
+      <TooltipProvider delayDuration={300} skipDelayDuration={100}>
         <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-2 lg:grid-cols-6 lg:grid-rows-2">
           <SummaryChartWidget
             selectedChart={selectedChart}

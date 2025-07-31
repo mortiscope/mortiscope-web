@@ -50,6 +50,7 @@ export const CaseItemDropdown = memo(
   }: CaseItemDropdownProps) => {
     return (
       <DropdownMenu
+        key={`case-dropdown-${caseItem.id}`}
         onOpenChange={(open) => {
           if (!open && isRenameActive) onConfirmRename();
         }}
