@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import {
@@ -26,7 +26,7 @@ import { Separator } from "@/components/ui/separator";
 /**
  * Framer Motion variants for the main modal content container.
  */
-const modalContentVariants = {
+const modalContentVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -40,7 +40,7 @@ const modalContentVariants = {
 /**
  * Framer Motion variants for individual animated items within the modal.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: {
     y: 0,

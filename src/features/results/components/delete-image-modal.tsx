@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { ImSpinner2 } from "react-icons/im";
@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
  * Framer Motion variants for the main modal content container.
  * This orchestrates the animation of its children with a staggered effect.
  */
-const modalContentVariants = {
+const modalContentVariants: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { delayChildren: 0.2, staggerChildren: 0.2 } },
 };
@@ -33,7 +33,7 @@ const modalContentVariants = {
 /**
  * Framer Motion variants for individual animated items within the modal.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
 };

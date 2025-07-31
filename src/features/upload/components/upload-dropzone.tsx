@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { memo } from "react";
 import { type DropzoneState } from "react-dropzone";
 import { BsCamera } from "react-icons/bs";
@@ -24,11 +24,14 @@ type UploadDropzoneProps = {
 };
 
 // Defines the animation variants for the tab content.
-const contentVariants = {
+const contentVariants: Variants = {
   initial: { y: 10, opacity: 0 },
-  animate: { y: 0, opacity: 1 },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.3, ease: "easeInOut" },
+  },
   exit: { y: -10, opacity: 0 },
-  transition: { duration: 0.3, ease: "easeInOut" },
 };
 
 /**
@@ -83,7 +86,6 @@ export const UploadDropzone = memo(
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={contentVariants.transition}
               className="flex flex-col items-center"
             >
               <IoImagesOutline className={cn(iconClasses, isDragReject && "text-rose-500")} />
@@ -130,7 +132,6 @@ export const UploadDropzone = memo(
               initial="initial"
               animate="animate"
               exit="exit"
-              transition={contentVariants.transition}
               className="flex flex-col items-center"
             >
               <BsCamera className={cn(iconClasses)} />

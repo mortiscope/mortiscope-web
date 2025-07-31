@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { IoImagesOutline,IoLayersOutline, IoPhonePortraitOutline } from "react-icons/io5";
+import { motion, type Variants } from "framer-motion";
+import { IoImagesOutline, IoLayersOutline, IoPhonePortraitOutline } from "react-icons/io5";
 import { PiGlobeStand } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ const supportedFormats = [
  * Framer Motion variants for the main modal content container.
  * This orchestrates the animation of its children with a staggered effect.
  */
-const modalContentVariants = {
+const modalContentVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -63,7 +63,7 @@ const modalContentVariants = {
 /**
  * Framer Motion variants for individual animated items within the modal.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: {
     y: 0,
@@ -138,7 +138,7 @@ export function SupportedFormatsModal({ isOpen, onOpenChange }: SupportedFormats
           </motion.div>
 
           {/* Animated wrapper for the dialog footer. */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pb-6 md:pt-2 pt-0">
+          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-0 pb-6 md:pt-2">
             <DialogFooter>
               <Button
                 onClick={() => onOpenChange(false)}

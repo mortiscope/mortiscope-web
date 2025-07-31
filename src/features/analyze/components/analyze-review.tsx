@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 import { Card } from "@/components/ui/card";
 import { ReviewActions } from "@/features/cases/components/review-actions";
@@ -13,7 +13,7 @@ import { UploadPreviewModal } from "@/features/upload/components/upload-preview-
  * Framer Motion variants for the main content container.
  * This orchestrates the animation of its children with a staggered effect.
  */
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -27,7 +27,7 @@ const containerVariants = {
  * Framer Motion variants for individual animated items.
  * This creates the "slide-up and fade-in" effect.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: {
     y: 0,

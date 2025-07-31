@@ -1,9 +1,9 @@
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { memo } from "react";
 
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
 };

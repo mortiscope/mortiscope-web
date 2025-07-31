@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { ImSpinner2 } from "react-icons/im";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ type Case = Awaited<ReturnType<typeof getCases>>[number];
  * Framer Motion variants for the main modal content container.
  * This orchestrates the animation of its children with a staggered effect.
  */
-const modalContentVariants = {
+const modalContentVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -38,7 +38,7 @@ const modalContentVariants = {
 /**
  * Framer Motion variants for individual animated items within the modal.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: {
     y: 0,

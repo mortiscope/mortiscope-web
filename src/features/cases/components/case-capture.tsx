@@ -1,7 +1,7 @@
 "use client";
 
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import * as React from "react";
 import Webcam from "react-webcam";
 
@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
  * Framer Motion variants for the main dialog content container.
  * Controls the staggering of child animations for a coordinated entry effect.
  */
-const dialogContentVariants = {
+const dialogContentVariants: Variants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { delayChildren: 0.1, staggerChildren: 0.15 } },
   exit: { opacity: 0, transition: { duration: 0.2 } },
@@ -35,7 +35,7 @@ const dialogContentVariants = {
  * Framer Motion variants for individual animated items within the dialog.
  * This creates the "slide-up and fade-in" effect.
  */
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
   exit: { y: 20, opacity: 0, transition: { duration: 0.15 } },
