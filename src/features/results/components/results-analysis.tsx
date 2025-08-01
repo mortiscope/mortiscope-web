@@ -137,6 +137,18 @@ export const ResultsAnalysis = ({
   // A clear flag to check if a valid PMI estimation exists.
   const hasEstimation = typeof displayedPmiValue === "number";
 
+  /**
+   * A flag for the specific scenario where no estimation exists, but an adult was detected.
+   * This is determined by the backend setting `oldestStageDetected` to 'adult'.
+   */
+  const isAdultOnlyNoEstimation = !hasEstimation && analysisResult?.oldestStageDetected === "adult";
+
+  /**
+   * The information button is enabled if there is a valid estimation, OR if it's the
+   * special adult-only case where an explanation is available without a calculation.
+   */
+  const isInfoButtonEnabled = hasEstimation || isAdultOnlyNoEstimation;
+
   // A clear flag to check if the data source dropdown should be enabled.
   const isDataSourceDisabled = !uploads || uploads.length === 0;
 
@@ -163,6 +175,7 @@ export const ResultsAnalysis = ({
             pmiValue={displayedPmiValue}
             selectedUnit={selectedUnit}
             hasEstimation={hasEstimation}
+            isInfoButtonEnabled={isInfoButtonEnabled}
             isRecalculationNeeded={isRecalculationNeeded}
             onUnitSelect={setSelectedUnit}
             onInfoClick={() => setIsPmiModalOpen(true)}
@@ -177,6 +190,7 @@ export const ResultsAnalysis = ({
           isOpen={isPmiModalOpen}
           onOpenChange={setIsPmiModalOpen}
           analysisResult={analysisResult}
+          hasEstimation={hasEstimation}
         />
       )}
 

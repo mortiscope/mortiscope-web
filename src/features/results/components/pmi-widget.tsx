@@ -19,6 +19,9 @@ interface PmiWidgetProps {
   onInfoClick: () => void;
   /** A boolean to determine whether to display the PMI value or a placeholder message. */
   hasEstimation: boolean;
+  /** A boolean that determines if the information button should be enabled. */
+  isInfoButtonEnabled: boolean;
+  // --- END OF MODIFICATION ---
   /** A boolean to indicate if the current estimation is outdated and needs recalculation. */
   isRecalculationNeeded: boolean;
 }
@@ -29,7 +32,13 @@ interface PmiWidgetProps {
  * availability and the selected time unit.
  */
 export const PmiWidget = memo(
-  ({ pmiValue, selectedUnit, hasEstimation, ...toolbarProps }: PmiWidgetProps) => {
+  ({
+    pmiValue,
+    selectedUnit,
+    hasEstimation,
+    isInfoButtonEnabled,
+    ...toolbarProps
+  }: PmiWidgetProps) => {
     return (
       <Card className="relative col-span-1 flex h-52 flex-col justify-between overflow-hidden rounded-3xl border-none bg-white p-6 shadow-none transition-all duration-300 md:p-8 lg:col-span-2">
         {/* A decorative background icon for visual styling. */}
@@ -46,6 +55,7 @@ export const PmiWidget = memo(
           <PmiWidgetToolbar
             selectedUnit={selectedUnit}
             hasEstimation={hasEstimation}
+            isInfoButtonEnabled={isInfoButtonEnabled}
             {...toolbarProps}
           />
         </div>

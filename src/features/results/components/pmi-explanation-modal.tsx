@@ -58,6 +58,8 @@ interface PmiExplanationModalProps {
   isOpen: boolean;
   /** A callback function to handle changes to the open state. */
   onOpenChange: (isOpen: boolean) => void;
+  /** A boolean indicating if a PMI estimation is currently available to display. */
+  hasEstimation: boolean;
 }
 
 /**
@@ -67,6 +69,7 @@ export function PmiExplanationModal({
   analysisResult,
   isOpen,
   onOpenChange,
+  hasEstimation,
 }: PmiExplanationModalProps) {
   if (!analysisResult) return null;
 
@@ -97,59 +100,64 @@ export function PmiExplanationModal({
             variants={itemVariants}
             className="flex-1 space-y-4 overflow-y-auto border-y border-slate-200 p-6"
           >
-            {/* Interpretable Summary Section */}
-            <div>
-              <h3 className="font-plus-jakarta-sans mb-2 text-lg font-semibold text-slate-800">
-                Summary
-              </h3>
-              <p className="font-inter cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center text-base text-slate-600 hover:border-emerald-200 hover:bg-emerald-50">
-                The estimated minimum PMI is approximately&nbsp;
-                <strong className="font-semibold text-emerald-600">
-                  {formatPmiToInterpretableString(analysisResult.pmiMinutes)}
-                </strong>
-                .
-              </p>
-            </div>
+            {/* Conditionally render the Summary and Calculated Values sections only when there is a valid estimation. */}
+            {hasEstimation && (
+              <>
+                {/* Interpretable Summary Section */}
+                <div>
+                  <h3 className="font-plus-jakarta-sans mb-2 text-lg font-semibold text-slate-800">
+                    Summary
+                  </h3>
+                  <p className="font-inter cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center text-base text-slate-600 hover:border-emerald-200 hover:bg-emerald-50">
+                    The estimated minimum PMI is approximately&nbsp;
+                    <strong className="font-semibold text-emerald-600">
+                      {formatPmiToInterpretableString(analysisResult.pmiMinutes)}
+                    </strong>
+                    .
+                  </p>
+                </div>
 
-            <Separator />
+                <Separator />
 
-            {/* Raw Data Section */}
-            <div>
-              <h3 className="font-plus-jakarta-sans mb-3 text-lg font-semibold text-slate-800">
-                Calculated Values
-              </h3>
-              <ul className="font-inter grid gap-3">
-                <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
-                  <div className="flex items-center">
-                    <LuCalendarRange className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
-                    <span className="text-sm text-slate-700">PMI in Days</span>
-                  </div>
-                  <span className="font-medium text-slate-900">
-                    {analysisResult.pmiDays?.toFixed(2) ?? "N/A"}
-                  </span>
-                </li>
-                <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
-                  <div className="flex items-center">
-                    <FaRegHourglass className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
-                    <span className="text-sm text-slate-700">PMI in Hours</span>
-                  </div>
-                  <span className="font-medium text-slate-900">
-                    {analysisResult.pmiHours?.toFixed(2) ?? "N/A"}
-                  </span>
-                </li>
-                <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
-                  <div className="flex items-center">
-                    <LuClock className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
-                    <span className="text-sm text-slate-700">PMI in Minutes</span>
-                  </div>
-                  <span className="font-medium text-slate-900">
-                    {analysisResult.pmiMinutes?.toFixed(2) ?? "N/A"}
-                  </span>
-                </li>
-              </ul>
-            </div>
+                {/* Raw Data Section */}
+                <div>
+                  <h3 className="font-plus-jakarta-sans mb-3 text-lg font-semibold text-slate-800">
+                    Calculated Values
+                  </h3>
+                  <ul className="font-inter grid gap-3">
+                    <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
+                      <div className="flex items-center">
+                        <LuCalendarRange className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
+                        <span className="text-sm text-slate-700">PMI in Days</span>
+                      </div>
+                      <span className="font-medium text-slate-900">
+                        {analysisResult.pmiDays?.toFixed(2) ?? "N/A"}
+                      </span>
+                    </li>
+                    <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
+                      <div className="flex items-center">
+                        <FaRegHourglass className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
+                        <span className="text-sm text-slate-700">PMI in Hours</span>
+                      </div>
+                      <span className="font-medium text-slate-900">
+                        {analysisResult.pmiHours?.toFixed(2) ?? "N/A"}
+                      </span>
+                    </li>
+                    <li className="flex cursor-pointer items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-3 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
+                      <div className="flex items-center">
+                        <LuClock className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
+                        <span className="text-sm text-slate-700">PMI in Minutes</span>
+                      </div>
+                      <span className="font-medium text-slate-900">
+                        {analysisResult.pmiMinutes?.toFixed(2) ?? "N/A"}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
 
-            <Separator />
+                <Separator />
+              </>
+            )}
 
             {/* Explanation Section */}
             <div>

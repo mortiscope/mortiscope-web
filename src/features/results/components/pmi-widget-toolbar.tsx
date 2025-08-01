@@ -48,6 +48,8 @@ interface PmiWidgetToolbarProps {
   onInfoClick: () => void;
   /** A boolean indicating if a PMI estimation is currently available to display. */
   hasEstimation: boolean;
+  /** A boolean that determines if the information button should be enabled. */
+  isInfoButtonEnabled: boolean;
   /** A boolean to indicate if the current estimation is outdated and needs recalculation. */
   isRecalculationNeeded: boolean;
 }
@@ -63,6 +65,7 @@ export const PmiWidgetToolbar = memo(
     onUnitSelect,
     onInfoClick,
     hasEstimation,
+    isInfoButtonEnabled,
     isRecalculationNeeded,
   }: PmiWidgetToolbarProps) => {
     // Dynamically selects the appropriate icon for the time unit dropdown trigger.
@@ -146,12 +149,12 @@ export const PmiWidgetToolbar = memo(
               variant="ghost"
               aria-label="Information"
               onClick={onInfoClick}
-              disabled={!hasEstimation}
+              disabled={!isInfoButtonEnabled}
               className={cn(
                 "relative -ml-[2px] size-8 rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9",
-                hasEstimation &&
+                isInfoButtonEnabled &&
                   "cursor-pointer hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500",
-                !hasEstimation && "cursor-not-allowed opacity-50"
+                !isInfoButtonEnabled && "cursor-not-allowed opacity-50"
               )}
             >
               <IoInformation className="size-4 md:size-5" />
