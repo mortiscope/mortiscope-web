@@ -32,4 +32,5 @@ export const ResultsNoSearchResults = memo(
     );
   }
 );
+
 ResultsNoSearchResults.displayName = "ResultsNoSearchResults";

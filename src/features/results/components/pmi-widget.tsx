@@ -21,7 +21,6 @@ interface PmiWidgetProps {
   hasEstimation: boolean;
   /** A boolean that determines if the information button should be enabled. */
   isInfoButtonEnabled: boolean;
-  // --- END OF MODIFICATION ---
   /** A boolean to indicate if the current estimation is outdated and needs recalculation. */
   isRecalculationNeeded: boolean;
 }

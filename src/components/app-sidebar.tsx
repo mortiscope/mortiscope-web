@@ -81,7 +81,7 @@ export const AppSidebar = () => {
 
   // Defines a base set of Tailwind CSS classes for consistent menu item styling
   const menuItemClasses =
-    "font-plus-jakarta-sans flex h-10 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-3 text-sm font-normal ring-offset-emerald-900 transition-colors duration-300 ease-in-out hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none active:bg-emerald-800 data-[active=true]:bg-emerald-700";
+    "font-plus-jakarta-sans flex h-10 cursor-pointer items-center gap-3 rounded-lg bg-transparent px-3 text-sm font-normal ring-offset-emerald-900 transition-colors duration-300 ease-in-out hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none active:bg-emerald-800 data-[active=true]:bg-gradient-to-b from-emerald-600 to-emerald-700";
 
   // A specific class to ensure icons have a consistent size
   const iconSizeOverride = "[&>svg]:size-5.25";

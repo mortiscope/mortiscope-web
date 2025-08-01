@@ -77,34 +77,34 @@ export const ResultsDetails = ({ caseData, isLoading }: ResultsDetailsProps) => 
 
   const colorThemes = [
     {
-      bg: "bg-teal-600 hover:bg-teal-500",
+      bg: "bg-gradient-to-br from-teal-500 to-teal-700 transition duration-300 ease-in-out hover:from-teal-400 hover:to-teal-600",
       text: "text-teal-50",
-      icon: "text-teal-300",
+      icon: "text-teal-200",
     },
     {
-      bg: "bg-emerald-600 hover:bg-emerald-500",
+      bg: "bg-gradient-to-br from-emerald-500 to-emerald-700 transition duration-300 ease-in-out hover:from-emerald-400 hover:to-emerald-600",
       text: "text-emerald-50",
-      icon: "text-emerald-300",
+      icon: "text-emerald-200",
     },
     {
-      bg: "bg-indigo-600 hover:bg-indigo-500",
+      bg: "bg-gradient-to-br from-indigo-500 to-indigo-700 transition duration-300 ease-in-out hover:from-indigo-400 hover:to-indigo-600",
       text: "text-indigo-50",
-      icon: "text-indigo-300",
+      icon: "text-indigo-200",
     },
     {
-      bg: "bg-sky-600 hover:bg-sky-500",
+      bg: "bg-gradient-to-br from-sky-500 to-sky-700 transition duration-300 ease-in-out hover:from-sky-400 hover:to-sky-600",
       text: "text-sky-50",
-      icon: "text-sky-300",
+      icon: "text-sky-200",
     },
     {
-      bg: "bg-rose-600 hover:bg-rose-500",
+      bg: "bg-gradient-to-br from-rose-500 to-rose-700 transition duration-300 ease-in-out hover:from-rose-400 hover:to-rose-600",
       text: "text-rose-50",
-      icon: "text-rose-300",
+      icon: "text-rose-200",
     },
     {
-      bg: "bg-pink-600 hover:bg-pink-500",
+      bg: "bg-gradient-to-br from-pink-500 to-pink-700 transition duration-300 ease-in-out hover:from-pink-400 hover:to-pink-600",
       text: "text-pink-50",
-      icon: "text-pink-300",
+      icon: "text-pink-200",
     },
   ];
 
@@ -121,10 +121,12 @@ export const ResultsDetails = ({ caseData, isLoading }: ResultsDetailsProps) => 
           // Renders a single detail card.
           <Card
             key={detail.title}
-            className={`relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border-none p-4 shadow-none transition-all duration-300 outline-none ${theme.bg}`}
+            className={`group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-2xl border-none p-4 shadow-lg shadow-gray-900/10 transition-all duration-500 ease-in-out outline-none ${theme.bg}`}
           >
             {/* A large, decorative background icon for visual flair. */}
-            <Icon className={`absolute -right-4 -bottom-4 h-20 w-20 opacity-20 ${theme.icon}`} />
+            <Icon
+              className={`absolute -right-4 -bottom-4 h-20 w-20 opacity-20 transition-transform duration-500 ease-in-out group-hover:scale-110 ${theme.icon}`}
+            />
 
             {/* The card's header section. */}
             <div className="relative flex items-center gap-2">
