@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 
 import { FormFeedback } from "@/components/form-feedback";
@@ -21,6 +22,9 @@ import { forgotPassword } from "@/features/auth/actions/forgot-password";
 import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ForgotPasswordForm() {
+  // Generate stable ID for form elements to prevent hydration mismatches
+  const formId = useId();
+
   // Manages the server state for the forgot password action using TanStack Query
   const { mutate, isPending, data } = useMutation({
     // Specifies the server action to be executed when the mutation is triggered
@@ -84,9 +88,12 @@ export default function ForgotPasswordForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-normal md:text-sm">Email</FormLabel>
+                <FormLabel htmlFor={`${formId}-email`} className="text-xs font-normal md:text-sm">
+                  Email
+                </FormLabel>
                 <FormControl>
                   <Input
+                    id={`${formId}-email`}
                     type="email"
                     placeholder="Enter your email"
                     disabled={isPending}

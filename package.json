@@ -35,20 +35,22 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "dev:web": "concurrently \"pnpm:dev\" \"pnpm:inngest:dev\"",
+    "dev:webpack": "next dev",
     "inngest:dev": "npx inngest-cli@latest dev -u http://localhost:3000/api/inngest",
     "email": "dotenv -- email dev --dir src/emails",
     "build": "next build",
+    "build:turbo": "next build --turbo",
     "build:analyze": "cross-env ANALYZE=true next build",
     "build:validate": "pnpm run quality && pnpm run build",
     "build:production": "cross-env NODE_ENV=production pnpm run build:validate",
     "analyze": "cross-env ANALYZE=true next build",
     "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
-    "lint:strict": "next lint --max-warnings 0",
-    "typecheck": "tsc --noEmit",
+    "lint": "tsx scripts/lint.ts",
+    "lint:fix": "tsx scripts/lint.ts --fix",
+    "lint:strict": "tsx scripts/lint.ts --max-warnings 0",
+    "typecheck": "tsx scripts/typecheck.ts",
     "quality": "pnpm run lint:strict && pnpm run typecheck",
     "quality:fix": "pnpm run lint:fix && pnpm run typecheck",
     "pre-commit": "lint-staged",
@@ -63,12 +65,15 @@
     "bundle:analyze": "cross-env ANALYZE=true next build",
     "bundle:size": "npx size-limit",
     "lighthouse": "lighthouse http://localhost:3000 --view --chrome-flags=\"--headless\"",
-    "clean": "rimraf .next out dist",
-    "clean:deps": "rimraf node_modules && pnpm install"
+    "clean": "tsx scripts/clean.ts",
+    "clean:build": "tsx scripts/clean.ts build",
+    "clean:deps": "tsx scripts/clean.ts deps",
+    "clean:all": "tsx scripts/clean.ts all",
+    "clean:force": "tsx scripts/clean.ts all --force"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "next lint --fix --file"
+      "eslint --fix"
     ]
   },
   "size-limit": [
@@ -205,6 +210,7 @@
     "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
+    "chalk": "^5.6.2",
     "concurrently": "^9.2.1",
     "cross-env": "^10.0.0",
     "dotenv-cli": "^10.0.0",
