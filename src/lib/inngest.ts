@@ -5,6 +5,24 @@ import { EventSchemas, Inngest } from "inngest";
  */
 export type Events = {
   /**
+   * Fired when a user confirms account deletion via token.
+   */
+  "account/deletion.confirmed": {
+    data: {
+      token: string;
+    };
+  };
+
+  /**
+   * Fired at the exact time when a user's account should be permanently deleted.
+   */
+  "account/deletion.execute": {
+    data: {
+      userId: string;
+    };
+  };
+
+  /**
    * Fired when a user successfully creates a new case.
    */
   "analysis/request.sent": {
