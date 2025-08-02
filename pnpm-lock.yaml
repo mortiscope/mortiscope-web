@@ -292,8 +292,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       inngest-cli:
-        specifier: ^1.11.10
-        version: 1.11.10
+        specifier: ^1.11.13
+        version: 1.11.13
       lighthouse:
         specifier: ^12.8.2
         version: 12.8.2
@@ -5171,8 +5171,8 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  inngest-cli@1.11.10:
-    resolution: {integrity: sha512-b+LjLoxRW0EUM1VfvJlm/nv8tl5xufBfeWXE5ktbKyyhNfMgrJdv68cCZRryO0WB2VSy4AUfQSxnGcFP7lZP/g==}
+  inngest-cli@1.11.13:
+    resolution: {integrity: sha512-yHWP3kGyIPgOIRM775Wjm6dWpXx/gyTiJJG2W2f5pfya4qOt5EqnB5u/BnBT9JoYKJRK403yMc9o7UFxIS+5dQ==}
     hasBin: true
 
   inngest@3.40.2:
@@ -12961,7 +12961,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  inngest-cli@1.11.10:
+  inngest-cli@1.11.13:
     dependencies:
       adm-zip: 0.5.16
       debug: 4.4.1
