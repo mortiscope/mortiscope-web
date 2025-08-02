@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { analysisResults } from "@/db/schema";
+import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
 
 /**
@@ -59,13 +60,8 @@ export const analysisEvent = inngest.createFunction(
     });
 
     // Retrieve necessary secrets and configuration from environment variables.
-    const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL;
-    const fastApiSecret = process.env.FASTAPI_SECRET_KEY;
-
-    // Fail the function run if essential configuration is missing. Inngest will retry.
-    if (!fastApiUrl || !fastApiSecret) {
-      throw new Error("FastAPI URL or Secret Key is not configured in .env");
-    }
+    const fastApiUrl = env.NEXT_PUBLIC_FASTAPI_URL;
+    const fastApiSecret = env.FASTAPI_SECRET_KEY;
 
     // Executes the primary analysis by calling the FastAPI endpoint.
     const fullAnalysisResult = await step.run("run-full-fastapi-analysis", async () => {

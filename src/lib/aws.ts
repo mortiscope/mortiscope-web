@@ -1,21 +1,13 @@
 import { S3Client } from "@aws-sdk/client-s3";
 
-// Read the environment variables
-const region = process.env.AWS_BUCKET_REGION;
-const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+import { env } from "@/lib/env";
 
-// Perform a runtime check
-if (!region || !accessKeyId || !secretAccessKey) {
-  throw new Error("Missing required AWS environment variables for S3 Client!");
-}
-
-// Initialize the S3 client
+// Initialize the S3 client with type-safe environment variables
 const s3 = new S3Client({
-  region,
+  region: env.AWS_BUCKET_REGION,
   credentials: {
-    accessKeyId,
-    secretAccessKey,
+    accessKeyId: env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
   },
 });
 

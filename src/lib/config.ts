@@ -2,6 +2,8 @@ import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
+import { env } from "@/lib/env";
+
 // Define the shape of the user profile data returned by ORCID's APIs
 interface OrcidProfile {
   sub: string;
@@ -51,41 +53,37 @@ const ORCIDProvider = {
     }
     return { id: profile.sub, name: profile.name, email: profile.email, image: null };
   },
-  clientId: process.env.ORCID_CLIENT_ID,
-  clientSecret: process.env.ORCID_CLIENT_SECRET,
+  clientId: env.ORCID_CLIENT_ID,
+  clientSecret: env.ORCID_CLIENT_SECRET,
 };
 
 // Mail configuration
-let mailDomain: string;
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+const mailDomain = new URL(env.NEXT_PUBLIC_APP_URL).hostname;
 
 // Determine if the application is running in a development environment.
-const isDevelopment = process.env.NODE_ENV === "development";
-
-try {
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is not set in environment variables.");
-  }
-  mailDomain = new URL(appUrl).hostname;
-} catch (error) {
-  console.error(
-    "FATAL: Invalid or missing NEXT_PUBLIC_APP_URL. Cannot create 'from' address for emails.",
-    error
-  );
-  mailDomain = "invalid-configuration.local";
-}
+const isDevelopment = env.NODE_ENV === "development";
 
 const serverConfig = {
   aws: {
-    s3BucketName: process.env.AWS_BUCKET_NAME,
+    s3BucketName: env.AWS_BUCKET_NAME,
+    bucketRegion: env.AWS_BUCKET_REGION,
+    accessKeyId: env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
+  },
+  redis: {
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN,
   },
   mail: {
     domain: mailDomain,
     fromAddress: isDevelopment
       ? "MortiScope <onboarding@resend.dev>"
       : `MortiScope <noreply@${mailDomain}>`,
+    resendApiKey: env.RESEND_API_KEY,
+    contactEmail: env.CONTACT_EMAIL,
   },
   auth: {
+    secret: env.AUTH_SECRET,
     /**
      * Lightweight auth configuration for Edge Runtime compatibility
      * This excludes heavy dependencies like bcryptjs and database operations
@@ -95,14 +93,14 @@ const serverConfig = {
       providers: [
         ORCIDProvider,
         Google({
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          clientId: env.GOOGLE_CLIENT_ID,
+          clientSecret: env.GOOGLE_CLIENT_SECRET,
           allowDangerousEmailAccountLinking: true,
         }),
         MicrosoftEntraID({
-          clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
-          clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-          issuer: `https://login.microsoftonline.com/${process.env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
+          clientId: env.AUTH_MICROSOFT_ENTRA_ID_ID,
+          clientSecret: env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
+          issuer: `https://login.microsoftonline.com/${env.AUTH_MICROSOFT_ENTRA_ID_TENANT_ID}/v2.0`,
           allowDangerousEmailAccountLinking: true,
         }),
       ],
@@ -122,12 +120,16 @@ const serverConfig = {
       },
     } as NextAuthConfig,
   },
+  inngest: {
+    eventKey: env.INNGEST_EVENT_KEY,
+    signingKey: env.INNGEST_SIGNING_KEY,
+  },
+  fastapi: {
+    url: env.NEXT_PUBLIC_FASTAPI_URL,
+    secretKey: env.FASTAPI_SECRET_KEY,
+  },
 };
 
-// Perform a runtime validation to ensure all required variables are present.
-if (!serverConfig.aws.s3BucketName) {
-  throw new Error("Missing required server environment variable: AWS_BUCKET_NAME.");
-}
-
 // Export the validated server config object.
+// Environment validation is handled in env.ts at module load time
 export const config = serverConfig;

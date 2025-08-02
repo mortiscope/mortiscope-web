@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { exports } from "@/db/schema";
+import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
 
 /**
@@ -51,12 +52,8 @@ export const exportCaseData = inngest.createFunction(
     });
 
     // Retrieve necessary secrets and configuration from environment variables.
-    const fastApiUrl = process.env.NEXT_PUBLIC_FASTAPI_URL;
-    const fastApiSecret = process.env.FASTAPI_SECRET_KEY;
-
-    if (!fastApiUrl || !fastApiSecret) {
-      throw new Error("FastAPI URL or Secret Key is not configured in .env");
-    }
+    const fastApiUrl = env.NEXT_PUBLIC_FASTAPI_URL;
+    const fastApiSecret = env.FASTAPI_SECRET_KEY;
 
     // Call the FastAPI worker to perform the actual export.
     const result = await step.run("trigger-export-worker", async () => {

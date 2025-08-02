@@ -9,19 +9,22 @@ import {
   publicRoutes,
 } from "@/routes";
 
+// Get AUTH_SECRET directly from process.env to avoid importing heavy env validation
+const AUTH_SECRET = process.env.AUTH_SECRET;
+
 /**
  * The main middleware function, wrapped in the `auth` helper from NextAuth.js.
  * It intercepts requests to enforce authentication rules across the application.
- * 
+ *
  * @param req The incoming Next.js request object.
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
 
-  // Get JWT token directly
+  // Get JWT token with proper validation
   const token = await getToken({
     req,
-    secret: process.env.AUTH_SECRET,
+    secret: AUTH_SECRET,
   });
 
   const isLoggedIn = !!token;

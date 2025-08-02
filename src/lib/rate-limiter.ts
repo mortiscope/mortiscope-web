@@ -1,15 +1,12 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Ensure environment variables are set before initializing.
-if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-  throw new Error("RATE_LIMITER: Redis environment variables are not set.");
-}
+import { env } from "@/lib/env";
 
-// Initializes the Redis client using credentials from environment variables
+// Initializes the Redis client using type-safe environment variables
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  url: env.UPSTASH_REDIS_REST_URL,
+  token: env.UPSTASH_REDIS_REST_TOKEN,
 });
 
 /**
