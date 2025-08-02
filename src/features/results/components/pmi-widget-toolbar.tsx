@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { FaRegHourglass } from "react-icons/fa6";
 import { IoInformation } from "react-icons/io5";
 import { LuCalendarRange, LuClock } from "react-icons/lu";
@@ -68,12 +68,30 @@ export const PmiWidgetToolbar = memo(
     isInfoButtonEnabled,
     isRecalculationNeeded,
   }: PmiWidgetToolbarProps) => {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
+
     // Dynamically selects the appropriate icon for the time unit dropdown trigger.
     const SelectedTimeUnitIcon =
       timeUnitOptions.find((o) => o.value === selectedUnit)?.icon ?? FaRegHourglass;
 
+    if (!isMounted) {
+      return (
+        <div className="flex items-center">
+          {isRecalculationNeeded && (
+            <div className="mr-2 size-8 rounded-md border-2 border-amber-300 bg-amber-50 md:size-9" />
+          )}
+          <div className="size-8 rounded-none rounded-l-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+          <div className="-ml-[2px] size-8 rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center" suppressHydrationWarning>
+      <div className="flex items-center">
         {/* Manages the smooth entry and exit of the warning icon. */}
         <AnimatePresence>
           {isRecalculationNeeded && (

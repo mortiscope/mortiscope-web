@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { AiOutlineRadarChart } from "react-icons/ai";
 import { BsPieChart } from "react-icons/bs";
 import {
@@ -80,12 +80,28 @@ export const SummaryChartToolbar = memo(
     uploads,
     isDataSourceDisabled,
   }: SummaryChartToolbarProps) => {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
+
     // Dynamically selects the appropriate icon for the chart type dropdown trigger.
     const SelectedChartIcon =
       chartOptions.find((o) => o.value === selectedChart)?.icon ?? IoBarChartOutline;
 
+    if (!isMounted) {
+      return (
+        <div className="flex items-center">
+          <div className="size-8 rounded-none rounded-l-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+          <div className="-ml-[2px] size-8 rounded-none border-2 border-slate-200 bg-slate-100 md:size-9" />
+          <div className="-ml-[2px] size-8 rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+        </div>
+      );
+    }
+
     return (
-      <div className="flex items-center" suppressHydrationWarning>
+      <div className="flex items-center">
         {/* The chart type selection dropdown menu. */}
         <Tooltip key="chart-type-tooltip">
           <DropdownMenu key="chart-type-dropdown">

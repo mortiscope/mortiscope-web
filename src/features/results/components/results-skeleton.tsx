@@ -28,7 +28,7 @@ export const ResultsDetailsSkeleton = () => (
  * A skeleton loader that mimics the layout of the results analysis component.
  */
 export const ResultsAnalysisSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6 lg:grid-rows-2">
+  <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-2 lg:grid-cols-6 lg:grid-rows-2">
     {/* Main Case Summary Card Skeleton */}
     <div className="col-span-1 flex h-96 flex-col gap-4 rounded-3xl bg-white p-4 shadow-none md:col-span-2 md:p-8 lg:col-span-4 lg:row-span-2 lg:h-auto">
       <div className="flex items-start justify-between">
