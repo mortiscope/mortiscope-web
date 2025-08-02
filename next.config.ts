@@ -5,6 +5,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["192.168.1.6"],
   images: {
     remotePatterns: [
       {

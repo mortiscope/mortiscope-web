@@ -2,6 +2,8 @@ import { serve } from "inngest/next";
 
 import {
   analysisEvent,
+  confirmAccountDeletion,
+  executeAccountDeletion,
   exportCaseData,
   exportImageData,
   recalculateCase,
@@ -10,5 +12,12 @@ import { inngest } from "@/lib/inngest";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [analysisEvent, exportCaseData, exportImageData, recalculateCase],
+  functions: [
+    analysisEvent,
+    confirmAccountDeletion,
+    executeAccountDeletion,
+    exportCaseData,
+    exportImageData,
+    recalculateCase,
+  ],
 });
