@@ -12,6 +12,7 @@ import {
   requestImageExportSchema,
 } from "@/features/export/schemas/export";
 import { inngest } from "@/lib/inngest";
+import { exportLogger, logError, logUserAction } from "@/lib/logger";
 
 /**
  * Creates an export record for a single image and dispatches an Inngest event.
@@ -44,10 +45,21 @@ export const requestImageExport = async (
       data: { exportId: newExport.id, uploadId, userId: session.user.id, format },
     });
 
+    logUserAction(exportLogger, "image_export_requested", session.user.id, {
+      exportId: newExport.id,
+      uploadId,
+      caseId: imageToExport.caseId,
+      format,
+    });
+
     revalidatePath(`/results/${imageToExport.caseId}`);
     return { success: true, data: { exportId: newExport.id } };
   } catch (error) {
-    console.error("Failed to initiate image export process:", error);
+    logError(exportLogger, "Failed to initiate image export process", error, {
+      userId: session?.user?.id,
+      uploadId,
+      format,
+    });
     return { success: false, error: "An unexpected error occurred. Please try again later." };
   }
 };

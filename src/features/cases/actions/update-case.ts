@@ -7,6 +7,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
 import { type CaseDetailsFormData, caseDetailsSchema } from "@/features/cases/schemas/case-details";
+import { caseLogger, logError, logUserAction } from "@/lib/logger";
 
 /**
  * Defines the structured return type for the server action for clarity and type safety.
@@ -80,9 +81,17 @@ export async function updateCase(values: {
     }
 
     // On success, return a simple success message.
+    logUserAction(caseLogger, "case_updated", userId, {
+      caseId: values.caseId,
+      caseName: data.caseName,
+    });
     return { success: true };
   } catch (error) {
-    console.error("Error updating case:", error);
+    logError(caseLogger, "Error updating case", error, {
+      userId,
+      caseId: values.caseId,
+      caseName: data.caseName,
+    });
     // Specifically handle unique constraint violations for a user-friendly error.
     if (
       error &&

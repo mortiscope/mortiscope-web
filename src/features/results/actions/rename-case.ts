@@ -7,6 +7,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
+import { caseLogger, logError } from "@/lib/logger";
 
 // Defines the schema for validating the input to the renameCase action
 const renameCaseSchema = z.object({
@@ -63,7 +64,7 @@ export const renameCase = async (values: z.infer<typeof renameCaseSchema>) => {
     if (error instanceof Error && "code" in error && error.code === "23505") {
       return { error: "A case with this name already exists. Please choose a different name." };
     }
-    console.error("[RENAME_CASE_ERROR]", error);
+    logError(caseLogger, "Error renaming case", error, { userId, caseId, newName });
     return { error: "An unexpected error occurred. Please try again." };
   }
 };

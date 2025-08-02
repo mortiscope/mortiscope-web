@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { analysisResults, cases } from "@/db/schema";
 import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
+import { analysisLogger, inngestLogger, logError } from "@/lib/logger";
 
 /**
  * Handles the background recalculation of a case's PMI.
@@ -24,7 +25,12 @@ export const recalculateCase = inngest.createFunction(
       if (originalEvent.name === "recalculation/case.requested") {
         const { caseId } = originalEvent.data;
         if (typeof caseId !== "string") {
-          console.error("Could not find a valid caseId in recalculation onFailure.", event);
+          logError(
+            inngestLogger,
+            "Could not find a valid caseId in recalculation onFailure",
+            new Error("Invalid caseId type"),
+            { event, function: "fastapi-recalculate-case" }
+          );
           return;
         }
         // Update the analysis status to 'failed' to provide feedback.
@@ -36,6 +42,11 @@ export const recalculateCase = inngest.createFunction(
             updatedAt: new Date(),
           })
           .where(eq(analysisResults.caseId, caseId));
+
+        logError(analysisLogger, "Recalculation process failed", error, {
+          caseId,
+          function: "fastapi-recalculate-case",
+        });
       }
     },
   },
@@ -84,6 +95,7 @@ export const recalculateCase = inngest.createFunction(
         .where(eq(analysisResults.caseId, caseId));
     });
 
+    analysisLogger.info({ caseId }, "Recalculation completed successfully");
     return { message: `Successfully completed recalculation for case: ${caseId}` };
   }
 );

@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
 import { type CaseDetailsFormData, caseDetailsSchema } from "@/features/cases/schemas/case-details";
+import { caseLogger, logError, logUserAction } from "@/lib/logger";
 
 /**
  * Defines the structured return type for the server action for clarity and type safety.
@@ -83,9 +84,14 @@ export async function createCase(values: CaseDetailsFormData): Promise<ActionRes
     }
 
     // On success, return the newly created case ID.
+    logUserAction(caseLogger, "case_created", userId, {
+      caseId: newCase.id,
+      caseName: data.caseName,
+      location: `${data.location.city.name}, ${data.location.province.name}`,
+    });
     return { success: true, data: { caseId: newCase.id } };
   } catch (error) {
-    console.error("Error creating case:", error);
+    logError(caseLogger, "Error creating case", error, { userId, caseName: data.caseName });
 
     if (
       error &&

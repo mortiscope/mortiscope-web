@@ -49,7 +49,10 @@ export const useAnalysisSubmission = ({ caseId }: UseAnalysisSubmissionProps) =>
     onError: (error) => {
       // Handle unexpected network or server errors.
       toast.error("An unexpected error occurred. Please try again.");
-      console.error("Submission error:", error);
+      // Log error details for debugging (client-side only)
+      if (process.env.NODE_ENV === "development") {
+        console.error("Submission error:", error);
+      }
     },
   });
 
@@ -70,7 +73,10 @@ export const useAnalysisSubmission = ({ caseId }: UseAnalysisSubmissionProps) =>
     onError: (error) => {
       // Handle unexpected network or server errors during cancellation.
       toast.error("An unexpected error occurred while cancelling. Please try again.");
-      console.error("Cancellation error:", error);
+      // Log error details for debugging (client-side only)
+      if (process.env.NODE_ENV === "development") {
+        console.error("Cancellation error:", error);
+      }
     },
   });
 

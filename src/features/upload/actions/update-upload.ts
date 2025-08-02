@@ -6,6 +6,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
+import { logError, uploadLogger } from "@/lib/logger";
 
 // Define the schema for updating an upload record.
 const updateUploadSchema = z.object({
@@ -71,7 +72,11 @@ export async function updateUpload(values: UpdateUploadInput): Promise<ActionRes
 
     return { success: true };
   } catch (error) {
-    console.error("Error updating upload metadata:", error);
+    logError(uploadLogger, "Error updating upload metadata", error, {
+      userId,
+      uploadId: id,
+      updateData,
+    });
     return { success: false, error: "Failed to update upload details in the database." };
   }
 }

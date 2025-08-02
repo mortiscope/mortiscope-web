@@ -9,6 +9,7 @@ import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
+import { authLogger, emailLogger, logError, logUserAction } from "@/lib/logger";
 import { sendAccountDeletionCancelled, sendEmailVerification } from "@/lib/mail";
 import { publicActionLimiter } from "@/lib/rate-limiter";
 import { generateVerificationToken } from "@/lib/tokens";
@@ -50,17 +51,24 @@ export const signIn = async (values: SignInFormValues) => {
   if (existingUser.deletionScheduledAt) {
     await db.update(users).set({ deletionScheduledAt: null }).where(eq(users.id, existingUser.id));
 
-    console.log(
-      `Account recovery for ${existingUser.email}. Scheduled deletion has been cancelled.`
-    );
+    logUserAction(authLogger, "account_recovery", existingUser.id, {
+      email: existingUser.email,
+      scheduledDeletionCancelled: true,
+    });
 
     // Send a notification email about the cancellation
     try {
       await sendAccountDeletionCancelled(existingUser.email, existingUser.name);
+      emailLogger.info(
+        { userId: existingUser.id, email: existingUser.email },
+        "Account deletion cancellation email sent successfully"
+      );
     } catch (emailError) {
-      console.error(
-        `Failed to send account deletion cancellation email to ${existingUser.email}, but the account was recovered successfully.`,
-        emailError
+      logError(
+        emailLogger,
+        "Failed to send account deletion cancellation email, but account was recovered successfully",
+        emailError,
+        { userId: existingUser.id, email: existingUser.email }
       );
     }
   }

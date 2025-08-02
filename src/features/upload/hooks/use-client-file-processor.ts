@@ -26,7 +26,10 @@ export const useClientFileProcessor = () => {
       const blob = await response.blob();
       return new File([blob], file.name, { type: file.type });
     } catch (error) {
-      console.error("Fetch error in ensureFileBlob:", error);
+      // Log error details for debugging (client-side only)
+      if (process.env.NODE_ENV === "development") {
+        console.error("Fetch error in ensureFileBlob:", error);
+      }
       throw new Error("Could not fetch original image for editing.");
     }
   };

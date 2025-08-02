@@ -17,6 +17,7 @@ import {
   MAX_FILE_SIZE,
   PRESIGNED_URL_EXPIRATION_SECONDS,
 } from "@/lib/constants";
+import { logError, s3Logger, uploadLogger } from "@/lib/logger";
 import { formatBytes } from "@/lib/utils";
 
 // Runtime check for AWS Bucket Name
@@ -53,14 +54,14 @@ const extendedPresignedUrlSchema = generatePresignedUrlSchema.extend({
 export async function createUpload(
   values: GeneratePresignedUrlInput & { key?: string; caseId: string }
 ): Promise<ActionResponse> {
-  try {
-    // Authenticate the user
-    const session = await auth();
-    if (!session?.user?.id) {
-      return { success: false, error: "Unauthorized" };
-    }
-    const userId = session.user.id;
+  // Authenticate the user
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized" };
+  }
+  const userId = session.user.id;
 
+  try {
     // Validate the input parameters using the extended schema
     const parseResult = extendedPresignedUrlSchema.safeParse(values);
 
@@ -131,7 +132,11 @@ export async function createUpload(
       },
     };
   } catch (error) {
-    console.error("Error generating pre-signed URL:", error);
+    logError(uploadLogger, "Error generating pre-signed URL", error, {
+      userId,
+      caseId: values.caseId,
+      fileName: values.fileName,
+    });
     // Return a generic error to avoid leaking implementation details
     return {
       success: false,

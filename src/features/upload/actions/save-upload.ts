@@ -5,6 +5,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
+import { logError, uploadLogger } from "@/lib/logger";
 
 // Define the schema for the data required to save an upload record.
 const saveUploadSchema = z.object({
@@ -75,7 +76,12 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
 
     return { success: true, data: { url } };
   } catch (error) {
-    console.error("Error saving upload metadata:", error);
+    logError(uploadLogger, "Error saving upload metadata", error, {
+      userId,
+      uploadId: id,
+      key,
+      caseId,
+    });
     return { success: false, error: "Failed to save upload details to the database." };
   }
 }

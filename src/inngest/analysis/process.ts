@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { analysisResults } from "@/db/schema";
 import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
+import { analysisLogger, inngestLogger, logError } from "@/lib/logger";
 
 /**
  * Orchestrates the entire multi-step analysis process for a given case.
@@ -29,7 +30,12 @@ export const analysisEvent = inngest.createFunction(
 
         // A safeguard to ensure not to proceed if caseId is not a string.
         if (typeof caseId !== "string") {
-          console.error("Could not find a valid caseId in onFailure event data.", event);
+          logError(
+            inngestLogger,
+            "Could not find a valid caseId in onFailure event data",
+            new Error("Invalid caseId type"),
+            { event, function: "fastapi-analysis-event" }
+          );
           return;
         }
 
@@ -41,6 +47,11 @@ export const analysisEvent = inngest.createFunction(
             updatedAt: new Date(),
           })
           .where(eq(analysisResults.caseId, caseId));
+
+        logError(analysisLogger, "Analysis process failed", error, {
+          caseId,
+          function: "fastapi-analysis-event",
+        });
       }
     },
   },
@@ -99,6 +110,7 @@ export const analysisEvent = inngest.createFunction(
           .where(eq(analysisResults.caseId, caseId));
       });
       // End the function run early with a clear message for monitoring.
+      analysisLogger.info({ caseId }, "Analysis completed with no objects detected");
       return { message: "Workflow ended early: No objects detected." };
     }
 
@@ -127,6 +139,15 @@ export const analysisEvent = inngest.createFunction(
     });
 
     // The final return indicates the successful completion of the workflow.
+    analysisLogger.info(
+      {
+        caseId,
+        totalCounts: fullAnalysisResult.aggregated_results.total_counts,
+        oldestStage: fullAnalysisResult.aggregated_results.oldest_stage_detected,
+        pmiDays: fullAnalysisResult.pmi_estimation?.pmi_days,
+      },
+      "Analysis completed successfully"
+    );
     return { message: `Successfully completed analysis for case: ${caseId}` };
   }
 );

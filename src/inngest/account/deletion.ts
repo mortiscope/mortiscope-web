@@ -6,6 +6,14 @@ import { accountDeletionTokens, users } from "@/db/schema";
 import { getAccountDeletionTokenByToken } from "@/features/account/tokens/account-deletion-token";
 import { DELETION_GRACE_PERIOD_DAYS } from "@/lib/constants";
 import { inngest } from "@/lib/inngest";
+import {
+  authLogger,
+  emailLogger,
+  inngestLogger,
+  logCritical,
+  logError,
+  logUserAction,
+} from "@/lib/logger";
 import { sendAccountDeletionScheduled, sendGoodbyeEmail } from "@/lib/mail";
 
 /**
@@ -26,9 +34,11 @@ export const confirmAccountDeletion = inngest.createFunction(
      */
     onFailure: async ({ error, event }) => {
       const token = (event.data as { token?: string })?.token || "unknown";
-      console.error(
-        `CRITICAL FAILURE: The 'confirm-account-deletion' function failed terminally for token: ${token}. The user's deletion was NOT scheduled.`,
-        error
+      logCritical(
+        inngestLogger,
+        "The 'confirm-account-deletion' function failed terminally. User's deletion was NOT scheduled.",
+        error,
+        { token, function: "confirm-account-deletion" }
       );
     },
   },
@@ -81,10 +91,24 @@ export const confirmAccountDeletion = inngest.createFunction(
       // Send notification email
       try {
         await sendAccountDeletionScheduled(existingUser.email, DELETION_GRACE_PERIOD_DAYS);
+        emailLogger.info(
+          {
+            userId: existingUser.id,
+            email: existingUser.email,
+            gracePeriodDays: DELETION_GRACE_PERIOD_DAYS,
+          },
+          "Account deletion scheduled notification email sent successfully"
+        );
       } catch (emailError) {
-        console.error(
-          `CRITICAL LOG: Account deletion for ${existingUser.email} was scheduled, but the notification email failed to send.`,
-          emailError
+        logCritical(
+          emailLogger,
+          "Account deletion was scheduled, but the notification email failed to send",
+          emailError,
+          {
+            userId: existingUser.id,
+            email: existingUser.email,
+            gracePeriodDays: DELETION_GRACE_PERIOD_DAYS,
+          }
         );
       }
 
@@ -132,9 +156,11 @@ export const executeAccountDeletion = inngest.createFunction(
      */
     onFailure: async ({ error, event }) => {
       const userId = (event.data as { userId?: string })?.userId || "unknown";
-      console.error(
-        `CRITICAL FAILURE & MANUAL INTERVENTION REQUIRED: The 'execute-account-deletion' function failed terminally. User with ID '${userId}' was NOT deleted and requires manual removal.`,
-        error
+      logCritical(
+        inngestLogger,
+        "MANUAL INTERVENTION REQUIRED: The 'execute-account-deletion' function failed terminally. User was NOT deleted and requires manual removal.",
+        error,
+        { userId, function: "execute-account-deletion", requiresManualIntervention: true }
       );
     },
   },
@@ -154,8 +180,9 @@ export const executeAccountDeletion = inngest.createFunction(
 
         // Ensure all return paths have a consistent shape for type safety.
         if (!user || !user.deletionScheduledAt) {
-          console.log(
-            `User ${userId} no longer exists or cancelled deletion. Halting transaction.`
+          authLogger.info(
+            { userId },
+            "User no longer exists or cancelled deletion. Halting transaction."
           );
           return {
             deleted: false,
@@ -169,7 +196,10 @@ export const executeAccountDeletion = inngest.createFunction(
         const now = new Date();
         const scheduledTime = new Date(user.deletionScheduledAt);
         if (now < scheduledTime && now.getTime() - scheduledTime.getTime() < -3600000) {
-          console.log(`Deletion for user ${userId} (${user.email}) triggered too early. Halting.`);
+          authLogger.warn(
+            { userId, email: user.email, scheduledTime, currentTime: now },
+            "Deletion triggered too early. Halting."
+          );
           return {
             deleted: false,
             message: "Triggered too early.",
@@ -181,9 +211,11 @@ export const executeAccountDeletion = inngest.createFunction(
         // Permanently delete the user account within the transaction.
         await tx.delete(users).where(eq(users.id, user.id));
 
-        console.log(
-          `ACCOUNT DELETION: Successfully deleted account for ${user.email} (ID: ${userId}) within transaction.`
-        );
+        logUserAction(authLogger, "account_deleted", userId, {
+          email: user.email,
+          deletedAt: new Date().toISOString(),
+          withinTransaction: true,
+        });
 
         // Return the fresh user details for subsequent steps.
         return {
@@ -204,13 +236,16 @@ export const executeAccountDeletion = inngest.createFunction(
     await step.run("send-goodbye-email", async () => {
       try {
         await sendGoodbyeEmail(deletionResult.userEmail, deletionResult.userName);
-        console.log(
-          `ACCOUNT DELETION: Goodbye email sent successfully to ${deletionResult.userEmail}.`
+        emailLogger.info(
+          { email: deletionResult.userEmail, userName: deletionResult.userName },
+          "Goodbye email sent successfully after account deletion"
         );
       } catch (emailError) {
-        console.error(
-          `ACCOUNT DELETION: Account for ${deletionResult.userEmail} was deleted, but the goodbye email failed to send.`,
-          emailError
+        logError(
+          emailLogger,
+          "Account was deleted, but the goodbye email failed to send",
+          emailError,
+          { email: deletionResult.userEmail, userName: deletionResult.userName }
         );
       }
     });

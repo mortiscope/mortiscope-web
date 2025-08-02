@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { exports } from "@/db/schema";
 import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
+import { exportLogger, inngestLogger, logError } from "@/lib/logger";
 
 /**
  * Triggers the backend worker to start an export process for a case.
@@ -26,7 +27,12 @@ export const exportCaseData = inngest.createFunction(
 
         // A safeguard to ensure a valid exportId.
         if (typeof exportId !== "string") {
-          console.error("Could not find a valid exportId in onFailure event data.", event);
+          logError(
+            inngestLogger,
+            "Could not find a valid exportId in onFailure event data",
+            new Error("Invalid exportId type"),
+            { event, function: "fastapi-export-case-data" }
+          );
           return;
         }
 
@@ -38,6 +44,11 @@ export const exportCaseData = inngest.createFunction(
             failureReason: `Export failed: ${error.message}`,
           })
           .where(eq(exports.id, exportId));
+
+        logError(exportLogger, "Export process failed", error, {
+          exportId,
+          function: "fastapi-export-case-data",
+        });
       }
     },
   },
@@ -79,6 +90,10 @@ export const exportCaseData = inngest.createFunction(
     });
 
     // Handle updating the final status to 'completed' or 'failed'.
+    exportLogger.info(
+      { exportId, caseId, format },
+      "Export job successfully dispatched to FastAPI"
+    );
     return {
       message: `Successfully dispatched export job to FastAPI for exportId: ${exportId}`,
       result,

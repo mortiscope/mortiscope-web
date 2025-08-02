@@ -3,6 +3,7 @@ import Google from "next-auth/providers/google";
 import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 
 import { env } from "@/lib/env";
+import { authLogger, logError } from "@/lib/logger";
 
 // Define the shape of the user profile data returned by ORCID's APIs
 interface OrcidProfile {
@@ -49,7 +50,10 @@ const ORCIDProvider = {
         };
       }
     } catch (error) {
-      console.error("Failed to fetch ORCID person data:", error);
+      logError(authLogger, "Failed to fetch ORCID person data", error, {
+        orcidId: profile.sub,
+        endpoint: personApiEndpoint,
+      });
     }
     return { id: profile.sub, name: profile.name, email: profile.email, image: null };
   },

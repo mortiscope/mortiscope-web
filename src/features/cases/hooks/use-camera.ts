@@ -104,7 +104,10 @@ export const useCamera = ({ isOpen, webcamRef }: UseCameraProps) => {
    * error names into user-friendly titles and descriptions for the interface.
    */
   const handleUserMediaError = (error: string | DOMException) => {
-    console.error("Webcam Error:", error);
+    // Log error details for debugging (client-side only)
+    if (process.env.NODE_ENV === "development") {
+      console.error("Webcam Error:", error);
+    }
     toast.error("Could not access the camera.");
     if (typeof error === "string") {
       setCameraError({

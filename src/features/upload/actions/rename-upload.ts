@@ -9,6 +9,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
+import { logCritical, logError, s3Logger, uploadLogger } from "@/lib/logger";
 
 // Runtime check for AWS environment variables
 if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
@@ -114,10 +115,12 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
         .where(and(eq(uploads.key, oldKey), eq(uploads.userId, userId)));
     } catch (dbError) {
       // The S3 object was renamed, but the database update failed.
-      console.error(
-        `CRITICAL: DB update failed after S3 rename. User: ${userId}, Old Key: ${oldKey}, New Key: ${newKey}`,
-        dbError
-      );
+      logCritical(uploadLogger, "DB update failed after S3 rename", dbError, {
+        userId,
+        oldKey,
+        newKey,
+        requiresManualIntervention: true,
+      });
       return {
         success: false,
         error: "File was renamed, but a database error occurred. Please contact support.",
@@ -127,7 +130,11 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
     return { success: true, data: { newKey, newUrl } };
   } catch (error) {
     // This outer catch handles errors from S3 (copy/delete) or the initial metadata check.
-    console.error("Error renaming file:", error);
+    logError(uploadLogger, "Error renaming file", error, {
+      userId,
+      oldKey: values.oldKey,
+      newFileName: values.newFileName,
+    });
     return {
       success: false,
       error: "An internal server error occurred while renaming the file.",
