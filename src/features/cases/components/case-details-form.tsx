@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, type Variants } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useEffect } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,7 +13,6 @@ import { Form } from "@/components/ui/form";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { createCase } from "@/features/cases/actions/create-case";
 import { updateCase } from "@/features/cases/actions/update-case";
-import { CaseDateInput } from "@/features/cases/components/case-date-input";
 import { CaseFormActions } from "@/features/cases/components/case-form-actions";
 import { CaseLocationInput } from "@/features/cases/components/case-location-input";
 import { CaseNameInput } from "@/features/cases/components/case-name-input";
@@ -23,6 +23,15 @@ import {
   type CaseDetailsFormInput,
   caseDetailsSchema,
 } from "@/features/cases/schemas/case-details";
+
+// Dynamically import case date input and disable Server-Side Rendering (SSR).
+const CaseDateInput = dynamic(
+  () => import("@/features/cases/components/case-date-input").then((module) => module.CaseDateInput),
+  {
+    ssr: false,
+    loading: () => <div className="h-[124px] w-full" />,
+  }
+);
 
 /**
  * Renders the form for the 'Details' step of the case creation process.

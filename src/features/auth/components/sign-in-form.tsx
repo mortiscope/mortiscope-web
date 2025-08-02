@@ -118,9 +118,12 @@ export default function SignInForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-normal md:text-sm">Email</FormLabel>
+                <FormLabel htmlFor="email" className="text-xs font-normal md:text-sm">
+                  Email
+                </FormLabel>
                 <FormControl>
                   <Input
+                    id="email"
                     type="email"
                     placeholder="Enter your email"
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
@@ -139,10 +142,13 @@ export default function SignInForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-xs font-normal md:text-sm">Password</FormLabel>
+                <FormLabel htmlFor="password" className="text-xs font-normal md:text-sm">
+                  Password
+                </FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"

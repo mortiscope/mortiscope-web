@@ -1,9 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import React, { useEffect } from "react";
 
-import { AppBreadcrumb } from "@/components/app-breadcrumb";
+// Dynamically import app breadcrumb and disable Server-Side Rendering (SSR) to prevent hydration issues
+const AppBreadcrumb = dynamic(
+  () => import("@/components/app-breadcrumb").then((module) => ({ default: module.AppBreadcrumb })),
+  {
+    ssr: false,
+    loading: () => <div className="h-6 w-32 animate-pulse rounded bg-slate-300" />,
+  }
+);
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";

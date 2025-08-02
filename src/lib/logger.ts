@@ -27,19 +27,6 @@ const createLogger = () => {
   return pino({
     level: getLogLevel(),
 
-    // Pretty print in development for better readability
-    transport: isDevelopment
-      ? {
-          target: "pino-pretty",
-          options: {
-            colorize: true,
-            translateTime: "SYS:standard",
-            ignore: "pid,hostname",
-            singleLine: false,
-          },
-        }
-      : undefined,
-
     // Base configuration for all environments
     base: {
       env: process.env.NODE_ENV,
