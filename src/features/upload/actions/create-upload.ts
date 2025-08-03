@@ -17,7 +17,7 @@ import {
   MAX_FILE_SIZE,
   PRESIGNED_URL_EXPIRATION_SECONDS,
 } from "@/lib/constants";
-import { logError, s3Logger, uploadLogger } from "@/lib/logger";
+import { logError, uploadLogger } from "@/lib/logger";
 import { formatBytes } from "@/lib/utils";
 
 // Runtime check for AWS Bucket Name

@@ -31,6 +31,11 @@ if (!eslintArgs.some((arg) => !arg.startsWith("--"))) {
   eslintArgs.push(".");
 }
 
+// Add verbose output to see what ESLint is actually doing
+if (!eslintArgs.includes("--format")) {
+  eslintArgs.push("--format", "stylish");
+}
+
 function logInfo(message: string): void {
   console.log(`${chalk.blue("info")} - ${message}`);
 }

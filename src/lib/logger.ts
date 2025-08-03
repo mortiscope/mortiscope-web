@@ -22,8 +22,6 @@ const getLogLevel = (): pino.Level => {
 
 // Base logger configuration
 const createLogger = () => {
-  const isDevelopment = process.env.NODE_ENV === "development";
-
   return pino({
     level: getLogLevel(),
 

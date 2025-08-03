@@ -84,7 +84,7 @@ export const ResultsPreview = () => {
     /**
      * If the mutation fails, this function is called to roll back the optimistic update.
      */
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousCases) queryClient.setQueryData(["cases"], context.previousCases);
       toast.error("Failed to rename. Please try again.");
     },

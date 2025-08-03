@@ -107,7 +107,7 @@ export const DeleteCaseModal = ({
         toast.success(data.success);
       }
     },
-    onError: (error, variables, context) => {
+    onError: (_error, _variables, context) => {
       // If the mutation fails, roll back to the previous state.
       if (context?.previousCases) {
         queryClient.setQueryData(["cases"], context.previousCases);

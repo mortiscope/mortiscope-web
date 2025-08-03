@@ -9,7 +9,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
-import { logCritical, logError, s3Logger, uploadLogger } from "@/lib/logger";
+import { logCritical, logError, uploadLogger } from "@/lib/logger";
 
 // Runtime check for AWS environment variables
 if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
