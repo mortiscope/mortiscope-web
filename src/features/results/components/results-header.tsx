@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import type { cases } from "@/db/schema";
 import { ExportDropdown } from "@/features/export/components/export-dropdown";
+import { ResultsEditCaseButton } from "@/features/results/components/results-edit-case-button";
 import { ResultsRecalculateButton } from "@/features/results/components/results-recalculate-button";
 import { ResultsRecalculateModal } from "@/features/results/components/results-recalculate-modal";
 import { useRecalculationPoller } from "@/features/results/hooks/use-recalculation-poller";
@@ -21,12 +22,16 @@ interface ResultsHeaderProps {
    * The full case data object, including the recalculation status.
    */
   caseData: typeof cases.$inferSelect;
+  /**
+   * A callback function to trigger the opening of the edit sheet.
+   */
+  onEditClick?: () => void;
 }
 
 /**
  * A client component responsible for managing the header content for the results page.
  */
-export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
+export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => {
   const params = useParams();
   const router = useRouter();
   const caseId = typeof params.resultsId === "string" ? params.resultsId : null;
@@ -77,6 +82,7 @@ export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
     if (caseId) {
       setHeaderAdditionalContent(
         <div className="flex items-center gap-1 sm:gap-2">
+          <ResultsEditCaseButton onClick={onEditClick} />
           <ResultsRecalculateButton
             caseId={caseId}
             isDisabled={!shouldEnableRecalculation || isPolling}
@@ -98,6 +104,7 @@ export const ResultsHeader = ({ caseData }: ResultsHeaderProps) => {
     setHeaderAdditionalContent,
     clearHeaderAdditionalContent,
     pendingRecalculations,
+    onEditClick,
   ]);
 
   // Return a fragment containing the modal to render the results recalculate modal.

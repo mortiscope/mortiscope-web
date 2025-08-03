@@ -2,8 +2,9 @@
 
 import { AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type detections, type uploads } from "@/db/schema";
 import { ImageGrid } from "@/features/results/components/image-grid";
@@ -67,6 +68,13 @@ type ResultsImagesProps = {
  * and orchestrates the rendering of the toolbar, image grid, and various modals.
  */
 export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) => {
+  // State to ensure components with random IDs only render on the client.
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Initializes the master hook that provides all state and logic for this component.
   const {
     searchTerm,
@@ -109,13 +117,23 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     <>
       <TooltipProvider>
         <div className="w-full">
-          <ImageToolbar
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
-            sortOption={sortOption}
-            onSortOptionChange={setSortOption}
-            isSortDisabled={isSortDisabled}
-          />
+          {isMounted ? (
+            <ImageToolbar
+              searchTerm={searchTerm}
+              onSearchTermChange={setSearchTerm}
+              sortOption={sortOption}
+              onSortOptionChange={setSortOption}
+              isSortDisabled={isSortDisabled}
+            />
+          ) : (
+            // Render a skeleton placeholder to prevent layout shift during hydration.
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <Skeleton className="h-10 w-full max-w-sm bg-white" />
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-10 w-11 shrink-0 bg-white sm:w-[190px]" />
+              </div>
+            </div>
+          )}
           {/* Manages the animated transition between the image grid and the "no results" message. */}
           <AnimatePresence mode="wait">
             {sortedFiles.length > 0 ? (

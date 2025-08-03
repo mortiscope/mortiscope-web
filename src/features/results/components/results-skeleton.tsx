@@ -6,6 +6,8 @@ import { LG_GRID_LIMIT, MD_GRID_LIMIT, SM_GRID_LIMIT } from "@/lib/constants";
  */
 export const ResultsHeaderSkeletonWrapper = () => (
   <div className="flex items-center gap-1 sm:gap-2">
+    {/* Edit Case button skeleton */}
+    <Skeleton className="h-10 w-11 shrink-0 bg-white sm:w-[130px]" />
     {/* Recalculate button skeleton */}
     <Skeleton className="h-10 w-11 shrink-0 bg-white sm:w-[130px]" />
     {/* Export dropdown button skeleton */}
