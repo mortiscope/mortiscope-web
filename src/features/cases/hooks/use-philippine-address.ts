@@ -17,7 +17,7 @@ type UsePhilippineAddressProps = {
 /**
  * A hook to manage fetching and state for Philippine address dropdowns.
  * @param dependencies - The selected codes for region, province, and city to trigger fetches.
- * @returns Lists of regions, provinces, cities, and barangays.
+ * @returns Lists of regions, provinces, cities, and barangays, plus a loading state.
  */
 export const usePhilippineAddress = ({
   regionCode,
@@ -28,6 +28,7 @@ export const usePhilippineAddress = ({
   const [provinceList, setProvinceList] = useState<AddressPart[]>([]);
   const [cityList, setCityList] = useState<AddressPart[]>([]);
   const [barangayList, setBarangayList] = useState<AddressPart[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetches the list of all regions on initial component mount.
   useEffect(() => {
@@ -36,6 +37,8 @@ export const usePhilippineAddress = ({
         const formatted = data.map((r) => ({ code: r.region_code, name: r.region_name }));
         setRegionList(formatted);
       }
+      // Once the essential regions are fetched, the initial load is complete.
+      setIsLoading(false);
     });
   }, []);
 
@@ -90,5 +93,6 @@ export const usePhilippineAddress = ({
     }
   }, [cityCode]);
 
-  return { regionList, provinceList, cityList, barangayList };
+  // Return the new loading state along with the lists.
+  return { regionList, provinceList, cityList, barangayList, isLoading };
 };

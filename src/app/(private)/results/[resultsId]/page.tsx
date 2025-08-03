@@ -64,7 +64,7 @@ async function ResultsPageContent({ resultsId }: { resultsId: string }) {
     notFound();
   }
 
-  return <ResultsView caseData={caseData} />;
+  return <ResultsView initialCaseData={caseData} />;
 }
 
 /**

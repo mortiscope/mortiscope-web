@@ -129,9 +129,9 @@ export const ResultsDetails = ({ caseData, isLoading }: ResultsDetailsProps) => 
             />
 
             {/* The card's header section. */}
-            <div className="relative flex items-center gap-2">
+            <div className="relative flex min-w-0 items-center gap-2">
               <Icon className={`h-5 w-5 flex-shrink-0 ${theme.icon}`} />
-              <CardTitle className={`font-inter text-sm font-normal ${theme.text}`}>
+              <CardTitle className={`font-inter truncate text-sm font-normal ${theme.text}`}>
                 {detail.title}
               </CardTitle>
             </div>
