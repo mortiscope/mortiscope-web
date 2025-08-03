@@ -35,156 +35,166 @@ const isDateToday = (date: Date | undefined): boolean => {
 type CaseDateInputProps = {
   /** The `react-hook-form` instance, used for controlling the form field. */
   form: UseFormReturn<CaseDetailsFormInput>;
+  /** The layout of the date and time inputs. Defaults to 'horizontal'. */
+  layout?: "horizontal" | "vertical";
+  /** Whether to show the 'Set to Current Date' switch. Defaults to true. */
+  showSwitch?: boolean;
 };
 
 /**
  * A memoized component that renders the date and time pickers for the case.
  */
-export const CaseDateInput = memo(({ form }: CaseDateInputProps) => {
-  const { control, setValue, resetField } = form;
+export const CaseDateInput = memo(
+  ({ form, layout = "horizontal", showSwitch = true }: CaseDateInputProps) => {
+    const { control, setValue, resetField } = form;
 
-  // State to track focus on the time input with the placeholder.
-  const [isTimeInputFocused, setIsTimeInputFocused] = useState(false);
+    const [isTimeInputFocused, setIsTimeInputFocused] = useState(false);
 
-  const caseDateValue = useWatch({
-    control,
-    name: "caseDate",
-  });
+    const caseDateValue = useWatch({
+      control,
+      name: "caseDate",
+    });
 
-  return (
-    <FormField
-      control={control}
-      name="caseDate"
-      render={({ field }) => {
-        /**
-         * A handler for the calendar popover. It updates the date part of the
-         * form value while preserving the existing time.
-         */
-        const handleDateChange = (date: Date | undefined) => {
-          if (!date) {
-            field.onChange(undefined);
-            return;
-          }
-          // Preserve the existing time from the field's value, or use the current time if none exists.
-          const currentDateTime = field.value || new Date(date);
-          const newDate = new Date(date);
-          newDate.setHours(
-            currentDateTime.getHours(),
-            currentDateTime.getMinutes(),
-            currentDateTime.getSeconds(),
-            currentDateTime.getMilliseconds()
-          );
-          field.onChange(newDate);
-        };
+    return (
+      <FormField
+        control={control}
+        name="caseDate"
+        render={({ field }) => {
+          /**
+           * A handler for the calendar popover.
+           */
+          const handleDateChange = (date: Date | undefined) => {
+            if (!date) {
+              field.onChange(undefined);
+              return;
+            }
+            const currentDateTime = field.value || new Date(date);
+            const newDate = new Date(date);
+            newDate.setHours(
+              currentDateTime.getHours(),
+              currentDateTime.getMinutes(),
+              currentDateTime.getSeconds(),
+              currentDateTime.getMilliseconds()
+            );
+            field.onChange(newDate);
+          };
 
-        /**
-         * A handler for the time input. It updates the time part of the
-         * form value while preserving the existing date.
-         */
-        const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          const timeValue = e.target.value;
-          if (!timeValue) return;
+          /**
+           * A handler for the time input.
+           */
+          const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const timeValue = e.target.value;
+            if (!timeValue) return;
 
-          const [hours, minutes, seconds] = timeValue.split(":").map(Number);
-          const currentDate = field.value || new Date();
-          const newDate = new Date(currentDate);
-          newDate.setHours(hours, minutes, seconds || 0);
-          field.onChange(newDate);
-        };
+            const [hours, minutes, seconds] = timeValue.split(":").map(Number);
+            const currentDate = field.value || new Date();
+            const newDate = new Date(currentDate);
+            newDate.setHours(hours, minutes, seconds || 0);
+            field.onChange(newDate);
+          };
 
-        // The main interactive component.
-        return (
-          <FormItem className="flex flex-col">
-            <FormLabel className={sectionTitle}>Case Date and Time</FormLabel>
-            <div className="flex flex-col gap-4 md:flex-row md:gap-2">
-              {/* The date picker */}
-              <div className="w-full md:w-3/5">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          uniformInputStyles,
-                          "w-full cursor-pointer justify-start overflow-hidden text-left font-normal text-ellipsis whitespace-nowrap",
-                          !field.value && "!text-slate-400"
-                        )}
-                      >
-                        <PiCalendarCheck className="mr-2 h-4 w-4" />
-                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={handleDateChange}
-                      disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                      autoFocus
-                      className="font-inter"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {/* Time input */}
+          return (
+            <FormItem className="flex flex-col">
+              <FormLabel className={sectionTitle}>Case Date and Time</FormLabel>
               <div
-                className={cn("relative w-full md:w-2/5", {
-                  "cursor-not-allowed": !field.value,
-                })}
+                className={cn(
+                  "flex flex-col gap-4",
+                  layout === "horizontal" && "md:flex-row md:gap-2"
+                )}
               >
-                <PiClock
-                  className={cn("absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400", {
-                    "text-slate-800": !!field.value,
-                  })}
-                />
-                <FormControl>
-                  <Input
-                    type={isTimeInputFocused || field.value ? "time" : "text"}
-                    onFocus={() => setIsTimeInputFocused(true)}
-                    onBlur={() => setIsTimeInputFocused(false)}
-                    step="1"
-                    placeholder="Enter a time"
-                    className={cn(
-                      uniformInputStyles,
-                      "overflow-hidden pl-9 text-ellipsis whitespace-nowrap"
-                    )}
-                    value={field.value ? format(field.value, "HH:mm:ss") : ""}
-                    onChange={handleTimeChange}
-                    disabled={!field.value}
-                  />
-                </FormControl>
-              </div>
-            </div>
+                {/* The date picker */}
+                <div className={cn(layout === "horizontal" && "w-full md:w-3/5")}>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            uniformInputStyles,
+                            "w-full cursor-pointer justify-start overflow-hidden text-left font-normal text-ellipsis whitespace-nowrap",
+                            !field.value && "!text-slate-400"
+                          )}
+                        >
+                          <PiCalendarCheck className="mr-2 h-4 w-4" />
+                          {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={handleDateChange}
+                        disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                        autoFocus
+                        className="font-inter"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
 
-            {/* The switch to set the date and time to the current moment. */}
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch
-                id="current-date-toggle"
-                className="cursor-pointer data-[state=checked]:bg-emerald-600"
-                checked={isDateToday(caseDateValue)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    setValue("caseDate", new Date(), { shouldValidate: true });
-                  } else {
-                    resetField("caseDate");
-                  }
-                }}
-              />
-              <FormLabel
-                htmlFor="current-date-toggle"
-                className="font-inter text-xs font-normal text-slate-500 md:text-sm"
-              >
-                Set to Current Date and Time
-              </FormLabel>
-            </div>
-            <FormMessage />
-          </FormItem>
-        );
-      }}
-    />
-  );
-});
+                {/* Time input */}
+                <div
+                  className={cn(
+                    "relative",
+                    layout === "horizontal" ? "w-full md:w-2/5" : "w-full",
+                    { "cursor-not-allowed": !field.value }
+                  )}
+                >
+                  <PiClock
+                    className={cn(
+                      "absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400",
+                      { "text-slate-800": !!field.value }
+                    )}
+                  />
+                  <FormControl>
+                    <Input
+                      type={isTimeInputFocused || field.value ? "time" : "text"}
+                      onFocus={() => setIsTimeInputFocused(true)}
+                      onBlur={() => setIsTimeInputFocused(false)}
+                      step="1"
+                      placeholder="Enter a time"
+                      className={cn(
+                        uniformInputStyles,
+                        "overflow-hidden pl-9 text-ellipsis whitespace-nowrap"
+                      )}
+                      value={field.value ? format(field.value, "HH:mm:ss") : ""}
+                      onChange={handleTimeChange}
+                      disabled={!field.value}
+                    />
+                  </FormControl>
+                </div>
+              </div>
+
+              {showSwitch && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <Switch
+                    id="current-date-toggle"
+                    className="cursor-pointer data-[state=checked]:bg-emerald-600"
+                    checked={isDateToday(caseDateValue)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setValue("caseDate", new Date(), { shouldValidate: true });
+                      } else {
+                        resetField("caseDate");
+                      }
+                    }}
+                  />
+                  <FormLabel
+                    htmlFor="current-date-toggle"
+                    className="font-inter text-xs font-normal text-slate-500 md:text-sm"
+                  >
+                    Set to Current Date and Time
+                  </FormLabel>
+                </div>
+              )}
+              <FormMessage />
+            </FormItem>
+          );
+        }}
+      />
+    );
+  }
+);
 
 CaseDateInput.displayName = "CaseDateInput";

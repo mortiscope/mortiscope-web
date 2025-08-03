@@ -26,13 +26,21 @@ type CaseLocationInputProps = {
   provinceList: AddressPart[];
   cityList: AddressPart[];
   barangayList: AddressPart[];
+  className?: string;
 };
 
 /**
  * Renders a group of dependent dropdowns for selecting a Philippine address.
  */
 export const CaseLocationInput = memo(
-  ({ form, regionList, provinceList, cityList, barangayList }: CaseLocationInputProps) => {
+  ({
+    form,
+    regionList,
+    provinceList,
+    cityList,
+    barangayList,
+    className,
+  }: CaseLocationInputProps) => {
     const { control, watch, setValue } = form;
     const watchedRegion = watch("location.region");
     const watchedProvince = watch("location.province");
@@ -41,7 +49,7 @@ export const CaseLocationInput = memo(
     return (
       <FormItem>
         <FormLabel className={sectionTitle}>Location</FormLabel>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", className)}>
           {/* Region selection dropdown. */}
           <FormField
             control={control}
@@ -54,9 +62,9 @@ export const CaseLocationInput = memo(
                   onValueChange={(code) => {
                     const region = regionList.find((r) => r.code === code) || null;
                     field.onChange(region);
-                    setValue("location.province", null);
-                    setValue("location.city", null);
-                    setValue("location.barangay", null);
+                    setValue("location.province", null, { shouldValidate: true });
+                    setValue("location.city", null, { shouldValidate: true });
+                    setValue("location.barangay", null, { shouldValidate: true });
                   }}
                 >
                   <FormControl>
@@ -95,10 +103,10 @@ export const CaseLocationInput = memo(
                   onValueChange={(code) => {
                     const province = provinceList.find((p) => p.code === code) || null;
                     field.onChange(province);
-                    setValue("location.city", null);
-                    setValue("location.barangay", null);
+                    setValue("location.city", null, { shouldValidate: true });
+                    setValue("location.barangay", null, { shouldValidate: true });
                   }}
-                  disabled={!watchedRegion?.code || provinceList.length === 0}
+                  disabled={!watchedRegion}
                 >
                   <FormControl>
                     <SelectTrigger
@@ -136,9 +144,9 @@ export const CaseLocationInput = memo(
                   onValueChange={(code) => {
                     const city = cityList.find((c) => c.code === code) || null;
                     field.onChange(city);
-                    setValue("location.barangay", null);
+                    setValue("location.barangay", null, { shouldValidate: true });
                   }}
-                  disabled={!watchedProvince?.code || cityList.length === 0}
+                  disabled={!watchedProvince}
                 >
                   <FormControl>
                     <SelectTrigger
@@ -177,7 +185,7 @@ export const CaseLocationInput = memo(
                     const barangay = barangayList.find((b) => b.code === code) || null;
                     field.onChange(barangay);
                   }}
-                  disabled={!watchedCity?.code || barangayList.length === 0}
+                  disabled={!watchedCity}
                 >
                   <FormControl>
                     <SelectTrigger
