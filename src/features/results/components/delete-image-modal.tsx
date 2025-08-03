@@ -106,10 +106,8 @@ export const DeleteImageModal = ({
           markForRecalculation(caseId);
         }
 
-        // Use setTimeout to ensure the invalidation happens after the modal is fully closed
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ["caseData", caseId] });
-        }, 100);
+        // Invalidate the case data query to refresh the UI immediately
+        queryClient.invalidateQueries({ queryKey: ["case", caseId] });
       } else {
         toast.error(data.error || "Failed to delete file.");
       }

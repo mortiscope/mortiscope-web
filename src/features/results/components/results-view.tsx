@@ -11,6 +11,7 @@ import { ResultsHeaderSkeleton } from "@/features/results/components/results-hea
 import { ResultsImages } from "@/features/results/components/results-images";
 import { ResultsDetailsSkeleton } from "@/features/results/components/results-skeleton";
 import { useCaseData } from "@/features/results/hooks/use-case-data";
+import { useResultsStore } from "@/features/results/store/results-store";
 
 /**
  * A comprehensive TypeScript type that represents a single case and all its relations
@@ -43,6 +44,7 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
    * Initializes the `useCaseData` hook to fetch and manage live data for the current case.
    */
   const { data: caseData, isLoading } = useCaseData(initialCaseData.id, initialCaseData);
+  const pendingRecalculations = useResultsStore((state) => state.pendingRecalculations);
 
   /**
    * While the initial data is being fetched by `useCaseData` for the first time on the client,
@@ -59,6 +61,9 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
     );
   }
 
+  // A derived state that is true if the database flag is set or if there's a pending client-side change.
+  const needsRecalculation = caseData.recalculationNeeded || pendingRecalculations.has(caseData.id);
+
   // Extracts the uploads with their nested detections for easier prop passing to child components.
   const uploadsWithDetections = caseData.uploads;
 
@@ -74,6 +79,7 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
           caseData={caseData}
           analysisResult={caseData.analysisResult}
           uploads={uploadsWithDetections}
+          isRecalculationNeeded={needsRecalculation}
         />
         {/* Renders the image gallery, passing the initial set of images. */}
         <ResultsImages initialImages={uploadsWithDetections} />

@@ -23,6 +23,7 @@ import {
   caseDetailsSchema,
 } from "@/features/cases/schemas/case-details";
 import { type CaseWithRelations } from "@/features/results/components/results-view";
+import { useResultsStore } from "@/features/results/store/results-store";
 import { cn } from "@/lib/utils";
 
 /**
@@ -53,6 +54,7 @@ interface ResultsEditCaseFormProps {
  */
 export const ResultsEditCaseForm = ({ caseData, onSuccess }: ResultsEditCaseFormProps) => {
   const queryClient = useQueryClient();
+  const markForRecalculation = useResultsStore((state) => state.markForRecalculation);
 
   // Maps the initial server data to the format expected by the `react-hook-form` instance.
   const defaultFormValues: CaseDetailsFormInput = {
@@ -162,7 +164,12 @@ export const ResultsEditCaseForm = ({ caseData, onSuccess }: ResultsEditCaseForm
     mutationFn: updateCase,
     onSuccess: (result, variables) => {
       if (result.success) {
-        toast.success(`"${variables.details.caseName}" edited successfully.`);
+        toast.success(`${variables.details.caseName} edited successfully.`);
+
+        // If the server confirms the temperature changed, mark it for recalculation on the client.
+        if (result.recalculationTriggered) {
+          markForRecalculation(caseData.id);
+        }
 
         // Invalidate multiple queries to ensure the interface is updated with the new data.
         const caseId = caseData.id;

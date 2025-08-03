@@ -36,6 +36,7 @@ export const PmiWidget = memo(
     selectedUnit,
     hasEstimation,
     isInfoButtonEnabled,
+    isRecalculationNeeded,
     ...toolbarProps
   }: PmiWidgetProps) => {
     return (
@@ -55,6 +56,7 @@ export const PmiWidget = memo(
             selectedUnit={selectedUnit}
             hasEstimation={hasEstimation}
             isInfoButtonEnabled={isInfoButtonEnabled}
+            isRecalculationNeeded={isRecalculationNeeded}
             {...toolbarProps}
           />
         </div>

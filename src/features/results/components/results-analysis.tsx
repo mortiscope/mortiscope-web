@@ -11,7 +11,6 @@ import { ResultsAnalysisSkeleton } from "@/features/results/components/results-s
 import { ReviewedImagesWidget } from "@/features/results/components/reviewed-images-widget";
 import { type ChartType } from "@/features/results/components/summary-chart-toolbar";
 import { SummaryChartWidget } from "@/features/results/components/summary-chart-widget";
-import { useResultsStore } from "@/features/results/store/results-store";
 import { DETECTION_CLASS_ORDER } from "@/lib/constants";
 
 // Lazily load modal components to improve initial page load performance.
@@ -56,6 +55,8 @@ interface ResultsAnalysisProps {
   uploads?: UploadWithDetections[];
   /** If true, the component will render its skeleton loading state. */
   isLoading?: boolean;
+  /** A derived boolean from the parent to signal if a recalculation is needed. */
+  isRecalculationNeeded?: boolean;
 }
 
 /**
@@ -67,9 +68,11 @@ export const ResultsAnalysis = ({
   analysisResult,
   uploads = [],
   isLoading,
+  isRecalculationNeeded,
 }: ResultsAnalysisProps) => {
   // All Hooks are called unconditionally at the top of the component.
   const [selectedUnit, setSelectedUnit] = useState<TimeUnit>("Hours");
+
   // State to manage the currently selected chart type.
   const [selectedChart, setSelectedChart] = useState<ChartType>("Bar Chart");
   // State to manage the visibility of the PMI explanation modal.
@@ -78,7 +81,6 @@ export const ResultsAnalysis = ({
   const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
   // State to manage the selected data source for the chart.
   const [selectedDataSource, setSelectedDataSource] = useState<string>("overall");
-  const pendingRecalculations = useResultsStore((state) => state.pendingRecalculations);
 
   /**
    * Memoizes the formatted data for the summary chart.
@@ -120,11 +122,6 @@ export const ResultsAnalysis = ({
     return DETECTION_CLASS_ORDER.map((name) => ({ name, quantity: counts[name] || 0 }));
   }, [selectedDataSource, uploads]);
 
-  // The conditional return now happens *after* all hooks have been called.
-  if (isLoading || !analysisResult || !caseData) {
-    return <ResultsAnalysisSkeleton />;
-  }
-
   // A map to easily retrieve the correct PMI value based on the selected time unit.
   const pmiValueMap = {
     Minutes: analysisResult?.pmiMinutes,
@@ -136,6 +133,11 @@ export const ResultsAnalysis = ({
 
   // A clear flag to check if a valid PMI estimation exists.
   const hasEstimation = typeof displayedPmiValue === "number";
+
+  // The conditional return now happens *after* all hooks have been called.
+  if (isLoading || !analysisResult || !caseData) {
+    return <ResultsAnalysisSkeleton />;
+  }
 
   /**
    * A flag for the specific scenario where no estimation exists, but an adult was detected.
@@ -151,11 +153,6 @@ export const ResultsAnalysis = ({
 
   // A clear flag to check if the data source dropdown should be enabled.
   const isDataSourceDisabled = !uploads || uploads.length === 0;
-
-  // Determines if a recalculation is needed by checking both the server-side flag
-  // and any pending client-side changes from the global store.
-  const hasPendingChanges = caseData?.id ? pendingRecalculations.has(caseData.id) : false;
-  const isRecalculationNeeded = (caseData?.recalculationNeeded ?? false) || hasPendingChanges;
 
   return (
     <>
@@ -176,7 +173,7 @@ export const ResultsAnalysis = ({
             selectedUnit={selectedUnit}
             hasEstimation={hasEstimation}
             isInfoButtonEnabled={isInfoButtonEnabled}
-            isRecalculationNeeded={isRecalculationNeeded}
+            isRecalculationNeeded={isRecalculationNeeded ?? false}
             onUnitSelect={setSelectedUnit}
             onInfoClick={() => setIsPmiModalOpen(true)}
           />

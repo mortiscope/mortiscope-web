@@ -16,6 +16,7 @@ type ActionResponse = {
   success: boolean;
   error?: string;
   details?: z.ZodIssue[];
+  recalculationTriggered?: boolean;
 };
 
 /**
@@ -62,6 +63,19 @@ export async function updateCase(values: {
   }
 
   try {
+    // Fetch the existing case to compare the temperature.
+    const existingCase = await db.query.cases.findFirst({
+      where: and(eq(cases.id, values.caseId), eq(cases.userId, userId)),
+      columns: { temperatureCelsius: true },
+    });
+
+    if (!existingCase) {
+      return { success: false, error: "Case not found or access denied." };
+    }
+
+    // Check if the temperature has changed.
+    const temperatureChanged = existingCase.temperatureCelsius !== temperatureCelsius;
+
     // Execute the database update for the specified case.
     const result = await db
       .update(cases)
@@ -73,6 +87,7 @@ export async function updateCase(values: {
         locationCity: data.location.city.name,
         locationBarangay: data.location.barangay.name,
         caseDate: data.caseDate,
+        recalculationNeeded: temperatureChanged,
       })
       .where(and(eq(cases.id, values.caseId), eq(cases.userId, userId)));
 
@@ -85,7 +100,8 @@ export async function updateCase(values: {
       caseId: values.caseId,
       caseName: data.caseName,
     });
-    return { success: true };
+    // Return the flag to the client.
+    return { success: true, recalculationTriggered: temperatureChanged };
   } catch (error) {
     logError(caseLogger, "Error updating case", error, {
       userId,

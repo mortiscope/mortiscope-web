@@ -66,15 +66,30 @@ export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => 
         clearRecalculationFlag(caseId);
       }
 
-      // Invalidate all related queries to ensure fresh data
-      setTimeout(async () => {
-        // Remove all cached data for this case
+      // Intelligent query invalidation with retry logic
+      const invalidateWithRetry = async (attempt = 1, maxAttempts = 3) => {
+        // Invalidate queries
+        await queryClient.invalidateQueries({ queryKey: ["case", caseId] });
         await queryClient.invalidateQueries({ queryKey: ["recalculationStatus", caseId] });
         await queryClient.invalidateQueries({ queryKey: ["cases"] });
 
-        // Force a page refresh to get the updated server-side case data
+        // Check if the database flag has been cleared
+        setTimeout(async () => {
+          const freshData = queryClient.getQueryData(["case", caseId]) as typeof cases.$inferSelect;
+
+          if (freshData?.recalculationNeeded && attempt < maxAttempts) {
+            invalidateWithRetry(attempt + 1, maxAttempts);
+          }
+        }, 500);
+      };
+
+      // Start the intelligent invalidation after a short delay
+      setTimeout(() => invalidateWithRetry(), 800);
+
+      // Still do the delayed page refresh for complete data consistency
+      setTimeout(() => {
         router.refresh();
-      }, 2000);
+      }, 4000);
     },
   });
 

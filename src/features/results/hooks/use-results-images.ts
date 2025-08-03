@@ -24,8 +24,8 @@ export const useResultsImages = (initialImages?: InitialImages) => {
    * Memoizes the transformation of raw server data into the `ImageFile` format used by the client.
    * This runs only when the initial server data changes, preventing unnecessary re-mapping.
    */
-  const mappedImages: ImageFile[] = useMemo(
-    () =>
+  const mappedImages: ImageFile[] = useMemo(() => {
+    const mapped =
       initialImages?.map((img) => ({
         id: img.id,
         name: img.name,
@@ -34,9 +34,10 @@ export const useResultsImages = (initialImages?: InitialImages) => {
         dateUploaded: img.createdAt,
         version: img.createdAt.getTime(),
         detections: img.detections,
-      })) || [],
-    [initialImages]
-  );
+      })) || [];
+
+    return mapped;
+  }, [initialImages]);
 
   // Local State Management
   const [files, setFiles] = useState<ImageFile[]>(mappedImages);
