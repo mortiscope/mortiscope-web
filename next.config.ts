@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  typedRoutes: true,
 };
 
 export default process.env.ANALYZE === "true" ? withBundleAnalyzer(nextConfig) : nextConfig;

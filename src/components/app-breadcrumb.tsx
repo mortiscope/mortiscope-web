@@ -1,5 +1,6 @@
 "use client";
 
+import { type Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
@@ -92,7 +93,8 @@ const BreadcrumbLinkItem = ({
 }: BreadcrumbItemType & { isStatic?: boolean }) => (
   <BreadcrumbLink asChild>
     <Link
-      href={href}
+      // Cast the dynamically generated href string as a Route type.
+      href={href as Route}
       className={cn(
         "group",
         // Conditionally apply cursor and disable pointer events
@@ -128,7 +130,8 @@ const StyledDropdownMenuItem = ({
       !isStatic && "cursor-pointer hover:border-emerald-200 focus:bg-emerald-100"
     )}
   >
-    <Link href={href} className={cn("group", isStatic && "pointer-events-none")}>
+    {/* Cast the dynamically generated href string as a Route type. */}
+    <Link href={href as Route} className={cn("group", isStatic && "pointer-events-none")}>
       <span
         className={cn(
           "transition-colors duration-300 ease-in-out",

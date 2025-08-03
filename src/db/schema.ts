@@ -241,6 +241,7 @@ export const exports = pgTable("exports", {
     .defaultNow()
     .$onUpdate(() => new Date()),
 });
+
 // Defines the relationships for the `users` table.
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),

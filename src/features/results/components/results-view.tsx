@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect,useState } from "react";
 
 import type { analysisResults, cases, detections, uploads } from "@/db/schema";
 import { ResultsImages } from "@/features/images/components/results-images";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
-import { ResultsEditCaseSheet } from "@/features/results/components/results-edit-case-sheet";
 import { ResultsHeader } from "@/features/results/components/results-header";
 import { ResultsHeaderSkeleton } from "@/features/results/components/results-header-skeleton";
 import { ResultsDetailsSkeleton } from "@/features/results/components/results-skeleton";
@@ -33,18 +33,47 @@ interface ResultsViewProps {
   initialCaseData: CaseWithRelations;
 }
 
+// Dynamically import the results edit case sheet.
+const DynamicResultsEditCaseSheet = dynamic(() =>
+  import("@/features/results/components/results-edit-case-sheet").then(
+    (module) => module.ResultsEditCaseSheet
+  )
+);
+
 /**
  * A smart client component responsible for orchestrating the entire results page.
  */
 export function ResultsView({ initialCaseData }: ResultsViewProps) {
   /** Local state to manage the visibility of the side sheet for editing case details. */
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  /** A new state to control whether the sheet is mounted in the DOM. */
+  const [isSheetMounted, setIsSheetMounted] = useState(false);
 
   /**
    * Initializes the `useCaseData` hook to fetch and manage live data for the current case.
    */
   const { data: caseData, isLoading } = useCaseData(initialCaseData.id, initialCaseData);
   const pendingRecalculations = useResultsStore((state) => state.pendingRecalculations);
+
+  // Effect to handle mounting and unmounting for animations.
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (isEditSheetOpen) {
+      // If the sheet should be open, ensure it's mounted immediately.
+      setIsSheetMounted(true);
+    } else if (!isEditSheetOpen && isSheetMounted) {
+      // If the sheet is closing, wait for the animation (500ms) to finish before unmounting.
+      timeoutId = setTimeout(() => {
+        setIsSheetMounted(false);
+      }, 500);
+    }
+
+    // Cleanup function to clear the timeout if the component unmounts or state changes again.
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [isEditSheetOpen, isSheetMounted]);
 
   /**
    * While the initial data is being fetched by `useCaseData` for the first time on the client,
@@ -85,12 +114,14 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
         <ResultsImages initialImages={uploadsWithDetections} />
       </div>
 
-      {/* Renders the edit sheet, which is conditionally visible. */}
-      <ResultsEditCaseSheet
-        isOpen={isEditSheetOpen}
-        onOpenChange={setIsEditSheetOpen}
-        caseData={caseData}
-      />
+      {/* The component is rendered based on `isSheetMounted`. */}
+      {isSheetMounted && (
+        <DynamicResultsEditCaseSheet
+          isOpen={isEditSheetOpen}
+          onOpenChange={setIsEditSheetOpen}
+          caseData={caseData}
+        />
+      )}
     </>
   );
 }

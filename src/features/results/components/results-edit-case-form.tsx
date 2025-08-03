@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { BeatLoader } from "react-spinners";
 import { toast } from "sonner";
@@ -55,6 +55,22 @@ interface ResultsEditCaseFormProps {
 export const ResultsEditCaseForm = ({ caseData, onSuccess }: ResultsEditCaseFormProps) => {
   const queryClient = useQueryClient();
   const markForRecalculation = useResultsStore((state) => state.markForRecalculation);
+
+  // State to manage the lock status of each form field group.
+  const [lockedFields, setLockedFields] = useState({
+    caseName: true,
+    caseDate: true,
+    temperature: true,
+    location: true,
+  });
+
+  // A handler function to toggle the lock state for a specific field.
+  const toggleLock = (field: keyof typeof lockedFields) => {
+    setLockedFields((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
 
   // Maps the initial server data to the format expected by the `react-hook-form` instance.
   const defaultFormValues: CaseDetailsFormInput = {
@@ -209,16 +225,32 @@ export const ResultsEditCaseForm = ({ caseData, onSuccess }: ResultsEditCaseForm
             </div>
           ) : (
             <div className="space-y-8 p-6">
-              <CaseNameInput control={form.control} />
-              <CaseDateInput form={form} layout="vertical" showSwitch={false} />
-              <CaseTemperatureInput control={form.control} />
+              <CaseNameInput
+                control={form.control}
+                isLocked={lockedFields.caseName}
+                onToggleLock={() => toggleLock("caseName")}
+              />
+              <CaseDateInput
+                form={form}
+                variant="stacked"
+                showSwitch={false}
+                isLocked={lockedFields.caseDate}
+                onToggleLock={() => toggleLock("caseDate")}
+              />
+              <CaseTemperatureInput
+                control={form.control}
+                isLocked={lockedFields.temperature}
+                onToggleLock={() => toggleLock("temperature")}
+              />
               <CaseLocationInput
                 form={form}
+                variant="stacked"
                 regionList={regionList}
                 provinceList={provinceList}
                 cityList={cityList}
                 barangayList={barangayList}
-                className="grid-cols-1 md:grid-cols-1"
+                isLocked={lockedFields.location}
+                onToggleLock={() => toggleLock("location")}
               />
             </div>
           )}

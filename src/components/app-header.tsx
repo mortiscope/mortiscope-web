@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import React, { useEffect,useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiLogOut } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { LuHouse } from "react-icons/lu";
@@ -188,12 +188,14 @@ export const AppHeader = () => {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className={menuItemClassName}>
+                {/* @ts-expect-error: Route is yet to be implemented. */}
                 <Link href="/account">
                   <IoSettingsOutline className="mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500" />
                   <span className="transition-colors group-hover:text-emerald-500">Account</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className={menuItemClassName}>
+                {/* @ts-expect-error: Route is yet to be implemented. */}
                 <Link href="/help">
                   <PiLightbulbFilament className="mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500" />
                   <span className="transition-colors group-hover:text-emerald-500">Help</span>

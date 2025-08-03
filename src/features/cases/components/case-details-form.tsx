@@ -26,7 +26,8 @@ import {
 
 // Dynamically import case date input and disable Server-Side Rendering (SSR).
 const CaseDateInput = dynamic(
-  () => import("@/features/cases/components/case-date-input").then((module) => module.CaseDateInput),
+  () =>
+    import("@/features/cases/components/case-date-input").then((module) => module.CaseDateInput),
   {
     ssr: false,
     loading: () => <div className="h-[124px] w-full" />,
@@ -185,11 +186,12 @@ export const CaseDetailsForm = () => {
             <CardContent className="space-y-8 px-0">
               <CaseNameInput control={form.control} />
               <div className="grid grid-cols-1 items-start gap-x-4 gap-y-8 md:grid-cols-2">
-                <CaseDateInput form={form} />
+                <CaseDateInput form={form} variant="horizontal" />
                 <CaseTemperatureInput control={form.control} />
               </div>
               <CaseLocationInput
                 form={form}
+                variant="grid"
                 regionList={regionList}
                 provinceList={provinceList}
                 cityList={cityList}

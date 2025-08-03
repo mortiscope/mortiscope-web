@@ -1,10 +1,12 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
+import { type Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import * as React from "react";
 import { FiLogOut, FiMoreHorizontal } from "react-icons/fi";
 import { GrList } from "react-icons/gr";
 import { IoSettingsOutline } from "react-icons/io5";
@@ -28,15 +30,22 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
+// Define a type for menu items using the imported Route type.
+type MenuItem = {
+  icon: React.ElementType;
+  label: string;
+  href: Route;
+};
+
 // Defines the data for the "Home" menu item.
-const homeMenuItem = {
+const homeMenuItem: MenuItem = {
   icon: LuHouse,
   label: "Home",
   href: "/dashboard",
 };
 
 // Defines the data for the "Analysis" group of menu items.
-const analysisMenuItems = [
+const analysisMenuItems: MenuItem[] = [
   {
     icon: PiMicroscope,
     label: "Analyze",
@@ -50,15 +59,17 @@ const analysisMenuItems = [
 ];
 
 // Defines the data for the "Settings" group of menu items.
-const settingsMenuItems = [
+const settingsMenuItems: MenuItem[] = [
   {
     icon: IoSettingsOutline,
     label: "Account",
+    // @ts-expect-error: Route is yet to be implemented.
     href: "/account",
   },
   {
     icon: PiLightbulbFilament,
     label: "Help",
+    // @ts-expect-error: Route is yet to be implemented.
     href: "/help",
   },
 ];
