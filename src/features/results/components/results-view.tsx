@@ -3,12 +3,12 @@
 import { useState } from "react";
 
 import type { analysisResults, cases, detections, uploads } from "@/db/schema";
+import { ResultsImages } from "@/features/images/components/results-images";
 import { ResultsAnalysis } from "@/features/results/components/results-analysis";
 import { ResultsDetails } from "@/features/results/components/results-details";
 import { ResultsEditCaseSheet } from "@/features/results/components/results-edit-case-sheet";
 import { ResultsHeader } from "@/features/results/components/results-header";
 import { ResultsHeaderSkeleton } from "@/features/results/components/results-header-skeleton";
-import { ResultsImages } from "@/features/results/components/results-images";
 import { ResultsDetailsSkeleton } from "@/features/results/components/results-skeleton";
 import { useCaseData } from "@/features/results/hooks/use-case-data";
 import { useResultsStore } from "@/features/results/store/results-store";

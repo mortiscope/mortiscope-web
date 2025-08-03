@@ -1,17 +1,17 @@
 "use client";
 
 import { type UploadableFile } from "@/features/analyze/store/analyze-store";
-import { usePreviewActions } from "@/features/cases/hooks/use-preview-actions";
-import { usePreviewEditing } from "@/features/cases/hooks/use-preview-editing";
-import { usePreviewFileState } from "@/features/cases/hooks/use-preview-file-state";
-import { usePreviewImage } from "@/features/cases/hooks/use-preview-image";
-import { usePreviewNavigation } from "@/features/cases/hooks/use-preview-navigation";
-import { usePreviewRotation } from "@/features/cases/hooks/use-preview-rotation";
-import { usePreviewTransform } from "@/features/cases/hooks/use-preview-transform";
+import { usePreviewActions } from "@/features/images/hooks/use-preview-actions";
+import { usePreviewEditing } from "@/features/images/hooks/use-preview-editing";
+import { usePreviewFileState } from "@/features/images/hooks/use-preview-file-state";
+import { usePreviewImage } from "@/features/images/hooks/use-preview-image";
+import { usePreviewNavigation } from "@/features/images/hooks/use-preview-navigation";
+import { usePreviewRotation } from "@/features/images/hooks/use-preview-rotation";
+import { usePreviewTransform } from "@/features/images/hooks/use-preview-transform";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Re-exports the viewing box type for components that need it without importing the source hook.
-export type { ViewingBox } from "@/features/cases/hooks/use-preview-transform";
+export type { ViewingBox } from "@/features/images/hooks/use-preview-transform";
 
 /**
  * Defines the props required by the usePreviewModal hook.

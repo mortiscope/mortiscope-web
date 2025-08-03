@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import React, { memo } from "react";
 
-import { ImageCard } from "@/features/results/components/image-card";
-import { type ImageFile } from "@/features/results/components/results-images";
+import { ImageCard } from "@/features/images/components/image-card";
+import { type ImageFile } from "@/features/images/components/results-images";
 
 /**
  * Defines the props for the ImageGrid component. It inherits all props from `ImageCard`

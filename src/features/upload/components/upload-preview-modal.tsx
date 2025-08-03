@@ -12,7 +12,7 @@ import { PreviewImageViewer } from "@/features/cases/components/preview-image-vi
 import { PreviewModalHeader } from "@/features/cases/components/preview-modal-header";
 import { PreviewThumbnailList } from "@/features/cases/components/preview-thumbnail-list";
 import { PreviewViewControls } from "@/features/cases/components/preview-view-controls";
-import { usePreviewModal } from "@/features/cases/hooks/use-preview-modal";
+import { usePreviewModal } from "@/features/images/hooks/use-preview-modal";
 import { cn } from "@/lib/utils";
 
 /**

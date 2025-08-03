@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { type detections, type uploads } from "@/db/schema";
 import { useSelectionNavigator } from "@/features/cases/hooks/use-selection-navigator";
-import { type ImageFile } from "@/features/results/components/results-images";
+import { type ImageFile } from "@/features/images/components/results-images";
 import { type SortOptionValue } from "@/lib/constants";
 
 // Type definitions for the initial data passed from the server.

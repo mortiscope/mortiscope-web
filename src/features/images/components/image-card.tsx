@@ -6,7 +6,7 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type ImageFile } from "@/features/results/components/results-images";
+import { type ImageFile } from "@/features/images/components/results-images";
 import { cn } from "@/lib/utils";
 
 /**

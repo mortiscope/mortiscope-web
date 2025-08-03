@@ -4,9 +4,9 @@ import React, { memo } from "react";
 import { LuLoaderCircle } from "react-icons/lu";
 import { type ReactZoomPanPinchState, TransformComponent } from "react-zoom-pan-pinch";
 
-import { ResultsBoundingBox } from "@/features/results/components/results-bounding-box";
-import { ResultsImagesMinimap } from "@/features/results/components/results-images-minimap";
-import { type ImageFile, type ViewingBox } from "@/features/results/hooks/use-results-image-viewer";
+import { ResultsBoundingBox } from "@/features/images/components/results-bounding-box";
+import { ResultsImagesMinimap } from "@/features/images/components/results-images-minimap";
+import { type ImageFile, type ViewingBox } from "@/features/images/hooks/use-results-image-viewer";
 import { cn } from "@/lib/utils";
 
 /**

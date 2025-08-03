@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { type detections } from "@/db/schema";
+import { useRenderedImage } from "@/features/images/hooks/use-rendered-image";
 import { useListNavigation } from "@/features/results/hooks/use-list-navigation";
-import { useRenderedImage } from "@/features/results/hooks/use-rendered-image";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /**

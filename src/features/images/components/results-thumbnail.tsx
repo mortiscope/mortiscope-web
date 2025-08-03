@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { memo } from "react";
 
-import { type ImageFile } from "@/features/results/hooks/use-results-image-viewer";
+import { type ImageFile } from "@/features/images/hooks/use-results-image-viewer";
 import { cn } from "@/lib/utils";
 
 /**

@@ -9,7 +9,7 @@ import { type ReactZoomPanPinchState, TransformComponent } from "react-zoom-pan-
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type UploadableFile } from "@/features/analyze/store/analyze-store";
-import { type ViewingBox } from "@/features/cases/hooks/use-preview-modal";
+import { type ViewingBox } from "@/features/images/hooks/use-preview-modal";
 import { UploadPreviewMinimap } from "@/features/upload/components/upload-preview-minimap";
 import { cn } from "@/lib/utils";
 

@@ -7,16 +7,16 @@ import React, { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type detections, type uploads } from "@/db/schema";
-import { ImageGrid } from "@/features/results/components/image-grid";
-import { ImageToolbar } from "@/features/results/components/image-toolbar";
+import { ImageGrid } from "@/features/images/components/image-grid";
+import { ImageToolbar } from "@/features/images/components/image-toolbar";
+import { useResultsImages } from "@/features/images/hooks/use-results-images";
 import { ResultsNoSearchResults } from "@/features/results/components/results-no-search-results";
 import { ResultsImagesSkeleton } from "@/features/results/components/results-skeleton";
-import { useResultsImages } from "@/features/results/hooks/use-results-images";
 
 // Add a local `loading` fallback to each dynamic import.
 const ResultsImagesModal = dynamic(
   () =>
-    import("@/features/results/components/results-images-modal").then(
+    import("@/features/images/components/results-images-modal").then(
       (module) => module.ResultsImagesModal
     ),
   { loading: () => null }
@@ -30,7 +30,7 @@ const ExportImageModal = dynamic(
 );
 const DeleteImageModal = dynamic(
   () =>
-    import("@/features/results/components/delete-image-modal").then(
+    import("@/features/images/components/delete-image-modal").then(
       (module) => module.DeleteImageModal
     ),
   { loading: () => null }

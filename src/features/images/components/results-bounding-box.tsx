@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { type Detection, type ImageFile } from "@/features/results/hooks/use-results-image-viewer";
+import { type Detection, type ImageFile } from "@/features/images/hooks/use-results-image-viewer";
 import { formatConfidence, formatLabel, getColorForClass } from "@/lib/utils";
 
 /**

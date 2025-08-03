@@ -6,7 +6,7 @@ import { LuX } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { type ImageFile } from "@/features/results/hooks/use-results-image-viewer";
+import { type ImageFile } from "@/features/images/hooks/use-results-image-viewer";
 import { formatBytes } from "@/lib/utils";
 
 /**

@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { deleteImage } from "@/features/results/actions/delete-image";
+import { deleteImage } from "@/features/images/actions/delete-image";
 import { useResultsStore } from "@/features/results/store/results-store";
 import { cn } from "@/lib/utils";
 

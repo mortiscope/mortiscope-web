@@ -2,8 +2,8 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import React, { memo, useLayoutEffect, useRef } from "react";
 
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { ResultsThumbnail } from "@/features/results/components/results-thumbnail";
-import { type ImageFile } from "@/features/results/hooks/use-results-image-viewer";
+import { ResultsThumbnail } from "@/features/images/components/results-thumbnail";
+import { type ImageFile } from "@/features/images/hooks/use-results-image-viewer";
 import { cn } from "@/lib/utils";
 
 /**

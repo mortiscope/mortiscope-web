@@ -10,15 +10,15 @@ import {
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ResultsImageViewer } from "@/features/results/components/results-image-viewer";
-import { ResultsModalHeader } from "@/features/results/components/results-modal-header";
-import { ResultsThumbnailList } from "@/features/results/components/results-thumbnail-list";
-import { ResultsViewControls } from "@/features/results/components/results-view-controls";
+import { ResultsImageViewer } from "@/features/images/components/results-image-viewer";
+import { ResultsThumbnailList } from "@/features/images/components/results-thumbnail-list";
 import {
   type ImageFile,
   useResultsImageViewer,
   type ViewingBox,
-} from "@/features/results/hooks/use-results-image-viewer";
+} from "@/features/images/hooks/use-results-image-viewer";
+import { ResultsModalHeader } from "@/features/results/components/results-modal-header";
+import { ResultsViewControls } from "@/features/results/components/results-view-controls";
 import { cn } from "@/lib/utils";
 
 /**

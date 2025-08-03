@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { toast } from "sonner";
 
 import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { usePreviewMutations } from "@/features/cases/hooks/use-preview-mutations";
+import { usePreviewMutations } from "@/features/images/hooks/use-preview-mutations";
 import { useClientFileProcessor } from "@/features/upload/hooks/use-client-file-processor";
 
 /**
