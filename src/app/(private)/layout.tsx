@@ -9,7 +9,7 @@ const AppBreadcrumb = dynamic(
   () => import("@/components/app-breadcrumb").then((module) => ({ default: module.AppBreadcrumb })),
   {
     ssr: false,
-    loading: () => <div className="h-6 w-32 animate-pulse rounded bg-slate-300" />,
+    loading: () => <div className="h-6 w-32" />,
   }
 );
 import { AppHeader } from "@/components/app-header";

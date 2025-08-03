@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
+import { useEffect, useState } from "react";
 
 import {
   Breadcrumb,
@@ -21,8 +22,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { analysisSteps } from "@/features/analyze/components/analyze-progress";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
-import { useCaseName } from "@/features/results/hooks/use-case-name";
+import { ResultsBreadcrumb } from "@/features/results/components/results-breadcrumb";
 import { cn } from "@/lib/utils";
+
+/**
+ * An inline, invisible placeholder component. Rendered during SSR and initial
+ * hydration to prevent DOM mismatches and layout shift.
+ */
+const BreadcrumbPlaceholder = () => (
+  <div className="flex h-10 items-center">
+    <div className="h-4 w-48" />
+  </div>
+);
 
 /**
  * Defines the structure for a single breadcrumb item.
@@ -134,8 +145,17 @@ const StyledDropdownMenuItem = ({
  * A dynamic and responsive breadcrumb component that generates its structure from the current URL path.
  */
 export function AppBreadcrumb() {
+  // Introduce state to track client-side mounting, preventing hydration errors.
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // All hooks declared unconditionally at the top of the component.
   const pathname = usePathname();
   const status = useAnalyzeStore((state) => state.status);
+
+  const pathSegments = React.useMemo(() => pathname.split("/").filter(Boolean), [pathname]);
 
   // Translate the wizard status into a step number for breadcrumb logic.
   const currentStep = React.useMemo(() => {
@@ -146,24 +166,8 @@ export function AppBreadcrumb() {
     return 1;
   }, [status]);
 
-  const pathSegments = React.useMemo(() => pathname.split("/").filter(Boolean), [pathname]);
-  const isResultsPage = pathSegments[0] === "results" && pathSegments.length === 2;
-  const caseId = isResultsPage ? pathSegments[1] : null;
-
-  const { data: caseData, isLoading } = useCaseName(caseId);
-
   const items = React.useMemo(() => {
     const baseItems = generateBreadcrumbsFromPath(pathname);
-
-    // If on the results page, replace the last breadcrumb's label (the ID) with the fetched case name.
-    if (isResultsPage && baseItems.length > 0) {
-      const lastItem = baseItems[baseItems.length - 1];
-      if (isLoading) {
-        lastItem.label = "Loading...";
-      } else if (caseData?.caseName) {
-        lastItem.label = caseData.caseName;
-      }
-    }
 
     if (pathname === "/analyze") {
       if (status === "processing") {
@@ -175,7 +179,19 @@ export function AppBreadcrumb() {
       }
     }
     return baseItems;
-  }, [pathname, status, currentStep, isResultsPage, caseData, isLoading]);
+  }, [pathname, status, currentStep]);
+
+  // Render a placeholder until the component is mounted on the client.
+  if (!isMounted) {
+    return <BreadcrumbPlaceholder />;
+  }
+
+  const isResultsIdPage = pathSegments[0] === "results" && pathSegments.length === 2;
+  const caseId = isResultsIdPage ? pathSegments[1] : null;
+
+  if (isResultsIdPage && caseId) {
+    return <ResultsBreadcrumb caseId={caseId} />;
+  }
 
   if (items.length === 0) {
     return (
