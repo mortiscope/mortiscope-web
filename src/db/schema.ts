@@ -163,6 +163,7 @@ export const cases = pgTable(
       .notNull()
       .defaultNow(),
     recalculationNeeded: boolean("recalculation_needed").notNull().default(false),
+    notes: text("notes"),
   },
   (table) => [uniqueIndex("case_name_idx").on(table.userId, table.caseName)]
 );
