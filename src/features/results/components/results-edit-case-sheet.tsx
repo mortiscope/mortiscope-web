@@ -1,28 +1,38 @@
 "use client";
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
-import { XIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import * as React from "react";
+import { HiMiniListBullet, HiOutlineClipboardDocument } from "react-icons/hi2";
+import { BeatLoader } from "react-spinners";
 
+import { Form } from "@/components/ui/form";
+import { EditCaseSheetFooter } from "@/features/results/components/edit-case-sheet-footer";
+import { EditCaseSheetHeader } from "@/features/results/components/edit-case-sheet-header";
 import { ResultsEditCaseForm } from "@/features/results/components/results-edit-case-form";
+import { ResultsEditCaseTabs } from "@/features/results/components/results-edit-case-tabs";
 import { type CaseWithRelations } from "@/features/results/components/results-view";
+import { useEditCaseForm } from "@/features/results/hooks/use-edit-case-form";
 import { cn } from "@/lib/utils";
 
 /**
  * Defines the props for the results edit case sheet component.
  */
 interface ResultsEditCaseSheetProps {
+  /** The full case data object, passed to the `useEditCaseForm` hook. */
   caseData: CaseWithRelations;
   /** Controls whether the sheet is open or closed. */
   isOpen: boolean;
   /** A callback function that is triggered when the sheet's open state changes. */
   onOpenChange: (isOpen: boolean) => void;
-  /** Optional class name to apply to the sheet content. */
+  /** Optional class name to apply to the sheet content for custom styling. */
   className?: string;
 }
 
 /**
- * A customized sheet component for editing case details.
+ * A smart component that renders a customized, animated slide-out sheet for editing case details.
+ * It uses the `useEditCaseForm` hook to manage all its state and logic, and it orchestrates
+ * the rendering of the header, tabs, form content, and footer.
  */
 export const ResultsEditCaseSheet = ({
   caseData,
@@ -30,6 +40,81 @@ export const ResultsEditCaseSheet = ({
   onOpenChange,
   className,
 }: ResultsEditCaseSheetProps) => {
+  // Initializes the master hook that provides all state and logic for the form.
+  const {
+    form,
+    activeTab,
+    setActiveTab,
+    lockedFields,
+    toggleLock,
+    addressData,
+    onSubmit,
+    isButtonDisabled,
+    isSubmitting,
+  } = useEditCaseForm({ caseData, onSheetClose: () => onOpenChange(false) });
+
+  /**
+   * A function that conditionally renders the content for the currently active tab.
+   * It uses Framer Motion's `AnimatePresence` to create smooth, animated transitions
+   * when the user switches between tabs.
+   */
+  const renderTabContent = () => {
+    // Defines the animation variants for the tab content.
+    const contentVariants = {
+      hidden: { opacity: 0, y: 10 },
+      visible: { opacity: 1, y: 0 },
+      exit: { opacity: 0, y: -10 },
+    };
+
+    return (
+      // `AnimatePresence` manages the entry and exit animations of the tab content.
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          variants={contentVariants}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="h-full"
+        >
+          {activeTab === "details" &&
+            (addressData.isLoading ? (
+              // Shows a loading spinner while the initial address data is being fetched.
+              <div className="flex h-full items-center justify-center p-6">
+                <BeatLoader color="#16a34a" size={12} />
+              </div>
+            ) : (
+              // Renders the main form content once data is available.
+              <ResultsEditCaseForm
+                form={form}
+                lockedFields={lockedFields}
+                toggleLock={toggleLock}
+                regionList={addressData.regionList}
+                provinceList={addressData.provinceList}
+                cityList={addressData.cityList}
+                barangayList={addressData.barangayList}
+              />
+            ))}
+          {/* Placeholder content for the 'notes' tab. */}
+          {activeTab === "notes" && (
+            <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
+              <HiOutlineClipboardDocument className="mb-4 h-12 w-12 text-slate-300" />
+              No notes available.
+            </div>
+          )}
+          {/* Placeholder content for the 'history' tab. */}
+          {activeTab === "history" && (
+            <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
+              <HiMiniListBullet className="mb-4 h-12 w-12 text-slate-300" />
+              No history available.
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    );
+  };
+
   return (
     <SheetPrimitive.Root open={isOpen} onOpenChange={onOpenChange}>
       <SheetPrimitive.Portal>
@@ -39,24 +124,26 @@ export const ResultsEditCaseSheet = ({
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col overflow-hidden bg-white transition ease-in-out data-[state=closed]:duration-500 data-[state=open]:duration-500 sm:max-w-md",
             className
           )}
+          // Prevents the sheet from automatically focusing on the first focusable element.
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <div className="relative flex h-16 shrink-0 items-center justify-center border-b-2 border-slate-200 md:h-20">
-            <SheetPrimitive.Title className="font-plus-jakarta-sans text-lg font-semibold text-slate-900 md:text-xl">
-              Edit Case Details
-            </SheetPrimitive.Title>
-
-            <SheetPrimitive.Description className="sr-only">
-              Make changes to the case details here.
-            </SheetPrimitive.Description>
-
-            <SheetPrimitive.Close className="focus:ring-ring absolute top-1/2 right-4 -translate-y-1/2 cursor-pointer rounded opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-none disabled:pointer-events-none">
-              <XIcon className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </SheetPrimitive.Close>
-          </div>
-
-          <ResultsEditCaseForm caseData={caseData} onSuccess={() => onOpenChange(false)} />
+          <EditCaseSheetHeader />
+          <ResultsEditCaseTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          {/* The `react-hook-form` provider, which makes the form instance available to all child components. */}
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="font-inter flex min-h-0 flex-1 flex-col overflow-hidden"
+            >
+              {/* The main scrollable area for the form content. */}
+              <div className="flex-1 overflow-y-auto">{renderTabContent()}</div>
+              <EditCaseSheetFooter
+                activeTab={activeTab}
+                isSubmitting={isSubmitting}
+                isDisabled={isButtonDisabled}
+              />
+            </form>
+          </Form>
         </SheetPrimitive.Content>
       </SheetPrimitive.Portal>
     </SheetPrimitive.Root>

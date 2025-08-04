@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { barangays, cities, provinces, regions } from "select-philippines-address";
 
-// Type definitions for address data from 'select-philippines-address'
-type AddressPart = { code: string; name: string };
+// Type definitions for address data
+export type Address = { code: string; name: string };
 type Region = { region_code: string; region_name: string };
 type Province = { province_code: string; province_name: string };
 type City = { city_code: string; city_name: string };
@@ -24,10 +24,10 @@ export const usePhilippineAddress = ({
   provinceCode,
   cityCode,
 }: UsePhilippineAddressProps) => {
-  const [regionList, setRegionList] = useState<AddressPart[]>([]);
-  const [provinceList, setProvinceList] = useState<AddressPart[]>([]);
-  const [cityList, setCityList] = useState<AddressPart[]>([]);
-  const [barangayList, setBarangayList] = useState<AddressPart[]>([]);
+  const [regionList, setRegionList] = useState<Address[]>([]);
+  const [provinceList, setProvinceList] = useState<Address[]>([]);
+  const [cityList, setCityList] = useState<Address[]>([]);
+  const [barangayList, setBarangayList] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetches the list of all regions on initial component mount.
