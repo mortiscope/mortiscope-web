@@ -10,9 +10,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 /**
- * Defines the props for the results edit case tabs component.
+ * Defines the props for the edit case tabs component.
  */
-interface ResultsEditCaseTabsProps {
+interface EditCaseTabsProps {
   /** The currently active tab's value. */
   activeTab: string;
   /** A callback function to handle tab changes. */
@@ -29,10 +29,10 @@ const TABS = [
 ];
 
 /**
- * Renders the tabs for the results edit case sheet, complete with a smooth
+ * Renders the tabs for the edit case sheet, complete with a smooth
  * sliding animation for the active tab indicator.
  */
-export const ResultsEditCaseTabs = memo(({ activeTab, onTabChange }: ResultsEditCaseTabsProps) => {
+export const EditCaseTabs = memo(({ activeTab, onTabChange }: EditCaseTabsProps) => {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList className="font-inter grid h-14 w-full grid-cols-3 rounded-none bg-emerald-600 px-3 py-2 md:h-16 md:px-3 md:py-2.5">
@@ -63,4 +63,4 @@ export const ResultsEditCaseTabs = memo(({ activeTab, onTabChange }: ResultsEdit
   );
 });
 
-ResultsEditCaseTabs.displayName = "ResultsEditCaseTabs";
+EditCaseTabs.displayName = "EditCaseTabs";

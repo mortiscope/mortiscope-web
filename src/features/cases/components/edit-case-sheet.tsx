@@ -9,19 +9,17 @@ import { HiMiniListBullet } from "react-icons/hi2";
 import { BeatLoader } from "react-spinners";
 
 import { Form } from "@/components/ui/form";
+import { EditCaseForm } from "@/features/cases/components/edit-case-form";
+import { EditCaseTabs } from "@/features/cases/components/edit-case-tabs";
+import { useEditCaseForm } from "@/features/cases/hooks/use-edit-case-form";
 import { EditCaseSheetFooter } from "@/features/results/components/edit-case-sheet-footer";
 import { EditCaseSheetHeader } from "@/features/results/components/edit-case-sheet-header";
-import { ResultsEditCaseForm } from "@/features/results/components/results-edit-case-form";
-import { ResultsEditCaseTabs } from "@/features/results/components/results-edit-case-tabs";
 import { type CaseWithRelations } from "@/features/results/components/results-view";
-import { useEditCaseForm } from "@/features/results/hooks/use-edit-case-form";
 import { cn } from "@/lib/utils";
 
-const DynamicResultsNoteEditor = dynamic(
+const DynamicCaseNoteEditor = dynamic(
   () =>
-    import("@/features/cases/components/case-note-editor").then(
-      (module) => module.CaseNoteEditor
-    ),
+    import("@/features/cases/components/case-note-editor").then((module) => module.CaseNoteEditor),
   {
     loading: () => (
       <div className="flex h-full items-center justify-center p-6">
@@ -33,9 +31,9 @@ const DynamicResultsNoteEditor = dynamic(
 );
 
 /**
- * Defines the props for the results edit case sheet component.
+ * Defines the props for the edit case sheet component.
  */
-interface ResultsEditCaseSheetProps {
+interface EditCaseSheetProps {
   /** The full case data object, passed to the `useEditCaseForm` hook. */
   caseData: CaseWithRelations;
   /** Controls whether the sheet is open or closed. */
@@ -87,7 +85,7 @@ export const ResultsEditCaseSheet = ({
   isOpen,
   onOpenChange,
   className,
-}: ResultsEditCaseSheetProps) => {
+}: EditCaseSheetProps) => {
   // Initializes the master hook that provides all state and logic for the form.
   const {
     form,
@@ -119,7 +117,7 @@ export const ResultsEditCaseSheet = ({
               </div>
             ) : (
               // Renders the main form content once data is available.
-              <ResultsEditCaseForm
+              <EditCaseForm
                 form={form}
                 lockedFields={lockedFields}
                 toggleLock={toggleLock}
@@ -138,7 +136,7 @@ export const ResultsEditCaseSheet = ({
               name="notes"
               control={form.control}
               render={({ field }) => (
-                <DynamicResultsNoteEditor value={field.value ?? ""} onChange={field.onChange} />
+                <DynamicCaseNoteEditor value={field.value ?? ""} onChange={field.onChange} />
               )}
             />
           </MotionTabContent>
@@ -169,7 +167,7 @@ export const ResultsEditCaseSheet = ({
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <EditCaseSheetHeader />
-          <ResultsEditCaseTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <EditCaseTabs activeTab={activeTab} onTabChange={setActiveTab} />
           {/* The `react-hook-form` provider, which makes the form instance available to all child components. */}
           <Form {...form}>
             <form

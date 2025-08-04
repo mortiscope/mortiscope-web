@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { analysisResults, cases, detections, uploads } from "@/db/schema";
 import { ResultsImages } from "@/features/images/components/results-images";
@@ -34,8 +34,8 @@ interface ResultsViewProps {
 }
 
 // Dynamically import the results edit case sheet.
-const DynamicResultsEditCaseSheet = dynamic(() =>
-  import("@/features/results/components/results-edit-case-sheet").then(
+const DynamicEditCaseSheet = dynamic(() =>
+  import("@/features/cases/components/edit-case-sheet").then(
     (module) => module.ResultsEditCaseSheet
   )
 );
@@ -116,7 +116,7 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
 
       {/* The component is rendered based on `isSheetMounted`. */}
       {isSheetMounted && (
-        <DynamicResultsEditCaseSheet
+        <DynamicEditCaseSheet
           isOpen={isEditSheetOpen}
           onOpenChange={setIsEditSheetOpen}
           caseData={caseData}

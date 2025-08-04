@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import type { cases } from "@/db/schema";
+import { EditCaseButton } from "@/features/cases/components/edit-case-button";
 import { ExportDropdown } from "@/features/export/components/export-dropdown";
-import { ResultsEditCaseButton } from "@/features/results/components/results-edit-case-button";
 import { ResultsRecalculateButton } from "@/features/results/components/results-recalculate-button";
 import { ResultsRecalculateModal } from "@/features/results/components/results-recalculate-modal";
 import { useRecalculationPoller } from "@/features/results/hooks/use-recalculation-poller";
@@ -97,7 +97,7 @@ export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => 
     if (caseId) {
       setHeaderAdditionalContent(
         <div className="flex items-center gap-1 sm:gap-2">
-          <ResultsEditCaseButton onClick={onEditClick} />
+          <EditCaseButton onClick={onEditClick} />
           <ResultsRecalculateButton
             caseId={caseId}
             isDisabled={!shouldEnableRecalculation || isPolling}

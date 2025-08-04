@@ -22,9 +22,9 @@ const CaseDateInput = dynamic(
 );
 
 /**
- * Defines the props for the results edit case form component.
+ * Defines the props for the edit case form component.
  */
-interface ResultsEditCaseFormProps {
+interface EditCaseFormProps {
   /** The `react-hook-form` instance, passed down to connect the inputs to the form state. */
   form: UseFormReturn<CaseDetailsFormInput>;
   /** A state object that manages the lock status of each field group. */
@@ -49,7 +49,7 @@ interface ResultsEditCaseFormProps {
 /**
  * A presentational or dumb component that renders the form fields for editing case details.
  */
-export const ResultsEditCaseForm = ({
+export const EditCaseForm = ({
   form,
   lockedFields,
   toggleLock,
@@ -57,7 +57,7 @@ export const ResultsEditCaseForm = ({
   provinceList,
   cityList,
   barangayList,
-}: ResultsEditCaseFormProps) => {
+}: EditCaseFormProps) => {
   return (
     <div className="space-y-8 p-6">
       {/* Renders the input for the case name. */}

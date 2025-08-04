@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 /**
- * Defines the props for the results edit case button component.
+ * Defines the props for the edit case button component.
  */
-interface ResultsEditCaseButtonProps {
+interface EditCaseButtonProps {
   /** Controls whether the button is disabled. */
   isDisabled?: boolean;
   /** An optional click handler for the button. */
@@ -20,9 +20,9 @@ interface ResultsEditCaseButtonProps {
  * It displays as an icon-only button on small screens and includes a tooltip
  * that is only active when the button is enabled.
  *
- * @param {ResultsEditCaseButtonProps} props The component props.
+ * @param {EditCaseButtonProps} props The component props.
  */
-export const ResultsEditCaseButton = ({ isDisabled, onClick }: ResultsEditCaseButtonProps) => {
+export const EditCaseButton = ({ isDisabled, onClick }: EditCaseButtonProps) => {
   const handleEdit = () => {
     // If an onClick handler is provided, call it.
     if (onClick) {
