@@ -1,11 +1,20 @@
+import { internalIpV4Sync } from "internal-ip";
 import type { NextConfig } from "next";
 
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
 
+const allowedOrigins = ["localhost"];
+
+const ipAddress = internalIpV4Sync();
+
+if (ipAddress) {
+  allowedOrigins.push(ipAddress);
+}
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.6"],
+  allowedDevOrigins: allowedOrigins,
   images: {
     remotePatterns: [
       {
