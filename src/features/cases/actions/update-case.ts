@@ -87,6 +87,7 @@ export async function updateCase(values: {
         locationCity: data.location.city.name,
         locationBarangay: data.location.barangay.name,
         caseDate: data.caseDate,
+        notes: data.notes,
         recalculationNeeded: temperatureChanged,
       })
       .where(and(eq(cases.id, values.caseId), eq(cases.userId, userId)));

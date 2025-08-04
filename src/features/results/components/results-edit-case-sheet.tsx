@@ -2,8 +2,10 @@
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import * as React from "react";
-import { HiMiniListBullet, HiOutlineClipboardDocument } from "react-icons/hi2";
+import { Controller } from "react-hook-form";
+import { HiMiniListBullet } from "react-icons/hi2";
 import { BeatLoader } from "react-spinners";
 
 import { Form } from "@/components/ui/form";
@@ -14,6 +16,21 @@ import { ResultsEditCaseTabs } from "@/features/results/components/results-edit-
 import { type CaseWithRelations } from "@/features/results/components/results-view";
 import { useEditCaseForm } from "@/features/results/hooks/use-edit-case-form";
 import { cn } from "@/lib/utils";
+
+const DynamicResultsNoteEditor = dynamic(
+  () =>
+    import("@/features/cases/components/case-note-editor").then(
+      (module) => module.CaseNoteEditor
+    ),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center p-6">
+        <BeatLoader color="#16a34a" size={12} />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 /**
  * Defines the props for the results edit case sheet component.
@@ -28,6 +45,37 @@ interface ResultsEditCaseSheetProps {
   /** Optional class name to apply to the sheet content for custom styling. */
   className?: string;
 }
+
+/**
+ * A shared motion component for tab content to ensure consistent animations and style isolation.
+ */
+const MotionTabContent = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  // Defines the animation variants for the tab content.
+  const contentVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -10 },
+  };
+
+  return (
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={contentVariants}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+      className={cn("h-full", className)}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 /**
  * A smart component that renders a customized, animated slide-out sheet for editing case details.
@@ -59,27 +107,12 @@ export const ResultsEditCaseSheet = ({
    * when the user switches between tabs.
    */
   const renderTabContent = () => {
-    // Defines the animation variants for the tab content.
-    const contentVariants = {
-      hidden: { opacity: 0, y: 10 },
-      visible: { opacity: 1, y: 0 },
-      exit: { opacity: 0, y: -10 },
-    };
-
     return (
       // `AnimatePresence` manages the entry and exit animations of the tab content.
       <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          variants={contentVariants}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="h-full"
-        >
-          {activeTab === "details" &&
-            (addressData.isLoading ? (
+        {activeTab === "details" && (
+          <MotionTabContent key="details">
+            {addressData.isLoading ? (
               // Shows a loading spinner while the initial address data is being fetched.
               <div className="flex h-full items-center justify-center p-6">
                 <BeatLoader color="#16a34a" size={12} />
@@ -95,22 +128,30 @@ export const ResultsEditCaseSheet = ({
                 cityList={addressData.cityList}
                 barangayList={addressData.barangayList}
               />
-            ))}
-          {/* Placeholder content for the 'notes' tab. */}
-          {activeTab === "notes" && (
-            <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
-              <HiOutlineClipboardDocument className="mb-4 h-12 w-12 text-slate-300" />
-              No notes available.
-            </div>
-          )}
-          {/* Placeholder content for the 'history' tab. */}
-          {activeTab === "history" && (
+            )}
+          </MotionTabContent>
+        )}
+        {activeTab === "notes" && (
+          <MotionTabContent key="notes">
+            {/* Renders the notes editor, connecting it to the form state via a controller. */}
+            <Controller
+              name="notes"
+              control={form.control}
+              render={({ field }) => (
+                <DynamicResultsNoteEditor value={field.value ?? ""} onChange={field.onChange} />
+              )}
+            />
+          </MotionTabContent>
+        )}
+        {activeTab === "history" && (
+          <MotionTabContent key="history">
+            {/* Placeholder content for the 'history' tab. */}
             <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
               <HiMiniListBullet className="mb-4 h-12 w-12 text-slate-300" />
               No history available.
             </div>
-          )}
-        </motion.div>
+          </MotionTabContent>
+        )}
       </AnimatePresence>
     );
   };

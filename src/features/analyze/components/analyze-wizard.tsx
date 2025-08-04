@@ -73,6 +73,7 @@ export const AnalyzeWizard = () => {
           city: { name: draftCaseData.locationCity, code: "" },
           barangay: { name: draftCaseData.locationBarangay, code: "" },
         },
+        notes: draftCaseData.notes ?? "",
       };
       updateDetailsData(details);
     } else {

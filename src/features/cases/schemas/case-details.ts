@@ -63,6 +63,9 @@ const rawCaseDetailsSchema = z.object({
   caseDate: z.date({
     message: "A valid case date is required.",
   }),
+
+  // Validates the notes field, allowing it to be an optional string.
+  notes: z.string().optional(),
 });
 
 /**
@@ -110,6 +113,7 @@ export const caseDetailsSchema = rawCaseDetailsSchema.transform((data, ctx) => {
       barangay: data.location.barangay,
     },
     caseDate: data.caseDate,
+    notes: data.notes,
   };
 });
 

@@ -64,6 +64,7 @@ export const useEditCaseForm = ({ caseData, onSheetClose }: UseEditCaseFormProps
         city: { name: caseData.locationCity, code: "" },
         barangay: { name: caseData.locationBarangay, code: "" },
       },
+      notes: caseData.notes ?? "",
     },
   });
 
@@ -148,7 +149,6 @@ export const useEditCaseForm = ({ caseData, onSheetClose }: UseEditCaseFormProps
    * The submission handler passed to `react-hook-form`. It triggers the server mutation.
    */
   const onSubmit: SubmitHandler<CaseDetailsFormInput> = (data) => {
-    if (activeTab !== "details") return;
     updateCaseMutation.mutate({ caseId: caseData.id, details: data as CaseDetailsFormData });
   };
 
