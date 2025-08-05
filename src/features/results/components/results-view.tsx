@@ -36,7 +36,7 @@ interface ResultsViewProps {
 // Dynamically import the results edit case sheet.
 const DynamicEditCaseSheet = dynamic(() =>
   import("@/features/cases/components/edit-case-sheet").then(
-    (module) => module.ResultsEditCaseSheet
+    (module) => module.EditCaseSheet
   )
 );
 

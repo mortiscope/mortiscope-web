@@ -1,11 +1,12 @@
 "use server";
 
+import { createId } from "@paralleldrive/cuid2";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases } from "@/db/schema";
+import { caseAuditLogs, cases, type cases as CaseTable } from "@/db/schema";
 import { type CaseDetailsFormData, caseDetailsSchema } from "@/features/cases/schemas/case-details";
 import { caseLogger, logError, logUserAction } from "@/lib/logger";
 
@@ -17,6 +18,15 @@ type ActionResponse = {
   error?: string;
   details?: z.ZodIssue[];
   recalculationTriggered?: boolean;
+};
+
+/**
+ * A helper type for defining a change entry for the audit log.
+ */
+type ChangeEntry = {
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
 };
 
 /**
@@ -63,17 +73,37 @@ export async function updateCase(values: {
   }
 
   try {
-    // Fetch the existing case to compare the temperature.
+    // Fetch the full existing case to compare all fields for auditing.
     const existingCase = await db.query.cases.findFirst({
       where: and(eq(cases.id, values.caseId), eq(cases.userId, userId)),
-      columns: { temperatureCelsius: true },
     });
 
     if (!existingCase) {
       return { success: false, error: "Case not found or access denied." };
     }
 
-    // Check if the temperature has changed.
+    // Audit Log Generation
+    const changes: ChangeEntry[] = [];
+    const checkChange = (
+      field: keyof typeof CaseTable.$inferSelect,
+      oldValue: unknown,
+      newValue: unknown
+    ) => {
+      // Use JSON stringify for a more reliable comparison of objects like dates.
+      if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+        changes.push({ field, oldValue, newValue });
+      }
+    };
+
+    checkChange("caseName", existingCase.caseName, data.caseName);
+    checkChange("temperatureCelsius", existingCase.temperatureCelsius, temperatureCelsius);
+    checkChange("locationRegion", existingCase.locationRegion, data.location.region.name);
+    checkChange("locationProvince", existingCase.locationProvince, data.location.province.name);
+    checkChange("locationCity", existingCase.locationCity, data.location.city.name);
+    checkChange("locationBarangay", existingCase.locationBarangay, data.location.barangay.name);
+    checkChange("caseDate", existingCase.caseDate, data.caseDate);
+
+    // Check if the temperature has changed for recalculation flag.
     const temperatureChanged = existingCase.temperatureCelsius !== temperatureCelsius;
 
     // Execute the database update for the specified case.
@@ -96,7 +126,21 @@ export async function updateCase(values: {
       return { success: false, error: "Case not found or you do not have permission to edit it." };
     }
 
-    // On success, return a simple success message.
+    // If there were changes, insert them into the audit log.
+    if (changes.length > 0) {
+      const batchId = createId();
+      await db.insert(caseAuditLogs).values(
+        changes.map((change) => ({
+          caseId: values.caseId,
+          userId,
+          batchId,
+          field: change.field,
+          oldValue: change.oldValue,
+          newValue: change.newValue,
+        }))
+      );
+    }
+
     logUserAction(caseLogger, "case_updated", userId, {
       caseId: values.caseId,
       caseName: data.caseName,
