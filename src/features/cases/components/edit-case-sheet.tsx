@@ -1,17 +1,18 @@
 "use client";
 
 import * as SheetPrimitive from "@radix-ui/react-dialog";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import * as React from "react";
 import { Controller } from "react-hook-form";
-import { HiMiniListBullet } from "react-icons/hi2";
 import { BeatLoader } from "react-spinners";
 
 import { Form } from "@/components/ui/form";
 import { EditCaseForm } from "@/features/cases/components/edit-case-form";
 import { EditCaseTabs } from "@/features/cases/components/edit-case-tabs";
 import { useEditCaseForm } from "@/features/cases/hooks/use-edit-case-form";
+import { getCaseHistory } from "@/features/results/actions/get-case-history";
 import { EditCaseSheetFooter } from "@/features/results/components/edit-case-sheet-footer";
 import { EditCaseSheetHeader } from "@/features/results/components/edit-case-sheet-header";
 import { type CaseWithRelations } from "@/features/results/components/results-view";
@@ -20,6 +21,19 @@ import { cn } from "@/lib/utils";
 const DynamicCaseNoteEditor = dynamic(
   () =>
     import("@/features/cases/components/case-note-editor").then((module) => module.CaseNoteEditor),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center p-6">
+        <BeatLoader color="#16a34a" size={12} />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const DynamicCaseHistoryLog = dynamic(
+  () =>
+    import("@/features/cases/components/case-history-log").then((module) => module.CaseHistoryLog),
   {
     loading: () => (
       <div className="flex h-full items-center justify-center p-6">
@@ -80,7 +94,7 @@ const MotionTabContent = ({
  * It uses the `useEditCaseForm` hook to manage all its state and logic, and it orchestrates
  * the rendering of the header, tabs, form content, and footer.
  */
-export const ResultsEditCaseSheet = ({
+export const EditCaseSheet = ({
   caseData,
   isOpen,
   onOpenChange,
@@ -98,6 +112,20 @@ export const ResultsEditCaseSheet = ({
     isButtonDisabled,
     isSubmitting,
   } = useEditCaseForm({ caseData, onSheetClose: () => onOpenChange(false) });
+
+  // Data fetching for the history tab.
+  const {
+    data: historyData,
+    isLoading: isHistoryLoading,
+    isError: isHistoryError,
+  } = useQuery({
+    queryKey: ["caseHistory", caseData.id],
+    queryFn: () => getCaseHistory(caseData.id),
+    // Only fetch data when the sheet is open and the history tab is active.
+    enabled: isOpen && activeTab === "history",
+    // Keep data fresh but not too aggressively.
+    staleTime: 1000 * 60,
+  });
 
   /**
    * A function that conditionally renders the content for the currently active tab.
@@ -143,11 +171,11 @@ export const ResultsEditCaseSheet = ({
         )}
         {activeTab === "history" && (
           <MotionTabContent key="history">
-            {/* Placeholder content for the 'history' tab. */}
-            <div className="flex h-full flex-col items-center justify-center p-6 text-slate-500">
-              <HiMiniListBullet className="mb-4 h-12 w-12 text-slate-300" />
-              No history available.
-            </div>
+            <DynamicCaseHistoryLog
+              isLoading={isHistoryLoading}
+              isError={isHistoryError}
+              data={historyData}
+            />
           </MotionTabContent>
         )}
       </AnimatePresence>
