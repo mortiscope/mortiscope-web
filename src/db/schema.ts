@@ -243,12 +243,31 @@ export const exports = pgTable("exports", {
     .$onUpdate(() => new Date()),
 });
 
+// Stores a detailed audit trail of all changes made to a case.
+export const caseAuditLogs = pgTable("case_audit_logs", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  caseId: text("case_id")
+    .notNull()
+    .references(() => cases.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "no action" }),
+  batchId: text("batch_id").notNull(),
+  timestamp: timestamp("timestamp", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  field: text("field").notNull(),
+  oldValue: jsonb("old_value"),
+  newValue: jsonb("new_value"),
+});
+
 // Defines the relationships for the `users` table.
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
   cases: many(cases),
   exports: many(exports),
+  caseAuditLogs: many(caseAuditLogs),
 }));
 
 // Defines the relationship from an `account` back to its owning `user`.
@@ -279,6 +298,7 @@ export const casesRelations = relations(cases, ({ one, many }) => ({
     references: [analysisResults.caseId],
   }),
   exports: many(exports),
+  auditLogs: many(caseAuditLogs),
 }));
 
 // Defines the relationships for an `upload`, linking it to its parent entities.
@@ -318,6 +338,18 @@ export const exportsRelations = relations(exports, ({ one }) => ({
   }),
   user: one(users, {
     fields: [exports.userId],
+    references: [users.id],
+  }),
+}));
+
+// Defines the relationships for a `case audit log`, linking it to its parent entities.
+export const caseAuditLogsRelations = relations(caseAuditLogs, ({ one }) => ({
+  case: one(cases, {
+    fields: [caseAuditLogs.caseId],
+    references: [cases.id],
+  }),
+  user: one(users, {
+    fields: [caseAuditLogs.userId],
     references: [users.id],
   }),
 }));
