@@ -111,7 +111,7 @@ const renderCustomizedLabel = ({
       textAnchor="middle"
       dominantBaseline="central"
       className={cn(
-        "font-inter pointer-events-none font-semibold select-none",
+        "font-inter pointer-events-none font-semibold drop-shadow-[0_1px_2px_rgb(0_0_0_/_0.5)] select-none",
         isMobile ? "text-[10px]" : "text-sm"
       )}
     >

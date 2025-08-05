@@ -31,7 +31,7 @@ export const HistoryLogTimeline = ({ groupedData }: HistoryLogTimelineProps) => 
     <div className="font-inter p-6 sm:p-8">
       {Object.entries(groupedData).map(([day, groupedByBatch]) => (
         <div key={day} className="mb-10">
-          <h1 className="mb-4 text-xl font-semibold text-slate-800">{formatDateHeading(day)}</h1>
+          <h1 className="mb-4 text-lg font-medium text-slate-800">{formatDateHeading(day)}</h1>
           {/* Establishes the positioning context for the timeline bar. */}
           <div className="relative">
             {/* The vertical timeline bar with fading effect */}

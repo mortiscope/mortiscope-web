@@ -241,7 +241,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.1.7",
-    "inngest-cli": "^1.11.13",
+    "inngest-cli": "^1.12.1",
     "internal-ip": "^8.0.1",
     "lighthouse": "^12.8.2",
     "lint-staged": "^16.1.6",
