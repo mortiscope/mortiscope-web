@@ -106,20 +106,27 @@ export async function updateCase(values: {
     // Check if the temperature has changed for recalculation flag.
     const temperatureChanged = existingCase.temperatureCelsius !== temperatureCelsius;
 
+    // Prepare the update object
+    const updateData: Partial<typeof cases.$inferInsert> = {
+      caseName: data.caseName,
+      temperatureCelsius,
+      locationRegion: data.location.region.name,
+      locationProvince: data.location.province.name,
+      locationCity: data.location.city.name,
+      locationBarangay: data.location.barangay.name,
+      caseDate: data.caseDate,
+      notes: data.notes,
+    };
+
+    // Only update recalculationNeeded if temperature actually changed
+    if (temperatureChanged) {
+      updateData.recalculationNeeded = true;
+    }
+
     // Execute the database update for the specified case.
     const result = await db
       .update(cases)
-      .set({
-        caseName: data.caseName,
-        temperatureCelsius,
-        locationRegion: data.location.region.name,
-        locationProvince: data.location.province.name,
-        locationCity: data.location.city.name,
-        locationBarangay: data.location.barangay.name,
-        caseDate: data.caseDate,
-        notes: data.notes,
-        recalculationNeeded: temperatureChanged,
-      })
+      .set(updateData)
       .where(and(eq(cases.id, values.caseId), eq(cases.userId, userId)));
 
     if (result.rowCount === 0) {

@@ -113,6 +113,8 @@ export const useCaseNoteEditor = ({ value, onChange }: UseCaseNoteEditorProps) =
     editor?.setEditable(newEditableState);
     if (newEditableState) {
       editor?.chain().focus().run();
+      // Trigger `onChange` when entering edit mode to mark the field as dirty
+      onChange(editor?.getHTML() || value);
     }
   };
 
