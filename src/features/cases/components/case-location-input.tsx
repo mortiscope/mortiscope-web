@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 
@@ -61,6 +61,19 @@ export const CaseLocationInput = memo(
       "w-full cursor-pointer truncate"
     );
 
+    // Memoize disabled states to prevent excessive calculations
+    const disabledStates = useMemo(() => {
+      const provinceDisabled = !watchedRegion || isLocked;
+      const cityDisabled = !watchedProvince || isLocked;
+      const barangayDisabled = !watchedCity || isLocked;
+
+      return {
+        province: provinceDisabled,
+        city: cityDisabled,
+        barangay: barangayDisabled,
+      };
+    }, [watchedRegion, watchedProvince, watchedCity, isLocked]);
+
     const regionField = (
       <FormField
         control={control}
@@ -72,10 +85,14 @@ export const CaseLocationInput = memo(
               value={field.value?.code || ""}
               onValueChange={(code) => {
                 const region = regionList.find((r) => r.code === code) || null;
+
+                // Force reset child fields first to ensure cascading works even with same codes
+                setValue("location.province", null, { shouldValidate: false });
+                setValue("location.city", null, { shouldValidate: false });
+                setValue("location.barangay", null, { shouldValidate: false });
+
+                // Then set the new region
                 field.onChange(region);
-                setValue("location.province", null, { shouldValidate: true });
-                setValue("location.city", null, { shouldValidate: true });
-                setValue("location.barangay", null, { shouldValidate: true });
               }}
               disabled={isLocked}
             >
@@ -109,11 +126,15 @@ export const CaseLocationInput = memo(
               value={field.value?.code || ""}
               onValueChange={(code) => {
                 const province = provinceList.find((p) => p.code === code) || null;
+
+                // Force reset child fields first to ensure cascading works even with same codes
+                setValue("location.city", null, { shouldValidate: false });
+                setValue("location.barangay", null, { shouldValidate: false });
+
+                // Then set the new province
                 field.onChange(province);
-                setValue("location.city", null, { shouldValidate: true });
-                setValue("location.barangay", null, { shouldValidate: true });
               }}
-              disabled={!watchedRegion || isLocked}
+              disabled={disabledStates.province}
             >
               <FormControl>
                 <SelectTrigger className={commonSelectTriggerClasses}>
@@ -145,10 +166,14 @@ export const CaseLocationInput = memo(
               value={field.value?.code || ""}
               onValueChange={(code) => {
                 const city = cityList.find((c) => c.code === code) || null;
+
+                // Force reset child fields first to ensure cascading works even with same codes
+                setValue("location.barangay", null, { shouldValidate: false });
+
+                // Then set the new city
                 field.onChange(city);
-                setValue("location.barangay", null, { shouldValidate: true });
               }}
-              disabled={!watchedProvince || isLocked}
+              disabled={disabledStates.city}
             >
               <FormControl>
                 <SelectTrigger className={commonSelectTriggerClasses}>
@@ -182,7 +207,7 @@ export const CaseLocationInput = memo(
                 const barangay = barangayList.find((b) => b.code === code) || null;
                 field.onChange(barangay);
               }}
-              disabled={!watchedCity || isLocked}
+              disabled={disabledStates.barangay}
             >
               <FormControl>
                 <SelectTrigger className={commonSelectTriggerClasses}>

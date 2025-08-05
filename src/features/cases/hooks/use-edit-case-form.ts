@@ -45,6 +45,9 @@ export const useEditCaseForm = ({ caseData, onSheetClose }: UseEditCaseFormProps
     location: true,
   });
 
+  // Track whether initial form population is complete to prevent auto-setting interference
+  const [isInitialPopulationComplete, setIsInitialPopulationComplete] = React.useState(false);
+
   /** A helper function to toggle the locked/unlocked state of a form field section. */
   const toggleLock = (field: keyof typeof lockedFields) => {
     setLockedFields((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -82,42 +85,116 @@ export const useEditCaseForm = ({ caseData, onSheetClose }: UseEditCaseFormProps
 
   // Series of `useEffect` hooks critical for initializing the form's address fields.
   React.useEffect(() => {
-    if (caseData.locationRegion && addressData.regionList.length > 0 && !watchedRegion?.code) {
+    if (
+      !isInitialPopulationComplete &&
+      caseData.locationRegion &&
+      addressData.regionList.length > 0 &&
+      !watchedRegion?.code
+    ) {
       const matched = addressData.regionList.find((r) => r.name === caseData.locationRegion);
-      if (matched) form.setValue("location.region", matched, { shouldValidate: true });
+      if (matched) {
+        form.setValue("location.region", matched, { shouldValidate: true });
+      }
     }
-  }, [addressData.regionList, caseData.locationRegion, form, watchedRegion]);
+  }, [
+    addressData.regionList,
+    caseData.locationRegion,
+    form,
+    watchedRegion,
+    isInitialPopulationComplete,
+  ]);
 
   React.useEffect(() => {
     if (
+      !isInitialPopulationComplete &&
       watchedRegion?.code &&
       caseData.locationProvince &&
       addressData.provinceList.length > 0 &&
       !watchedProvince?.code
     ) {
       const matched = addressData.provinceList.find((p) => p.name === caseData.locationProvince);
-      if (matched) form.setValue("location.province", matched, { shouldValidate: true });
+      if (matched) {
+        form.setValue("location.province", matched, { shouldValidate: true });
+      }
     }
-  }, [addressData.provinceList, caseData.locationProvince, form, watchedProvince, watchedRegion]);
+  }, [
+    addressData.provinceList,
+    caseData.locationProvince,
+    form,
+    watchedProvince,
+    watchedRegion,
+    isInitialPopulationComplete,
+  ]);
 
   React.useEffect(() => {
     if (
+      !isInitialPopulationComplete &&
       watchedProvince?.code &&
       caseData.locationCity &&
       addressData.cityList.length > 0 &&
       !watchedCity?.code
     ) {
       const matched = addressData.cityList.find((c) => c.name === caseData.locationCity);
-      if (matched) form.setValue("location.city", matched, { shouldValidate: true });
+      if (matched) {
+        form.setValue("location.city", matched, { shouldValidate: true });
+      }
     }
-  }, [addressData.cityList, caseData.locationCity, form, watchedCity, watchedProvince]);
+  }, [
+    addressData.cityList,
+    caseData.locationCity,
+    form,
+    watchedCity,
+    watchedProvince,
+    isInitialPopulationComplete,
+  ]);
 
   React.useEffect(() => {
-    if (watchedCity?.code && caseData.locationBarangay && addressData.barangayList.length > 0) {
+    if (
+      !isInitialPopulationComplete &&
+      watchedCity?.code &&
+      caseData.locationBarangay &&
+      addressData.barangayList.length > 0
+    ) {
       const matched = addressData.barangayList.find((b) => b.name === caseData.locationBarangay);
-      if (matched) form.setValue("location.barangay", matched, { shouldValidate: true });
+      if (matched) {
+        form.setValue("location.barangay", matched, { shouldValidate: true });
+        // Mark initial population as complete after setting the final field
+        setIsInitialPopulationComplete(true);
+      }
     }
-  }, [addressData.barangayList, caseData.locationBarangay, form, watchedCity]);
+  }, [
+    addressData.barangayList,
+    caseData.locationBarangay,
+    form,
+    watchedCity,
+    isInitialPopulationComplete,
+  ]);
+
+  // Fallback to mark initial population complete if all address data is loaded but no barangay match
+  React.useEffect(() => {
+    if (
+      !isInitialPopulationComplete &&
+      addressData.regionList.length > 0 &&
+      addressData.provinceList.length > 0 &&
+      addressData.cityList.length > 0 &&
+      addressData.barangayList.length > 0 &&
+      watchedRegion?.code &&
+      watchedProvince?.code &&
+      watchedCity?.code
+    ) {
+      // If we have all the data loaded and all fields populated, mark as complete
+      setIsInitialPopulationComplete(true);
+    }
+  }, [
+    isInitialPopulationComplete,
+    addressData.regionList.length,
+    addressData.provinceList.length,
+    addressData.cityList.length,
+    addressData.barangayList.length,
+    watchedRegion?.code,
+    watchedProvince?.code,
+    watchedCity?.code,
+  ]);
 
   /**
    * Initializes a mutation with Tanstack Query for updating the case data on the server.

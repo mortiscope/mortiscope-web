@@ -337,8 +337,8 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       inngest-cli:
-        specifier: ^1.11.13
-        version: 1.11.13
+        specifier: ^1.12.1
+        version: 1.12.1
       internal-ip:
         specifier: ^8.0.1
         version: 8.0.1
@@ -5508,8 +5508,8 @@ packages:
   inline-style-parser@0.2.4:
     resolution: {integrity: sha512-0aO8FkhNZlj/ZIbNi7Lxxr12obT7cL1moPfE4tg1LkX7LlLfC6DeX4l2ZEud1ukP9jNQyNnfzQVqwbwmAATY4Q==}
 
-  inngest-cli@1.11.13:
-    resolution: {integrity: sha512-yHWP3kGyIPgOIRM775Wjm6dWpXx/gyTiJJG2W2f5pfya4qOt5EqnB5u/BnBT9JoYKJRK403yMc9o7UFxIS+5dQ==}
+  inngest-cli@1.12.1:
+    resolution: {integrity: sha512-1Q/bQ1LDjAKFbLiZ6mycjzORyqFSkSaPIIq3FMJekxnenSOz8THn35G9/f61rCEQJXYI+LnWeXExUNUdKdb9eA==}
     hasBin: true
 
   inngest@3.40.2:
@@ -13987,7 +13987,7 @@ snapshots:
 
   inline-style-parser@0.2.4: {}
 
-  inngest-cli@1.11.13:
+  inngest-cli@1.12.1:
     dependencies:
       adm-zip: 0.5.16
       debug: 4.4.1
