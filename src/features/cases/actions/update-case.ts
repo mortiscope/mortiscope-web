@@ -133,8 +133,8 @@ export async function updateCase(values: {
       return { success: false, error: "Case not found or you do not have permission to edit it." };
     }
 
-    // If there were changes, insert them into the audit log.
-    if (changes.length > 0) {
+    // If there were changes and the case is active, insert them into the audit log.
+    if (changes.length > 0 && existingCase.status === "active") {
       const batchId = createId();
       await db.insert(caseAuditLogs).values(
         changes.map((change) => ({
