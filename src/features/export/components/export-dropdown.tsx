@@ -21,6 +21,11 @@ const ExportResultsModal = dynamic(() =>
 );
 
 /**
+ * Defines the available case export formats that can trigger the modal.
+ */
+type CaseExportFormat = "raw_data" | "labelled_images";
+
+/**
  * Defines the props for the export dropdown component.
  */
 interface ExportDropdownProps {
@@ -31,7 +36,13 @@ interface ExportDropdownProps {
  * Renders a dropdown menu for exporting results in various formats.
  */
 export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
-  const [isRawDataModalOpen, setIsRawDataModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<CaseExportFormat>("raw_data");
+
+  const handleOpenModal = (format: CaseExportFormat) => {
+    setSelectedFormat(format);
+    setIsModalOpen(true);
+  };
 
   return (
     <>
@@ -64,11 +75,12 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
               <span className="truncate">Export as PDF</span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
-              disabled
+              onSelect={(e) => {
+                e.preventDefault();
+                handleOpenModal("labelled_images");
+              }}
               className={cn(
-                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600",
-                "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-transparent disabled:hover:text-slate-800 disabled:focus:bg-transparent disabled:hover:[&_svg]:!text-slate-600"
+                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
               )}
             >
               <FaRegFileImage className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
@@ -77,7 +89,7 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
-                setIsRawDataModalOpen(true);
+                handleOpenModal("raw_data");
               }}
               className={cn(
                 "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
@@ -95,11 +107,12 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
 
       {/* Wrap the modal in a Suspense boundary. */}
       <Suspense fallback={null}>
-        {isRawDataModalOpen && (
+        {isModalOpen && (
           <ExportResultsModal
             caseId={caseId}
-            isOpen={isRawDataModalOpen}
-            onOpenChange={setIsRawDataModalOpen}
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            format={selectedFormat}
           />
         )}
       </Suspense>

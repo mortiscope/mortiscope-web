@@ -7,10 +7,12 @@ import { toast } from "sonner";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { requestResultsExport } from "@/features/export/actions/request-results-export";
+import { ExportImagesBody } from "@/features/export/components/export-images-body";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
 import { ExportResultsBody } from "@/features/export/components/export-results-body";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
+import type { RequestResultsExportInput } from "@/features/export/schemas/export";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -20,18 +22,31 @@ const modalContentVariants = {
   show: { opacity: 1, transition: { delayChildren: 0.2, staggerChildren: 0.2 } },
 };
 
+/**
+ * Defines the types for the case export formats and resolutions.
+ */
+type CaseExportFormat = "raw_data" | "labelled_images";
+type ExportResolution = "1280x720" | "1920x1080" | "3840x2160";
+
 interface ExportResultsModalProps {
   caseId: string | null;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
+  format: CaseExportFormat;
 }
 
 /**
  * A modal to confirm the export of a case. This smart component manages the
  * export request and orchestrates the UI components.
  */
-export const ExportResultsModal = ({ caseId, isOpen, onOpenChange }: ExportResultsModalProps) => {
+export const ExportResultsModal = ({
+  caseId,
+  isOpen,
+  onOpenChange,
+  format,
+}: ExportResultsModalProps) => {
   const [exportId, setExportId] = useState<string | null>(null);
+  const [resolution, setResolution] = useState<ExportResolution>("1920x1080");
 
   const { mutate: startExport, isPending: isStarting } = useMutation({
     mutationFn: requestResultsExport,
@@ -60,13 +75,22 @@ export const ExportResultsModal = ({ caseId, isOpen, onOpenChange }: ExportResul
   const isPending = isStarting || isPolling;
 
   const handleExport = () => {
-    if (caseId && !isPending) startExport({ caseId, format: "raw_data" });
+    if (caseId && !isPending) {
+      const payload: RequestResultsExportInput =
+        format === "labelled_images" ? { caseId, format, resolution } : { caseId, format };
+      startExport(payload);
+    }
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) setExportId(null);
+    if (!open) {
+      setExportId(null);
+      setResolution("1920x1080");
+    }
     onOpenChange(open);
   };
+
+  const modalTitle = format === "raw_data" ? "Export as Raw Data" : "Export as Labelled Images";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -77,8 +101,12 @@ export const ExportResultsModal = ({ caseId, isOpen, onOpenChange }: ExportResul
           initial="hidden"
           animate="show"
         >
-          <ExportModalHeader title="Export as Raw Data" />
-          <ExportResultsBody />
+          <ExportModalHeader title={modalTitle} />
+          {format === "raw_data" ? (
+            <ExportResultsBody />
+          ) : (
+            <ExportImagesBody selectedResolution={resolution} onResolutionChange={setResolution} />
+          )}
           <ExportModalFooter
             isPending={isPending}
             onCancel={() => handleOpenChange(false)}

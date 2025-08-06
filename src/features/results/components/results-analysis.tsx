@@ -146,10 +146,17 @@ export const ResultsAnalysis = ({
   const isAdultOnlyNoEstimation = !hasEstimation && analysisResult?.oldestStageDetected === "adult";
 
   /**
-   * The information button is enabled if there is a valid estimation, OR if it's the
-   * special adult-only case where an explanation is available without a calculation.
+   * A flag for the scenario where no insects were detected at all.
+   * The backend provides a specific explanation for this case.
    */
-  const isInfoButtonEnabled = hasEstimation || isAdultOnlyNoEstimation;
+  const isNoInsectsFound = !hasEstimation && !analysisResult?.oldestStageDetected;
+
+  /**
+   * The information button is enabled if there is a valid estimation, if it's the
+   * special adult-only case, or if no insects were found, as all these scenarios
+   * have a corresponding explanation to display.
+   */
+  const isInfoButtonEnabled = hasEstimation || isAdultOnlyNoEstimation || isNoInsectsFound;
 
   // A clear flag to check if the data source dropdown should be enabled.
   const isDataSourceDisabled = !uploads || uploads.length === 0;
