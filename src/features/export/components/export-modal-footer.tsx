@@ -1,4 +1,4 @@
-import { motion, type Variants } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { memo } from "react";
 import { ImSpinner2 } from "react-icons/im";
 
@@ -11,11 +11,22 @@ const itemVariants: Variants = {
   show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
 };
 
+/**
+ * Defines the animation for the text transition inside the buttons.
+ * The text will slide up/down and fade in/out.
+ */
+const textVariants: Variants = {
+  initial: { y: 10, opacity: 0 },
+  animate: { y: 0, opacity: 1 },
+  exit: { y: -10, opacity: 0 },
+};
+
 type ExportModalFooterProps = {
   isPending: boolean;
   onCancel: () => void;
   onExport: () => void;
   exportButtonText?: string;
+  cancelButtonText?: string;
   pendingButtonText?: string;
 };
 
@@ -28,6 +39,7 @@ export const ExportModalFooter = memo(
     onCancel,
     onExport,
     exportButtonText = "Export",
+    cancelButtonText = "Cancel",
     pendingButtonText = "Exporting...",
   }: ExportModalFooterProps) => (
     <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4 pb-6">
@@ -37,23 +49,49 @@ export const ExportModalFooter = memo(
             variant="outline"
             onClick={onCancel}
             disabled={isPending}
-            className="font-inter h-10 w-full cursor-pointer uppercase transition-all duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed"
+            className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed"
           >
-            Cancel
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span
+                key={cancelButtonText}
+                variants={textVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                transition={{ ease: "easeInOut", duration: 0.2 }}
+                className="block"
+              >
+                {cancelButtonText}
+              </motion.span>
+            </AnimatePresence>
           </Button>
         </div>
         <div className={cn("flex-1", isPending && "cursor-not-allowed")}>
           <Button
             onClick={onExport}
             disabled={isPending}
-            className="font-inter flex h-10 w-full cursor-pointer items-center justify-center gap-2 bg-emerald-600 text-white uppercase transition-all duration-300 ease-in-out hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed"
+            className="font-inter flex h-10 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden bg-emerald-600 text-white uppercase transition-all duration-300 ease-in-out hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed"
           >
             {isPending ? (
               <>
-                <ImSpinner2 className="h-5 w-5 animate-spin" /> {pendingButtonText}
+                <ImSpinner2 className="h-5 w-5 animate-spin" />
+                <span className="sr-only">Export started successfully.</span>&nbsp;
+                <span>{pendingButtonText}</span>
               </>
             ) : (
-              exportButtonText
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={exportButtonText}
+                  variants={textVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                  transition={{ ease: "easeInOut", duration: 0.2 }}
+                  className="block"
+                >
+                  {exportButtonText}
+                </motion.span>
+              </AnimatePresence>
             )}
           </Button>
         </div>
