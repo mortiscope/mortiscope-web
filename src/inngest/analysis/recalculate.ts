@@ -1,7 +1,8 @@
+import { createId } from "@paralleldrive/cuid2";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { analysisResults, cases } from "@/db/schema";
+import { analysisResults, caseAuditLogs, cases } from "@/db/schema";
 import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
 import { analysisLogger, inngestLogger, logError } from "@/lib/logger";
@@ -54,6 +55,14 @@ export const recalculateCase = inngest.createFunction(
   async ({ event, step }) => {
     const { caseId } = event.data;
 
+    // Capture the old PMI values before recalculation for audit logging
+    const oldAnalysisResult = await step.run("capture-old-pmi-values", async () => {
+      const result = await db.query.analysisResults.findFirst({
+        where: eq(analysisResults.caseId, caseId),
+      });
+      return result;
+    });
+
     // Update status to 'processing' for immediate user feedback.
     await step.run("update-status-to-processing", async () => {
       await db
@@ -84,7 +93,7 @@ export const recalculateCase = inngest.createFunction(
       return await response.json();
     });
 
-    // On success, finalize the process in the database.
+    // On success, finalize the process in the database and create audit log.
     await step.run("finalize-recalculation-status", async () => {
       // Set the flag back to false, indicating the job is done.
       await db.update(cases).set({ recalculationNeeded: false }).where(eq(cases.id, caseId));
@@ -93,6 +102,74 @@ export const recalculateCase = inngest.createFunction(
         .update(analysisResults)
         .set({ status: "completed", updatedAt: new Date() })
         .where(eq(analysisResults.caseId, caseId));
+    });
+
+    // Create audit log for PMI recalculation
+    await step.run("create-pmi-audit-log", async () => {
+      // Get the case to find the user who triggered the recalculation
+      const caseData = await db.query.cases.findFirst({
+        where: eq(cases.id, caseId),
+      });
+
+      if (!caseData || !oldAnalysisResult) {
+        analysisLogger.warn(
+          { caseId },
+          "Could not create PMI audit log - missing case or old analysis data"
+        );
+        return;
+      }
+
+      // Get the new PMI values after recalculation
+      const newAnalysisResult = await db.query.analysisResults.findFirst({
+        where: eq(analysisResults.caseId, caseId),
+      });
+
+      if (!newAnalysisResult) {
+        analysisLogger.warn(
+          { caseId },
+          "Could not create PMI audit log - missing new analysis data"
+        );
+        return;
+      }
+
+      // Only create audit log if PMI values actually changed
+      const oldPmiMinutes = oldAnalysisResult.pmiMinutes;
+      const newPmiMinutes = newAnalysisResult.pmiMinutes;
+
+      if (oldPmiMinutes !== newPmiMinutes) {
+        const batchId = createId();
+
+        // Store all PMI values (minutes, hours, days) for comprehensive display
+        const oldPmiValues = {
+          minutes: oldAnalysisResult.pmiMinutes,
+          hours: oldAnalysisResult.pmiHours,
+          days: oldAnalysisResult.pmiDays,
+        };
+
+        const newPmiValues = {
+          minutes: newAnalysisResult.pmiMinutes,
+          hours: newAnalysisResult.pmiHours,
+          days: newAnalysisResult.pmiDays,
+        };
+
+        await db.insert(caseAuditLogs).values({
+          caseId,
+          userId: caseData.userId,
+          batchId,
+          field: "pmiRecalculation",
+          oldValue: oldPmiValues,
+          newValue: newPmiValues,
+        });
+
+        analysisLogger.info(
+          {
+            caseId,
+            oldPmiMinutes,
+            newPmiMinutes,
+          },
+          "PMI recalculation audit log created"
+        );
+      }
     });
 
     analysisLogger.info({ caseId }, "Recalculation completed successfully");

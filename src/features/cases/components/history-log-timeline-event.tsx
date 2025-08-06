@@ -19,12 +19,14 @@ const fieldLabels: Record<string, string> = {
   locationProvince: "Province",
   locationCity: "City",
   locationBarangay: "Barangay",
+  pmiRecalculation: "PMI Estimation",
 };
 
 /**
  * Field display order that defines the priority order for displaying changes.
  */
 const fieldOrder = [
+  "pmiRecalculation",
   "caseName",
   "caseDate",
   "temperatureCelsius",
@@ -33,6 +35,18 @@ const fieldOrder = [
   "locationCity",
   "locationBarangay",
 ];
+
+/**
+ * Helper function to format time unit with proper singular/plural form
+ */
+const formatTimeUnit = (value: number | null | undefined, unit: string): string => {
+  if (value === null || value === undefined) {
+    return `N/A ${unit}`;
+  }
+  const roundedValue = Math.round(value * 100) / 100; // Round to 2 decimal places
+  const isPlural = roundedValue !== 1;
+  return `${roundedValue} ${unit}${isPlural ? "s" : ""}`;
+};
 
 /**
  * Formats a value for display in the log, returning only the string or simple node.
@@ -54,12 +68,59 @@ const formatValue = (value: unknown, field: string) => {
 };
 
 /**
+ * Formats PMI recalculation values showing all time units
+ */
+const formatPmiRecalculation = (oldValue: unknown, newValue: unknown) => {
+  // Type guard to ensure we have the expected structure
+  const isValidPmiValue = (
+    val: unknown
+  ): val is { minutes?: number; hours?: number; days?: number } => {
+    return val !== null && typeof val === "object" && val !== undefined;
+  };
+
+  const oldPmi = isValidPmiValue(oldValue) ? oldValue : { minutes: null, hours: null, days: null };
+  const newPmi = isValidPmiValue(newValue) ? newValue : { minutes: null, hours: null, days: null };
+
+  return (
+    <div className="space-y-1">
+      <div>
+        <span className="text-slate-500">Minutes: </span>
+        <span className="font-medium text-rose-600">
+          {formatTimeUnit(oldPmi.minutes, "minute")}
+        </span>
+        <span className="text-slate-400"> → </span>
+        <span className="font-medium text-emerald-600">
+          {formatTimeUnit(newPmi.minutes, "minute")}
+        </span>
+      </div>
+      <div>
+        <span className="text-slate-500">Hours: </span>
+        <span className="font-medium text-rose-600">{formatTimeUnit(oldPmi.hours, "hour")}</span>
+        <span className="text-slate-400"> → </span>
+        <span className="font-medium text-emerald-600">{formatTimeUnit(newPmi.hours, "hour")}</span>
+      </div>
+      <div>
+        <span className="text-slate-500">Days: </span>
+        <span className="font-medium text-rose-600">{formatTimeUnit(oldPmi.days, "day")}</span>
+        <span className="text-slate-400"> → </span>
+        <span className="font-medium text-emerald-600">{formatTimeUnit(newPmi.days, "day")}</span>
+      </div>
+    </div>
+  );
+};
+
+/**
  * Formats a single change log entry into a human-readable string with custom styling.
  * @param log - The log entry object.
  * @returns A React node representing the formatted change.
  */
 const formatChange = (log: LogEntry) => {
   const fieldLabel = fieldLabels[log.field] ?? log.field;
+
+  // Special formatting for PMI recalculation to match the requested format
+  if (log.field === "pmiRecalculation") {
+    return <div className="text-sm">{formatPmiRecalculation(log.oldValue, log.newValue)}</div>;
+  }
 
   return (
     <div className="text-sm">
@@ -92,6 +153,9 @@ export const HistoryLogTimelineEvent = ({ batchId, batchLogs }: HistoryLogTimeli
     return aOrder - bOrder;
   });
 
+  // Check if this is a PMI recalculation event
+  const isPmiRecalculation = batchLogs.length === 1 && batchLogs[0]?.field === "pmiRecalculation";
+
   return (
     // Each event is a relative container with padding to make space for the icon.
     <div key={batchId} className="relative pl-12 md:pl-16">
@@ -102,7 +166,13 @@ export const HistoryLogTimelineEvent = ({ batchId, batchLogs }: HistoryLogTimeli
       <div className="flex flex-col">
         <p className="text-sm text-slate-600">
           <span className="font-medium text-slate-900">{user?.name ?? "A user"}</span>
-          &nbsp; made {batchLogs.length} change{batchLogs.length > 1 && "s"}.
+          {isPmiRecalculation ? (
+            <span>&nbsp;triggered PMI recalculation.</span>
+          ) : (
+            <span>
+              &nbsp;made {batchLogs.length} change{batchLogs.length > 1 ? "s" : ""}.
+            </span>
+          )}
         </p>
         <ul className="mt-2 space-y-2">
           {sortedLogs.map((log) => (

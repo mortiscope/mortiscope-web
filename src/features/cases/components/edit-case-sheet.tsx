@@ -125,6 +125,8 @@ export const EditCaseSheet = ({
     enabled: isOpen && activeTab === "history",
     // Keep data fresh but not too aggressively.
     staleTime: 1000 * 60,
+    // Poll more frequently when recalculation is in progress to catch new audit logs
+    refetchInterval: caseData.recalculationNeeded ? 5000 : false,
   });
 
   /**
