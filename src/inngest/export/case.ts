@@ -55,7 +55,7 @@ export const exportCaseData = inngest.createFunction(
   { event: "export/case.data.requested" },
   async ({ event, step }) => {
     // In the main handler, the type is correctly inferred automatically.
-    const { exportId, caseId, format } = event.data;
+    const { exportId, caseId, format, resolution } = event.data;
 
     // Update the export status to 'processing'.
     await step.run("update-export-status-to-processing", async () => {
@@ -69,17 +69,21 @@ export const exportCaseData = inngest.createFunction(
     // Call the FastAPI worker to perform the actual export.
     const result = await step.run("trigger-export-worker", async () => {
       const endpoint = `${fastApiUrl}/v1/export/`;
+
+      const payload = {
+        export_id: exportId,
+        case_id: caseId,
+        format: format,
+        resolution: resolution,
+      };
+
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Api-Key": fastApiSecret,
         },
-        body: JSON.stringify({
-          export_id: exportId,
-          case_id: caseId,
-          format: format,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -91,7 +95,7 @@ export const exportCaseData = inngest.createFunction(
 
     // Handle updating the final status to 'completed' or 'failed'.
     exportLogger.info(
-      { exportId, caseId, format },
+      { exportId, caseId, format, resolution },
       "Export job successfully dispatched to FastAPI"
     );
     return {

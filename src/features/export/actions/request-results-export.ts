@@ -23,7 +23,10 @@ export const requestResultsExport = async (
   if (!session?.user?.id) return { success: false, error: "Unauthorized" };
 
   const parseResult = requestResultsExportSchema.safeParse(values);
-  if (!parseResult.success) return { success: false, error: "Invalid input provided." };
+  if (!parseResult.success) {
+    const errorMessage = parseResult.error.issues[0]?.message ?? "Invalid input provided.";
+    return { success: false, error: errorMessage };
+  }
   const { caseId, format } = parseResult.data;
 
   try {
@@ -40,7 +43,11 @@ export const requestResultsExport = async (
 
     await inngest.send({
       name: "export/case.data.requested",
-      data: { exportId: newExport.id, caseId, userId: session.user.id, format },
+      data: {
+        exportId: newExport.id,
+        userId: session.user.id,
+        ...parseResult.data,
+      },
     });
 
     revalidatePath(`/results/${caseId}`);

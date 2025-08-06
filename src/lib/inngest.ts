@@ -40,6 +40,7 @@ export type Events = {
       caseId: string;
       userId: string;
       format: "raw_data" | "pdf" | "labelled_images";
+      resolution?: "1280x720" | "1920x1080" | "3840x2160";
     };
   };
 
