@@ -105,7 +105,11 @@ export const ExportResultsModal = ({
           {format === "raw_data" ? (
             <ExportResultsBody />
           ) : (
-            <ExportImagesBody selectedResolution={resolution} onResolutionChange={setResolution} />
+            <ExportImagesBody
+              selectedResolution={resolution}
+              onResolutionChange={setResolution}
+              isExporting={isPending}
+            />
           )}
           <ExportModalFooter
             isPending={isPending}

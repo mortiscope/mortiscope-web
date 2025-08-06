@@ -25,6 +25,7 @@ const resolutions: { value: ExportResolution; label: string }[] = [
 interface ExportImagesBodyProps {
   selectedResolution: ExportResolution;
   onResolutionChange: (resolution: ExportResolution) => void;
+  isExporting?: boolean;
 }
 
 /**
@@ -32,7 +33,7 @@ interface ExportImagesBodyProps {
  * allowing users to select an output resolution for a case export.
  */
 export const ExportImagesBody = memo(
-  ({ selectedResolution, onResolutionChange }: ExportImagesBodyProps) => (
+  ({ selectedResolution, onResolutionChange, isExporting = false }: ExportImagesBodyProps) => (
     <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4">
       <DialogDescription asChild>
         <div className="font-inter space-y-6 text-left text-sm text-slate-600">
@@ -68,13 +69,23 @@ export const ExportImagesBody = memo(
               value={selectedResolution}
               onValueChange={(value) => onResolutionChange(value as ExportResolution)}
               className="grid grid-cols-3 gap-3"
+              disabled={isExporting}
             >
               {resolutions.map((res) => (
-                <div key={res.value}>
-                  <RadioGroupItem value={res.value} id={res.value} className="peer sr-only" />
+                <div key={res.value} className={isExporting ? "cursor-not-allowed" : ""}>
+                  <RadioGroupItem
+                    value={res.value}
+                    id={res.value}
+                    className="peer sr-only"
+                    disabled={isExporting}
+                  />
                   <Label
                     htmlFor={res.value}
-                    className="block cursor-pointer rounded-md border-2 border-slate-200 p-3 text-center text-slate-700 transition-colors duration-600 ease-in-out peer-data-[state=checked]:border-emerald-500 peer-data-[state=checked]:bg-emerald-50/50 peer-data-[state=checked]:font-semibold peer-data-[state=checked]:text-emerald-600 hover:bg-slate-50"
+                    className={`block rounded-md border-2 border-slate-200 p-3 text-center text-slate-700 transition-colors duration-600 ease-in-out peer-data-[state=checked]:border-emerald-500 peer-data-[state=checked]:bg-emerald-50/50 peer-data-[state=checked]:font-semibold peer-data-[state=checked]:text-emerald-600 ${
+                      isExporting
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:bg-slate-50"
+                    }`}
                   >
                     {res.label}
                   </Label>
