@@ -15,15 +15,27 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-// Lazy-loaded version of the modal.
-const ExportResultsModal = dynamic(() =>
-  import("@/features/export/components/export-results-modal").then((mod) => mod.ExportResultsModal)
+// Lazy-loaded versions of the modals.
+const ExportPdfModal = dynamic(() =>
+  import("@/features/export/components/export-pdf-modal").then((module) => module.ExportPdfModal)
+);
+
+const ExportLabelledImagesModal = dynamic(() =>
+  import("@/features/export/components/export-labelled-images-modal").then(
+    (module) => module.ExportLabelledImagesModal
+  )
+);
+
+const ExportRawDataModal = dynamic(() =>
+  import("@/features/export/components/export-raw-data-modal").then(
+    (module) => module.ExportRawDataModal
+  )
 );
 
 /**
  * Defines the available case export formats that can trigger the modal.
  */
-type CaseExportFormat = "raw_data" | "labelled_images";
+type CaseExportFormat = "raw_data" | "labelled_images" | "pdf";
 
 /**
  * Defines the props for the export dropdown component.
@@ -64,11 +76,12 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
           </TooltipTrigger>
           <DropdownMenuContent align="end" className="max-w-xs">
             <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
-              disabled
+              onSelect={(e) => {
+                e.preventDefault();
+                handleOpenModal("pdf");
+              }}
               className={cn(
-                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600",
-                "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-transparent disabled:hover:text-slate-800 disabled:focus:bg-transparent disabled:hover:[&_svg]:!text-slate-600"
+                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
               )}
             >
               <FaRegFilePdf className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
@@ -105,17 +118,24 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
         </TooltipContent>
       </Tooltip>
 
-      {/* Wrap the modal in a Suspense boundary. */}
+      {/* Wrap the modals in a Suspense boundary. */}
       <Suspense fallback={null}>
-        {isModalOpen && (
-          <ExportResultsModal
+        {isModalOpen && selectedFormat === "pdf" && (
+          <ExportPdfModal caseId={caseId} isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
+        )}
+        {isModalOpen && selectedFormat === "labelled_images" && (
+          <ExportLabelledImagesModal
             caseId={caseId}
             isOpen={isModalOpen}
             onOpenChange={setIsModalOpen}
-            format={selectedFormat}
           />
+        )}
+        {isModalOpen && selectedFormat === "raw_data" && (
+          <ExportRawDataModal caseId={caseId} isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
         )}
       </Suspense>
     </>
   );
 };
+
+ExportDropdown.displayName = "ExportDropdown";
