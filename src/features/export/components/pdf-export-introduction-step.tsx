@@ -17,24 +17,24 @@ export const PdfExportIntroductionStep = () => (
       {/* Main informational text about the PDF report. */}
       <div>
         <p>
-          This option generates a multi-page&nbsp;
-          <strong className="font-semibold text-slate-800">PDF report</strong>
-          &nbsp;containing the complete case analysis. This format is ideal for:
+          This option generates a multi-page{" "}
+          <strong className="font-semibold text-slate-800">PDF report</strong> containing the
+          complete case analysis. This format is ideal for:
         </p>
         {/* A list highlighting the key use cases for the PDF report. */}
         <ul className="mt-3 space-y-1 text-slate-600">
           <li className="flex items-start">
             <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
             <p>
-              <strong className="font-medium text-slate-700">Case Record:</strong>
-              &nbsp;Creates a formal, archivable document for official records.
+              <strong className="font-medium text-slate-700">Case Record:</strong> Creates a formal,
+              archivable document for official records.
             </p>
           </li>
           <li className="flex items-start">
             <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
             <p>
-              <strong className="font-medium text-slate-700">Sharing & Collaboration:</strong>
-              &nbsp;Allows for easy sharing of results with colleagues and peers.
+              <strong className="font-medium text-slate-700">Sharing & Collaboration:</strong>{" "}
+              Allows for easy sharing of results with colleagues and peers.
             </p>
           </li>
         </ul>

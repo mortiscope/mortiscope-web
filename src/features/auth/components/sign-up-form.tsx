@@ -342,7 +342,7 @@ export default function SignUpForm() {
 
       {/* Link to Sign In page for existing users */}
       <p className="font-inter pt-2 text-center text-xs text-slate-600 md:pt-0 md:text-sm">
-        Already have an account?&nbsp;
+        Already have an account?{" "}
         <Link
           href="/signin"
           className="relative font-medium text-green-700 after:absolute after:-bottom-1 after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-green-600 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:text-green-600 hover:after:origin-bottom-left hover:after:scale-x-100"

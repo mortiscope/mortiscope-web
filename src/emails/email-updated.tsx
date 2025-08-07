@@ -126,7 +126,7 @@ export const EmailUpdated = ({ notificationType }: EmailUpdatedProps) => {
               {securityWarning}
               {contactEmail ? (
                 <>
-                  &nbsp;
+                  {" "}
                   <Link href={`mailto:${contactEmail}`} className="text-emerald-500">
                     {contactEmail}
                   </Link>

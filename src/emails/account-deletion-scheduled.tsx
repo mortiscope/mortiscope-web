@@ -99,7 +99,7 @@ export const AccountDeletionScheduled = ({
               deletion.
             </Text>
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
-              Your account and all associated data will be permanently erased in approximately&nbsp;
+              Your account and all associated data will be permanently erased in approximately{" "}
               <strong>{deletionWindowDays} days</strong>.
             </Text>
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
@@ -119,7 +119,7 @@ export const AccountDeletionScheduled = ({
 
             {/* Fallback link */}
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
-              If the button doesn&apos;t work, you can go to our sign-in page directly:&nbsp;
+              If the button doesn&apos;t work, you can go to our sign-in page directly:{" "}
               <Link href={recoveryLink} className="text-rose-500">
                 {recoveryLink}
               </Link>

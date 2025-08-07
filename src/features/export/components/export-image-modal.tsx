@@ -130,7 +130,7 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
               description={
                 step === "format" ? (
                   <>
-                    Choose a download option for&nbsp;
+                    Choose a download option for{" "}
                     <strong className="font-semibold text-slate-800">{image?.name}</strong>.
                   </>
                 ) : (

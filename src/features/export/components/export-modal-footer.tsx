@@ -84,7 +84,7 @@ export const ExportModalFooter = memo(
               {isPending ? (
                 <>
                   <ImSpinner2 className="h-5 w-5 animate-spin" />
-                  <span className="sr-only">Export started successfully.</span>&nbsp;
+                  <span className="sr-only">Export started successfully.</span>{" "}
                   <span>{pendingButtonText}</span>
                 </>
               ) : (

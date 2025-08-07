@@ -107,7 +107,7 @@ export const EmailVerification = ({ token }: EmailVerificationProps) => {
 
             {/* Fallback link */}
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
-              If it didn&apos;t work, you can copy and paste this URL into your browser:&nbsp;
+              If it didn&apos;t work, you can copy and paste this URL into your browser:{" "}
               <Link href={verificationLink} className="text-emerald-500">
                 {verificationLink}
               </Link>

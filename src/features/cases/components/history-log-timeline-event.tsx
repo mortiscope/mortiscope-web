@@ -167,10 +167,11 @@ export const HistoryLogTimelineEvent = ({ batchId, batchLogs }: HistoryLogTimeli
         <p className="text-sm text-slate-600">
           <span className="font-medium text-slate-900">{user?.name ?? "A user"}</span>
           {isPmiRecalculation ? (
-            <span>&nbsp;triggered PMI recalculation.</span>
+            <span> triggered PMI recalculation.</span>
           ) : (
             <span>
-              &nbsp;made {batchLogs.length} change{batchLogs.length > 1 ? "s" : ""}.
+              {" "}
+              made {batchLogs.length} change{batchLogs.length > 1 ? "s" : ""}.
             </span>
           )}
         </p>

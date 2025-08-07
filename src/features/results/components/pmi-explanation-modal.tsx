@@ -109,7 +109,7 @@ export function PmiExplanationModal({
                     Summary
                   </h3>
                   <p className="font-inter cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center text-base text-slate-600 hover:border-emerald-200 hover:bg-emerald-50">
-                    The estimated minimum PMI is approximately&nbsp;
+                    The estimated minimum PMI is approximately{" "}
                     <strong className="font-semibold text-emerald-600">
                       {formatPmiToInterpretableString(analysisResult.pmiMinutes)}
                     </strong>

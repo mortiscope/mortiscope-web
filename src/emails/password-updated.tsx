@@ -107,15 +107,15 @@ export const PasswordUpdated = () => {
               resetting your password again and contact us at
               {contactEmail ? (
                 <>
-                  &nbsp;
+                  {" "}
                   <Link href={`mailto:${contactEmail}`} className="text-emerald-500">
                     {contactEmail}
                   </Link>
                 </>
               ) : (
                 " this email"
-              )}
-              &nbsp;if problems persist.
+              )}{" "}
+              if problems persist.
             </Text>
 
             {/* Footer section with copyright */}

@@ -108,19 +108,19 @@ export const ResultsRecalculateModal = ({
               <DialogDescription asChild>
                 <div className="font-inter pt-4 text-center text-sm text-slate-600">
                   <p>
-                    A value affecting the&nbsp;
+                    A value affecting the{" "}
                     <strong className="font-semibold text-slate-800">
                       Post-Mortem Interval (PMI) estimation
-                    </strong>
-                    &nbsp;has been updated, and the current estimate may be inaccurate. Would you
-                    like to recalculate it now?
+                    </strong>{" "}
+                    has been updated, and the current estimate may be inaccurate. Would you like to
+                    recalculate it now?
                   </p>
 
                   <div className="mt-4 flex items-start gap-3 rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 text-left">
                     <PiWarning className="h-5 w-5 flex-shrink-0 text-amber-500" />
                     <p className="flex-1 text-slate-700">
                       <strong className="font-semibold text-amber-500">Note:</strong> Proceeding
-                      with this action will permanently&nbsp;
+                      with this action will permanently{" "}
                       <strong className="font-semibold text-slate-800">overwrite</strong> the
                       current PMI estimation with a new calculation.
                     </p>

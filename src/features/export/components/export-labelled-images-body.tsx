@@ -60,7 +60,7 @@ export const ExportLabelledImagesBody = memo(
           <div>
             <p>
               This option generates a <strong className="font-semibold text-slate-800">zip</strong>
-              &nbsp;archive containing images rendered with bounding boxes. This format is ideal for
+              {" "}archive containing images rendered with bounding boxes. This format is ideal for
               the following use cases:
             </p>
             <ul className="mt-3 space-y-1 text-slate-600">
@@ -68,13 +68,13 @@ export const ExportLabelledImagesBody = memo(
                 <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
                 <p>
                   <strong className="font-medium text-slate-700">Reports & Presentations:</strong>
-                  &nbsp;Provides clear visualization for case file images.
+                  {" "}Provides clear visualization for case file images.
                 </p>
               </li>
               <li className="flex items-start">
                 <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
                 <p>
-                  <strong className="font-medium text-slate-700">Peer Review:</strong>&nbsp;Allows
+                  <strong className="font-medium text-slate-700">Peer Review:</strong>{" "}Allows
                   for quick sharing and verification of detected objects with peers.
                 </p>
               </li>

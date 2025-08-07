@@ -16,7 +16,7 @@ export const ExportResultsBody = memo(() => (
     <DialogDescription asChild>
       <div className="font-inter text-left text-sm text-slate-600">
         <p>
-          This option bundles all original case files into a single&nbsp;
+          This option bundles all original case files into a single{" "}
           <strong className="font-semibold text-slate-800">zip</strong> archive. This format is
           ideal for the following use cases:
         </p>
@@ -24,15 +24,15 @@ export const ExportResultsBody = memo(() => (
           <li className="flex items-start">
             <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
             <p>
-              <strong className="font-medium text-slate-700">Permanent Archival:</strong>&nbsp;
-              Creates a complete, offline backup of the case for record-keeping.
+              <strong className="font-medium text-slate-700">Permanent Archival:</strong> Creates a
+              complete, offline backup of the case for record-keeping.
             </p>
           </li>
           <li className="flex items-start">
             <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"></span>
             <p>
-              <strong className="font-medium text-slate-700">External Analysis:</strong>&nbsp;
-              Allows the data to be used with other software or for academic research.
+              <strong className="font-medium text-slate-700">External Analysis:</strong> Allows the
+              data to be used with other software or for academic research.
             </p>
           </li>
         </ul>

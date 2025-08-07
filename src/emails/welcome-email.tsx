@@ -99,7 +99,7 @@ export const WelcomeEmail = ({ username }: WelcomeEmailProps) => {
             </Text>
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
               Your email has been successfully verified. We&apos;re thrilled to have you on board!
-              You can now be able to identify&nbsp;
+              You can now be able to identify{" "}
               <em className="text-gray-900">Chrysomya megacephala</em>, classify its life stages,
               and estimate Post-Mortem Interval (PMI).
             </Text>
@@ -126,7 +126,7 @@ export const WelcomeEmail = ({ username }: WelcomeEmailProps) => {
             {/* Fallback link */}
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
               If the button above doesn&apos;t work, you can copy and paste this link into your
-              browser:&nbsp;
+              browser:{" "}
               <Link href={buttonLink} className="text-emerald-600">
                 {buttonLink}
               </Link>

@@ -103,7 +103,7 @@ export const AccountDeletionRequest = ({
             {deletionWindowDays > 0 ? (
               <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
                 Once you confirm by clicking the button below, your account will be scheduled for
-                deletion. You will then have a&nbsp;
+                deletion. You will then have a{" "}
                 <strong>{deletionWindowDays}-day grace period</strong> to cancel the deletion simply
                 by logging back into your account.
               </Text>
@@ -126,8 +126,7 @@ export const AccountDeletionRequest = ({
 
             {/* Fallback link */}
             <Text className="font-inter text-[14px] leading-[24px] tracking-[0.015em] text-gray-800">
-              If the button doesn&apos;t work, you can copy and paste this URL into your
-              browser:&nbsp;
+              If the button doesn&apos;t work, you can copy and paste this URL into your browser:{" "}
               <Link href={deletionLink} className="text-rose-500">
                 {deletionLink}
               </Link>

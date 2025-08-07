@@ -173,7 +173,7 @@ export const DeleteImageModal = ({
               <DialogDescription asChild>
                 <div className="font-inter pt-4 text-center text-sm text-slate-600">
                   <p>
-                    Are you sure you want to permanently delete the image named&nbsp;
+                    Are you sure you want to permanently delete the image named{" "}
                     <strong className="font-semibold break-all text-slate-800">{imageName}</strong>?
                     This action is irreversible.
                   </p>
@@ -182,9 +182,8 @@ export const DeleteImageModal = ({
                     <PiWarning className="h-5 w-5 flex-shrink-0 text-rose-500" />
                     <p className="flex-1 text-slate-700">
                       <strong className="font-semibold text-rose-500">Note:</strong> To update the
-                      PMI estimation with the remaining files, you need to click the&nbsp;
-                      <strong className="font-semibold text-slate-800">recalculate</strong>
-                      &nbsp;button.
+                      PMI estimation with the remaining files, you need to click the{" "}
+                      <strong className="font-semibold text-slate-800">recalculate</strong> button.
                     </p>
                   </div>
                 </div>
