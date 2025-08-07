@@ -26,9 +26,18 @@ export type RequestResultsExportInput = z.infer<typeof requestResultsExportSchem
 /**
  * Defines the schema for requesting a single image export.
  */
-export const requestImageExportSchema = z.object({
-  uploadId: z.cuid2({ message: "A valid upload ID is required." }),
-  format: z.enum(["raw_data", "labelled_images"]),
-});
+export const requestImageExportSchema = z.discriminatedUnion("format", [
+  z.object({
+    uploadId: z.cuid2({ message: "A valid upload ID is required." }),
+    format: z.literal("raw_data"),
+  }),
+  z.object({
+    uploadId: z.cuid2({ message: "A valid upload ID is required." }),
+    format: z.literal("labelled_images"),
+    resolution: z.enum(["1280x720", "1920x1080", "3840x2160"], {
+      message: "Please select an image resolution.",
+    }),
+  }),
+]);
 
 export type RequestImageExportInput = z.infer<typeof requestImageExportSchema>;

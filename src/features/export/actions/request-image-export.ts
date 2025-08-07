@@ -25,11 +25,13 @@ export const requestImageExport = async (
 
   const parseResult = requestImageExportSchema.safeParse(values);
   if (!parseResult.success) return { success: false, error: "Invalid input provided." };
-  const { uploadId, format } = parseResult.data;
+
+  // The validated data from Zod. This object is a discriminated union.
+  const validatedData = parseResult.data;
 
   try {
     const imageToExport = await db.query.uploads.findFirst({
-      where: and(eq(uploads.id, uploadId), eq(uploads.userId, session.user.id)),
+      where: and(eq(uploads.id, validatedData.uploadId), eq(uploads.userId, session.user.id)),
       columns: { id: true, caseId: true },
     });
     if (!imageToExport?.caseId)
@@ -37,19 +39,28 @@ export const requestImageExport = async (
 
     const [newExport] = await db
       .insert(exports)
-      .values({ caseId: imageToExport.caseId, userId: session.user.id, format, status: "pending" })
+      .values({
+        caseId: imageToExport.caseId,
+        userId: session.user.id,
+        format: validatedData.format,
+        status: "pending",
+      })
       .returning();
 
+    // Spread the validated data to ensure the payload matches the Inngest event schema.
     await inngest.send({
       name: "export/image.data.requested",
-      data: { exportId: newExport.id, uploadId, userId: session.user.id, format },
+      data: {
+        ...validatedData,
+        exportId: newExport.id,
+        userId: session.user.id,
+      },
     });
 
     logUserAction(exportLogger, "image_export_requested", session.user.id, {
+      ...validatedData,
       exportId: newExport.id,
-      uploadId,
       caseId: imageToExport.caseId,
-      format,
     });
 
     revalidatePath(`/results/${imageToExport.caseId}`);
@@ -57,8 +68,7 @@ export const requestImageExport = async (
   } catch (error) {
     logError(exportLogger, "Failed to initiate image export process", error, {
       userId: session?.user?.id,
-      uploadId,
-      format,
+      ...values,
     });
     return { success: false, error: "An unexpected error occurred. Please try again later." };
   }

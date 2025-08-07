@@ -1,9 +1,10 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
+import type { z } from "zod";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { requestImageExport } from "@/features/export/actions/request-image-export";
@@ -11,14 +12,17 @@ import { ExportImageBody } from "@/features/export/components/export-image-body"
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
+import { requestImageExportSchema } from "@/features/export/schemas/export";
 
 /**
  * Framer Motion variants for the main modal content container.
  */
 const modalContentVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { delayChildren: 0.2, staggerChildren: 0.2 } },
+  show: { opacity: 1, transition: { delayChildren: 0.1, staggerChildren: 0.1 } },
 };
+
+type Resolution = z.infer<(typeof requestImageExportSchema.options)[1]["shape"]["resolution"]>;
 
 interface ExportImageModalProps {
   image: { id: string; name: string } | null;
@@ -31,7 +35,10 @@ interface ExportImageModalProps {
  * component manages state and orchestrates the UI.
  */
 export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageModalProps) => {
+  // State for the multi-step interface flow.
+  const [step, setStep] = useState<"format" | "resolution">("format");
   const [exportOption, setExportOption] = useState<"raw_data" | "labelled_image">("raw_data");
+  const [resolution, setResolution] = useState<Resolution>("1920x1080");
   const [exportId, setExportId] = useState<string | null>(null);
 
   const { mutate: startExport, isPending: isStarting } = useMutation({
@@ -60,44 +67,95 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
 
   const isPending = isStarting || isPolling;
 
-  const handleExport = () => {
-    if (image && !isPending && exportOption === "raw_data") {
+  const handlePrimaryAction = () => {
+    if (!image || isPending) return;
+
+    if (exportOption === "raw_data") {
       startExport({ uploadId: image.id, format: "raw_data" });
+    } else if (exportOption === "labelled_image") {
+      if (step === "format") {
+        setStep("resolution");
+      } else if (step === "resolution" && resolution) {
+        startExport({ uploadId: image.id, format: "labelled_images", resolution });
+      }
     }
   };
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) setExportId(null);
     onOpenChange(open);
+    // Reset state when the modal is closed to ensure it starts fresh.
+    if (!open) {
+      setTimeout(() => {
+        setStep("format");
+        setExportOption("raw_data");
+        setResolution("1920x1080");
+        setExportId(null);
+      }, 300);
+    }
   };
+
+  const handleBack = () => {
+    if (step === "resolution") {
+      setStep("format");
+    }
+  };
+
+  const handleCancelOrBack = () => {
+    if (step === "resolution") {
+      handleBack();
+    } else {
+      handleOpenChange(false);
+    }
+  };
+
+  // Determine the text for the action buttons based on the current step.
+  const exportButtonText =
+    exportOption === "labelled_image" && step === "format" ? "Next" : "Download";
+  const cancelButtonText = step === "resolution" ? "Back" : "Cancel";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
-        <motion.div
-          className="contents"
-          variants={modalContentVariants}
-          initial="hidden"
-          animate="show"
-        >
-          <ExportModalHeader
-            title="Download Image"
-            description={
-              <>
-                Choose a download option for&nbsp;
-                <strong className="font-semibold text-slate-800">{image?.name}</strong>.
-              </>
-            }
-          />
-          <ExportImageBody exportOption={exportOption} onExportOptionChange={setExportOption} />
-          <ExportModalFooter
-            isPending={isPending}
-            onCancel={() => handleOpenChange(false)}
-            onExport={handleExport}
-            exportButtonText="Download"
-            pendingButtonText="Downloading..."
-          />
-        </motion.div>
+      <DialogContent className="flex flex-col overflow-hidden rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            className="contents"
+            variants={modalContentVariants}
+            initial="hidden"
+            animate="show"
+            exit="hidden"
+          >
+            <ExportModalHeader
+              title={step === "format" ? "Download Image" : "Select Resolution"}
+              description={
+                step === "format" ? (
+                  <>
+                    Choose a download option for&nbsp;
+                    <strong className="font-semibold text-slate-800">{image?.name}</strong>.
+                  </>
+                ) : (
+                  "Select a resolution for the labelled image."
+                )
+              }
+            />
+            <ExportImageBody
+              step={step}
+              exportOption={exportOption}
+              onExportOptionChange={setExportOption}
+              resolution={resolution}
+              onResolutionChange={setResolution}
+              isPending={isPending}
+            />
+            <ExportModalFooter
+              isPending={isPending}
+              onCancel={handleCancelOrBack}
+              onExport={handlePrimaryAction}
+              exportButtonText={exportButtonText}
+              cancelButtonText={cancelButtonText}
+              pendingButtonText="Downloading..."
+            />
+          </motion.div>
+        </AnimatePresence>
       </DialogContent>
     </Dialog>
   );
