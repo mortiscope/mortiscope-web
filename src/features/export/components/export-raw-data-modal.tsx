@@ -1,0 +1,126 @@
+"use client";
+
+import { useMutation } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { requestResultsExport } from "@/features/export/actions/request-results-export";
+import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
+import { ExportModalHeader } from "@/features/export/components/export-modal-header";
+import { ExportResultsBody } from "@/features/export/components/export-results-body";
+import { useExportStatus } from "@/features/export/hooks/use-export-status";
+import type { RequestResultsExportInput } from "@/features/export/schemas/export";
+
+/**
+ * Framer Motion variants for the main modal content container.
+ * This orchestrates the animation of its children with a staggered effect.
+ */
+const modalContentVariants = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { delayChildren: 0.2, staggerChildren: 0.2 } },
+};
+
+/**
+ * Defines the props for the `ExportRawDataModal` component.
+ */
+interface ExportRawDataModalProps {
+  /** The unique identifier of the case to be exported. */
+  caseId: string | null;
+  /** A boolean to control the visibility of the modal. */
+  isOpen: boolean;
+  /** A callback function to handle changes to the modal's open state. */
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+/**
+ * A smart modal component that orchestrates the entire process of exporting raw data.
+ * It handles the initial export request, polls for the result using a custom hook, and
+ * composes the interface from smaller, presentational components.
+ */
+export const ExportRawDataModal = ({ caseId, isOpen, onOpenChange }: ExportRawDataModalProps) => {
+  /** Local state to store the unique ID of the export job, received from the server. */
+  const [exportId, setExportId] = useState<string | null>(null);
+
+  /**
+   * Initializes a mutation with Tanstack Query to trigger the server-side export process.
+   * On success, it sets the `exportId` to begin the polling process.
+   */
+  const { mutate: startExport, isPending: isStarting } = useMutation({
+    mutationFn: requestResultsExport,
+    onSuccess: (data) => {
+      if (data.success) {
+        if (data.data?.exportId) {
+          toast.success("Export started successfully.");
+          // Setting the exportId triggers the `useExportStatus` hook.
+          setExportId(data.data.exportId);
+        }
+      } else {
+        toast.error(data.error || "Failed to start export.");
+        onOpenChange(false);
+      }
+    },
+    onError: () => {
+      toast.error("An unexpected error occurred.");
+      onOpenChange(false);
+    },
+  });
+
+  /**
+   * A custom hook that polls the server for the export status. It is only active when
+   * `exportId` has a value. `isPolling` will be true while it's actively checking.
+   */
+  const isPolling = useExportStatus({ exportId, onClose: () => onOpenChange(false) });
+
+  /** A derived boolean to represent the overall pending state of the export process. */
+  const isPending = isStarting || isPolling;
+
+  /**
+   * The main handler for the "Export" button. It validates the `caseId` and triggers the `startExport` mutation.
+   */
+  const handleExport = () => {
+    if (caseId && !isPending) {
+      const payload: RequestResultsExportInput = {
+        caseId,
+        format: "raw_data",
+      };
+      startExport(payload);
+    }
+  };
+
+  /**
+   * A wrapper for `onOpenChange` that ensures the `exportId` is reset when the modal is closed.
+   * It is to stop the polling process and ensure a clean state for the next time the modal is opened.
+   */
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      setExportId(null);
+    }
+    onOpenChange(open);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
+        {/* The main animated container for the modal's content. */}
+        <motion.div
+          className="contents"
+          variants={modalContentVariants}
+          initial="hidden"
+          animate="show"
+        >
+          <ExportModalHeader title="Export as Raw Data" />
+          <ExportResultsBody />
+          <ExportModalFooter
+            isPending={isPending}
+            onCancel={() => handleOpenChange(false)}
+            onExport={handleExport}
+          />
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+ExportRawDataModal.displayName = "ExportRawDataModal";

@@ -7,10 +7,9 @@ import { toast } from "sonner";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { requestResultsExport } from "@/features/export/actions/request-results-export";
-import { ExportImagesBody } from "@/features/export/components/export-images-body";
+import { ExportLabelledImagesBody } from "@/features/export/components/export-labelled-images-body";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
-import { ExportResultsBody } from "@/features/export/components/export-results-body";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
 import type { RequestResultsExportInput } from "@/features/export/schemas/export";
 
@@ -23,42 +22,50 @@ const modalContentVariants = {
 };
 
 /**
- * Defines the types for the case export formats and resolutions.
+ * Defines the possible resolution options for the image export.
  */
-type CaseExportFormat = "raw_data" | "labelled_images";
 type ExportResolution = "1280x720" | "1920x1080" | "3840x2160";
 
-interface ExportResultsModalProps {
+/**
+ * Defines the props for the `ExportLabelledImagesModal` component.
+ */
+interface ExportLabelledImagesModalProps {
+  /** The unique identifier of the case to be exported. */
   caseId: string | null;
+  /** A boolean to control the visibility of the modal. */
   isOpen: boolean;
+  /** A callback function to handle changes to the modal's open state. */
   onOpenChange: (isOpen: boolean) => void;
-  format: CaseExportFormat;
 }
 
 /**
- * A modal to confirm the export of a case. This smart component manages the
- * export request and orchestrates the UI components.
+ * A smart modal component that orchestrates the entire process of exporting labelled images.
+ * It handles user input, the initial export request, and polls for the result using a custom hook.
  */
-export const ExportResultsModal = ({
+export const ExportLabelledImagesModal = ({
   caseId,
   isOpen,
   onOpenChange,
-  format,
-}: ExportResultsModalProps) => {
+}: ExportLabelledImagesModalProps) => {
+  /** Local state to store the unique ID of the export job, received from the server. */
   const [exportId, setExportId] = useState<string | null>(null);
+  /** Local state for the user-selected export resolution, with a sensible default. */
   const [resolution, setResolution] = useState<ExportResolution>("1920x1080");
 
+  /**
+   * Initializes a mutation with Tanstack Query to trigger the server-side export process.
+   * On success, it sets the `exportId` to begin the polling process.
+   */
   const { mutate: startExport, isPending: isStarting } = useMutation({
     mutationFn: requestResultsExport,
     onSuccess: (data) => {
-      // Correctly handle the discriminated union from the server action.
       if (data.success) {
         if (data.data?.exportId) {
           toast.success("Export started successfully.");
+          // Setting the exportId triggers the `useExportStatus` hook to start polling.
           setExportId(data.data.exportId);
         }
       } else {
-        // If success is false, we can safely access the error property.
         toast.error(data.error || "Failed to start export.");
         onOpenChange(false);
       }
@@ -69,19 +76,34 @@ export const ExportResultsModal = ({
     },
   });
 
-  // Handles polling and side-effects. Closes modal on completion.
+  /**
+   * A custom hook that polls the server for the export status. It is only active when
+   * `exportId` has a value. `isPolling` will be true while it's actively checking.
+   */
   const isPolling = useExportStatus({ exportId, onClose: () => onOpenChange(false) });
-
+  /** A derived boolean to represent the overall pending state of the export process. */
   const isPending = isStarting || isPolling;
 
+  /**
+   * The main handler for the export button. It constructs the payload with the selected
+   * resolution and triggers the `startExport` mutation.
+   */
   const handleExport = () => {
     if (caseId && !isPending) {
-      const payload: RequestResultsExportInput =
-        format === "labelled_images" ? { caseId, format, resolution } : { caseId, format };
+      const payload: RequestResultsExportInput = {
+        caseId,
+        format: "labelled_images",
+        resolution,
+      };
+
       startExport(payload);
     }
   };
 
+  /**
+   * A wrapper for `onOpenChange` that ensures all local state is reset when the modal is closed.
+   * It is to stop polling and ensure a clean state for the next time the modal is opened.
+   */
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setExportId(null);
@@ -90,27 +112,22 @@ export const ExportResultsModal = ({
     onOpenChange(open);
   };
 
-  const modalTitle = format === "raw_data" ? "Export as Raw Data" : "Export as Labelled Images";
-
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
+        {/* The main animated container for the modal's content. */}
         <motion.div
           className="contents"
           variants={modalContentVariants}
           initial="hidden"
           animate="show"
         >
-          <ExportModalHeader title={modalTitle} />
-          {format === "raw_data" ? (
-            <ExportResultsBody />
-          ) : (
-            <ExportImagesBody
-              selectedResolution={resolution}
-              onResolutionChange={setResolution}
-              isExporting={isPending}
-            />
-          )}
+          <ExportModalHeader title="Export as Labelled Images" />
+          <ExportLabelledImagesBody
+            selectedResolution={resolution}
+            onResolutionChange={setResolution}
+            isExporting={isPending}
+          />
           <ExportModalFooter
             isPending={isPending}
             onCancel={() => handleOpenChange(false)}

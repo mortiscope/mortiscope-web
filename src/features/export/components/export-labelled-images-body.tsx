@@ -5,16 +5,22 @@ import { DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-// The entry animation for the component body.
+/**
+ * The entry animation variants for the component's body, creating a "slide-up and fade-in" effect.
+ */
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   show: { y: 0, opacity: 1, transition: { type: "spring", damping: 20, stiffness: 150 } },
 };
 
+/**
+ * Defines the possible resolution options for the image export.
+ */
 type ExportResolution = "1280x720" | "1920x1080" | "3840x2160";
 
 /**
- * An array to define the resolution options to map.
+ * A configuration array that defines the available resolution options.
+ * This approach centralizes the options, making them easy to manage and map over in the UI.
  */
 const resolutions: { value: ExportResolution; label: string }[] = [
   { value: "1280x720", label: "720p" },
@@ -22,21 +28,35 @@ const resolutions: { value: ExportResolution; label: string }[] = [
   { value: "3840x2160", label: "4K" },
 ];
 
-interface ExportImagesBodyProps {
+/**
+ * Defines the props for the `ExportLabelledImagesBody` component.
+ */
+interface ExportLabelledImagesBodyProps {
+  /** The currently selected export resolution. */
   selectedResolution: ExportResolution;
+  /** A callback function to update the selected resolution in the parent component's state. */
   onResolutionChange: (resolution: ExportResolution) => void;
+  /** An optional boolean to disable the controls while an export is in progress. */
   isExporting?: boolean;
 }
 
 /**
- * Renders the interactive body for the "Export as Labelled Images" modal,
- * allowing users to select an output resolution for a case export.
+ * A memoized presentational component that renders the interactive body for the
+ * "Export as Labelled Images" modal. It provides informational text and a radio group
+ * for selecting the output resolution. This component is fully controlled by its parent.
  */
-export const ExportImagesBody = memo(
-  ({ selectedResolution, onResolutionChange, isExporting = false }: ExportImagesBodyProps) => (
+export const ExportLabelledImagesBody = memo(
+  ({
+    selectedResolution,
+    onResolutionChange,
+    isExporting = false,
+  }: ExportLabelledImagesBodyProps) => (
+    // The main animated container for the modal body.
     <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4">
+      {/* Uses dialog description to ensure the content is properly announced by screen readers. */}
       <DialogDescription asChild>
         <div className="font-inter space-y-6 text-left text-sm text-slate-600">
+          {/* Informational text section. */}
           <div>
             <p>
               This option generates a <strong className="font-semibold text-slate-800">zip</strong>
@@ -61,6 +81,7 @@ export const ExportImagesBody = memo(
             </ul>
           </div>
 
+          {/* Resolution selection section. */}
           <div className="space-y-3">
             <p className="font-normal text-slate-700">
               Please select the desired output resolution for the images.
@@ -71,8 +92,10 @@ export const ExportImagesBody = memo(
               className="grid grid-cols-3 gap-3"
               disabled={isExporting}
             >
+              {/* Dynamically generates the radio options from the resolutions constant. */}
               {resolutions.map((res) => (
                 <div key={res.value} className={isExporting ? "cursor-not-allowed" : ""}>
+                  {/* The actual radio input is visually hidden but remains accessible to screen readers. */}
                   <RadioGroupItem
                     value={res.value}
                     id={res.value}
@@ -99,4 +122,4 @@ export const ExportImagesBody = memo(
   )
 );
 
-ExportImagesBody.displayName = "ExportImagesBody";
+ExportLabelledImagesBody.displayName = "ExportLabelledImagesBody";
