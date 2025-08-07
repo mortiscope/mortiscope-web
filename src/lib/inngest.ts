@@ -48,12 +48,20 @@ export type Events = {
    * Fired when a user requests to export a single image's data.
    */
   "export/image.data.requested": {
-    data: {
-      exportId: string;
-      uploadId: string;
-      userId: string;
-      format: "raw_data" | "labelled_images";
-    };
+    data:
+      | {
+          exportId: string;
+          uploadId: string;
+          userId: string;
+          format: "raw_data";
+        }
+      | {
+          exportId: string;
+          uploadId: string;
+          userId: string;
+          format: "labelled_images";
+          resolution: "1280x720" | "1920x1080" | "3840x2160";
+        };
   };
 
   /**

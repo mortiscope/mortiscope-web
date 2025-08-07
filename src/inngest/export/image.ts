@@ -41,11 +41,12 @@ export const exportImageData = inngest.createFunction(
   },
   { event: "export/image.data.requested" },
   async ({ event, step }) => {
-    const { exportId, uploadId, format } = event.data;
-
     // Update the export status to 'processing'.
     await step.run("update-image-export-status-to-processing", async () => {
-      await db.update(exports).set({ status: "processing" }).where(eq(exports.id, exportId));
+      await db
+        .update(exports)
+        .set({ status: "processing" })
+        .where(eq(exports.id, event.data.exportId));
     });
 
     // Retrieve necessary secrets and configuration.
@@ -54,6 +55,23 @@ export const exportImageData = inngest.createFunction(
 
     // Call the FastAPI worker to perform the export.
     const result = await step.run("trigger-image-export-worker", async () => {
+      // Prepare the payload for the API. It will always have these properties.
+      const apiPayload: {
+        export_id: string;
+        upload_id: string;
+        format: string;
+        resolution?: string;
+      } = {
+        export_id: event.data.exportId,
+        upload_id: event.data.uploadId,
+        format: event.data.format,
+      };
+
+      // Conditionally add resolution if the format is 'labelled_images'.
+      if (event.data.format === "labelled_images") {
+        apiPayload.resolution = event.data.resolution;
+      }
+
       const endpoint = `${fastApiUrl}/v1/export/`;
       const response = await fetch(endpoint, {
         method: "POST",
@@ -61,11 +79,7 @@ export const exportImageData = inngest.createFunction(
           "Content-Type": "application/json",
           "X-Api-Key": fastApiSecret,
         },
-        body: JSON.stringify({
-          export_id: exportId,
-          upload_id: uploadId,
-          format: format,
-        }),
+        body: JSON.stringify(apiPayload),
       });
 
       if (!response.ok) {
@@ -76,7 +90,7 @@ export const exportImageData = inngest.createFunction(
     });
 
     return {
-      message: `Successfully dispatched image export job to FastAPI for exportId: ${exportId}`,
+      message: `Successfully dispatched image export job to FastAPI for exportId: ${event.data.exportId}`,
       result,
     };
   }
