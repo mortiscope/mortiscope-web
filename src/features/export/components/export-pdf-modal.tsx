@@ -10,7 +10,6 @@ import { requestResultsExport } from "@/features/export/actions/request-results-
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
 import { PdfExportIntroductionStep } from "@/features/export/components/pdf-export-introduction-step";
-import { PdfExportPasswordStep } from "@/features/export/components/pdf-export-password-step";
 import { PdfExportPermissionsStep } from "@/features/export/components/pdf-export-permissions-step";
 import { PdfExportSecurityStep } from "@/features/export/components/pdf-export-security-step";
 import type { SecurityLevel } from "@/features/export/constants/pdf-options";
@@ -103,7 +102,7 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
     securityLevel === "view_protected" || securityLevel === "permissions_protected";
   const isPasswordValid = !isPasswordRequired || validatePasswordProtection(true, password);
   const isPasswordStepDisabled =
-    (step === "password" || step === "permissions") && !isPasswordValid;
+    ((step === "security" && isPasswordRequired) || step === "permissions") && !isPasswordValid;
 
   /**
    * The main handler for the final export action. It validates the wizard state,
@@ -169,9 +168,15 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
 
       case "security": {
         const isStandardSelected = securityLevel === "standard";
-        const primaryAction = isStandardSelected ? handleExport : handleNext;
-        const primaryButtonText = isStandardSelected ? "Export" : "Next";
-        const isButtonDisabled = !securityLevel || !pageSize;
+        const isViewProtectedSelected = securityLevel === "view_protected";
+
+        // For standard and view-protected, export directly. For permissions-protected, go to next step.
+        const primaryAction =
+          isStandardSelected || isViewProtectedSelected ? handleExport : handleNext;
+        const primaryButtonText = isStandardSelected || isViewProtectedSelected ? "Export" : "Next";
+
+        // Button is disabled if no security level or page size is selected, or if password is required but invalid
+        const isButtonDisabled = !securityLevel || !pageSize || isPasswordStepDisabled;
 
         return (
           <ExportModalFooter
@@ -185,7 +190,6 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
         );
       }
 
-      case "password":
       case "permissions":
         return (
           <div className={cn({ "cursor-not-allowed": isPasswordStepDisabled })}>
@@ -219,12 +223,6 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
             onSecurityLevelChange={handleSecurityLevelChange}
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
-            isPending={isPending}
-          />
-        );
-      case "password":
-        return (
-          <PdfExportPasswordStep
             password={password}
             onPasswordChange={setPassword}
             isPending={isPending}
@@ -235,8 +233,6 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
           <PdfExportPermissionsStep
             permissions={permissions}
             onPermissionsChange={setPermissions}
-            password={password}
-            onPasswordChange={setPassword}
             isPending={isPending}
           />
         );
@@ -247,7 +243,7 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
+      <DialogContent className="flex max-h-[85vh] flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:max-h-none md:rounded-3xl">
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -258,7 +254,15 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
             exit="hidden"
           >
             <ExportModalHeader title="Export as PDF" />
-            <motion.div variants={itemVariants} className="shrink-0 overflow-hidden px-6 pt-2">
+            {/* Mobile version */}
+            <motion.div
+              variants={itemVariants}
+              className="flex-1 overflow-y-auto border-y border-slate-200 px-6 pt-4 pb-4 md:hidden"
+            >
+              {renderStep()}
+            </motion.div>
+            {/* Desktop version */}
+            <motion.div variants={itemVariants} className="hidden px-6 pt-4 md:block">
               {renderStep()}
             </motion.div>
             {renderFooter()}

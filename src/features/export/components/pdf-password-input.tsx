@@ -60,7 +60,7 @@ export const PdfPasswordInput = ({
           placeholder={placeholder}
           // Applies conditional styling for the error state.
           className={cn(
-            "font-inter h-9 border-2 pr-10 text-sm placeholder:text-slate-400 focus-visible:ring-0 md:h-10",
+            "font-inter h-9 border-2 pr-10 text-sm shadow-none placeholder:text-slate-400 focus-visible:ring-0 md:h-10",
             hasError
               ? "border-rose-500 focus-visible:border-rose-500"
               : "border-slate-200 focus-visible:border-green-600"

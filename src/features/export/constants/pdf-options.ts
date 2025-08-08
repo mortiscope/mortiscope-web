@@ -3,7 +3,7 @@ import { FiFileText, FiLock, FiShield } from "react-icons/fi";
 /**
  * Defines the possible steps in the multi-step PDF export wizard.
  */
-export type PdfExportStep = "introduction" | "security" | "password" | "permissions";
+export type PdfExportStep = "introduction" | "security" | "permissions";
 
 /**
  * Defines the available security levels for the PDF. The `null` type

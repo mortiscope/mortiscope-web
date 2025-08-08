@@ -38,10 +38,8 @@ export const usePdfExportWizard = () => {
       return;
     }
 
-    // From the security step, the next step depends on the chosen level.
-    if (securityLevel === "view_protected") {
-      setStep("password");
-    } else if (securityLevel === "permissions_protected") {
+    // From the security step, only permissions-protected goes to the next step.
+    if (securityLevel === "permissions_protected") {
       setStep("permissions");
     }
   };
@@ -54,11 +52,9 @@ export const usePdfExportWizard = () => {
     // If on the security step, go back to the beginning.
     if (step === "security") {
       setStep("introduction");
-    } else {
-      // From any subsequent step, go back to the security step.
+    } else if (step === "permissions") {
+      // From permissions step, go back to the security step.
       setStep("security");
-      // Clear the password to ensure it's not unintentionally retained.
-      setPassword("");
     }
   };
 
