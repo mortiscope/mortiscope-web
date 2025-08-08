@@ -10,8 +10,11 @@ import { requestResultsExport } from "@/features/export/actions/request-results-
 import { ExportLabelledImagesBody } from "@/features/export/components/export-labelled-images-body";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
+import { ExportPasswordProtection } from "@/features/export/components/export-password-protection";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
 import type { RequestResultsExportInput } from "@/features/export/schemas/export";
+import { validatePasswordProtection } from "@/features/export/schemas/export";
+import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -52,6 +55,10 @@ export const ExportLabelledImagesModal = ({
   /** Local state for the user-selected export resolution, with a sensible default. */
   const [resolution, setResolution] = useState<ExportResolution>("1920x1080");
 
+  /** Password protection state */
+  const [password, setPassword] = useState("");
+  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
+
   /**
    * Initializes a mutation with Tanstack Query to trigger the server-side export process.
    * On success, it sets the `exportId` to begin the polling process.
@@ -90,10 +97,15 @@ export const ExportLabelledImagesModal = ({
    */
   const handleExport = () => {
     if (caseId && !isPending) {
+      const passwordProtection = isPasswordEnabled
+        ? { enabled: true, password }
+        : { enabled: false };
+
       const payload: RequestResultsExportInput = {
         caseId,
         format: "labelled_images",
         resolution,
+        passwordProtection,
       };
 
       startExport(payload);
@@ -108,8 +120,24 @@ export const ExportLabelledImagesModal = ({
     if (!open) {
       setExportId(null);
       setResolution("1920x1080");
+      setPassword("");
+      setIsPasswordEnabled(false);
     }
     onOpenChange(open);
+  };
+
+  // Check if password protection is valid for enabling the export button
+  const isPasswordValid = validatePasswordProtection(isPasswordEnabled, password);
+  const isExportDisabled = !isPasswordValid;
+
+  /**
+   * Handler for toggling password protection. Clears the password when disabled.
+   */
+  const handleTogglePasswordProtection = (enabled: boolean) => {
+    setIsPasswordEnabled(enabled);
+    if (!enabled) {
+      setPassword(""); // Clear password when protection is disabled
+    }
   };
 
   return (
@@ -128,13 +156,27 @@ export const ExportLabelledImagesModal = ({
             onResolutionChange={setResolution}
             isExporting={isPending}
           />
-          <ExportModalFooter
-            isPending={isPending}
-            onCancel={() => handleOpenChange(false)}
-            onExport={handleExport}
-          />
+          <div className="px-6">
+            <ExportPasswordProtection
+              password={password}
+              onPasswordChange={(e) => setPassword(e.target.value)}
+              isEnabled={isPasswordEnabled}
+              onToggleEnabled={handleTogglePasswordProtection}
+              disabled={isPending}
+            />
+          </div>
+          <div className={cn({ "cursor-not-allowed": isExportDisabled })}>
+            <ExportModalFooter
+              isPending={isPending}
+              onCancel={() => handleOpenChange(false)}
+              onExport={handleExport}
+              disabled={isExportDisabled}
+            />
+          </div>
         </motion.div>
       </DialogContent>
     </Dialog>
   );
 };
+
+ExportLabelledImagesModal.displayName = "ExportLabelledImagesModal";

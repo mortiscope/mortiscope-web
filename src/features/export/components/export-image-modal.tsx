@@ -11,8 +11,13 @@ import { requestImageExport } from "@/features/export/actions/request-image-expo
 import { ExportImageBody } from "@/features/export/components/export-image-body";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
+import { ExportPasswordProtection } from "@/features/export/components/export-password-protection";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
-import { requestImageExportSchema } from "@/features/export/schemas/export";
+import {
+  requestImageExportSchema,
+  validatePasswordProtection,
+} from "@/features/export/schemas/export";
+import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -40,6 +45,10 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
   const [exportOption, setExportOption] = useState<"raw_data" | "labelled_image">("raw_data");
   const [resolution, setResolution] = useState<Resolution>("1920x1080");
   const [exportId, setExportId] = useState<string | null>(null);
+
+  // Password protection state
+  const [password, setPassword] = useState("");
+  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
 
   const { mutate: startExport, isPending: isStarting } = useMutation({
     mutationFn: requestImageExport,
@@ -70,13 +79,24 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
   const handlePrimaryAction = () => {
     if (!image || isPending) return;
 
+    const passwordProtection = isPasswordEnabled ? { enabled: true, password } : { enabled: false };
+
     if (exportOption === "raw_data") {
-      startExport({ uploadId: image.id, format: "raw_data" });
+      startExport({
+        uploadId: image.id,
+        format: "raw_data",
+        passwordProtection,
+      });
     } else if (exportOption === "labelled_image") {
       if (step === "format") {
         setStep("resolution");
       } else if (step === "resolution" && resolution) {
-        startExport({ uploadId: image.id, format: "labelled_images", resolution });
+        startExport({
+          uploadId: image.id,
+          format: "labelled_images",
+          resolution,
+          passwordProtection,
+        });
       }
     }
   };
@@ -90,6 +110,8 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
         setExportOption("raw_data");
         setResolution("1920x1080");
         setExportId(null);
+        setPassword("");
+        setIsPasswordEnabled(false);
       }, 300);
     }
   };
@@ -112,6 +134,20 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
   const exportButtonText =
     exportOption === "labelled_image" && step === "format" ? "Next" : "Download";
   const cancelButtonText = step === "resolution" ? "Back" : "Cancel";
+
+  // Check if password protection is valid for enabling the export button
+  const isPasswordValid = validatePasswordProtection(isPasswordEnabled, password);
+  const isExportDisabled = !isPasswordValid;
+
+  /**
+   * Handler for toggling password protection. Clears the password when disabled.
+   */
+  const handleTogglePasswordProtection = (enabled: boolean) => {
+    setIsPasswordEnabled(enabled);
+    if (!enabled) {
+      setPassword(""); // Clear password when protection is disabled
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -146,17 +182,31 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
               onResolutionChange={setResolution}
               isPending={isPending}
             />
-            <ExportModalFooter
-              isPending={isPending}
-              onCancel={handleCancelOrBack}
-              onExport={handlePrimaryAction}
-              exportButtonText={exportButtonText}
-              cancelButtonText={cancelButtonText}
-              pendingButtonText="Downloading..."
-            />
+            <div className="px-6">
+              <ExportPasswordProtection
+                password={password}
+                onPasswordChange={(e) => setPassword(e.target.value)}
+                isEnabled={isPasswordEnabled}
+                onToggleEnabled={handleTogglePasswordProtection}
+                disabled={isPending}
+              />
+            </div>
+            <div className={cn({ "cursor-not-allowed": isExportDisabled })}>
+              <ExportModalFooter
+                isPending={isPending}
+                onCancel={handleCancelOrBack}
+                onExport={handlePrimaryAction}
+                exportButtonText={exportButtonText}
+                cancelButtonText={cancelButtonText}
+                pendingButtonText="Downloading..."
+                disabled={isExportDisabled}
+              />
+            </div>
           </motion.div>
         </AnimatePresence>
       </DialogContent>
     </Dialog>
   );
 };
+
+ExportImageModal.displayName = "ExportImageModal";

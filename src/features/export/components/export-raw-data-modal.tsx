@@ -9,9 +9,12 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { requestResultsExport } from "@/features/export/actions/request-results-export";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
+import { ExportPasswordProtection } from "@/features/export/components/export-password-protection";
 import { ExportResultsBody } from "@/features/export/components/export-results-body";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
 import type { RequestResultsExportInput } from "@/features/export/schemas/export";
+import { validatePasswordProtection } from "@/features/export/schemas/export";
+import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -42,6 +45,10 @@ interface ExportRawDataModalProps {
 export const ExportRawDataModal = ({ caseId, isOpen, onOpenChange }: ExportRawDataModalProps) => {
   /** Local state to store the unique ID of the export job, received from the server. */
   const [exportId, setExportId] = useState<string | null>(null);
+
+  /** Password protection state */
+  const [password, setPassword] = useState("");
+  const [isPasswordEnabled, setIsPasswordEnabled] = useState(false);
 
   /**
    * Initializes a mutation with Tanstack Query to trigger the server-side export process.
@@ -81,9 +88,14 @@ export const ExportRawDataModal = ({ caseId, isOpen, onOpenChange }: ExportRawDa
    */
   const handleExport = () => {
     if (caseId && !isPending) {
+      const passwordProtection = isPasswordEnabled
+        ? { enabled: true, password }
+        : { enabled: false };
+
       const payload: RequestResultsExportInput = {
         caseId,
         format: "raw_data",
+        passwordProtection,
       };
       startExport(payload);
     }
@@ -96,8 +108,24 @@ export const ExportRawDataModal = ({ caseId, isOpen, onOpenChange }: ExportRawDa
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       setExportId(null);
+      setPassword("");
+      setIsPasswordEnabled(false);
     }
     onOpenChange(open);
+  };
+
+  // Check if password protection is valid for enabling the export button
+  const isPasswordValid = validatePasswordProtection(isPasswordEnabled, password);
+  const isExportDisabled = !isPasswordValid;
+
+  /**
+   * Handler for toggling password protection. Clears the password when disabled.
+   */
+  const handleTogglePasswordProtection = (enabled: boolean) => {
+    setIsPasswordEnabled(enabled);
+    if (!enabled) {
+      setPassword(""); // Clear password when protection is disabled
+    }
   };
 
   return (
@@ -112,11 +140,23 @@ export const ExportRawDataModal = ({ caseId, isOpen, onOpenChange }: ExportRawDa
         >
           <ExportModalHeader title="Export as Raw Data" />
           <ExportResultsBody />
-          <ExportModalFooter
-            isPending={isPending}
-            onCancel={() => handleOpenChange(false)}
-            onExport={handleExport}
-          />
+          <div className="px-6">
+            <ExportPasswordProtection
+              password={password}
+              onPasswordChange={(e) => setPassword(e.target.value)}
+              isEnabled={isPasswordEnabled}
+              onToggleEnabled={handleTogglePasswordProtection}
+              disabled={isPending}
+            />
+          </div>
+          <div className={cn({ "cursor-not-allowed": isExportDisabled })}>
+            <ExportModalFooter
+              isPending={isPending}
+              onCancel={() => handleOpenChange(false)}
+              onExport={handleExport}
+              disabled={isExportDisabled}
+            />
+          </div>
         </motion.div>
       </DialogContent>
     </Dialog>
