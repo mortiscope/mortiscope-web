@@ -13,9 +13,12 @@ import { PdfExportIntroductionStep } from "@/features/export/components/pdf-expo
 import { PdfExportPasswordStep } from "@/features/export/components/pdf-export-password-step";
 import { PdfExportPermissionsStep } from "@/features/export/components/pdf-export-permissions-step";
 import { PdfExportSecurityStep } from "@/features/export/components/pdf-export-security-step";
+import type { SecurityLevel } from "@/features/export/constants/pdf-options";
 import { useExportStatus } from "@/features/export/hooks/use-export-status";
 import { usePdfExportWizard } from "@/features/export/hooks/use-pdf-export-wizard";
 import type { RequestResultsExportInput } from "@/features/export/schemas/export";
+import { validatePasswordProtection } from "@/features/export/schemas/export";
+import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -95,6 +98,13 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
   // A derived boolean for the overall pending state of the export.
   const isPending = isStarting || isPolling;
 
+  // Password validation for steps that require password protection
+  const isPasswordRequired =
+    securityLevel === "view_protected" || securityLevel === "permissions_protected";
+  const isPasswordValid = !isPasswordRequired || validatePasswordProtection(true, password);
+  const isPasswordStepDisabled =
+    (step === "password" || step === "permissions") && !isPasswordValid;
+
   /**
    * The main handler for the final export action. It validates the wizard state,
    * constructs the payload, and triggers the `startExport` mutation.
@@ -117,6 +127,17 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
 
       startExport(payload);
     }
+  };
+
+  /**
+   * Enhanced security level handler that clears password when switching to standard security.
+   */
+  const handleSecurityLevelChange = (newSecurityLevel: SecurityLevel) => {
+    // Clear password when switching to standard security (no password needed)
+    if (newSecurityLevel === "standard" && password) {
+      setPassword("");
+    }
+    setSecurityLevel(newSecurityLevel);
   };
 
   /**
@@ -167,13 +188,16 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
       case "password":
       case "permissions":
         return (
-          <ExportModalFooter
-            isPending={isPending}
-            onCancel={handleBack}
-            onExport={handleExport}
-            exportButtonText="Export"
-            showBackButton
-          />
+          <div className={cn({ "cursor-not-allowed": isPasswordStepDisabled })}>
+            <ExportModalFooter
+              isPending={isPending}
+              onCancel={handleBack}
+              onExport={handleExport}
+              exportButtonText="Export"
+              showBackButton
+              disabled={isPasswordStepDisabled}
+            />
+          </div>
         );
 
       default:
@@ -192,7 +216,7 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
         return (
           <PdfExportSecurityStep
             securityLevel={securityLevel}
-            onSecurityLevelChange={setSecurityLevel}
+            onSecurityLevelChange={handleSecurityLevelChange}
             pageSize={pageSize}
             onPageSizeChange={setPageSize}
             isPending={isPending}
