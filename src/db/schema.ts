@@ -236,6 +236,7 @@ export const exports = pgTable("exports", {
   format: exportFormatEnum("format").notNull(),
   s3Key: text("s3_key"),
   failureReason: text("failure_reason"),
+  passwordProtected: boolean("password_protected").notNull().default(false),
   createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date", withTimezone: true })
     .notNull()
