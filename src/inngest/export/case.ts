@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { exports } from "@/db/schema";
 import { env } from "@/lib/env";
-import { inngest } from "@/lib/inngest";
+import { type Events, inngest } from "@/lib/inngest";
 import { exportLogger, inngestLogger, logError } from "@/lib/logger";
 
 /**
@@ -56,6 +56,8 @@ export const exportCaseData = inngest.createFunction(
   async ({ event, step }) => {
     // In the main handler, the type is correctly inferred automatically.
     const { exportId, caseId, format, resolution } = event.data;
+    const eventData = event.data as Events["export/case.data.requested"]["data"];
+    const passwordProtection = eventData.passwordProtection;
 
     // Update the export status to 'processing'.
     await step.run("update-export-status-to-processing", async () => {
@@ -75,6 +77,12 @@ export const exportCaseData = inngest.createFunction(
         case_id: caseId,
         format: format,
         resolution: resolution,
+        password_protection: passwordProtection
+          ? {
+              enabled: passwordProtection.enabled,
+              password: passwordProtection.password,
+            }
+          : { enabled: false },
       };
 
       const response = await fetch(endpoint, {
@@ -95,7 +103,13 @@ export const exportCaseData = inngest.createFunction(
 
     // Handle updating the final status to 'completed' or 'failed'.
     exportLogger.info(
-      { exportId, caseId, format, resolution },
+      {
+        exportId,
+        caseId,
+        format,
+        resolution,
+        passwordProtected: passwordProtection?.enabled ?? false,
+      },
       "Export job successfully dispatched to FastAPI"
     );
     return {

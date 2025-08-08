@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { exports } from "@/db/schema";
 import { env } from "@/lib/env";
-import { inngest } from "@/lib/inngest";
+import { type Events, inngest } from "@/lib/inngest";
 
 /**
  * Triggers the backend worker to start an export process for a single image.
@@ -55,21 +55,39 @@ export const exportImageData = inngest.createFunction(
 
     // Call the FastAPI worker to perform the export.
     const result = await step.run("trigger-image-export-worker", async () => {
+      // Type the event data properly
+      const eventData = event.data as Events["export/image.data.requested"]["data"];
+
       // Prepare the payload for the API. It will always have these properties.
       const apiPayload: {
         export_id: string;
         upload_id: string;
         format: string;
         resolution?: string;
+        password_protection: {
+          enabled: boolean;
+          password?: string;
+        };
       } = {
-        export_id: event.data.exportId,
-        upload_id: event.data.uploadId,
-        format: event.data.format,
+        export_id: eventData.exportId,
+        upload_id: eventData.uploadId,
+        format: eventData.format,
+        password_protection: eventData.passwordProtection
+          ? {
+              enabled: eventData.passwordProtection.enabled,
+              password: eventData.passwordProtection.password,
+            }
+          : { enabled: false },
       };
 
       // Conditionally add resolution if the format is 'labelled_images'.
-      if (event.data.format === "labelled_images") {
-        apiPayload.resolution = event.data.resolution;
+      if (eventData.format === "labelled_images") {
+        apiPayload.resolution = (
+          eventData as Extract<
+            Events["export/image.data.requested"]["data"],
+            { format: "labelled_images" }
+          >
+        ).resolution;
       }
 
       const endpoint = `${fastApiUrl}/v1/export/`;

@@ -41,6 +41,10 @@ export type Events = {
       userId: string;
       format: "raw_data" | "pdf" | "labelled_images";
       resolution?: "1280x720" | "1920x1080" | "3840x2160";
+      passwordProtection?: {
+        enabled: boolean;
+        password?: string;
+      };
     };
   };
 
@@ -54,6 +58,10 @@ export type Events = {
           uploadId: string;
           userId: string;
           format: "raw_data";
+          passwordProtection?: {
+            enabled: boolean;
+            password?: string;
+          };
         }
       | {
           exportId: string;
@@ -61,6 +69,10 @@ export type Events = {
           userId: string;
           format: "labelled_images";
           resolution: "1280x720" | "1920x1080" | "3840x2160";
+          passwordProtection?: {
+            enabled: boolean;
+            password?: string;
+          };
         };
   };
 
