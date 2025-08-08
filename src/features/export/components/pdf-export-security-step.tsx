@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PdfPasswordInput } from "@/features/export/components/pdf-password-input";
 import {
   type PageSize,
   type SecurityLevel,
@@ -17,7 +18,6 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
-
  * Defines the props for the PDF export security step component.
  */
 interface PdfExportSecurityStepProps {
@@ -29,13 +29,17 @@ interface PdfExportSecurityStepProps {
   pageSize: PageSize;
   /** A callback function to update the selected page size. */
   onPageSizeChange: (value: NonNullable<PageSize>) => void;
+  /** The current value of the password input. */
+  password: string;
+  /** A callback function to update the password state. */
+  onPasswordChange: (value: string) => void;
   /** A boolean to indicate if an action is pending, which disables the inputs. */
   isPending: boolean;
 }
 
 /**
  * Renders the interface for the security step of the PDF export wizard. This component
- * allows the user to select a security level and page size for the PDF document.
+ * allows the user to select a security level, page size, and password for the PDF document.
  * It is a fully controlled component, with its state managed by a parent hook.
  */
 export const PdfExportSecurityStep = ({
@@ -43,13 +47,26 @@ export const PdfExportSecurityStep = ({
   onSecurityLevelChange,
   pageSize,
   onPageSizeChange,
+  password,
+  onPasswordChange,
   isPending,
 }: PdfExportSecurityStepProps) => {
   // A derived boolean to control the disabled state of the page size select.
   const isPageSizeDisabled = !securityLevel || isPending;
 
+  // Check if password protection should be enabled
+  const isPasswordRequired =
+    securityLevel === "view_protected" || securityLevel === "permissions_protected";
+  const isPasswordDisabled = !isPasswordRequired || isPending;
+
+  // Password validation
+  const hasPasswordError = password.length > 0 && password.length < 8;
+  const passwordErrorMessage = hasPasswordError
+    ? "Password must be at least 8 characters."
+    : undefined;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Security Level Selection */}
       <div className={cn(isPending && "pointer-events-none opacity-50")}>
         <Label className="font-inter pl-1 text-sm font-normal text-slate-700">
@@ -121,7 +138,7 @@ export const PdfExportSecurityStep = ({
           <SelectTrigger
             id="page-size"
             className={cn(
-              "font-inter mt-2 h-10 w-full border-2 border-slate-200 bg-white text-sm transition-colors duration-300 ease-in-out placeholder:text-slate-400 focus-visible:border-emerald-400 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:border-emerald-400 data-[state=open]:bg-emerald-50",
+              "font-inter mt-2 h-10 w-full border-2 border-slate-200 bg-white text-sm shadow-none transition-colors duration-300 ease-in-out placeholder:text-slate-400 focus-visible:border-emerald-400 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:border-emerald-400 data-[state=open]:bg-emerald-50",
               !isPageSizeDisabled && "cursor-pointer hover:border-emerald-400 hover:bg-emerald-50",
               // Styles the placeholder text when no value is selected.
               "data-[placeholder]:text-slate-400"
@@ -144,6 +161,28 @@ export const PdfExportSecurityStep = ({
             </SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Password Protection Section */}
+      <div className={cn(isPasswordDisabled && "cursor-not-allowed")}>
+        <Label
+          className={cn(
+            "font-inter pl-1 text-sm font-normal text-slate-700",
+            isPasswordDisabled && "opacity-50"
+          )}
+        >
+          Enter a password to protect access to this document.
+        </Label>
+        <div className={cn("mt-2", isPasswordDisabled && "pointer-events-none opacity-50")}>
+          <PdfPasswordInput
+            value={password}
+            onChange={(e) => onPasswordChange(e.target.value)}
+            disabled={isPasswordDisabled}
+            placeholder="Enter password"
+            hasError={hasPasswordError && isPasswordRequired}
+            errorMessage={passwordErrorMessage}
+          />
+        </div>
       </div>
     </div>
   );
