@@ -29,6 +29,9 @@ export const requestImageExport = async (
   // The validated data from Zod. This object is a discriminated union.
   const validatedData = parseResult.data;
 
+  // Extract password protection info for database tracking
+  const passwordProtected = validatedData.passwordProtection?.enabled ?? false;
+
   try {
     const imageToExport = await db.query.uploads.findFirst({
       where: and(eq(uploads.id, validatedData.uploadId), eq(uploads.userId, session.user.id)),
@@ -44,6 +47,7 @@ export const requestImageExport = async (
         userId: session.user.id,
         format: validatedData.format,
         status: "pending",
+        passwordProtected,
       })
       .returning();
 
