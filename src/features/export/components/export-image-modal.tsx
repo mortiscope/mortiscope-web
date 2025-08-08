@@ -182,15 +182,17 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
               onResolutionChange={setResolution}
               isPending={isPending}
             />
-            <div className="px-6">
-              <ExportPasswordProtection
-                password={password}
-                onPasswordChange={(e) => setPassword(e.target.value)}
-                isEnabled={isPasswordEnabled}
-                onToggleEnabled={handleTogglePasswordProtection}
-                disabled={isPending}
-              />
-            </div>
+            {step === "format" && (
+              <div className="px-6">
+                <ExportPasswordProtection
+                  password={password}
+                  onPasswordChange={(e) => setPassword(e.target.value)}
+                  isEnabled={isPasswordEnabled}
+                  onToggleEnabled={handleTogglePasswordProtection}
+                  disabled={isPending}
+                />
+              </div>
+            )}
             <div className={cn({ "cursor-not-allowed": isExportDisabled })}>
               <ExportModalFooter
                 isPending={isPending}

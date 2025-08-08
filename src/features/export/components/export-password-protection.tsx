@@ -53,7 +53,7 @@ export const ExportPasswordProtection = ({
     <motion.div variants={itemVariants} className="space-y-3">
       {/* Description paragraph */}
       <p className="font-inter text-sm text-slate-600">
-        Enable password protection to secure the exported file with a custom password.
+        Enable password protection to secure the exported file.
       </p>
 
       {/* Password protection toggle and input container */}
