@@ -2,9 +2,57 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { exports } from "@/db/schema";
+import { type PdfPermissions } from "@/features/export/constants/pdf-options";
 import { env } from "@/lib/env";
-import { type Events, inngest } from "@/lib/inngest";
+import { inngest } from "@/lib/inngest";
 import { exportLogger, inngestLogger, logError } from "@/lib/logger";
+
+/**
+ * Type definition for the export payload
+ */
+type ExportPayload = {
+  export_id: string;
+  case_id: string;
+  format: string;
+  // PDF-specific fields
+  page_size?: string;
+  security_level?: string;
+  password?: string;
+  permissions?: {
+    printing: boolean;
+    copying: boolean;
+    annotations: boolean;
+    form_filling: boolean;
+    assembly: boolean;
+    extraction: boolean;
+    page_rotation: boolean;
+    degraded_printing: boolean;
+    screen_reader: boolean;
+    metadata_modification: boolean;
+  };
+  // Non-PDF fields
+  resolution?: string;
+  password_protection?: {
+    enabled: boolean;
+    password?: string;
+  };
+};
+
+/**
+ * Type definition for export logging data
+ */
+type ExportLogData = {
+  exportId: string;
+  caseId: string;
+  format: string;
+  // PDF-specific fields
+  pageSize?: string;
+  securityLevel?: string;
+  passwordProtected?: boolean;
+  permissionsProtected?: boolean;
+  // Non-PDF fields
+  resolution?: string;
+};
 
 /**
  * Triggers the backend worker to start an export process for a case.
@@ -55,9 +103,28 @@ export const exportCaseData = inngest.createFunction(
   { event: "export/case.data.requested" },
   async ({ event, step }) => {
     // In the main handler, the type is correctly inferred automatically.
-    const { exportId, caseId, format, resolution } = event.data;
-    const eventData = event.data as Events["export/case.data.requested"]["data"];
-    const passwordProtection = eventData.passwordProtection;
+    const { exportId, caseId, format } = event.data;
+    const eventData = event.data;
+
+    // Extract format-specific parameters based on format type
+    let resolution: string | undefined;
+    let passwordProtection: { enabled: boolean; password?: string } | undefined;
+    let pageSize: string | undefined;
+    let securityLevel: string | undefined;
+    let password: string | undefined;
+    let permissions: PdfPermissions | undefined;
+
+    if (eventData.format === "labelled_images") {
+      resolution = eventData.resolution;
+      passwordProtection = eventData.passwordProtection;
+    } else if (eventData.format === "raw_data") {
+      passwordProtection = eventData.passwordProtection;
+    } else if (eventData.format === "pdf") {
+      pageSize = eventData.pageSize;
+      securityLevel = eventData.securityLevel;
+      password = eventData.password;
+      permissions = eventData.permissions;
+    }
 
     // Update the export status to 'processing'.
     await step.run("update-export-status-to-processing", async () => {
@@ -72,18 +139,56 @@ export const exportCaseData = inngest.createFunction(
     const result = await step.run("trigger-export-worker", async () => {
       const endpoint = `${fastApiUrl}/v1/export/`;
 
-      const payload = {
+      // Build the base payload
+      const payload: ExportPayload = {
         export_id: exportId,
         case_id: caseId,
         format: format,
-        resolution: resolution,
-        password_protection: passwordProtection
+      };
+
+      // Add format-specific parameters
+      if (format === "pdf") {
+        // PDF-specific parameters
+        payload.page_size = pageSize;
+        payload.security_level = securityLevel;
+
+        // Add password if provided for protected security levels
+        if (
+          password &&
+          (securityLevel === "view_protected" || securityLevel === "permissions_protected")
+        ) {
+          payload.password = password;
+        }
+
+        // Add permissions if provided for permissions-protected security level
+        if (permissions && securityLevel === "permissions_protected") {
+          payload.permissions = {
+            printing: permissions.printing,
+            copying: permissions.copying,
+            annotations: permissions.annotations,
+            form_filling: permissions.formFilling,
+            assembly: permissions.assembly,
+            extraction: permissions.extraction,
+            page_rotation: permissions.pageRotation,
+            degraded_printing: permissions.degradedPrinting,
+            screen_reader: permissions.screenReader,
+            metadata_modification: permissions.metadataModification,
+          };
+        }
+      } else {
+        // Non-PDF formats (raw_data, labelled_images)
+        if (resolution) {
+          payload.resolution = resolution;
+        }
+
+        // Handle password protection for non-PDF formats
+        payload.password_protection = passwordProtection
           ? {
               enabled: passwordProtection.enabled,
               password: passwordProtection.password,
             }
-          : { enabled: false },
-      };
+          : { enabled: false };
+      }
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -102,16 +207,27 @@ export const exportCaseData = inngest.createFunction(
     });
 
     // Handle updating the final status to 'completed' or 'failed'.
-    exportLogger.info(
-      {
-        exportId,
-        caseId,
-        format,
-        resolution,
-        passwordProtected: passwordProtection?.enabled ?? false,
-      },
-      "Export job successfully dispatched to FastAPI"
-    );
+    const logData: ExportLogData = {
+      exportId,
+      caseId,
+      format,
+    };
+
+    // Add format-specific logging data
+    if (format === "pdf") {
+      logData.pageSize = pageSize;
+      logData.securityLevel = securityLevel;
+      logData.passwordProtected = !!(
+        password &&
+        (securityLevel === "view_protected" || securityLevel === "permissions_protected")
+      );
+      logData.permissionsProtected = securityLevel === "permissions_protected";
+    } else {
+      logData.resolution = resolution;
+      logData.passwordProtected = passwordProtection?.enabled ?? false;
+    }
+
+    exportLogger.info(logData, "Export job successfully dispatched to FastAPI");
     return {
       message: `Successfully dispatched export job to FastAPI for exportId: ${exportId}`,
       result,

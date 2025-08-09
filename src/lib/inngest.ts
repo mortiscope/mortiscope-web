@@ -35,17 +35,49 @@ export type Events = {
    * Fired when a user requests to export case data.
    */
   "export/case.data.requested": {
-    data: {
-      exportId: string;
-      caseId: string;
-      userId: string;
-      format: "raw_data" | "pdf" | "labelled_images";
-      resolution?: "1280x720" | "1920x1080" | "3840x2160";
-      passwordProtection?: {
-        enabled: boolean;
-        password?: string;
-      };
-    };
+    data:
+      | {
+          exportId: string;
+          caseId: string;
+          userId: string;
+          format: "raw_data";
+          passwordProtection?: {
+            enabled: boolean;
+            password?: string;
+          };
+        }
+      | {
+          exportId: string;
+          caseId: string;
+          userId: string;
+          format: "labelled_images";
+          resolution: "1280x720" | "1920x1080" | "3840x2160";
+          passwordProtection?: {
+            enabled: boolean;
+            password?: string;
+          };
+        }
+      | {
+          exportId: string;
+          caseId: string;
+          userId: string;
+          format: "pdf";
+          pageSize: "a4" | "letter";
+          securityLevel: "standard" | "view_protected" | "permissions_protected";
+          password?: string;
+          permissions?: {
+            printing: boolean;
+            copying: boolean;
+            annotations: boolean;
+            formFilling: boolean;
+            assembly: boolean;
+            extraction: boolean;
+            pageRotation: boolean;
+            degradedPrinting: boolean;
+            screenReader: boolean;
+            metadataModification: boolean;
+          };
+        };
   };
 
   /**
