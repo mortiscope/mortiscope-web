@@ -30,10 +30,18 @@ export const requestResultsExport = async (
   const { caseId, format } = parseResult.data;
 
   // Extract password protection info for database tracking
-  const passwordProtected =
-    "passwordProtection" in parseResult.data
+  const passwordProtected = (() => {
+    if (parseResult.data.format === "pdf") {
+      return !!(
+        parseResult.data.password &&
+        (parseResult.data.securityLevel === "view_protected" ||
+          parseResult.data.securityLevel === "permissions_protected")
+      );
+    }
+    return "passwordProtection" in parseResult.data
       ? (parseResult.data.passwordProtection?.enabled ?? false)
       : false;
+  })();
 
   try {
     const caseToExport = await db.query.cases.findFirst({

@@ -38,6 +38,14 @@ export const requestResultsExportSchema = z
         .object({
           printing: z.boolean(),
           copying: z.boolean(),
+          annotations: z.boolean(),
+          formFilling: z.boolean(),
+          assembly: z.boolean(),
+          extraction: z.boolean(),
+          pageRotation: z.boolean(),
+          degradedPrinting: z.boolean(),
+          screenReader: z.boolean(),
+          metadataModification: z.boolean(),
         })
         .optional(),
     }),
