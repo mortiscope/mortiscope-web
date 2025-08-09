@@ -353,3 +353,5 @@ export default function SignUpForm() {
     </div>
   );
 }
+
+SignUpForm.displayName = "SignUpForm";

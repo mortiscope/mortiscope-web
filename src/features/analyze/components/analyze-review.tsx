@@ -120,3 +120,5 @@ export const AnalyzeReview = () => {
     </>
   );
 };
+
+AnalyzeReview.displayName = "AnalyzeReview";

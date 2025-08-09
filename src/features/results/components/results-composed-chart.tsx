@@ -203,3 +203,5 @@ export const ResultsComposedChart = ({
     </div>
   );
 };
+
+ResultsComposedChart.displayName = "ResultsComposedChart";

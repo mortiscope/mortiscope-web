@@ -10,9 +10,9 @@ import * as React from "react";
 import { FiLogOut, FiMoreHorizontal } from "react-icons/fi";
 import { GrList } from "react-icons/gr";
 import { IoSettingsOutline } from "react-icons/io5";
-import { LuHouse } from "react-icons/lu";
 import { PiMicroscope } from "react-icons/pi";
 import { PiLightbulbFilament } from "react-icons/pi";
+import { RxDashboard } from "react-icons/rx";
 
 import {
   Sidebar,
@@ -39,8 +39,8 @@ type MenuItem = {
 
 // Defines the data for the "Home" menu item.
 const homeMenuItem: MenuItem = {
-  icon: LuHouse,
-  label: "Home",
+  icon: RxDashboard,
+  label: "Dashboard",
   href: "/dashboard",
 };
 
@@ -170,7 +170,7 @@ export const AppSidebar = () => {
           ) : (
             LogoImage
           )}
-          <span className="font-inter mt-2 text-2xl font-bold tracking-tighter transition-opacity duration-200 group-data-[state=collapsed]:pointer-events-none group-data-[state=collapsed]:opacity-0">
+          <span className="font-plus-jakarta-sans mt-2 text-2xl font-semibold transition-opacity duration-200 group-data-[state=collapsed]:pointer-events-none group-data-[state=collapsed]:opacity-0">
             <span className="text-amber-400">MORTI</span>
             <span className="text-white">SCOPE</span>
             <span className="text-amber-400">.</span>
@@ -329,3 +329,5 @@ export const AppSidebar = () => {
     </Sidebar>
   );
 };
+
+AppSidebar.displayName = "AppSidebar";

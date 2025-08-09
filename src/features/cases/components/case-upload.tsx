@@ -148,3 +148,5 @@ export const CaseUpload = () => {
     </>
   );
 };
+
+CaseUpload.displayName = "CaseUpload";

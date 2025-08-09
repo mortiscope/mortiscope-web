@@ -192,3 +192,5 @@ export const DeleteCaseModal = ({
     </Dialog>
   );
 };
+
+DeleteCaseModal.displayName = "DeleteCaseModal";

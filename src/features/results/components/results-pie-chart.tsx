@@ -301,3 +301,5 @@ export const ResultsPieChart = ({ data }: ResultsPieChartProps) => {
     </div>
   );
 };
+
+ResultsPieChart.displayName = "ResultsPieChart";

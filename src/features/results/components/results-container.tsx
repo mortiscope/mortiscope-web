@@ -71,6 +71,8 @@ const ResultsSkeleton = () => {
   );
 };
 
+ResultsSkeleton.displayName = "ResultsSkeleton";
+
 /**
  * The client-side container for the results page.
  */
@@ -86,3 +88,5 @@ export const ResultsContainer = () => {
 
   return isLoading || isError ? <ResultsSkeleton /> : <ResultsPreview />;
 };
+
+ResultsContainer.displayName = "ResultsContainer";

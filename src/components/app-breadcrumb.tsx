@@ -326,3 +326,5 @@ export function AppBreadcrumb() {
     </Breadcrumb>
   );
 }
+
+AppBreadcrumb.displayName = "AppBreadcrumb";

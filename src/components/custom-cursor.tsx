@@ -230,3 +230,5 @@ export const CustomCursor: React.FC<CustomCursorProps> = ({
     </div>
   );
 };
+
+CustomCursor.displayName = "CustomCursor";

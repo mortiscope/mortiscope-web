@@ -94,3 +94,5 @@ export const EditCaseForm = ({
     </div>
   );
 };
+
+EditCaseForm.displayName = "EditCaseForm";

@@ -227,3 +227,5 @@ export const UploadPreview = () => {
     </>
   );
 };
+
+UploadPreview.displayName = "UploadPreview";

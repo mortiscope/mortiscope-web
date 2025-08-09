@@ -35,9 +35,7 @@ interface ResultsViewProps {
 
 // Dynamically import the results edit case sheet.
 const DynamicEditCaseSheet = dynamic(() =>
-  import("@/features/cases/components/edit-case-sheet").then(
-    (module) => module.EditCaseSheet
-  )
+  import("@/features/cases/components/edit-case-sheet").then((module) => module.EditCaseSheet)
 );
 
 /**
@@ -125,3 +123,5 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
     </>
   );
 }
+
+ResultsView.displayName = "ResultsView";

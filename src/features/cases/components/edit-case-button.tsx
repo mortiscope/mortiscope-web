@@ -59,3 +59,5 @@ export const EditCaseButton = ({ isDisabled, onClick }: EditCaseButtonProps) => 
     </Tooltip>
   );
 };
+
+EditCaseButton.displayName = "EditCaseButton";

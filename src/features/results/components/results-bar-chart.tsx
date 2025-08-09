@@ -154,3 +154,5 @@ export const ResultsBarChart = ({ data }: ResultsBarChartProps) => {
     </div>
   );
 };
+
+ResultsBarChart.displayName = "ResultsBarChart";

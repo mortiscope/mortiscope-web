@@ -15,6 +15,8 @@ export const ResultsHeaderSkeletonWrapper = () => (
   </div>
 );
 
+ResultsHeaderSkeletonWrapper.displayName = "ResultsHeaderSkeletonWrapper";
+
 /**
  * A skeleton loader that mimics the layout of the results details component.
  */
@@ -25,6 +27,8 @@ export const ResultsDetailsSkeleton = () => (
     ))}
   </div>
 );
+
+ResultsDetailsSkeleton.displayName = "ResultsDetailsSkeleton";
 
 /**
  * A skeleton loader that mimics the layout of the results analysis component.
@@ -44,6 +48,8 @@ export const ResultsAnalysisSkeleton = () => (
     <Skeleton className="h-52 rounded-3xl bg-white lg:col-span-2" />
   </div>
 );
+
+ResultsAnalysisSkeleton.displayName = "ResultsAnalysisSkeleton";
 
 /**
  * A skeleton loader that accurately mimics the multi-part, responsive layout of the results images component.
@@ -89,3 +95,5 @@ export const ResultsImagesSkeleton = () => (
     </div>
   </div>
 );
+
+ResultsImagesSkeleton.displayName = "ResultsImagesSkeleton";

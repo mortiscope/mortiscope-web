@@ -187,3 +187,5 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     </>
   );
 };
+
+ResultsImages.displayName = "ResultsImages";

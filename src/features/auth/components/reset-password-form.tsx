@@ -288,3 +288,5 @@ export default function ResetPasswordForm() {
     </div>
   );
 }
+
+ResetPasswordForm.displayName = "ResetPasswordForm";

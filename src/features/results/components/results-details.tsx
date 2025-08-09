@@ -148,3 +148,5 @@ export const ResultsDetails = ({ caseData, isLoading }: ResultsDetailsProps) => 
     </div>
   );
 };
+
+ResultsDetails.displayName = "ResultsDetails";

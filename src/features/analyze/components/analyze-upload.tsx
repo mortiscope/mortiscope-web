@@ -9,3 +9,5 @@ import { CaseUpload } from "@/features/cases/components/case-upload";
 export const AnalyzeUpload = () => {
   return <CaseUpload />;
 };
+
+AnalyzeUpload.displayName = "AnalyzeUpload";

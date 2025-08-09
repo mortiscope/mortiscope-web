@@ -59,3 +59,5 @@ export function ResultsBreadcrumb({ caseId }: ResultsBreadcrumbProps) {
     </Breadcrumb>
   );
 }
+
+ResultsBreadcrumb.displayName = "ResultsBreadcrumb";

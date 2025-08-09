@@ -201,3 +201,5 @@ export const ResultsImagesModal = (props: ResultsImagesModalProps) => {
     </Dialog>
   );
 };
+
+ResultsImagesModal.displayName = "ResultsImagesModal";

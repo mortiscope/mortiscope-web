@@ -51,3 +51,5 @@ export function UserAvatar({ user, className, size = "md" }: UserAvatarProps) {
     </Avatar>
   );
 }
+
+UserAvatar.displayName = "UserAvatar";

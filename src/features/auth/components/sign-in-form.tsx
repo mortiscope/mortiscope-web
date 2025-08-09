@@ -266,3 +266,5 @@ export default function SignInForm() {
     </div>
   );
 }
+
+SignInForm.displayName = "SignInForm";

@@ -64,3 +64,5 @@ export const ResultsRecalculateButton = ({
     </Tooltip>
   );
 };
+
+ResultsRecalculateButton.displayName = "ResultsRecalculateButton";

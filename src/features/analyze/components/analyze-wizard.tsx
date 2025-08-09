@@ -148,3 +148,5 @@ export const AnalyzeWizard = () => {
     </div>
   );
 };
+
+AnalyzeWizard.displayName = "AnalyzeWizard";

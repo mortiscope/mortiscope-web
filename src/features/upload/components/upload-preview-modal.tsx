@@ -301,3 +301,5 @@ export const UploadPreviewModal = (props: UploadPreviewModalProps) => {
     </Dialog>
   );
 };
+
+UploadPreviewModal.displayName = "UploadPreviewModal";

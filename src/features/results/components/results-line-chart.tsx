@@ -135,3 +135,5 @@ export const ResultsLineChart = ({ data, strokeColor = "#10b981" }: ResultsLineC
     </div>
   );
 };
+
+ResultsLineChart.displayName = "ResultsLineChart";

@@ -186,3 +186,5 @@ export function PmiExplanationModal({
     </Dialog>
   );
 }
+
+PmiExplanationModal.displayName = "PmiExplanationModal";

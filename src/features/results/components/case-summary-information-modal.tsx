@@ -194,3 +194,5 @@ export function CaseSummaryInformationModal({
     </Dialog>
   );
 }
+
+CaseSummaryInformationModal.displayName = "CaseSummaryInformationModal";

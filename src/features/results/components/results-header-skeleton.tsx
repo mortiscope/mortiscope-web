@@ -27,3 +27,5 @@ export const ResultsHeaderSkeleton = () => {
   // This component doesn't render anything visible itself
   return null;
 };
+
+ResultsHeaderSkeleton.displayName = "ResultsHeaderSkeleton";

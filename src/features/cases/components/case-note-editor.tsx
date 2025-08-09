@@ -50,3 +50,5 @@ export const CaseNoteEditor = ({ value, onChange, className }: CaseNoteEditorPro
     </TooltipProvider>
   );
 };
+
+CaseNoteEditor.displayName = "CaseNoteEditor";

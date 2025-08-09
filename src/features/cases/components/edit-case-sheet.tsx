@@ -218,3 +218,5 @@ export const EditCaseSheet = ({
     </SheetPrimitive.Root>
   );
 };
+
+EditCaseSheet.displayName = "EditCaseSheet";

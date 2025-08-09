@@ -110,3 +110,5 @@ export const ResultsImagesMinimap = ({
     </div>
   );
 };
+
+ResultsImagesMinimap.displayName = "ResultsImageMinimap";

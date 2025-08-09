@@ -167,3 +167,5 @@ export const ResultsRecalculateModal = ({
     </Dialog>
   );
 };
+
+ResultsRecalculateModal.displayName = "ResultsRecalculateModal";

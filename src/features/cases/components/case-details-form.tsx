@@ -210,3 +210,5 @@ export const CaseDetailsForm = () => {
     </motion.div>
   );
 };
+
+CaseDetailsForm.displayName = "CaseDetailsForm";

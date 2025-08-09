@@ -239,3 +239,5 @@ export const DeleteImageModal = ({
     </Dialog>
   );
 };
+
+DeleteImageModal.displayName = "DeleteImageModal";

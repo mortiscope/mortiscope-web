@@ -67,3 +67,5 @@ export const ResultsRadarChart = ({ data }: ResultsRadarChartProps) => {
     </ResponsiveContainer>
   );
 };
+
+ResultsRadarChart.displayName = "ResultsRadarChart";

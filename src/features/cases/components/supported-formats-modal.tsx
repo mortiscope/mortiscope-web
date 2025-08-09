@@ -153,3 +153,5 @@ export function SupportedFormatsModal({ isOpen, onOpenChange }: SupportedFormats
     </Dialog>
   );
 }
+
+SupportedFormatsModal.displayName = "SupportedFormatsModal";

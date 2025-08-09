@@ -64,3 +64,5 @@ export const AnalyzeDynamicMetatitle = () => {
     </div>
   );
 };
+
+AnalyzeDynamicMetatitle.displayName = "AnalyzeDynamicMetatitle";

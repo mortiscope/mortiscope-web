@@ -9,3 +9,5 @@ import { CaseDetailsForm } from "@/features/cases/components/case-details-form";
 export const AnalyzeDetails = () => {
   return <CaseDetailsForm />;
 };
+
+AnalyzeDetails.displayName = "AnalyzeDetails";

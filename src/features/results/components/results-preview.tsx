@@ -235,3 +235,5 @@ export const ResultsPreview = () => {
     </TooltipProvider>
   );
 };
+
+ResultsPreview.displayName = "ResultsPreview";

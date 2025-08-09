@@ -208,3 +208,5 @@ export function CaseCapture({ isOpen, onOpenChange }: CaseCaptureProps) {
     </Dialog>
   );
 }
+
+CaseCapture.displayName = "CaseCapture";

@@ -136,19 +136,13 @@ const Hero = () => {
         {/* Navigation bar wrapper */}
         <div className="w-full">
           <motion.nav
-            className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6"
+            className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6 2xl:px-32"
             variants={navStaggerContainer}
             initial="hidden"
             animate={isMounted ? "show" : "hidden"}
           >
             <motion.div className="flex items-center" variants={slideInFromTop}>
-              <Image
-                src="/logos/logo.svg"
-                alt="Mortiscope Logo"
-                width={50}
-                height={50}
-                priority
-              />
+              <Image src="/logos/logo.svg" alt="Mortiscope Logo" width={50} height={50} priority />
               {/* Site title */}
               <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
                 <span className="text-green-800">MORTI</span>
@@ -183,7 +177,7 @@ const Hero = () => {
         </div>
 
         {/* Hero Content Area */}
-        <div className="container mx-auto flex flex-grow items-center px-4 py-10 sm:px-6 lg:px-6">
+        <div className="container mx-auto flex flex-grow items-center px-4 py-10 sm:px-6 lg:px-6 2xl:px-32">
           {/* Grid layout for hero content */}
           <div className="grid w-full grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2">
             <motion.div
@@ -280,5 +274,7 @@ const Hero = () => {
     </>
   );
 };
+
+Hero.displayName = "Hero";
 
 export default Hero;

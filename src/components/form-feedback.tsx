@@ -42,3 +42,5 @@ export function FormFeedback({ message, type }: FormFeedbackProps) {
     </div>
   );
 }
+
+FormFeedback.displayName = "FormFeedback";

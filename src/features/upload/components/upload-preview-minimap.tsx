@@ -116,3 +116,5 @@ export const UploadPreviewMinimap = ({
     </div>
   );
 };
+
+UploadPreviewMinimap.displayName = "UploadPreviewMinimap";

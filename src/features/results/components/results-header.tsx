@@ -142,3 +142,5 @@ export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => 
     </>
   );
 };
+
+ResultsHeader.displayName = "ResultsHeader";

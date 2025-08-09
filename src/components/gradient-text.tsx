@@ -29,3 +29,5 @@ export const GradientText = ({
     </span>
   );
 };
+
+GradientText.displayName = "GradientText";

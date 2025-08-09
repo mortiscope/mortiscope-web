@@ -234,3 +234,5 @@ export const AnalyzeProgress = ({ currentStep }: AnalyzeProgressProps) => {
     </nav>
   );
 };
+
+AnalyzeProgress.displayName = "AnalyzeProgress";

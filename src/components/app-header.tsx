@@ -221,3 +221,5 @@ export const AppHeader = () => {
     </header>
   );
 };
+
+AppHeader.displayName = "AppHeader";
