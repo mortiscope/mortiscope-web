@@ -64,7 +64,7 @@ export const AccountDeletionCancelled = ({ username }: AccountDeletionCancelledP
         <Preview>
           This confirms the scheduled deletion for your MortiScope account has been cancelled.
         </Preview>
-        <Body className="mx-auto my-auto bg-slate-200 font-sans">
+        <Body className="mx-auto my-auto bg-white font-sans">
           {/* Header section with a decorative banner */}
           <Section
             className="h-[175px] w-full bg-emerald-600"
@@ -75,7 +75,7 @@ export const AccountDeletionCancelled = ({ username }: AccountDeletionCancelledP
           />
 
           {/* Main content container */}
-          <Container className="mx-auto -mt-16 mb-[40px] w-full max-w-[465px] rounded-none bg-slate-50 p-8 sm:rounded-2xl">
+          <Container className="mx-auto w-full max-w-[560px] p-8">
             <Section className="mt-4 text-center">
               <Img
                 src={`${domain}/logos/logo.svg`}
@@ -125,8 +125,8 @@ export const AccountDeletionCancelled = ({ username }: AccountDeletionCancelledP
             </Text>
           </Container>
 
-          {/* Footer section with copyright */}
-          <Section className="mt-8 mb-8 w-full text-center">
+          {/* Footer section with site title */}
+          <Section className="mb-8 w-full text-center">
             <Img
               src={`${domain}/logos/site-title.svg`}
               width="175"
