@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  */
 const AccountPage = () => {
   return (
-    <div className="flex flex-1 rounded-2xl bg-white px-4 py-2 sm:p-6 md:rounded-3xl">
+    <div className="flex flex-1 rounded-2xl bg-white px-4 pt-2 pb-6 sm:px-6 sm:py-8 md:rounded-3xl">
       <AccountContainer />
     </div>
   );

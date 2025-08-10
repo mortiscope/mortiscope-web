@@ -2,7 +2,7 @@
 
 import { type Route } from "next";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { useEffect, useState } from "react";
 
@@ -157,6 +157,7 @@ export function AppBreadcrumb() {
 
   // All hooks declared unconditionally at the top of the component.
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const status = useAnalyzeStore((state) => state.status);
 
   const pathSegments = React.useMemo(() => pathname.split("/").filter(Boolean), [pathname]);
@@ -199,7 +200,7 @@ export function AppBreadcrumb() {
   }
 
   if (isAccountPage) {
-    return <AccountBreadcrumb />;
+    return <AccountBreadcrumb activeTab={searchParams.get("tab") || "profile"} />;
   }
 
   if (items.length === 0) {
