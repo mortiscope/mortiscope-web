@@ -10,18 +10,18 @@ export const metadata: Metadata = {
 
 /**
  * The main server component for the account settings page.
- * It establishes a two-column grid layout for navigation and content.
+ * It establishes a responsive layout with navigation and content.
  *
  * @returns {JSX.Element} The rendered page component.
  */
 const AccountPage = (): JSX.Element => {
   return (
-    <div className="flex flex-1 rounded-2xl bg-white p-6 md:rounded-3xl">
-      <div className="grid w-full grid-cols-5 gap-x-6">
-        <div className="col-span-1">
+    <div className="flex flex-1 rounded-2xl bg-white p-2 sm:p-6 md:rounded-3xl">
+      <div className="flex w-full flex-col gap-6 lg:grid lg:grid-cols-5 lg:gap-x-6">
+        <div className="lg:col-span-1">
           <AccountNavigation />
         </div>
-        <div className="col-span-4">
+        <div className="lg:col-span-4">
           <AccountContainer />
         </div>
       </div>
