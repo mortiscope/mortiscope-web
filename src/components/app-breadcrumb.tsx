@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AccountBreadcrumb } from "@/features/account/components/account-breadcrumb";
 import { analysisSteps } from "@/features/analyze/components/analyze-progress";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { ResultsBreadcrumb } from "@/features/results/components/results-breadcrumb";
@@ -190,10 +191,15 @@ export function AppBreadcrumb() {
   }
 
   const isResultsIdPage = pathSegments[0] === "results" && pathSegments.length === 2;
+  const isAccountPage = pathSegments[0] === "account";
   const caseId = isResultsIdPage ? pathSegments[1] : null;
 
   if (isResultsIdPage && caseId) {
     return <ResultsBreadcrumb caseId={caseId} />;
+  }
+
+  if (isAccountPage) {
+    return <AccountBreadcrumb />;
   }
 
   if (items.length === 0) {

@@ -63,7 +63,6 @@ const settingsMenuItems: MenuItem[] = [
   {
     icon: IoSettingsOutline,
     label: "Account",
-    // @ts-expect-error: Route is yet to be implemented.
     href: "/account",
   },
   {
