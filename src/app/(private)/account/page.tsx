@@ -2,9 +2,27 @@ import { type Metadata } from "next";
 
 import { AccountContainer } from "@/features/account/components/account-container";
 
-export const metadata: Metadata = {
-  title: "Account Settings • MortiScope",
+type Props = {
+  searchParams: Promise<{ tab?: string }>;
 };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const params = await searchParams;
+  const tab = params.tab || "profile";
+
+  const tabTitles: Record<string, string> = {
+    profile: "Profile",
+    security: "Security",
+    sessions: "Sessions",
+    deletion: "Deletion",
+  };
+
+  const tabTitle = tabTitles[tab] || "Profile";
+
+  return {
+    title: `Account Settings — ${tabTitle} • MortiScope`,
+  };
+}
 
 /**
  * The main page component for the account settings page.
