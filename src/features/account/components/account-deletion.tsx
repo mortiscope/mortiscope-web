@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
-import { PiWarning } from "react-icons/pi";
+import { PiEye, PiEyeSlash, PiWarning } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 export const AccountDeletion = () => {
   const [confirmationText, setConfirmationText] = useState("");
   const [isPasswordLocked, setIsPasswordLocked] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="w-full">
@@ -44,14 +45,32 @@ export const AccountDeletion = () => {
           <div className="order-1">
             <div className="flex items-start gap-2">
               <div className={cn("flex-grow", { "cursor-not-allowed": isPasswordLocked })}>
-                <Input
-                  type="password"
-                  placeholder="Enter password"
-                  value={confirmationText}
-                  onChange={(e) => setConfirmationText(e.target.value)}
-                  disabled={isPasswordLocked}
-                  className={cn(uniformInputStyles, "w-full")}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter password"
+                    value={confirmationText}
+                    onChange={(e) => setConfirmationText(e.target.value)}
+                    disabled={isPasswordLocked}
+                    className={cn(uniformInputStyles, "w-full pr-10")}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                    disabled={isPasswordLocked}
+                  >
+                    {showPassword ? (
+                      <PiEye size={18} className="md:h-5 md:w-5" />
+                    ) : (
+                      <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <TooltipProvider delayDuration={100}>
                 <Tooltip>
