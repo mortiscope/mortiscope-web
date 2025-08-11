@@ -1,0 +1,396 @@
+import { useMemo } from "react";
+import { type Control, type FieldPath, type FieldValues, useController } from "react-hook-form";
+import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
+import { PiFloppyDiskBack } from "react-icons/pi";
+
+import { Button } from "@/components/ui/button";
+import { FormControl, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  sectionTitle,
+  selectItemStyles,
+  selectTriggerStyles,
+  uniformInputStyles,
+} from "@/features/cases/constants/styles";
+import { cn } from "@/lib/utils";
+
+type AddressPart = { code: string; name: string };
+
+interface LocationDropdownProps<T extends FieldValues = FieldValues> {
+  /** Form control from react-hook-form */
+  control: Control<T>;
+  /** Base field path for location (e.g., "location" or "address") */
+  basePath: string;
+  /** List of regions */
+  regionList: AddressPart[];
+  /** List of provinces */
+  provinceList: AddressPart[];
+  /** List of cities */
+  cityList: AddressPart[];
+  /** List of barangays */
+  barangayList: AddressPart[];
+  /** Layout variant */
+  variant?: "grid" | "stacked";
+  /** Whether the component is locked */
+  isLocked?: boolean;
+  /** Lock toggle handler */
+  onToggleLock?: () => void;
+  /** Save handler for region field */
+  onSaveRegion?: () => void;
+
+  /** Custom styling classes */
+  className?: string;
+  /** Show label */
+  showLabel?: boolean;
+  /** Custom label text */
+  labelText?: string;
+  /** Custom input styles */
+  inputStyles?: string;
+  /** Custom label styles */
+  labelStyles?: string;
+  /** Custom select item styles */
+  customSelectItemStyles?: string;
+  /** Custom select trigger styles */
+  customSelectTriggerStyles?: string;
+}
+
+/**
+ * A reusable location dropdown component with cascading Philippine address selection.
+ * Supports both form integration and standalone usage with customizable validation.
+ */
+export function LocationDropdown<T extends FieldValues = FieldValues>({
+  control,
+  basePath,
+  regionList,
+  provinceList,
+  cityList,
+  barangayList,
+  variant = "grid",
+  isLocked = false,
+  onToggleLock,
+  onSaveRegion,
+  className,
+  showLabel = true,
+  labelText = "Location",
+  inputStyles = uniformInputStyles,
+  labelStyles = sectionTitle,
+  customSelectItemStyles = selectItemStyles,
+  customSelectTriggerStyles = selectTriggerStyles,
+}: LocationDropdownProps<T>) {
+  // Field controllers for each dropdown
+  const regionField = useController({
+    control,
+    name: `${basePath}.region` as FieldPath<T>,
+  });
+
+  const provinceField = useController({
+    control,
+    name: `${basePath}.province` as FieldPath<T>,
+  });
+
+  const cityField = useController({
+    control,
+    name: `${basePath}.city` as FieldPath<T>,
+  });
+
+  const barangayField = useController({
+    control,
+    name: `${basePath}.barangay` as FieldPath<T>,
+  });
+
+  // Watch values for cascading logic
+  const watchedRegion = regionField.field.value;
+  const watchedProvince = provinceField.field.value;
+  const watchedCity = cityField.field.value;
+
+  const commonSelectTriggerClasses = cn(
+    inputStyles,
+    customSelectTriggerStyles,
+    "w-full cursor-pointer truncate"
+  );
+
+  // Memoize disabled states to prevent excessive calculations
+  const disabledStates = useMemo(() => {
+    const provinceDisabled = !watchedRegion || isLocked;
+    const cityDisabled = !watchedProvince || isLocked;
+    const barangayDisabled = !watchedCity || isLocked;
+
+    return {
+      province: provinceDisabled,
+      city: cityDisabled,
+      barangay: barangayDisabled,
+    };
+  }, [watchedRegion, watchedProvince, watchedCity, isLocked]);
+
+  // Helper function to reset child fields
+  const resetChildFields = (level: "province" | "city" | "barangay") => {
+    // When region changes, reset province, city, and barangay
+    if (level === "province") {
+      provinceField.field.onChange(null);
+      cityField.field.onChange(null);
+      barangayField.field.onChange(null);
+    }
+
+    // When province changes, reset city and barangay only
+    if (level === "city") {
+      cityField.field.onChange(null);
+      barangayField.field.onChange(null);
+    }
+
+    // When city changes, reset barangay only
+    if (level === "barangay") {
+      barangayField.field.onChange(null);
+    }
+  };
+
+  const regionDropdown = (
+    <FormItem>
+      <FormLabel className="sr-only">Region</FormLabel>
+      <Select
+        value={regionField.field.value?.code || ""}
+        onValueChange={(code) => {
+          const region = regionList.find((r) => r.code === code) || null;
+
+          // Reset child fields first
+          resetChildFields("province");
+
+          // Then set the new region
+          regionField.field.onChange(region);
+        }}
+        disabled={isLocked}
+      >
+        <FormControl>
+          <SelectTrigger className={commonSelectTriggerClasses}>
+            <SelectValue placeholder="Select Region" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="max-h-72 overflow-x-auto">
+          {regionList.map((r) => (
+            <SelectItem key={r.code} value={r.code} className={customSelectItemStyles}>
+              {r.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  );
+
+  const provinceDropdown = (
+    <FormItem>
+      <FormLabel className="sr-only">Province</FormLabel>
+      <Select
+        value={provinceField.field.value?.code || ""}
+        onValueChange={(code) => {
+          const province = provinceList.find((p) => p.code === code) || null;
+
+          // Reset child fields first
+          resetChildFields("city");
+
+          // Then set the new province
+          provinceField.field.onChange(province);
+        }}
+        disabled={disabledStates.province}
+      >
+        <FormControl>
+          <SelectTrigger className={commonSelectTriggerClasses}>
+            <SelectValue placeholder="Select Province" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="max-h-72 overflow-x-auto">
+          {provinceList.map((p) => (
+            <SelectItem key={p.code} value={p.code} className={customSelectItemStyles}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  );
+
+  const cityDropdown = (
+    <FormItem>
+      <FormLabel className="sr-only">City/Municipality</FormLabel>
+      <Select
+        value={cityField.field.value?.code || ""}
+        onValueChange={(code) => {
+          const city = cityList.find((c) => c.code === code) || null;
+
+          // Reset child fields first
+          resetChildFields("barangay");
+
+          // Then set the new city
+          cityField.field.onChange(city);
+        }}
+        disabled={disabledStates.city}
+      >
+        <FormControl>
+          <SelectTrigger className={commonSelectTriggerClasses}>
+            <SelectValue placeholder="Select City/Municipality" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="max-h-72 overflow-x-auto">
+          {cityList.map((c) => (
+            <SelectItem key={c.code} value={c.code} className={customSelectItemStyles}>
+              {c.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  );
+
+  const barangayDropdown = (
+    <FormItem>
+      <FormLabel className="sr-only">Barangay</FormLabel>
+      <Select
+        value={barangayField.field.value?.code || ""}
+        onValueChange={(code) => {
+          const barangay = barangayList.find((b) => b.code === code) || null;
+          barangayField.field.onChange(barangay);
+        }}
+        disabled={disabledStates.barangay}
+      >
+        <FormControl>
+          <SelectTrigger className={commonSelectTriggerClasses}>
+            <SelectValue placeholder="Select Barangay" />
+          </SelectTrigger>
+        </FormControl>
+        <SelectContent className="max-h-72 overflow-x-auto">
+          {barangayList.map((b) => (
+            <SelectItem key={b.code} value={b.code} className={customSelectItemStyles}>
+              {b.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <FormMessage />
+    </FormItem>
+  );
+
+  return (
+    <FormItem>
+      {showLabel && <FormLabel className={labelStyles}>{labelText}</FormLabel>}
+      {variant === "stacked" ? (
+        <div className={cn("space-y-4", { "cursor-not-allowed": isLocked }, className)}>
+          <div className="flex items-start gap-2">
+            <div className="flex-grow">{regionDropdown}</div>
+            {onToggleLock && (
+              <TooltipProvider delayDuration={100}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={cn(
+                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                        {
+                          "border-slate-100": isLocked,
+                          "border-slate-200": !isLocked,
+                        }
+                      )}
+                      onClick={onToggleLock}
+                      aria-label={isLocked ? "Unlock" : "Lock"}
+                    >
+                      {isLocked ? (
+                        <HiOutlineLockClosed className="h-5 w-5" />
+                      ) : (
+                        <HiOutlineLockOpen className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="font-inter">
+                    <p>{isLocked ? "Unlock" : "Lock"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+          {provinceDropdown}
+          {cityDropdown}
+          {barangayDropdown}
+        </div>
+      ) : (
+        <div className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", className)}>
+          {/* Region with buttons */}
+          {onToggleLock || onSaveRegion ? (
+            <div className="flex items-start gap-2">
+              <div className="flex-grow">{regionDropdown}</div>
+              <div className="flex gap-2">
+                {onToggleLock && (
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className={cn(
+                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                            {
+                              "border-slate-100": isLocked,
+                              "border-slate-200": !isLocked,
+                            }
+                          )}
+                          onClick={onToggleLock}
+                          aria-label={isLocked ? "Unlock" : "Lock"}
+                        >
+                          {isLocked ? (
+                            <HiOutlineLockClosed className="h-5 w-5" />
+                          ) : (
+                            <HiOutlineLockOpen className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="font-inter">
+                        <p>{isLocked ? "Unlock" : "Lock"}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {onSaveRegion && (
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="h-9 w-9 flex-shrink-0 cursor-pointer border-2 border-slate-200 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10"
+                          onClick={onSaveRegion}
+                          aria-label="Save"
+                        >
+                          <PiFloppyDiskBack className="h-5 w-5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="font-inter">
+                        <p>Save</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </div>
+            </div>
+          ) : (
+            regionDropdown
+          )}
+          {provinceDropdown}
+          {cityDropdown}
+          {barangayDropdown}
+        </div>
+      )}
+    </FormItem>
+  );
+}
+
+LocationDropdown.displayName = "LocationDropdown";
