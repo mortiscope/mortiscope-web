@@ -42,7 +42,7 @@ export const AccountNavigation = memo(({ activeTab, onTabChange }: AccountNaviga
             key={tab.value}
             onClick={() => onTabChange(tab.value)}
             className={cn(
-              "relative cursor-pointer py-3 text-slate-800 md:py-0 md:text-white lg:w-full lg:justify-start lg:rounded-lg lg:px-4 lg:py-3 lg:text-slate-800",
+              "relative cursor-pointer py-3 text-emerald-700 md:py-0 md:text-white lg:w-full lg:justify-start lg:rounded-lg lg:px-4 lg:py-3 lg:text-emerald-700",
               "flex items-center justify-center lg:justify-start"
             )}
           >
