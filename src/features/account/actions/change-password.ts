@@ -7,16 +7,25 @@ import { auth } from "@/auth";
 import { getUserById } from "@/data/user";
 import { db } from "@/db";
 import { users } from "@/db/schema";
+import { AccountSecuritySchema } from "@/features/account/schemas/account";
 import { type ChangePasswordFormValues, ChangePasswordSchema } from "@/features/auth/schemas/auth";
+import { inngest } from "@/lib/inngest";
 import { sendPasswordUpdatedEmail } from "@/lib/mail";
 import { privateActionLimiter } from "@/lib/rate-limiter";
+
+// Support both old and new form value types
+type UpdatePasswordValues = {
+  currentPassword: string;
+  newPassword: string;
+  repeatPassword: string;
+};
 
 /**
  * A server action to handle user password changes.
  * @param values The form values containing the current and new passwords.
  * @returns A promise resolving to an object with either a `success` or `error` message.
  */
-export const changePassword = async (values: ChangePasswordFormValues) => {
+export const changePassword = async (values: ChangePasswordFormValues | UpdatePasswordValues) => {
   // Authenticate the user's session
   const session = await auth();
   if (!session?.user?.id) {
@@ -31,20 +40,41 @@ export const changePassword = async (values: ChangePasswordFormValues) => {
     };
   }
 
-  // Validate the form fields against the schema
-  const validatedFields = ChangePasswordSchema.safeParse(values);
-  if (!validatedFields.success) {
-    return { error: "Invalid fields provided." };
-  }
+  let currentPassword: string;
+  let newPassword: string;
 
-  const { currentPassword, newPassword } = validatedFields.data;
+  // Handle both old and new form value types
+  if ("repeatPassword" in values) {
+    // New format from account security form
+    const validationResult = AccountSecuritySchema.pick({
+      currentPassword: true,
+      newPassword: true,
+      repeatPassword: true,
+    }).safeParse(values);
+
+    if (!validationResult.success) {
+      return { error: "Invalid fields provided." };
+    }
+
+    currentPassword = validationResult.data.currentPassword;
+    newPassword = validationResult.data.newPassword;
+  } else {
+    // Legacy format from auth forms
+    const validatedFields = ChangePasswordSchema.safeParse(values);
+    if (!validatedFields.success) {
+      return { error: "Invalid fields provided." };
+    }
+
+    currentPassword = validatedFields.data.currentPassword;
+    newPassword = validatedFields.data.newPassword;
+  }
   const userId = session.user.id;
 
   try {
     // Retrieve the current user from the database
     const user = await getUserById(userId);
 
-    // If the user doesn't exist or doesn't have a password (is an OAuth user), block the action.
+    // If the user doesn't exist or doesn't have a password, block the action.
     if (!user || !user.password) {
       return { error: "Password cannot be changed for accounts signed in with a provider." };
     }
@@ -67,9 +97,22 @@ export const changePassword = async (values: ChangePasswordFormValues) => {
 
     // Send a notification email about the password change
     try {
-      await sendPasswordUpdatedEmail(user.email);
-    } catch (error) {
-      console.error("Failed to send password updated email after change:", error);
+      await inngest.send({
+        name: "account/password.updated",
+        data: {
+          userId: user.id,
+          userEmail: user.email,
+          userName: user.name,
+        },
+      });
+    } catch (inngestError) {
+      console.error("Failed to trigger password update email event:", inngestError);
+      // Fallback to direct email sending
+      try {
+        await sendPasswordUpdatedEmail(user.email);
+      } catch (emailError) {
+        console.error("Failed to send password updated email after change:", emailError);
+      }
     }
 
     return { success: "Password updated successfully." };
@@ -78,3 +121,6 @@ export const changePassword = async (values: ChangePasswordFormValues) => {
     return { error: "An unexpected error occurred. Please try again." };
   }
 };
+
+// Export alias for backward compatibility
+export const updatePassword = changePassword;
