@@ -78,6 +78,13 @@
       "when": 1760240114009,
       "tag": "0010_export_password_protection",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1761575128015,
+      "tag": "0011_user_profile_details",
+      "breakpoints": true
     }
   ]
 }

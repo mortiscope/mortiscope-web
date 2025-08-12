@@ -47,6 +47,12 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   password: text("password"),
+  professionalTitle: text("professional_title"),
+  institution: text("institution"),
+  locationRegion: text("location_region"),
+  locationProvince: text("location_province"),
+  locationCity: text("location_city"),
+  locationBarangay: text("location_barangay"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" })
     .notNull()
