@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { type Control, type FieldPath, type FieldValues, useController } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
+import { LuLoaderCircle } from "react-icons/lu";
 import { PiFloppyDiskBack } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,15 @@ import {
 } from "@/features/cases/constants/styles";
 import { cn } from "@/lib/utils";
 
+/**
+ * Defines the basic structure for an address part.
+ */
 type AddressPart = { code: string; name: string };
 
+/**
+ * Defines the props for the generic location dropdown component.
+ * @template T The type of the form values, extending `react-hook-form`'s `FieldValues`.
+ */
 interface LocationDropdownProps<T extends FieldValues = FieldValues> {
   /** Form control from react-hook-form */
   control: Control<T>;
@@ -40,12 +48,17 @@ interface LocationDropdownProps<T extends FieldValues = FieldValues> {
   variant?: "grid" | "stacked";
   /** Whether the component is locked */
   isLocked?: boolean;
-  /** Lock toggle handler */
+  /** A boolean to enable or disable the lock toggle button. */
+  isLockEnabled?: boolean;
+  /** An optional callback function to toggle the locked state. */
   onToggleLock?: () => void;
   /** Save handler for region field */
   onSaveRegion?: () => void;
-
-  /** Custom styling classes */
+  /** A boolean to enable or disable the save button. */
+  isSaveEnabled?: boolean;
+  /** A boolean to indicate if the save operation is in a pending state. */
+  isSavePending?: boolean;
+  /** An optional class name for custom styling of the container. */
   className?: string;
   /** Show label */
   showLabel?: boolean;
@@ -74,8 +87,11 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
   barangayList,
   variant = "grid",
   isLocked = false,
+  isLockEnabled = true,
   onToggleLock,
   onSaveRegion,
+  isSaveEnabled = false,
+  isSavePending = false,
   className,
   showLabel = true,
   labelText = "Location",
@@ -110,13 +126,17 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
   const watchedProvince = provinceField.field.value;
   const watchedCity = cityField.field.value;
 
+  // A shared class string for consistent styling of the select triggers.
   const commonSelectTriggerClasses = cn(
     inputStyles,
     customSelectTriggerStyles,
     "w-full cursor-pointer truncate"
   );
 
-  // Memoize disabled states to prevent excessive calculations
+  /**
+   * Memoizes the disabled states of the dependent dropdowns for performance optimization.
+   * This prevents recalculating these states on every render.
+   */
   const disabledStates = useMemo(() => {
     const provinceDisabled = !watchedRegion || isLocked;
     const cityDisabled = !watchedProvince || isLocked;
@@ -129,7 +149,12 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
     };
   }, [watchedRegion, watchedProvince, watchedCity, isLocked]);
 
-  // Helper function to reset child fields
+  /**
+   * A helper function that implements the cascading logic. When a parent dropdown changes,
+   * this function is called to reset the values of all its child dropdowns, ensuring data consistency.
+   *
+   * @param level The level from which to start resetting.
+   */
   const resetChildFields = (level: "province" | "city" | "barangay") => {
     // When region changes, reset province, city, and barangay
     if (level === "province") {
@@ -150,6 +175,7 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
     }
   };
 
+  // Defining each dropdown as a separate JSX variable for improved readability.
   const regionDropdown = (
     <FormItem>
       <FormLabel className="sr-only">Region</FormLabel>
@@ -280,40 +306,48 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
   return (
     <FormItem>
       {showLabel && <FormLabel className={labelStyles}>{labelText}</FormLabel>}
+      {/* Renders the final layout based on the `variant` prop. */}
       {variant === "stacked" ? (
         <div className={cn("space-y-4", { "cursor-not-allowed": isLocked }, className)}>
           <div className="flex items-start gap-2">
             <div className="flex-grow">{regionDropdown}</div>
+            {/* Renders the lock button if its handler is provided. */}
             {onToggleLock && (
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className={cn(
-                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                        {
-                          "border-slate-100": isLocked,
-                          "border-slate-200": !isLocked,
-                        }
-                      )}
-                      onClick={onToggleLock}
-                      aria-label={isLocked ? "Unlock" : "Lock"}
-                    >
-                      {isLocked ? (
-                        <HiOutlineLockClosed className="h-5 w-5" />
-                      ) : (
-                        <HiOutlineLockOpen className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="font-inter">
-                    <p>{isLocked ? "Unlock" : "Lock"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className={cn({ "cursor-not-allowed": !isLockEnabled })}>
+                <TooltipProvider delayDuration={100}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className={cn(
+                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                          isLockEnabled
+                            ? "cursor-pointer hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                            : "cursor-not-allowed opacity-50",
+                          {
+                            "border-slate-100": isLocked,
+                            "border-slate-200": !isLocked,
+                          }
+                        )}
+                        disabled={!isLockEnabled}
+                        onClick={onToggleLock}
+                        aria-label={isLocked ? "Unlock" : "Lock"}
+                      >
+                        {isLocked ? (
+                          <HiOutlineLockClosed className="h-5 w-5" />
+                        ) : (
+                          <HiOutlineLockOpen className="h-5 w-5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="font-inter">
+                      <p>{isLocked ? "Unlock" : "Lock"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             )}
           </div>
           {provinceDropdown}
@@ -322,62 +356,80 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
         </div>
       ) : (
         <div className={cn("grid grid-cols-1 gap-4 md:grid-cols-2", className)}>
-          {/* Region with buttons */}
+          {/* Conditionally renders the region dropdown with or without action buttons. */}
           {onToggleLock || onSaveRegion ? (
             <div className="flex items-start gap-2">
               <div className="flex-grow">{regionDropdown}</div>
               <div className="flex gap-2">
                 {onToggleLock && (
-                  <TooltipProvider delayDuration={100}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className={cn(
-                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                            {
-                              "border-slate-100": isLocked,
-                              "border-slate-200": !isLocked,
-                            }
-                          )}
-                          onClick={onToggleLock}
-                          aria-label={isLocked ? "Unlock" : "Lock"}
-                        >
-                          {isLocked ? (
-                            <HiOutlineLockClosed className="h-5 w-5" />
-                          ) : (
-                            <HiOutlineLockOpen className="h-5 w-5" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="font-inter">
-                        <p>{isLocked ? "Unlock" : "Lock"}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className={cn({ "cursor-not-allowed": !isLockEnabled })}>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              isLockEnabled
+                                ? "cursor-pointer hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                : "cursor-not-allowed opacity-50",
+                              {
+                                "border-slate-100": isLocked,
+                                "border-slate-200": !isLocked,
+                              }
+                            )}
+                            disabled={!isLockEnabled}
+                            onClick={onToggleLock}
+                            aria-label={isLocked ? "Unlock" : "Lock"}
+                          >
+                            {isLocked ? (
+                              <HiOutlineLockClosed className="h-5 w-5" />
+                            ) : (
+                              <HiOutlineLockOpen className="h-5 w-5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="font-inter">
+                          <p>{isLocked ? "Unlock" : "Lock"}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 )}
                 {onSaveRegion && (
-                  <TooltipProvider delayDuration={100}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className="h-9 w-9 flex-shrink-0 cursor-pointer border-2 border-slate-200 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10"
-                          onClick={onSaveRegion}
-                          aria-label="Save"
-                        >
-                          <PiFloppyDiskBack className="h-5 w-5" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="font-inter">
-                        <p>Save</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div className={cn({ "cursor-not-allowed": !isSaveEnabled })}>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              isSaveEnabled
+                                ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                : "cursor-not-allowed border-slate-100 opacity-50"
+                            )}
+                            disabled={!isSaveEnabled}
+                            onClick={onSaveRegion}
+                            aria-label="Save"
+                          >
+                            {isSavePending ? (
+                              <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <PiFloppyDiskBack className="h-5 w-5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="font-inter">
+                          <p>Save</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 )}
               </div>
             </div>
