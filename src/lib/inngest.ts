@@ -23,6 +23,29 @@ export type Events = {
   };
 
   /**
+   * Fired when a user successfully updates their email address.
+   */
+  "account/email.updated": {
+    data: {
+      userId: string;
+      oldEmail: string;
+      newEmail: string;
+      userName: string | null;
+    };
+  };
+
+  /**
+   * Fired when a user successfully updates their password.
+   */
+  "account/password.updated": {
+    data: {
+      userId: string;
+      userEmail: string;
+      userName: string | null;
+    };
+  };
+
+  /**
    * Fired when a user successfully creates a new case.
    */
   "analysis/request.sent": {
