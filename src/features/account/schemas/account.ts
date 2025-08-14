@@ -167,8 +167,29 @@ export const AccountDeletionModalSchema = z.object({
 });
 
 /**
+ * Schema for setting up two-factor authentication.
+ */
+export const SetupTwoFactorSchema = z.object({
+});
+
+/**
+ * Schema for verifying two-factor authentication setup.
+ * Validates the secret and 6-digit TOTP token.
+ */
+export const VerifyTwoFactorSchema = z.object({
+  secret: z.string().min(1, { message: "Secret is required." }),
+  token: z
+    .string()
+    .min(1, { message: "Verification code is required." })
+    .length(6, { message: "Verification code must be 6 digits." })
+    .regex(/^\d{6}$/, { message: "Verification code must contain only numbers." }),
+});
+
+/**
  * Exports TypeScript types inferred from the Zod schemas.
  */
 export type AccountProfileFormValues = z.infer<typeof AccountProfileSchema>;
 export type AccountSecurityFormValues = z.infer<typeof AccountSecuritySchema>;
 export type AccountDeletionModalFormValues = z.infer<typeof AccountDeletionModalSchema>;
+export type SetupTwoFactorFormValues = z.infer<typeof SetupTwoFactorSchema>;
+export type VerifyTwoFactorFormValues = z.infer<typeof VerifyTwoFactorSchema>;
