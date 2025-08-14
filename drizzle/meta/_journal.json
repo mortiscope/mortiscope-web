@@ -85,6 +85,13 @@
       "when": 1761575128015,
       "tag": "0011_user_profile_details",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1761727240776,
+      "tag": "0012_two_factor_authentication",
+      "breakpoints": true
     }
   ]
 }

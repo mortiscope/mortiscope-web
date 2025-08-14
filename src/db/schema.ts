@@ -268,6 +268,39 @@ export const caseAuditLogs = pgTable("case_audit_logs", {
   newValue: jsonb("new_value"),
 });
 
+// Stores two-factor authentication settings for users
+export const userTwoFactor = pgTable("user_two_factor", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  secret: text("secret").notNull(),
+  enabled: boolean("enabled").notNull().default(false),
+  backupCodesGenerated: boolean("backup_codes_generated").notNull().default(false),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { mode: "date" })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
+
+// Stores recovery/backup codes for two-factor authentication
+export const twoFactorRecoveryCodes = pgTable("two_factor_recovery_codes", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  code: text("code").notNull().unique(),
+  used: boolean("used").notNull().default(false),
+  usedAt: timestamp("used_at", { mode: "date" }),
+  createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+});
+
 // Defines the relationships for the `users` table.
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
@@ -275,6 +308,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   cases: many(cases),
   exports: many(exports),
   caseAuditLogs: many(caseAuditLogs),
+  twoFactor: many(userTwoFactor),
+  recoveryCodes: many(twoFactorRecoveryCodes),
 }));
 
 // Defines the relationship from an `account` back to its owning `user`.
@@ -357,6 +392,22 @@ export const caseAuditLogsRelations = relations(caseAuditLogs, ({ one }) => ({
   }),
   user: one(users, {
     fields: [caseAuditLogs.userId],
+    references: [users.id],
+  }),
+}));
+
+// Defines the relationships for two-factor authentication
+export const userTwoFactorRelations = relations(userTwoFactor, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userTwoFactor.userId],
+    references: [users.id],
+  }),
+  recoveryCodes: many(twoFactorRecoveryCodes),
+}));
+
+export const twoFactorRecoveryCodesRelations = relations(twoFactorRecoveryCodes, ({ one }) => ({
+  user: one(users, {
+    fields: [twoFactorRecoveryCodes.userId],
     references: [users.id],
   }),
 }));
