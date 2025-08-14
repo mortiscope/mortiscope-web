@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, type Variants } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -16,6 +17,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountProfile } from "@/features/account/hooks/use-account-profile";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
+import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
 import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/styles";
 import { usePhilippineAddress } from "@/features/cases/hooks/use-philippine-address";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,39 @@ const LocationDropdown = dynamic(
   () => import("@/components/location-dropdown").then((module) => module.LocationDropdown),
   { ssr: false }
 ) as typeof import("@/components/location-dropdown").LocationDropdown;
+
+/**
+ * Framer Motion variants for the main content container.
+ */
+const contentVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+      delayChildren: 0.1,
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+/**
+ * Framer Motion variants for individual items.
+ */
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  show: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring" as const,
+      damping: 20,
+      stiffness: 150,
+    },
+  },
+};
 
 // Form data type for account profile
 type AccountProfileForm = {
@@ -51,7 +86,13 @@ export const AccountProfile = () => {
   const [isLocationLocked, setIsLocationLocked] = useState(true);
 
   // Fetch profile data
-  const { data: profileData, error } = useAccountProfile();
+  const { data: profileData, error, isLoading: isProfileLoading } = useAccountProfile();
+
+  // Check if user is using social providers
+  const { isSocialUser, isLoading: isSocialProviderLoading } = useSocialProvider();
+
+  // Wait for all data to be ready before showing animations
+  const isDataReady = !isProfileLoading && !isSocialProviderLoading;
 
   // Account mutations
   const { updateProfile } = useAccountMutation();
@@ -324,64 +365,127 @@ export const AccountProfile = () => {
     setIsLocationLocked(!isLocationLocked);
   };
 
+  // Don't render anything until all data is ready
+  if (!isDataReady) {
+    return <div className="w-full" />;
+  }
+
   return (
-    <div className="w-full">
+    <motion.div className="w-full" variants={contentVariants} initial="hidden" animate="show">
       {/* Profile Header */}
-      <div className="text-center lg:text-left">
+      <motion.div variants={itemVariants} className="text-center lg:text-left">
         <h1 className="font-plus-jakarta-sans text-2xl font-semibold text-slate-800 uppercase md:text-3xl">
           Profile
         </h1>
         <p className="font-inter mt-2 text-sm text-slate-600">
           View and manage your personal information.
         </p>
-      </div>
+      </motion.div>
 
       {/* Profile Form */}
-      <Form {...form}>
-        <form className="mt-8 space-y-6">
-          {/* Name Field */}
-          <div className="w-full">
-            <Label className={`${sectionTitle} font-inter`}>Name</Label>
-            <div className="mt-2 flex items-start gap-2">
-              <div className={cn("flex-grow", { "cursor-not-allowed": isNameLocked })}>
-                <Input
-                  placeholder="Enter Full Name"
-                  className={cn(uniformInputStyles, "w-full")}
-                  disabled={isNameLocked}
-                  {...form.register("name")}
-                />
-              </div>
-              <div className="flex gap-2">
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                          {
-                            "border-slate-100": isNameLocked,
-                            "border-slate-200": !isNameLocked,
-                          }
-                        )}
-                        onClick={handleNameLockToggle}
-                        aria-label={isNameLocked ? "Unlock" : "Lock"}
-                      >
-                        {isNameLocked ? (
-                          <HiOutlineLockClosed className="h-5 w-5" />
-                        ) : (
-                          <HiOutlineLockOpen className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="font-inter">
-                      <p>{isNameLocked ? "Unlock" : "Lock"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className={cn({ "cursor-not-allowed": !isNameSaveEnabled })}>
+      <motion.div variants={itemVariants}>
+        <Form {...form}>
+          <form className="mt-8 space-y-6">
+            {/* Name Field */}
+            <div className="w-full">
+              <Label className={`${sectionTitle} font-inter`}>Name</Label>
+              {!isSocialProviderLoading && (
+                <div className="mt-2 flex items-start gap-2">
+                  <div
+                    className={cn("flex-grow", {
+                      "cursor-not-allowed": isSocialUser || isNameLocked,
+                    })}
+                  >
+                    <Input
+                      placeholder="Enter Full Name"
+                      className={cn(uniformInputStyles, "w-full")}
+                      disabled={isSocialUser || isNameLocked}
+                      {...form.register("name")}
+                    />
+                  </div>
+                  {!isSocialUser && (
+                    <div className="flex gap-2">
+                      <TooltipProvider delayDuration={100}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              className={cn(
+                                "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                {
+                                  "border-slate-100": isNameLocked,
+                                  "border-slate-200": !isNameLocked,
+                                }
+                              )}
+                              onClick={handleNameLockToggle}
+                              aria-label={isNameLocked ? "Unlock" : "Lock"}
+                            >
+                              {isNameLocked ? (
+                                <HiOutlineLockClosed className="h-5 w-5" />
+                              ) : (
+                                <HiOutlineLockOpen className="h-5 w-5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="font-inter">
+                            <p>{isNameLocked ? "Unlock" : "Lock"}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <div className={cn({ "cursor-not-allowed": !isNameSaveEnabled })}>
+                        <TooltipProvider delayDuration={100}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                className={cn(
+                                  "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                  isNameSaveEnabled
+                                    ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                    : "cursor-not-allowed border-slate-100 opacity-50"
+                                )}
+                                disabled={!isNameSaveEnabled}
+                                onClick={handleNameUpdate}
+                                aria-label="Save"
+                              >
+                                {updateProfile.isPending ? (
+                                  <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                ) : (
+                                  <PiFloppyDiskBack className="h-5 w-5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="font-inter">
+                              <p>Save</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Professional Title Field */}
+            <div className="w-full">
+              <Label className={`${sectionTitle} font-inter`}>
+                Professional Title or Designation
+              </Label>
+              <div className="mt-2 flex items-start gap-2">
+                <div className={cn("flex-grow", { "cursor-not-allowed": isTitleLocked })}>
+                  <Input
+                    placeholder="Enter Professional Title or Designation"
+                    className={cn(uniformInputStyles, "w-full")}
+                    disabled={isTitleLocked}
+                    {...form.register("title")}
+                  />
+                </div>
+                <div className="flex gap-2">
                   <TooltipProvider delayDuration={100}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -390,77 +494,75 @@ export const AccountProfile = () => {
                           variant="outline"
                           size="icon"
                           className={cn(
-                            "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                            isNameSaveEnabled
-                              ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                              : "cursor-not-allowed border-slate-100 opacity-50"
+                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                            {
+                              "border-slate-100": isTitleLocked,
+                              "border-slate-200": !isTitleLocked,
+                            }
                           )}
-                          disabled={!isNameSaveEnabled}
-                          onClick={handleNameUpdate}
-                          aria-label="Save"
+                          onClick={handleTitleLockToggle}
+                          aria-label={isTitleLocked ? "Unlock" : "Lock"}
                         >
-                          {updateProfile.isPending ? (
-                            <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                          {isTitleLocked ? (
+                            <HiOutlineLockClosed className="h-5 w-5" />
                           ) : (
-                            <PiFloppyDiskBack className="h-5 w-5" />
+                            <HiOutlineLockOpen className="h-5 w-5" />
                           )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="font-inter">
-                        <p>Save</p>
+                        <p>{isTitleLocked ? "Unlock" : "Lock"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  <div className={cn({ "cursor-not-allowed": !isTitleSaveEnabled })}>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              isTitleSaveEnabled
+                                ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                : "cursor-not-allowed border-slate-100 opacity-50"
+                            )}
+                            disabled={!isTitleSaveEnabled}
+                            onClick={handleTitleUpdate}
+                            aria-label="Save"
+                          >
+                            {updateProfile.isPending ? (
+                              <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <PiFloppyDiskBack className="h-5 w-5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="font-inter">
+                          <p>Save</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Professional Title Field */}
-          <div className="w-full">
-            <Label className={`${sectionTitle} font-inter`}>
-              Professional Title or Designation
-            </Label>
-            <div className="mt-2 flex items-start gap-2">
-              <div className={cn("flex-grow", { "cursor-not-allowed": isTitleLocked })}>
-                <Input
-                  placeholder="Enter Professional Title or Designation"
-                  className={cn(uniformInputStyles, "w-full")}
-                  disabled={isTitleLocked}
-                  {...form.register("title")}
-                />
-              </div>
-              <div className="flex gap-2">
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                          {
-                            "border-slate-100": isTitleLocked,
-                            "border-slate-200": !isTitleLocked,
-                          }
-                        )}
-                        onClick={handleTitleLockToggle}
-                        aria-label={isTitleLocked ? "Unlock" : "Lock"}
-                      >
-                        {isTitleLocked ? (
-                          <HiOutlineLockClosed className="h-5 w-5" />
-                        ) : (
-                          <HiOutlineLockOpen className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="font-inter">
-                      <p>{isTitleLocked ? "Unlock" : "Lock"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className={cn({ "cursor-not-allowed": !isTitleSaveEnabled })}>
+            {/* Institution Field */}
+            <div className="w-full">
+              <Label className={`${sectionTitle} font-inter`}>Institution or Organization</Label>
+              <div className="mt-2 flex items-start gap-2">
+                <div className={cn("flex-grow", { "cursor-not-allowed": isInstitutionLocked })}>
+                  <Input
+                    placeholder="Enter Institution or Organization"
+                    className={cn(uniformInputStyles, "w-full")}
+                    disabled={isInstitutionLocked}
+                    {...form.register("institution")}
+                  />
+                </div>
+                <div className="flex gap-2">
                   <TooltipProvider delayDuration={100}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -469,132 +571,86 @@ export const AccountProfile = () => {
                           variant="outline"
                           size="icon"
                           className={cn(
-                            "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                            isTitleSaveEnabled
-                              ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                              : "cursor-not-allowed border-slate-100 opacity-50"
+                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                            {
+                              "border-slate-100": isInstitutionLocked,
+                              "border-slate-200": !isInstitutionLocked,
+                            }
                           )}
-                          disabled={!isTitleSaveEnabled}
-                          onClick={handleTitleUpdate}
-                          aria-label="Save"
+                          onClick={handleInstitutionLockToggle}
+                          aria-label={isInstitutionLocked ? "Unlock" : "Lock"}
                         >
-                          {updateProfile.isPending ? (
-                            <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                          {isInstitutionLocked ? (
+                            <HiOutlineLockClosed className="h-5 w-5" />
                           ) : (
-                            <PiFloppyDiskBack className="h-5 w-5" />
+                            <HiOutlineLockOpen className="h-5 w-5" />
                           )}
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="font-inter">
-                        <p>Save</p>
+                        <p>{isInstitutionLocked ? "Unlock" : "Lock"}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                  <div className={cn({ "cursor-not-allowed": !isInstitutionSaveEnabled })}>
+                    <TooltipProvider delayDuration={100}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className={cn(
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              isInstitutionSaveEnabled
+                                ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                : "cursor-not-allowed border-slate-100 opacity-50"
+                            )}
+                            disabled={!isInstitutionSaveEnabled}
+                            onClick={handleInstitutionUpdate}
+                            aria-label="Save"
+                          >
+                            {updateProfile.isPending ? (
+                              <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <PiFloppyDiskBack className="h-5 w-5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent className="font-inter">
+                          <p>Save</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Institution Field */}
-          <div className="w-full">
-            <Label className={`${sectionTitle} font-inter`}>Institution or Organization</Label>
-            <div className="mt-2 flex items-start gap-2">
-              <div className={cn("flex-grow", { "cursor-not-allowed": isInstitutionLocked })}>
-                <Input
-                  placeholder="Enter Institution or Organization"
-                  className={cn(uniformInputStyles, "w-full")}
-                  disabled={isInstitutionLocked}
-                  {...form.register("institution")}
-                />
-              </div>
-              <div className="flex gap-2">
-                <TooltipProvider delayDuration={100}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                          "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                          {
-                            "border-slate-100": isInstitutionLocked,
-                            "border-slate-200": !isInstitutionLocked,
-                          }
-                        )}
-                        onClick={handleInstitutionLockToggle}
-                        aria-label={isInstitutionLocked ? "Unlock" : "Lock"}
-                      >
-                        {isInstitutionLocked ? (
-                          <HiOutlineLockClosed className="h-5 w-5" />
-                        ) : (
-                          <HiOutlineLockOpen className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent className="font-inter">
-                      <p>{isInstitutionLocked ? "Unlock" : "Lock"}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className={cn({ "cursor-not-allowed": !isInstitutionSaveEnabled })}>
-                  <TooltipProvider delayDuration={100}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          className={cn(
-                            "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                            isInstitutionSaveEnabled
-                              ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                              : "cursor-not-allowed border-slate-100 opacity-50"
-                          )}
-                          disabled={!isInstitutionSaveEnabled}
-                          onClick={handleInstitutionUpdate}
-                          aria-label="Save"
-                        >
-                          {updateProfile.isPending ? (
-                            <LuLoaderCircle className="h-5 w-5 animate-spin" />
-                          ) : (
-                            <PiFloppyDiskBack className="h-5 w-5" />
-                          )}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent className="font-inter">
-                        <p>Save</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Location Field */}
-          <LocationDropdown
-            control={form.control}
-            basePath="location"
-            regionList={regionList}
-            provinceList={provinceList}
-            cityList={cityList}
-            barangayList={barangayList}
-            variant="grid"
-            isLocked={isLocationLocked}
-            isLockEnabled={isLocationLockEnabled}
-            onToggleLock={handleLocationLockToggle}
-            onSaveRegion={handleLocationUpdate}
-            isSaveEnabled={isLocationSaveEnabled}
-            isSavePending={updateProfile.isPending}
-            showLabel={true}
-            labelText="Location"
-            inputStyles={uniformInputStyles}
-            labelStyles={`${sectionTitle} font-inter`}
-          />
-        </form>
-      </Form>
-    </div>
+            {/* Location Field */}
+            <LocationDropdown
+              control={form.control}
+              basePath="location"
+              regionList={regionList}
+              provinceList={provinceList}
+              cityList={cityList}
+              barangayList={barangayList}
+              variant="grid"
+              isLocked={isLocationLocked}
+              isLockEnabled={isLocationLockEnabled}
+              onToggleLock={handleLocationLockToggle}
+              onSaveRegion={handleLocationUpdate}
+              isSaveEnabled={isLocationSaveEnabled}
+              isSavePending={updateProfile.isPending}
+              showLabel={true}
+              labelText="Location"
+              inputStyles={uniformInputStyles}
+              labelStyles={`${sectionTitle} font-inter`}
+            />
+          </form>
+        </Form>
+      </motion.div>
+    </motion.div>
   );
 };
 

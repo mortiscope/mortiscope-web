@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion, type Variants } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
@@ -22,12 +23,46 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
+import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
 import {
   type AccountSecurityFormValues,
   AccountSecuritySchema,
 } from "@/features/account/schemas/account";
 import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/styles";
 import { cn } from "@/lib/utils";
+
+/**
+ * Framer Motion variants for the main content container.
+ */
+const contentVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+      delayChildren: 0.1,
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+/**
+ * Framer Motion variants for individual items.
+ */
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  show: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring" as const,
+      damping: 20,
+      stiffness: 150,
+    },
+  },
+};
 
 /**
  * The security tab content component for the account settings page.
@@ -39,7 +74,13 @@ export const AccountSecurity = () => {
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
   // Fetch security data
-  const { data: securityData, error } = useAccountSecurity();
+  const { data: securityData, error, isLoading: isSecurityLoading } = useAccountSecurity();
+
+  // Check if user is using social providers
+  const { isSocialUser, isLoading: isSocialProviderLoading } = useSocialProvider();
+
+  // Wait for all data to be ready before showing animations
+  const isDataReady = !isSecurityLoading && !isSocialProviderLoading;
 
   // Account mutations
   const { verifyPassword, updatePassword, updateEmail } = useAccountMutation();
@@ -181,339 +222,391 @@ export const AccountSecurity = () => {
     setIsPasswordLocked(!isPasswordLocked);
   };
 
+  // Don't render anything until all data is ready
+  if (!isDataReady) {
+    return <div className="w-full" />;
+  }
+
   return (
-    <div className="w-full">
+    <motion.div className="w-full" variants={contentVariants} initial="hidden" animate="show">
       {/* Security Header */}
-      <div className="text-center lg:text-left">
+      <motion.div variants={itemVariants} className="text-center lg:text-left">
         <h1 className="font-plus-jakarta-sans text-2xl font-semibold text-slate-800 uppercase md:text-3xl">
           Security
         </h1>
         <p className="font-inter mt-2 text-sm text-slate-600">
           Change your password or enable extra security measures.
         </p>
-      </div>
+      </motion.div>
 
       {/* Security Form */}
-      <Form {...form}>
-        <form className="mt-8 space-y-6">
-          {/* Email and Change Password */}
-          <div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* Email Field */}
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel className={`${sectionTitle} font-inter`}>Email</FormLabel>
-                    <div className="mt-2 flex items-start gap-2">
-                      <div className={cn("flex-grow", { "cursor-not-allowed": isEmailLocked })}>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter email"
-                            className={cn(
-                              uniformInputStyles,
-                              "w-full",
-                              form.formState.errors.email &&
-                                "border-red-500 focus-visible:border-red-500"
-                            )}
-                            disabled={isEmailLocked}
-                            {...field}
-                          />
-                        </FormControl>
-                      </div>
-                      <div className="flex gap-2">
-                        <TooltipProvider delayDuration={100}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className={cn(
-                                  "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                  {
-                                    "border-slate-100": isEmailLocked,
-                                    "border-slate-200": !isEmailLocked,
-                                  }
-                                )}
-                                onClick={handleEmailLockToggle}
-                                aria-label={isEmailLocked ? "Unlock" : "Lock"}
-                              >
-                                {isEmailLocked ? (
-                                  <HiOutlineLockClosed className="h-5 w-5" />
-                                ) : (
-                                  <HiOutlineLockOpen className="h-5 w-5" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="font-inter">
-                              <p>{isEmailLocked ? "Unlock" : "Lock"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <div className={cn({ "cursor-not-allowed": !isEmailSaveEnabled })}>
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  className={cn(
-                                    "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                                    isEmailSaveEnabled
-                                      ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                      : "cursor-not-allowed border-slate-100 opacity-50"
-                                  )}
-                                  disabled={!isEmailSaveEnabled}
-                                  onClick={handleEmailUpdate}
-                                  aria-label="Save"
-                                >
-                                  {updateEmail.isPending ? (
-                                    <LuLoaderCircle className="h-5 w-5 animate-spin" />
-                                  ) : (
-                                    <PiFloppyDiskBack className="h-5 w-5" />
-                                  )}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="font-inter">
-                                <p>Save</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+      <motion.div variants={itemVariants}>
+        <Form {...form}>
+          <form className="mt-8 space-y-6">
+            {/* Email and Change Password */}
+            <div>
+              {!isSocialProviderLoading &&
+                (isSocialUser ? (
+                  /* Email Field for Social Users - Full Width and Disabled */
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <FormLabel className={`${sectionTitle} font-inter`}>Email</FormLabel>
+                        <div className="mt-2">
+                          <div className="cursor-not-allowed">
+                            <FormControl>
+                              <Input
+                                placeholder="Enter email"
+                                className={cn(uniformInputStyles, "w-full")}
+                                disabled={true}
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    {/* Individual validation message for small screens */}
-                    <FormMessage className="font-inter text-xs md:hidden" />
-                  </FormItem>
-                )}
-              />
+                        <FormMessage className="font-inter text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    {/* Email Field */}
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel className={`${sectionTitle} font-inter`}>Email</FormLabel>
+                          <div className="mt-2 flex items-start gap-2">
+                            <div
+                              className={cn("flex-grow", { "cursor-not-allowed": isEmailLocked })}
+                            >
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter email"
+                                  className={cn(
+                                    uniformInputStyles,
+                                    "w-full",
+                                    form.formState.errors.email &&
+                                      "border-red-500 focus-visible:border-red-500"
+                                  )}
+                                  disabled={isEmailLocked}
+                                  {...field}
+                                />
+                              </FormControl>
+                            </div>
+                            <div className="flex gap-2">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className={cn(
+                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                        {
+                                          "border-slate-100": isEmailLocked,
+                                          "border-slate-200": !isEmailLocked,
+                                        }
+                                      )}
+                                      onClick={handleEmailLockToggle}
+                                      aria-label={isEmailLocked ? "Unlock" : "Lock"}
+                                    >
+                                      {isEmailLocked ? (
+                                        <HiOutlineLockClosed className="h-5 w-5" />
+                                      ) : (
+                                        <HiOutlineLockOpen className="h-5 w-5" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="font-inter">
+                                    <p>{isEmailLocked ? "Unlock" : "Lock"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <div className={cn({ "cursor-not-allowed": !isEmailSaveEnabled })}>
+                                <TooltipProvider delayDuration={100}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className={cn(
+                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                          isEmailSaveEnabled
+                                            ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                            : "cursor-not-allowed border-slate-100 opacity-50"
+                                        )}
+                                        disabled={!isEmailSaveEnabled}
+                                        onClick={handleEmailUpdate}
+                                        aria-label="Save"
+                                      >
+                                        {updateEmail.isPending ? (
+                                          <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                          <PiFloppyDiskBack className="h-5 w-5" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="font-inter">
+                                      <p>Save</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Individual validation message for small screens */}
+                          <FormMessage className="font-inter text-xs md:hidden" />
+                        </FormItem>
+                      )}
+                    />
 
-              {/* Current Password Field */}
-              <FormField
-                control={form.control}
-                name="currentPassword"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <FormLabel className={`${sectionTitle} font-inter`}>Change Password</FormLabel>
-                    <div className="mt-2 flex items-start gap-2">
-                      <div className={cn("flex-grow", { "cursor-not-allowed": isPasswordLocked })}>
-                        <FormControl>
-                          <div className="relative">
+                    {/* Current Password Field */}
+                    <FormField
+                      control={form.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem className="w-full">
+                          <FormLabel className={`${sectionTitle} font-inter`}>
+                            Change Password
+                          </FormLabel>
+                          <div className="mt-2 flex items-start gap-2">
+                            <div
+                              className={cn("flex-grow", {
+                                "cursor-not-allowed": isPasswordLocked,
+                              })}
+                            >
+                              <FormControl>
+                                <div className="relative">
+                                  <Input
+                                    type={showCurrentPassword ? "text" : "password"}
+                                    placeholder="Enter current password"
+                                    className={cn(
+                                      uniformInputStyles,
+                                      "w-full pr-10",
+                                      form.formState.errors.currentPassword &&
+                                        "border-red-500 focus-visible:border-red-500"
+                                    )}
+                                    disabled={isPasswordLocked}
+                                    {...field}
+                                    onChange={(e) => {
+                                      field.onChange(e);
+                                      handleCurrentPasswordChange(e.target.value);
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                    aria-label={
+                                      showCurrentPassword ? "Hide password" : "Show password"
+                                    }
+                                    tabIndex={-1}
+                                    disabled={isPasswordLocked}
+                                  >
+                                    {showCurrentPassword ? (
+                                      <PiEye size={18} className="md:h-5 md:w-5" />
+                                    ) : (
+                                      <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </FormControl>
+                            </div>
+                            <div className="flex gap-2">
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className={cn(
+                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                        {
+                                          "border-slate-100": isPasswordLocked,
+                                          "border-slate-200": !isPasswordLocked,
+                                        }
+                                      )}
+                                      onClick={handlePasswordLockToggle}
+                                      aria-label={isPasswordLocked ? "Unlock" : "Lock"}
+                                    >
+                                      {isPasswordLocked ? (
+                                        <HiOutlineLockClosed className="h-5 w-5" />
+                                      ) : (
+                                        <HiOutlineLockOpen className="h-5 w-5" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="font-inter">
+                                    <p>{isPasswordLocked ? "Unlock" : "Lock"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                              <div
+                                className={cn({ "cursor-not-allowed": !isPasswordSubmitEnabled })}
+                              >
+                                <TooltipProvider delayDuration={100}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className={cn(
+                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                          isPasswordSubmitEnabled
+                                            ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                            : "cursor-not-allowed border-slate-100 opacity-50"
+                                        )}
+                                        disabled={!isPasswordSubmitEnabled}
+                                        onClick={handlePasswordVerification}
+                                        aria-label="Submit"
+                                      >
+                                        <PiPaperPlaneRight className="h-5 w-5" />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="font-inter">
+                                      <p>Submit</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Individual validation message for small screens */}
+                          <FormMessage className="font-inter text-xs md:hidden" />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+              {/* Combined validation message for medium screens */}
+              {!isSocialProviderLoading && !isSocialUser && emailPasswordFieldsError && (
+                <div className="text-destructive font-inter mt-1 hidden text-xs md:block">
+                  <p>{emailPasswordFieldsError}</p>
+                </div>
+              )}
+            </div>
+
+            {/* New Password and Repeat Password - Hidden for Social Users */}
+            {!isSocialProviderLoading && !isSocialUser && (
+              <div>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {/* New Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="newPassword"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <div
+                          className={cn("w-full", { "cursor-not-allowed": !isPasswordVerified })}
+                        >
+                          <FormControl>
                             <Input
-                              type={showCurrentPassword ? "text" : "password"}
-                              placeholder="Enter current password"
+                              type="password"
+                              placeholder="Enter new password"
                               className={cn(
                                 uniformInputStyles,
-                                "w-full pr-10",
-                                form.formState.errors.currentPassword &&
+                                "w-full",
+                                form.formState.errors.newPassword &&
                                   "border-red-500 focus-visible:border-red-500"
                               )}
-                              disabled={isPasswordLocked}
+                              disabled={!isPasswordVerified}
                               {...field}
-                              onChange={(e) => {
-                                field.onChange(e);
-                                handleCurrentPasswordChange(e.target.value);
-                              }}
                             />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                              aria-label={showCurrentPassword ? "Hide password" : "Show password"}
-                              tabIndex={-1}
-                              disabled={isPasswordLocked}
-                            >
-                              {showCurrentPassword ? (
-                                <PiEye size={18} className="md:h-5 md:w-5" />
-                              ) : (
-                                <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                              )}
-                            </Button>
-                          </div>
-                        </FormControl>
-                      </div>
-                      <div className="flex gap-2">
-                        <TooltipProvider delayDuration={100}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                className={cn(
-                                  "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                  {
-                                    "border-slate-100": isPasswordLocked,
-                                    "border-slate-200": !isPasswordLocked,
-                                  }
-                                )}
-                                onClick={handlePasswordLockToggle}
-                                aria-label={isPasswordLocked ? "Unlock" : "Lock"}
-                              >
-                                {isPasswordLocked ? (
-                                  <HiOutlineLockClosed className="h-5 w-5" />
-                                ) : (
-                                  <HiOutlineLockOpen className="h-5 w-5" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="font-inter">
-                              <p>{isPasswordLocked ? "Unlock" : "Lock"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                        <div className={cn({ "cursor-not-allowed": !isPasswordSubmitEnabled })}>
-                          <TooltipProvider delayDuration={100}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  className={cn(
-                                    "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                                    isPasswordSubmitEnabled
-                                      ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                      : "cursor-not-allowed border-slate-100 opacity-50"
-                                  )}
-                                  disabled={!isPasswordSubmitEnabled}
-                                  onClick={handlePasswordVerification}
-                                  aria-label="Submit"
-                                >
-                                  <PiPaperPlaneRight className="h-5 w-5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent className="font-inter">
-                                <p>Submit</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          </FormControl>
                         </div>
-                      </div>
-                    </div>
-                    {/* Individual validation message for small screens */}
-                    <FormMessage className="font-inter text-xs md:hidden" />
-                  </FormItem>
-                )}
-              />
-            </div>
-            {/* Combined validation message for medium screens */}
-            {emailPasswordFieldsError && (
-              <div className="text-destructive font-inter mt-1 hidden text-xs md:block">
-                <p>{emailPasswordFieldsError}</p>
-              </div>
-            )}
-          </div>
+                        {/* Individual validation message for small screens */}
+                        <FormMessage className="font-inter text-xs md:hidden" />
+                      </FormItem>
+                    )}
+                  />
 
-          {/* New Password and Repeat Password */}
-          <div>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {/* New Password Field */}
-              <FormField
-                control={form.control}
-                name="newPassword"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <div className={cn("w-full", { "cursor-not-allowed": !isPasswordVerified })}>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Enter new password"
-                          className={cn(
-                            uniformInputStyles,
-                            "w-full",
-                            form.formState.errors.newPassword &&
-                              "border-red-500 focus-visible:border-red-500"
-                          )}
-                          disabled={!isPasswordVerified}
-                          {...field}
-                        />
-                      </FormControl>
-                    </div>
-                    {/* Individual validation message for small screens */}
-                    <FormMessage className="font-inter text-xs md:hidden" />
-                  </FormItem>
-                )}
-              />
-
-              {/* Repeat Password Field */}
-              <FormField
-                control={form.control}
-                name="repeatPassword"
-                render={({ field }) => (
-                  <FormItem className="w-full">
-                    <div className="flex items-start gap-2">
-                      <div
-                        className={cn("flex-grow", { "cursor-not-allowed": !isPasswordVerified })}
-                      >
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder="Repeat new password"
-                            className={cn(
-                              uniformInputStyles,
-                              "w-full",
-                              form.formState.errors.repeatPassword &&
-                                "border-red-500 focus-visible:border-red-500"
-                            )}
-                            disabled={!isPasswordVerified}
-                            {...field}
-                          />
-                        </FormControl>
-                      </div>
-                      <div className={cn({ "cursor-not-allowed": !isNewPasswordSaveEnabled })}>
-                        <TooltipProvider delayDuration={100}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
+                  {/* Repeat Password Field */}
+                  <FormField
+                    control={form.control}
+                    name="repeatPassword"
+                    render={({ field }) => (
+                      <FormItem className="w-full">
+                        <div className="flex items-start gap-2">
+                          <div
+                            className={cn("flex-grow", {
+                              "cursor-not-allowed": !isPasswordVerified,
+                            })}
+                          >
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Repeat new password"
                                 className={cn(
-                                  "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
-                                  isNewPasswordSaveEnabled
-                                    ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                    : "cursor-not-allowed border-slate-100 opacity-50"
+                                  uniformInputStyles,
+                                  "w-full",
+                                  form.formState.errors.repeatPassword &&
+                                    "border-red-500 focus-visible:border-red-500"
                                 )}
-                                disabled={!isNewPasswordSaveEnabled}
-                                onClick={handlePasswordUpdate}
-                                aria-label="Save"
-                              >
-                                {updatePassword.isPending ? (
-                                  <LuLoaderCircle className="h-5 w-5 animate-spin" />
-                                ) : (
-                                  <PiFloppyDiskBack className="h-5 w-5" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="font-inter">
-                              <p>Save</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    </div>
-                    {/* Individual validation message for small screens */}
-                    <FormMessage className="font-inter text-xs md:hidden" />
-                  </FormItem>
+                                disabled={!isPasswordVerified}
+                                {...field}
+                              />
+                            </FormControl>
+                          </div>
+                          <div className={cn({ "cursor-not-allowed": !isNewPasswordSaveEnabled })}>
+                            <TooltipProvider delayDuration={100}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="icon"
+                                    className={cn(
+                                      "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                      isNewPasswordSaveEnabled
+                                        ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                                        : "cursor-not-allowed border-slate-100 opacity-50"
+                                    )}
+                                    disabled={!isNewPasswordSaveEnabled}
+                                    onClick={handlePasswordUpdate}
+                                    aria-label="Save"
+                                  >
+                                    {updatePassword.isPending ? (
+                                      <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                      <PiFloppyDiskBack className="h-5 w-5" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="font-inter">
+                                  <p>Save</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          </div>
+                        </div>
+                        {/* Individual validation message for small screens */}
+                        <FormMessage className="font-inter text-xs md:hidden" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {/* Combined validation message for medium screens */}
+                {newPasswordFieldsError && (
+                  <div className="text-destructive font-inter mt-1 hidden text-xs md:block">
+                    <p>{newPasswordFieldsError}</p>
+                  </div>
                 )}
-              />
-            </div>
-            {/* Combined validation message for medium screens */}
-            {newPasswordFieldsError && (
-              <div className="text-destructive font-inter mt-1 hidden text-xs md:block">
-                <p>{newPasswordFieldsError}</p>
               </div>
             )}
-          </div>
-        </form>
-      </Form>
-    </div>
+          </form>
+        </Form>
+      </motion.div>
+    </motion.div>
   );
 };
 

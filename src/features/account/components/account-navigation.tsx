@@ -51,7 +51,7 @@ export const AccountNavigation = memo(({ activeTab, onTabChange }: AccountNaviga
               <motion.div
                 layoutId="active-account-tab-pill"
                 transition={{ type: "tween", ease: "easeInOut", duration: 0.6 }}
-                className="absolute inset-0 rounded-lg bg-emerald-100 md:bg-emerald-500 lg:bg-emerald-100"
+                className="absolute inset-0 rounded-lg sm:border-none sm:border-0 border-2 border-emerald-300 bg-emerald-100 md:bg-emerald-500 lg:bg-emerald-100"
               />
             )}
             <span className="relative z-10 flex items-center justify-center lg:justify-start">
