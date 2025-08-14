@@ -7,8 +7,10 @@ import { toast } from "sonner";
 
 import { updatePassword } from "@/features/account/actions/change-password";
 import { updateEmail } from "@/features/account/actions/request-email-change";
+import { setupTwoFactor } from "@/features/account/actions/setup-two-factor";
 import { updateProfile } from "@/features/account/actions/update-profile";
 import { verifyCurrentPassword } from "@/features/account/actions/verify-current-password";
+import { verifyTwoFactor } from "@/features/account/actions/verify-two-factor";
 
 /**
  * A custom hook that provides a centralized API for all account-related server mutations.
@@ -120,6 +122,41 @@ export function useAccountMutation() {
   });
 
   /**
+   * A mutation to setup two-factor authentication by generating a secret and QR code.
+   */
+  const setupTwoFactorMutation = useMutation({
+    mutationFn: setupTwoFactor,
+    onError: () => {
+      toast.error("Failed to setup two-factor authentication.", {
+        className: "font-inter",
+      });
+    },
+  });
+
+  /**
+   * A mutation to verify the two-factor authentication code and enable 2FA.
+   */
+  const verifyTwoFactorMutation = useMutation({
+    mutationFn: verifyTwoFactor,
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Two-factor authentication successfully setup.", {
+          className: "font-inter",
+        });
+      } else {
+        toast.error(data.error || "Failed to verify two-factor authentication.", {
+          className: "font-inter",
+        });
+      }
+    },
+    onError: () => {
+      toast.error("An unexpected error occurred.", {
+        className: "font-inter",
+      });
+    },
+  });
+
+  /**
    * Memoizes the returned object to provide a stable API to the consuming component.
    */
   return useMemo(
@@ -145,6 +182,18 @@ export function useAccountMutation() {
         isPending: updateProfileMutation.isPending,
         isSuccess: updateProfileMutation.isSuccess,
       },
+      setupTwoFactor: {
+        mutate: setupTwoFactorMutation.mutate,
+        isPending: setupTwoFactorMutation.isPending,
+        isSuccess: setupTwoFactorMutation.isSuccess,
+        data: setupTwoFactorMutation.data,
+      },
+      verifyTwoFactor: {
+        mutate: verifyTwoFactorMutation.mutate,
+        isPending: verifyTwoFactorMutation.isPending,
+        isSuccess: verifyTwoFactorMutation.isSuccess,
+        data: verifyTwoFactorMutation.data,
+      },
     }),
     [
       // The dependency array includes all values exposed by the hook to ensure it updates correctly.
@@ -161,6 +210,14 @@ export function useAccountMutation() {
       updateProfileMutation.mutate,
       updateProfileMutation.isPending,
       updateProfileMutation.isSuccess,
+      setupTwoFactorMutation.mutate,
+      setupTwoFactorMutation.isPending,
+      setupTwoFactorMutation.isSuccess,
+      setupTwoFactorMutation.data,
+      verifyTwoFactorMutation.mutate,
+      verifyTwoFactorMutation.isPending,
+      verifyTwoFactorMutation.isSuccess,
+      verifyTwoFactorMutation.data,
     ]
   );
 }
