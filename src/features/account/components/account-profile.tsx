@@ -18,7 +18,11 @@ import { useAccountMutation } from "@/features/account/hooks/use-account-mutatio
 import { useAccountProfile } from "@/features/account/hooks/use-account-profile";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
 import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
-import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/styles";
+import {
+  sectionTitle,
+  selectTriggerStyles,
+  uniformInputStyles,
+} from "@/features/cases/constants/styles";
 import { usePhilippineAddress } from "@/features/cases/hooks/use-philippine-address";
 import { cn } from "@/lib/utils";
 
@@ -398,7 +402,9 @@ export const AccountProfile = () => {
                   >
                     <Input
                       placeholder="Enter Full Name"
-                      className={cn(uniformInputStyles, "w-full")}
+                      className={cn(uniformInputStyles, "w-full shadow-none", {
+                        "border-slate-200 disabled:opacity-100": isSocialUser || isNameLocked,
+                      })}
                       disabled={isSocialUser || isNameLocked}
                       {...form.register("name")}
                     />
@@ -413,11 +419,8 @@ export const AccountProfile = () => {
                               variant="outline"
                               size="icon"
                               className={cn(
-                                "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                {
-                                  "border-slate-100": isNameLocked,
-                                  "border-slate-200": !isNameLocked,
-                                }
+                                "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                "border-slate-200 disabled:opacity-100"
                               )}
                               onClick={handleNameLockToggle}
                               aria-label={isNameLocked ? "Unlock" : "Lock"}
@@ -443,10 +446,10 @@ export const AccountProfile = () => {
                                 variant="outline"
                                 size="icon"
                                 className={cn(
-                                  "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                  "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                                   isNameSaveEnabled
                                     ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                    : "cursor-not-allowed border-slate-100 opacity-50"
+                                    : "cursor-not-allowed border-slate-200"
                                 )}
                                 disabled={!isNameSaveEnabled}
                                 onClick={handleNameUpdate}
@@ -480,7 +483,9 @@ export const AccountProfile = () => {
                 <div className={cn("flex-grow", { "cursor-not-allowed": isTitleLocked })}>
                   <Input
                     placeholder="Enter Professional Title or Designation"
-                    className={cn(uniformInputStyles, "w-full")}
+                    className={cn(uniformInputStyles, "w-full shadow-none", {
+                      "border-slate-200 disabled:opacity-100": isTitleLocked,
+                    })}
                     disabled={isTitleLocked}
                     {...form.register("title")}
                   />
@@ -494,11 +499,8 @@ export const AccountProfile = () => {
                           variant="outline"
                           size="icon"
                           className={cn(
-                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                            {
-                              "border-slate-100": isTitleLocked,
-                              "border-slate-200": !isTitleLocked,
-                            }
+                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                            "border-slate-200 disabled:opacity-100"
                           )}
                           onClick={handleTitleLockToggle}
                           aria-label={isTitleLocked ? "Unlock" : "Lock"}
@@ -524,10 +526,10 @@ export const AccountProfile = () => {
                             variant="outline"
                             size="icon"
                             className={cn(
-                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                               isTitleSaveEnabled
                                 ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                : "cursor-not-allowed border-slate-100 opacity-50"
+                                : "cursor-not-allowed border-slate-200"
                             )}
                             disabled={!isTitleSaveEnabled}
                             onClick={handleTitleUpdate}
@@ -557,7 +559,9 @@ export const AccountProfile = () => {
                 <div className={cn("flex-grow", { "cursor-not-allowed": isInstitutionLocked })}>
                   <Input
                     placeholder="Enter Institution or Organization"
-                    className={cn(uniformInputStyles, "w-full")}
+                    className={cn(uniformInputStyles, "w-full shadow-none", {
+                      "border-slate-200 disabled:opacity-100": isInstitutionLocked,
+                    })}
                     disabled={isInstitutionLocked}
                     {...form.register("institution")}
                   />
@@ -571,11 +575,8 @@ export const AccountProfile = () => {
                           variant="outline"
                           size="icon"
                           className={cn(
-                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                            {
-                              "border-slate-100": isInstitutionLocked,
-                              "border-slate-200": !isInstitutionLocked,
-                            }
+                            "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                            "border-slate-200 disabled:opacity-100"
                           )}
                           onClick={handleInstitutionLockToggle}
                           aria-label={isInstitutionLocked ? "Unlock" : "Lock"}
@@ -601,10 +602,10 @@ export const AccountProfile = () => {
                             variant="outline"
                             size="icon"
                             className={cn(
-                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                              "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                               isInstitutionSaveEnabled
                                 ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                : "cursor-not-allowed border-slate-100 opacity-50"
+                                : "cursor-not-allowed border-slate-200"
                             )}
                             disabled={!isInstitutionSaveEnabled}
                             onClick={handleInstitutionUpdate}
@@ -644,8 +645,10 @@ export const AccountProfile = () => {
               isSavePending={updateProfile.isPending}
               showLabel={true}
               labelText="Location"
-              inputStyles={uniformInputStyles}
+              inputStyles={`${uniformInputStyles} disabled:opacity-100`}
               labelStyles={`${sectionTitle} font-inter`}
+              customSelectTriggerStyles={`${selectTriggerStyles} disabled:opacity-100`}
+              className="shadow-none [&_button]:border-slate-200 [&_button:disabled]:opacity-100"
             />
           </form>
         </Form>

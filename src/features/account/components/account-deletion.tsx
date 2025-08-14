@@ -197,7 +197,7 @@ export const AccountDeletion = () => {
                   <Button
                     disabled={!isDeleteEnabled}
                     className={cn(
-                      "font-inter h-9 w-full transition-all duration-300 ease-in-out md:h-10",
+                      "font-inter h-9 w-full transition-all duration-300 ease-in-out disabled:opacity-100 md:h-10",
                       isDeleteEnabled
                         ? "cursor-pointer bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20"
                         : "cursor-not-allowed bg-rose-400 text-rose-100 hover:bg-rose-400"
@@ -216,10 +216,7 @@ export const AccountDeletion = () => {
                         size="icon"
                         className={cn(
                           "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                          {
-                            "border-slate-100": isDeleteLocked,
-                            "border-slate-200": !isDeleteLocked,
-                          }
+                          "border-slate-200 disabled:opacity-100"
                         )}
                         onClick={() => setIsDeleteLocked(!isDeleteLocked)}
                         aria-label={isDeleteLocked ? "Unlock" : "Lock"}
@@ -261,9 +258,13 @@ export const AccountDeletion = () => {
                                     disabled={isPasswordLocked}
                                     className={cn(
                                       uniformInputStyles,
-                                      "w-full pr-10",
+                                      "w-full pr-10 shadow-none",
                                       form.formState.errors.password &&
-                                        "border-red-500 focus-visible:border-red-500"
+                                        "border-red-500 focus-visible:border-red-500",
+                                      {
+                                        "border-slate-200 disabled:opacity-100":
+                                          isPasswordLocked && !form.formState.errors.password,
+                                      }
                                     )}
                                     {...field}
                                     onChange={(e) => {
@@ -275,7 +276,7 @@ export const AccountDeletion = () => {
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 shadow-none hover:bg-transparent hover:text-slate-700 md:right-2"
                                     onClick={() => setShowPassword(!showPassword)}
                                     aria-label={showPassword ? "Hide password" : "Show password"}
                                     tabIndex={-1}
@@ -300,10 +301,7 @@ export const AccountDeletion = () => {
                                       size="icon"
                                       className={cn(
                                         "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                        {
-                                          "border-slate-100": isPasswordLocked,
-                                          "border-slate-200": !isPasswordLocked,
-                                        }
+                                        "border-slate-200 disabled:opacity-100"
                                       )}
                                       onClick={handlePasswordLockToggle}
                                       aria-label={isPasswordLocked ? "Unlock" : "Lock"}
@@ -331,10 +329,10 @@ export const AccountDeletion = () => {
                                         variant="outline"
                                         size="icon"
                                         className={cn(
-                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                                           isPasswordSubmitEnabled
                                             ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                            : "cursor-not-allowed border-slate-100 opacity-50"
+                                            : "cursor-not-allowed border-slate-200"
                                         )}
                                         disabled={!isPasswordSubmitEnabled}
                                         onClick={handlePasswordVerification}
@@ -363,7 +361,7 @@ export const AccountDeletion = () => {
                   <Button
                     disabled={!isDeleteEnabled}
                     className={cn(
-                      "font-inter h-9 w-full transition-all duration-300 ease-in-out md:h-10",
+                      "font-inter h-9 w-full transition-all duration-300 ease-in-out disabled:opacity-100 md:h-10",
                       isDeleteEnabled
                         ? "cursor-pointer bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20"
                         : "cursor-not-allowed bg-rose-400 text-rose-100 hover:bg-rose-400"

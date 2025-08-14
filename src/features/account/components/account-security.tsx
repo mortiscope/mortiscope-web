@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
@@ -72,6 +73,7 @@ export const AccountSecurity = () => {
   const [isPasswordLocked, setIsPasswordLocked] = useState(true);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
+  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
 
   // Fetch security data
   const { data: securityData, error, isLoading: isSecurityLoading } = useAccountSecurity();
@@ -242,7 +244,7 @@ export const AccountSecurity = () => {
       {/* Security Form */}
       <motion.div variants={itemVariants}>
         <Form {...form}>
-          <form className="mt-8 space-y-6">
+          <form className="mt-8 space-y-4">
             {/* Email and Change Password */}
             <div>
               {!isSocialProviderLoading &&
@@ -259,7 +261,11 @@ export const AccountSecurity = () => {
                             <FormControl>
                               <Input
                                 placeholder="Enter email"
-                                className={cn(uniformInputStyles, "w-full")}
+                                className={cn(
+                                  uniformInputStyles,
+                                  "w-full shadow-none",
+                                  "border-slate-200 disabled:opacity-100"
+                                )}
                                 disabled={true}
                                 {...field}
                               />
@@ -288,9 +294,13 @@ export const AccountSecurity = () => {
                                   placeholder="Enter email"
                                   className={cn(
                                     uniformInputStyles,
-                                    "w-full",
+                                    "w-full shadow-none",
                                     form.formState.errors.email &&
-                                      "border-red-500 focus-visible:border-red-500"
+                                      "border-red-500 focus-visible:border-red-500",
+                                    {
+                                      "border-slate-200 disabled:opacity-100":
+                                        isEmailLocked && !form.formState.errors.email,
+                                    }
                                   )}
                                   disabled={isEmailLocked}
                                   {...field}
@@ -306,14 +316,12 @@ export const AccountSecurity = () => {
                                       variant="outline"
                                       size="icon"
                                       className={cn(
-                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                        {
-                                          "border-slate-100": isEmailLocked,
-                                          "border-slate-200": !isEmailLocked,
-                                        }
+                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                        "border-slate-200 shadow-none disabled:opacity-100"
                                       )}
                                       onClick={handleEmailLockToggle}
                                       aria-label={isEmailLocked ? "Unlock" : "Lock"}
+                                      disabled={false}
                                     >
                                       {isEmailLocked ? (
                                         <HiOutlineLockClosed className="h-5 w-5" />
@@ -336,10 +344,10 @@ export const AccountSecurity = () => {
                                         variant="outline"
                                         size="icon"
                                         className={cn(
-                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                                           isEmailSaveEnabled
                                             ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                            : "cursor-not-allowed border-slate-100 opacity-50"
+                                            : "cursor-not-allowed border-slate-200"
                                         )}
                                         disabled={!isEmailSaveEnabled}
                                         onClick={handleEmailUpdate}
@@ -388,9 +396,14 @@ export const AccountSecurity = () => {
                                     placeholder="Enter current password"
                                     className={cn(
                                       uniformInputStyles,
-                                      "w-full pr-10",
+                                      "w-full pr-10 shadow-none",
                                       form.formState.errors.currentPassword &&
-                                        "border-red-500 focus-visible:border-red-500"
+                                        "border-red-500 focus-visible:border-red-500",
+                                      {
+                                        "border-slate-200 disabled:opacity-100":
+                                          isPasswordLocked &&
+                                          !form.formState.errors.currentPassword,
+                                      }
                                     )}
                                     disabled={isPasswordLocked}
                                     {...field}
@@ -403,7 +416,7 @@ export const AccountSecurity = () => {
                                     type="button"
                                     variant="ghost"
                                     size="icon"
-                                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
+                                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 shadow-none hover:bg-transparent hover:text-slate-700 md:right-2"
                                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                                     aria-label={
                                       showCurrentPassword ? "Hide password" : "Show password"
@@ -429,11 +442,8 @@ export const AccountSecurity = () => {
                                       variant="outline"
                                       size="icon"
                                       className={cn(
-                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                                        {
-                                          "border-slate-100": isPasswordLocked,
-                                          "border-slate-200": !isPasswordLocked,
-                                        }
+                                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                                        "border-slate-200 disabled:opacity-100"
                                       )}
                                       onClick={handlePasswordLockToggle}
                                       aria-label={isPasswordLocked ? "Unlock" : "Lock"}
@@ -461,10 +471,10 @@ export const AccountSecurity = () => {
                                         variant="outline"
                                         size="icon"
                                         className={cn(
-                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                                           isPasswordSubmitEnabled
                                             ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                            : "cursor-not-allowed border-slate-100 opacity-50"
+                                            : "cursor-not-allowed border-slate-200"
                                         )}
                                         disabled={!isPasswordSubmitEnabled}
                                         onClick={handlePasswordVerification}
@@ -507,7 +517,9 @@ export const AccountSecurity = () => {
                     render={({ field }) => (
                       <FormItem className="w-full">
                         <div
-                          className={cn("w-full", { "cursor-not-allowed": !isPasswordVerified })}
+                          className={cn("w-full shadow-none", {
+                            "cursor-not-allowed": !isPasswordVerified,
+                          })}
                         >
                           <FormControl>
                             <Input
@@ -515,9 +527,13 @@ export const AccountSecurity = () => {
                               placeholder="Enter new password"
                               className={cn(
                                 uniformInputStyles,
-                                "w-full",
+                                "w-full shadow-none",
                                 form.formState.errors.newPassword &&
-                                  "border-red-500 focus-visible:border-red-500"
+                                  "border-red-500 focus-visible:border-red-500",
+                                {
+                                  "border-slate-200 disabled:opacity-100":
+                                    !isPasswordVerified && !form.formState.errors.newPassword,
+                                }
                               )}
                               disabled={!isPasswordVerified}
                               {...field}
@@ -548,9 +564,13 @@ export const AccountSecurity = () => {
                                 placeholder="Repeat new password"
                                 className={cn(
                                   uniformInputStyles,
-                                  "w-full",
+                                  "w-full shadow-none",
                                   form.formState.errors.repeatPassword &&
-                                    "border-red-500 focus-visible:border-red-500"
+                                    "border-red-500 focus-visible:border-red-500",
+                                  {
+                                    "border-slate-200 disabled:opacity-100":
+                                      !isPasswordVerified && !form.formState.errors.repeatPassword,
+                                  }
                                 )}
                                 disabled={!isPasswordVerified}
                                 {...field}
@@ -566,10 +586,10 @@ export const AccountSecurity = () => {
                                     variant="outline"
                                     size="icon"
                                     className={cn(
-                                      "h-9 w-9 flex-shrink-0 border-2 text-slate-400 transition-colors ease-in-out md:h-10 md:w-10",
+                                      "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
                                       isNewPasswordSaveEnabled
                                         ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                                        : "cursor-not-allowed border-slate-100 opacity-50"
+                                        : "cursor-not-allowed border-slate-200"
                                     )}
                                     disabled={!isNewPasswordSaveEnabled}
                                     onClick={handlePasswordUpdate}
@@ -603,6 +623,30 @@ export const AccountSecurity = () => {
                 )}
               </div>
             )}
+
+            {/* Two-Factor Authentication */}
+            <div>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <div className="w-full">
+                  <div
+                    className={cn(
+                      uniformInputStyles,
+                      "flex w-full items-center justify-between rounded-md px-3 py-2 shadow-none"
+                    )}
+                  >
+                    <span className="font-inter text-sm text-slate-700">
+                      Two-Factor Authentication
+                    </span>
+                    <Switch
+                      id="two-factor-toggle"
+                      className="cursor-pointer data-[state=checked]:bg-emerald-600"
+                      checked={isTwoFactorEnabled}
+                      onCheckedChange={setIsTwoFactorEnabled}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </form>
         </Form>
       </motion.div>
