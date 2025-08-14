@@ -33,6 +33,7 @@ export async function getAccountProfile() {
         id: users.id,
         name: users.name,
         email: users.email,
+        image: users.image,
         professionalTitle: users.professionalTitle,
         institution: users.institution,
         locationRegion: users.locationRegion,

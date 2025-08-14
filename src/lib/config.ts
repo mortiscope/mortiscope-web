@@ -113,11 +113,19 @@ const serverConfig = {
           if (token.sub && session.user) {
             session.user.id = token.sub;
           }
+          // Preserve the image from the token
+          if (token.picture && session.user) {
+            session.user.image = token.picture;
+          }
           return session;
         },
-        async jwt({ token, user }) {
+        async jwt({ token, user, profile }) {
           if (user) {
             token.sub = user.id;
+          }
+          // Store profile image in token for OAuth providers
+          if (profile?.picture) {
+            token.picture = profile.picture;
           }
           return token;
         },

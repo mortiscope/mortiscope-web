@@ -11,6 +11,7 @@ type ProfileData = {
   id: string;
   name: string | null;
   email: string;
+  image: string | null;
   professionalTitle: string | null;
   institution: string | null;
   locationRegion: string | null;
