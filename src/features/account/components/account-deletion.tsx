@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
+import { LuLoaderCircle } from "react-icons/lu";
 import { PiEye, PiEyeSlash, PiPaperPlaneRight, PiWarning } from "react-icons/pi";
 import { z } from "zod";
 
@@ -338,7 +339,11 @@ export const AccountDeletion = () => {
                                         onClick={handlePasswordVerification}
                                         aria-label="Submit"
                                       >
-                                        <PiPaperPlaneRight className="h-5 w-5" />
+                                        {verifyPassword.isPending ? (
+                                          <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                          <PiPaperPlaneRight className="h-5 w-5" />
+                                        )}
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent className="font-inter">

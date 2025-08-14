@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, type Variants } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
@@ -21,6 +22,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+/**
+ * Dynamically imported two-factor authentication modal component.
+ */
+const TwoFactorEnableModal = dynamic(
+  () =>
+    import("@/features/account/components/two-factor-enable-modal").then(
+      (module) => module.TwoFactorEnableModal
+    ),
+  { ssr: false }
+);
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
@@ -74,6 +86,7 @@ export const AccountSecurity = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
 
   // Fetch security data
   const { data: securityData, error, isLoading: isSecurityLoading } = useAccountSecurity();
@@ -222,6 +235,21 @@ export const AccountSecurity = () => {
       setIsPasswordVerified(false);
     }
     setIsPasswordLocked(!isPasswordLocked);
+  };
+
+  // Handle two-factor authentication toggle
+  const handleTwoFactorToggle = (checked: boolean) => {
+    if (checked && !isTwoFactorEnabled) {
+      // If enabling 2FA, open the setup modal
+      setIsTwoFactorModalOpen(true);
+    } else if (!checked && isTwoFactorEnabled) {
+      setIsTwoFactorEnabled(false);
+    }
+  };
+
+  // Handle successful two-factor setup
+  const handleTwoFactorSuccess = () => {
+    setIsTwoFactorEnabled(true);
   };
 
   // Don't render anything until all data is ready
@@ -480,7 +508,11 @@ export const AccountSecurity = () => {
                                         onClick={handlePasswordVerification}
                                         aria-label="Submit"
                                       >
-                                        <PiPaperPlaneRight className="h-5 w-5" />
+                                        {verifyPassword.isPending ? (
+                                          <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                                        ) : (
+                                          <PiPaperPlaneRight className="h-5 w-5" />
+                                        )}
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent className="font-inter">
@@ -641,7 +673,7 @@ export const AccountSecurity = () => {
                       id="two-factor-toggle"
                       className="cursor-pointer data-[state=checked]:bg-emerald-600"
                       checked={isTwoFactorEnabled}
-                      onCheckedChange={setIsTwoFactorEnabled}
+                      onCheckedChange={handleTwoFactorToggle}
                     />
                   </div>
                 </div>
@@ -650,6 +682,13 @@ export const AccountSecurity = () => {
           </form>
         </Form>
       </motion.div>
+
+      {/* Two-Factor Authentication Modal */}
+      <TwoFactorEnableModal
+        isOpen={isTwoFactorModalOpen}
+        onOpenChange={setIsTwoFactorModalOpen}
+        onSuccess={handleTwoFactorSuccess}
+      />
     </motion.div>
   );
 };
