@@ -51,7 +51,7 @@ interface TwoFactorEnableModalProps {
   /** Callback to handle modal open state changes */
   onOpenChange: (isOpen: boolean) => void;
   /** Callback when two-factor authentication is successfully enabled */
-  onSuccess: () => void;
+  onSuccess: (recoveryCodes?: string[]) => void;
 }
 
 /**
@@ -94,7 +94,7 @@ export const TwoFactorEnableModal = ({
         {
           onSuccess: (data) => {
             if (data.success) {
-              onSuccess();
+              onSuccess(data.data?.recoveryCodes);
               handleClose();
             }
           },
@@ -146,11 +146,11 @@ export const TwoFactorEnableModal = ({
           {/* QR Code */}
           <motion.div variants={itemVariants} className="flex justify-center px-6 py-4">
             {qrCodeUrl ? (
-              <div className="flex h-[232px] w-[232px] items-center justify-center rounded-lg border-2 border-slate-200 bg-white p-4">
+              <div className="flex h-[232px] w-[232px] items-center justify-center rounded-xl border-2 border-slate-200 bg-white p-4">
                 <QRCode value={qrCodeUrl} size={200} />
               </div>
             ) : (
-              <div className="flex h-[232px] w-[232px] items-center justify-center rounded-lg border-2 border-slate-200 bg-slate-50">
+              <div className="flex h-[232px] w-[232px] items-center justify-center rounded-xl border-2 border-slate-200 bg-slate-50">
                 <BeatLoader color="#16a34a" size={12} />
               </div>
             )}
@@ -167,15 +167,22 @@ export const TwoFactorEnableModal = ({
                 className="font-mono disabled:cursor-not-allowed"
               >
                 <InputOTPGroup className="gap-2">
-                  {Array.from({ length: 6 }).map((_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      className={cn(
-                        "relative flex h-10 w-10 items-center justify-center border-2 border-slate-200 font-mono text-sm font-normal text-slate-800 shadow-none transition-all first:rounded-l-md last:rounded-r-md focus-visible:border-emerald-600 focus-visible:ring-0 focus-visible:ring-offset-0 data-[active=true]:z-10 data-[active=true]:border-emerald-600 data-[active=true]:ring-0 sm:h-12 sm:w-12 sm:text-base"
-                      )}
-                    />
-                  ))}
+                  {Array.from({ length: 6 }).map((_, index) => {
+                    const hasValue = otpValue[index];
+                    return (
+                      <InputOTPSlot
+                        key={index}
+                        index={index}
+                        className={cn(
+                          "relative flex h-10 w-10 items-center justify-center rounded-md border-2 font-mono text-sm font-normal shadow-none transition-all duration-600 ease-in-out focus-visible:ring-0 focus-visible:ring-offset-0 data-[active=true]:z-10 data-[active=true]:ring-0 sm:h-12 sm:w-12 sm:text-base",
+                          hasValue
+                            ? "border-emerald-600 bg-emerald-600 text-white"
+                            : "border-slate-200 bg-transparent text-slate-800",
+                          "focus-visible:border-emerald-600 data-[active=true]:border-emerald-600"
+                        )}
+                      />
+                    );
+                  })}
                 </InputOTPGroup>
               </InputOTP>
             </div>

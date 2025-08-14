@@ -10,6 +10,7 @@ import { getAccountSecurity } from "@/features/account/actions/get-account-secur
 type SecurityData = {
   id: string;
   email: string;
+  twoFactorEnabled: boolean;
 };
 
 /**

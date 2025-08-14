@@ -35,8 +35,7 @@ export const verifyTwoFactor = async (values: VerifyTwoFactorFormValues) => {
   const { success } = await privateActionLimiter.limit(userId);
   if (!success) {
     return {
-      error:
-        "You are attempting to verify two-factor authentication too frequently.",
+      error: "You are attempting to verify two-factor authentication too frequently.",
     };
   }
 
@@ -77,31 +76,28 @@ export const verifyTwoFactor = async (values: VerifyTwoFactorFormValues) => {
       }))
     );
 
-    // Use a transaction to ensure data consistency
-    await db.transaction(async (tx) => {
-      // Save or update the 2FA settings
-      if (existingTwoFactor) {
-        await tx
-          .update(userTwoFactor)
-          .set({
-            secret,
-            enabled: true,
-            backupCodesGenerated: true,
-            updatedAt: new Date(),
-          })
-          .where(eq(userTwoFactor.userId, userId));
-      } else {
-        await tx.insert(userTwoFactor).values({
-          userId,
+    // Save or update the 2FA settings
+    if (existingTwoFactor) {
+      await db
+        .update(userTwoFactor)
+        .set({
           secret,
           enabled: true,
           backupCodesGenerated: true,
-        });
-      }
+          updatedAt: new Date(),
+        })
+        .where(eq(userTwoFactor.userId, userId));
+    } else {
+      await db.insert(userTwoFactor).values({
+        userId,
+        secret,
+        enabled: true,
+        backupCodesGenerated: true,
+      });
+    }
 
-      // Save the recovery codes
-      await tx.insert(twoFactorRecoveryCodes).values(hashedCodes);
-    });
+    // Save the recovery codes
+    await db.insert(twoFactorRecoveryCodes).values(hashedCodes);
 
     return {
       success: "Two-factor authentication has been successfully enabled.",
