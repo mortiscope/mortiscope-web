@@ -45,7 +45,7 @@ export const verifySigninRecoveryCode = async (recoveryCode: string) => {
     return { error: "Session expired. Please sign in again." };
   }
 
-  const { userId, email } = authSession;
+  const { userId, email, provider } = authSession;
 
   try {
     // Get user data
@@ -95,8 +95,7 @@ export const verifySigninRecoveryCode = async (recoveryCode: string) => {
     if (codeAlreadyUsed) {
       authLogger.warn({ userId, email }, "Used recovery code provided during signin");
       return {
-        error:
-          "This recovery code has already been used.",
+        error: "This recovery code has already been used.",
       };
     }
 
@@ -121,6 +120,7 @@ export const verifySigninRecoveryCode = async (recoveryCode: string) => {
     logUserAction(authLogger, "signin_recovery_verified", userId, {
       email,
       method: "recovery_code",
+      provider: provider || "credentials",
       recoveryCodeId: matchedCodeId,
     });
 

@@ -11,6 +11,7 @@ export interface AuthSession {
   timestamp: number;
   verified: boolean;
   expiresAt: number;
+  provider?: string;
   [key: string]: unknown;
 }
 
@@ -29,9 +30,14 @@ const AUTH_SESSION_CONFIG = {
  *
  * @param userId - The user's ID
  * @param email - The user's email
+ * @param provider - The authentication provider
  * @returns Promise<void>
  */
-export async function createAuthSession(userId: string, email: string): Promise<void> {
+export async function createAuthSession(
+  userId: string,
+  email: string,
+  provider: string = "credentials"
+): Promise<void> {
   const now = Date.now();
   const expiresAt = now + AUTH_SESSION_CONFIG.maxAge;
 
@@ -41,6 +47,7 @@ export async function createAuthSession(userId: string, email: string): Promise<
     timestamp: now,
     verified: false,
     expiresAt,
+    provider,
   };
 
   // Create JWT token

@@ -38,7 +38,7 @@ export const verifySigninTwoFactor = async (token: string) => {
     return { error: "Session expired. Please sign in again." };
   }
 
-  const { userId, email } = authSession;
+  const { userId, email, provider } = authSession;
 
   try {
     // Get user data
@@ -78,6 +78,7 @@ export const verifySigninTwoFactor = async (token: string) => {
     logUserAction(authLogger, "signin_2fa_verified", userId, {
       email,
       method: "totp",
+      provider: provider || "credentials",
     });
 
     // Don't clear the auth session
