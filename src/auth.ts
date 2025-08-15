@@ -50,6 +50,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Return null if the user is not found or has no password (e.g., OAuth user).
           if (!user || !user.password) return null;
 
+          // Special case: 2FA-verified signin
+          if (password === "2fa-verified") {
+            // Verify that there's a valid verified auth session for this user
+            const { getAuthSession } = await import("@/lib/auth");
+            const authSession = await getAuthSession();
+
+            if (authSession?.verified && authSession.email === email) {
+              return user;
+            }
+            return null;
+          }
+
           const passwordsMatch = await bcrypt.compare(password, user.password);
           if (passwordsMatch) return user;
         }

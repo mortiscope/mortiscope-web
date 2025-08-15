@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { hasValidAuthSession } from "@/lib/auth";
 import {
   apiAuthPrefix,
   authRoutes,
@@ -42,6 +43,17 @@ export default async function middleware(req: NextRequest) {
 
   // Handle authentication-related routes
   if (isAuthRoute) {
+    // Special handling for 2FA routes - require valid auth session
+    if (nextUrl.pathname === "/signin/two-factor" || nextUrl.pathname === "/signin/recovery") {
+      const hasAuthSession = await hasValidAuthSession();
+      if (!hasAuthSession) {
+        return NextResponse.redirect(new URL("/signin?error=no-session", nextUrl));
+      }
+      // Allow access if there's a valid auth session
+      return NextResponse.next();
+    }
+
+    // For other auth routes, redirect if already logged in
     if (isLoggedIn) {
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }

@@ -8,7 +8,14 @@ export const apiAuthPrefix: string = "/api/auth";
  * An array of routes used for authentication purposes
  * @type {string[]}
  */
-export const authRoutes: string[] = ["/signin", "/signup", "/forgot-password", "/reset-password"];
+export const authRoutes: string[] = [
+  "/signin",
+  "/signin/two-factor",
+  "/signin/recovery",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+];
 
 /**
  * The default URL to redirect users to after a successful sign-in
