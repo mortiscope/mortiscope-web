@@ -169,8 +169,7 @@ export const AccountDeletionModalSchema = z.object({
 /**
  * Schema for setting up two-factor authentication.
  */
-export const SetupTwoFactorSchema = z.object({
-});
+export const SetupTwoFactorSchema = z.object({});
 
 /**
  * Schema for verifying two-factor authentication setup.
@@ -186,6 +185,14 @@ export const VerifyTwoFactorSchema = z.object({
 });
 
 /**
+ * Schema for disabling two-factor authentication.
+ * Requires current password validation for security.
+ */
+export const DisableTwoFactorSchema = z.object({
+  currentPassword: currentPasswordValidationSchema,
+});
+
+/**
  * Exports TypeScript types inferred from the Zod schemas.
  */
 export type AccountProfileFormValues = z.infer<typeof AccountProfileSchema>;
@@ -193,3 +200,4 @@ export type AccountSecurityFormValues = z.infer<typeof AccountSecuritySchema>;
 export type AccountDeletionModalFormValues = z.infer<typeof AccountDeletionModalSchema>;
 export type SetupTwoFactorFormValues = z.infer<typeof SetupTwoFactorSchema>;
 export type VerifyTwoFactorFormValues = z.infer<typeof VerifyTwoFactorSchema>;
+export type DisableTwoFactorFormValues = z.infer<typeof DisableTwoFactorSchema>;
