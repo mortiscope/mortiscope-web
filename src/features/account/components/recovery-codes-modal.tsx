@@ -93,10 +93,26 @@ export const RecoveryCodesModal = ({
         setIsInitialSetup(false);
         setIsLoading(true);
         getRecoveryCodes.mutate(undefined, {
-          onSuccess: (data) => {
-            if (data.success && data.data) {
+          onSuccess: (
+            data:
+              | { error: string; success?: undefined; data?: undefined }
+              | {
+                  success: string;
+                  data: {
+                    totalCodes: number;
+                    usedCount: number;
+                    unusedCount: number;
+                    codeStatus: boolean[];
+                    hasRecoveryCodes: boolean;
+                  };
+                  error?: undefined;
+                }
+          ) => {
+            if ("success" in data && data.success && data.data) {
               // Map the boolean status array to visual placeholders.
-              const codes = data.data.codeStatus.map((hasCode) => (hasCode ? "••••-••••" : null));
+              const codes = data.data.codeStatus.map((hasCode: boolean) =>
+                hasCode ? "••••-••••" : null
+              );
               setDisplayCodes(codes);
             } else {
               setDisplayCodes(new Array(16).fill(null));
