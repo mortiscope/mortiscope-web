@@ -110,28 +110,37 @@ export const RecoveryCodesModal = ({
         });
       }
     }
-  }, [isOpen, initialCodes, getRecoveryCodes]);
+  }, [isOpen, initialCodes]);
 
   /**
-   * A wrapper for the `onOpenChange` callback that resets all local state
-   * when the modal is closed, ensuring a clean state for the next time it opens.
+   * A wrapper for the `onOpenChange` callback that handles modal closing.
    */
   const handleClose = () => {
-    setDisplayCodes([]);
-    setIsInitialSetup(false);
-    setIsLoading(false);
     onOpenChange(false);
   };
 
+  // Reset state when modal is fully closed to prevent any visual changes during closing
+  useEffect(() => {
+    if (!isOpen) {
+      const timer = setTimeout(() => {
+        setDisplayCodes([]);
+        setIsInitialSetup(false);
+        setIsLoading(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   /** A derived boolean indicating if there are plaintext codes available to be copied. */
-  const canCopy = displayCodes.some((code) => code && !code.includes("••••"));
+  const canCopy = isOpen && displayCodes.some((code) => code && !code.includes("••••"));
 
   /**
    * Handles the "Copy" action. It filters for plaintext codes, formats them, and
    * uses the modern Clipboard API with a fallback to the legacy `execCommand`.
    */
   const handleCopy = async () => {
-    if (!canCopy) return;
+    if (!canCopy || !isOpen) return;
 
     try {
       const actualCodes = displayCodes.filter((code) => code && !code.includes("••••")) as string[];
@@ -173,14 +182,14 @@ export const RecoveryCodesModal = ({
   };
 
   /** A derived boolean indicating if there are plaintext codes available to be downloaded. */
-  const canDownload = displayCodes.some((code) => code && !code.includes("••••"));
+  const canDownload = isOpen && displayCodes.some((code) => code && !code.includes("••••"));
 
   /**
    * Handles the download action. It filters for plaintext codes, creates a text blob,
    * and triggers a file download in the browser.
    */
   const handleDownload = () => {
-    if (!canDownload) return;
+    if (!canDownload || !isOpen) return;
 
     try {
       const actualCodes = displayCodes.filter((code) => code && !code.includes("••••")) as string[];
@@ -224,6 +233,7 @@ export const RecoveryCodesModal = ({
    * updating the interface with the new, visible codes upon success.
    */
   const handleRegenerate = () => {
+    if (!isOpen) return;
     setIsLoading(true);
     regenerateRecoveryCodes.mutate(undefined, {
       onSuccess: (data) => {

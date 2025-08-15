@@ -22,6 +22,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
+import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
+import { useFormChange } from "@/features/account/hooks/use-form-change";
+import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
+import {
+  type AccountSecurityFormValues,
+  AccountSecuritySchema,
+} from "@/features/account/schemas/account";
+import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/styles";
+import { cn } from "@/lib/utils";
 
 /**
  * Dynamically imported two-factor authentication modal component.
@@ -33,16 +43,28 @@ const TwoFactorEnableModal = dynamic(
     ),
   { ssr: false }
 );
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
-import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
-import { useFormChange } from "@/features/account/hooks/use-form-change";
-import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
-import {
-  type AccountSecurityFormValues,
-  AccountSecuritySchema,
-} from "@/features/account/schemas/account";
-import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/styles";
-import { cn } from "@/lib/utils";
+
+/**
+ * Dynamically imported recovery codes modal component.
+ */
+const RecoveryCodesModal = dynamic(
+  () =>
+    import("@/features/account/components/recovery-codes-modal").then(
+      (module) => module.RecoveryCodesModal
+    ),
+  { ssr: false }
+);
+
+/**
+ * Dynamically imported two-factor disable modal component.
+ */
+const TwoFactorDisableModal = dynamic(
+  () =>
+    import("@/features/account/components/two-factor-disable-modal").then(
+      (module) => module.TwoFactorDisableModal
+    ),
+  { ssr: false }
+);
 
 /**
  * Framer Motion variants for the main content container.
@@ -87,9 +109,12 @@ export const AccountSecurity = () => {
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
   const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
+  const [isTwoFactorDisableModalOpen, setIsTwoFactorDisableModalOpen] = useState(false);
+  const [isRecoveryCodesModalOpen, setIsRecoveryCodesModalOpen] = useState(false);
+  const [initialRecoveryCodes, setInitialRecoveryCodes] = useState<string[]>();
 
   // Fetch security data
-  const { data: securityData, error, isLoading: isSecurityLoading } = useAccountSecurity();
+  const { data: securityData, error, isLoading: isSecurityLoading, refetch } = useAccountSecurity();
 
   // Check if user is using social providers
   const { isSocialUser, isLoading: isSocialProviderLoading } = useSocialProvider();
@@ -138,6 +163,8 @@ export const AccountSecurity = () => {
       };
       form.reset(formData);
       setInitialValues(formData);
+      // Set 2FA status from database
+      setIsTwoFactorEnabled(securityData.twoFactorEnabled || false);
     }
   }, [securityData, form]);
 
@@ -243,13 +270,25 @@ export const AccountSecurity = () => {
       // If enabling 2FA, open the setup modal
       setIsTwoFactorModalOpen(true);
     } else if (!checked && isTwoFactorEnabled) {
-      setIsTwoFactorEnabled(false);
+      // If disabling 2FA, open the disable modal for password confirmation
+      setIsTwoFactorDisableModalOpen(true);
     }
   };
 
   // Handle successful two-factor setup
-  const handleTwoFactorSuccess = () => {
+  const handleTwoFactorSuccess = (recoveryCodes?: string[]) => {
     setIsTwoFactorEnabled(true);
+    // Store recovery codes
+    if (recoveryCodes) {
+      setInitialRecoveryCodes(recoveryCodes);
+    }
+  };
+
+  // Handle successful two-factor disable
+  const handleTwoFactorDisableSuccess = () => {
+    setIsTwoFactorEnabled(false);
+    // Refetch security data to update the UI
+    refetch();
   };
 
   // Don't render anything until all data is ready
@@ -674,9 +713,21 @@ export const AccountSecurity = () => {
                       className="cursor-pointer data-[state=checked]:bg-emerald-600"
                       checked={isTwoFactorEnabled}
                       onCheckedChange={handleTwoFactorToggle}
+                      disabled={false}
                     />
                   </div>
                 </div>
+                {isTwoFactorEnabled && (
+                  <div className="w-full">
+                    <Button
+                      type="button"
+                      className="font-inter flex h-10 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden bg-emerald-600 text-white transition-all duration-300 ease-in-out hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed"
+                      onClick={() => setIsRecoveryCodesModalOpen(true)}
+                    >
+                      Recovery Codes
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </form>
@@ -688,6 +739,27 @@ export const AccountSecurity = () => {
         isOpen={isTwoFactorModalOpen}
         onOpenChange={setIsTwoFactorModalOpen}
         onSuccess={handleTwoFactorSuccess}
+      />
+
+      {/* Recovery Codes Modal */}
+      <RecoveryCodesModal
+        isOpen={isRecoveryCodesModalOpen}
+        onOpenChange={(open) => {
+          setIsRecoveryCodesModalOpen(open);
+          if (!open) {
+            setInitialRecoveryCodes(undefined);
+          }
+        }}
+        initialCodes={initialRecoveryCodes}
+      />
+
+      {/* Two-Factor Disable Modal */}
+      <TwoFactorDisableModal
+        isOpen={isTwoFactorDisableModalOpen}
+        onOpenChange={(open) => {
+          setIsTwoFactorDisableModalOpen(open);
+        }}
+        onSuccess={handleTwoFactorDisableSuccess}
       />
     </motion.div>
   );
