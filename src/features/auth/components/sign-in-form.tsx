@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { signIn as socialSignIn } from "next-auth/react";
 import React, { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -25,6 +26,8 @@ import { signIn } from "@/features/auth/actions/signin";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 
 export default function SignInForm() {
+  const router = useRouter();
+
   // Manages the server state for the credentials sign-in action using TanStack Query
   const {
     mutate: credentialsSignIn,
@@ -32,6 +35,12 @@ export default function SignInForm() {
     data,
   } = useMutation({
     mutationFn: signIn,
+    onSuccess: (result) => {
+      // Handle 2FA redirect
+      if (result?.requiresTwoFactor) {
+        router.push("/signin/two-factor");
+      }
+    },
   });
 
   // State to manage password visibility (show/hide)
