@@ -192,6 +192,33 @@ export const AccountDeletionRequestSchema = z.object({
 });
 
 /**
+ * Schema for validating TOTP token during signin process.
+ */
+export const SigninTwoFactorSchema = z.object({
+  token: z
+    .string()
+    .min(1, { message: "Verification code is required." })
+    .length(6, { message: "Verification code must be 6 digits." })
+    .regex(/^\d{6}$/, { message: "Verification code must contain only numbers." }),
+});
+
+/**
+ * Schema for validating recovery code during signin process.
+ */
+export const SigninRecoveryCodeSchema = z.object({
+  recoveryCode: z
+    .string()
+    .min(1, { message: "Recovery code is required." })
+    .regex(/^[A-Za-z0-9-\s]{8,9}$/, {
+      message: "Invalid recovery code format.",
+    })
+    .transform((code) => code.replace(/[-\s]/g, "").toUpperCase())
+    .refine((code) => code.length === 8, {
+      message: "Recovery code must be 8 characters long.",
+    }),
+});
+
+/**
  * Exports TypeScript types inferred from the Zod schemas.
  */
 export type SignUpFormValues = z.infer<typeof SignUpSchema>;
@@ -201,3 +228,5 @@ export type ResetPasswordFormValues = z.infer<typeof ResetPasswordSchema>;
 export type ChangePasswordFormValues = z.infer<typeof ChangePasswordSchema>;
 export type EmailChangeRequestFormValues = z.infer<typeof EmailChangeRequestSchema>;
 export type AccountDeletionRequestFormValues = z.infer<typeof AccountDeletionRequestSchema>;
+export type SigninTwoFactorFormValues = z.infer<typeof SigninTwoFactorSchema>;
+export type SigninRecoveryCodeFormValues = z.infer<typeof SigninRecoveryCodeSchema>;
