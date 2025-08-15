@@ -7,8 +7,9 @@ import { AuthError } from "next-auth";
 import { signIn as authSignIn } from "@/auth";
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, userTwoFactor } from "@/db/schema";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
+import { createAuthSession } from "@/lib/auth";
 import { authLogger, emailLogger, logError, logUserAction } from "@/lib/logger";
 import { sendAccountDeletionCancelled, sendEmailVerification } from "@/lib/mail";
 import { publicActionLimiter } from "@/lib/rate-limiter";
@@ -80,8 +81,37 @@ export const signIn = async (values: SignInFormValues) => {
     return { error: "Please verify the email before signing in." };
   }
 
+  // Check if user has 2FA enabled
+  const twoFactorData = await db.query.userTwoFactor.findFirst({
+    where: eq(userTwoFactor.userId, existingUser.id),
+  });
+
+  // If 2FA is enabled, create auth session and redirect to 2FA verification
+  if (twoFactorData?.enabled) {
+    // Verify password first before creating auth session
+    const bcrypt = await import("bcryptjs");
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+    if (!isPasswordValid) {
+      return { error: "Invalid email or password." };
+    }
+
+    // Create temporary auth session for 2FA flow
+    await createAuthSession(existingUser.id, existingUser.email);
+
+    logUserAction(authLogger, "signin_2fa_required", existingUser.id, {
+      email: existingUser.email,
+    });
+
+    // Return success with redirect instruction
+    return {
+      success: "Password verified. Please complete two-factor authentication.",
+      requiresTwoFactor: true,
+    };
+  }
+
   try {
-    // Attempt to sign the user in using the 'credentials' provider
+    // Attempt to sign the user in using the 'credentials' provider (no 2FA)
     await authSignIn("credentials", {
       email,
       password,
