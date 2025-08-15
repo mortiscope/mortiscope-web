@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, userTwoFactor } from "@/db/schema";
 
 /**
  * A server action to fetch security-related data (specifically the email) for the
@@ -27,13 +27,15 @@ export async function getAccountSecurity() {
       };
     }
 
-    // Fetch the user's security-related data (ID and email) from the database.
+    // Fetch the user's security-related data from the database.
     const userSecurity = await db
       .select({
         id: users.id,
         email: users.email,
+        twoFactorEnabled: userTwoFactor.enabled,
       })
       .from(users)
+      .leftJoin(userTwoFactor, eq(users.id, userTwoFactor.userId))
       .where(eq(users.id, session.user.id))
       .limit(1);
 
@@ -50,7 +52,10 @@ export async function getAccountSecurity() {
     return {
       success: true,
       error: null,
-      data: userSecurity[0],
+      data: {
+        ...userSecurity[0],
+        twoFactorEnabled: userSecurity[0].twoFactorEnabled || false,
+      },
     };
   } catch (error) {
     // Catch any unexpected errors during the process and return a generic error message.
