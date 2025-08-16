@@ -92,6 +92,13 @@
       "when": 1761727240776,
       "tag": "0012_two_factor_authentication",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1762010741123,
+      "tag": "0013_sessions",
+      "breakpoints": true
     }
   ]
 }

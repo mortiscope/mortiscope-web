@@ -95,6 +95,38 @@ export const sessions = pgTable("sessions", {
   expires: timestamp("expires", { mode: "date" }).notNull(),
 });
 
+// Stores detailed session information for device and location tracking
+export const userSessions = pgTable("user_sessions", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  sessionToken: text("session_token")
+    .notNull()
+    .references(() => sessions.sessionToken, { onDelete: "cascade" }),
+  deviceType: text("device_type"),
+  deviceVendor: text("device_vendor"),
+  deviceModel: text("device_model"),
+  browserName: text("browser_name"),
+  browserVersion: text("browser_version"),
+  osName: text("os_name"),
+  osVersion: text("os_version"),
+  ipAddress: text("ip_address").notNull(),
+  country: text("country"),
+  region: text("region"),
+  city: text("city"),
+  timezone: text("timezone"),
+  userAgent: text("user_agent").notNull(),
+  isCurrentSession: boolean("is_current_session").notNull().default(false),
+  createdAt: timestamp("created_at", { mode: "date", withTimezone: true }).notNull().defaultNow(),
+  lastActiveAt: timestamp("last_active_at", { mode: "date", withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  expiresAt: timestamp("expires_at", { mode: "date", withTimezone: true }).notNull(),
+});
+
 // Stores tokens for one-time email verification links
 export const verificationTokens = pgTable(
   "verification_tokens",
@@ -301,15 +333,31 @@ export const twoFactorRecoveryCodes = pgTable("two_factor_recovery_codes", {
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
 });
 
+// Stores blacklisted JWT tokens to prevent their reuse after session revocation
+export const revokedJwtTokens = pgTable("revoked_jwt_tokens", {
+  jti: text("jti").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  sessionToken: text("session_token").notNull(),
+  revokedAt: timestamp("revoked_at", { mode: "date" }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+});
+
 // Defines the relationships for the `users` table.
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   accounts: many(accounts),
   sessions: many(sessions),
+  userSessions: many(userSessions),
   cases: many(cases),
   exports: many(exports),
   caseAuditLogs: many(caseAuditLogs),
-  twoFactor: many(userTwoFactor),
+  twoFactor: one(userTwoFactor, {
+    fields: [users.id],
+    references: [userTwoFactor.userId],
+  }),
   recoveryCodes: many(twoFactorRecoveryCodes),
+  revokedJwtTokens: many(revokedJwtTokens),
 }));
 
 // Defines the relationship from an `account` back to its owning `user`.
@@ -321,10 +369,23 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 }));
 
 // Defines the relationship from a `session` back to its owning `user`.
-export const sessionsRelations = relations(sessions, ({ one }) => ({
+export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   user: one(users, {
     fields: [sessions.userId],
     references: [users.id],
+  }),
+  userSessions: many(userSessions),
+}));
+
+// Defines the relationships for detailed user sessions
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSessions.userId],
+    references: [users.id],
+  }),
+  session: one(sessions, {
+    fields: [userSessions.sessionToken],
+    references: [sessions.sessionToken],
   }),
 }));
 
@@ -397,17 +458,23 @@ export const caseAuditLogsRelations = relations(caseAuditLogs, ({ one }) => ({
 }));
 
 // Defines the relationships for two-factor authentication
-export const userTwoFactorRelations = relations(userTwoFactor, ({ one, many }) => ({
+export const userTwoFactorRelations = relations(userTwoFactor, ({ one }) => ({
   user: one(users, {
     fields: [userTwoFactor.userId],
     references: [users.id],
   }),
-  recoveryCodes: many(twoFactorRecoveryCodes),
 }));
 
 export const twoFactorRecoveryCodesRelations = relations(twoFactorRecoveryCodes, ({ one }) => ({
   user: one(users, {
     fields: [twoFactorRecoveryCodes.userId],
+    references: [users.id],
+  }),
+}));
+
+export const revokedJwtTokensRelations = relations(revokedJwtTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [revokedJwtTokens.userId],
     references: [users.id],
   }),
 }));
