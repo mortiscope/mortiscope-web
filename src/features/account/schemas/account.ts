@@ -193,6 +193,34 @@ export const DisableTwoFactorSchema = z.object({
 });
 
 /**
+ * Schema for validating profile image uploads.
+ * Validates file type, size, and format for profile pictures.
+ */
+export const ProfileImageSchema = z.object({
+  file: z
+    .instanceof(File, { message: "Please select a valid image file." })
+    .refine((file) => file.size <= 10 * 1024 * 1024, {
+      message: "Image must be smaller than 10MB.",
+    })
+    .refine(
+      (file) => {
+        const validTypes = [
+          "image/jpeg",
+          "image/jpg",
+          "image/png",
+          "image/webp",
+          "image/heic",
+          "image/heif",
+        ];
+        return validTypes.includes(file.type);
+      },
+      {
+        message: "Only JPEG, PNG, WebP, HEIC, and HEIF images are supported.",
+      }
+    ),
+});
+
+/**
  * Exports TypeScript types inferred from the Zod schemas.
  */
 export type AccountProfileFormValues = z.infer<typeof AccountProfileSchema>;
@@ -201,3 +229,4 @@ export type AccountDeletionModalFormValues = z.infer<typeof AccountDeletionModal
 export type SetupTwoFactorFormValues = z.infer<typeof SetupTwoFactorSchema>;
 export type VerifyTwoFactorFormValues = z.infer<typeof VerifyTwoFactorSchema>;
 export type DisableTwoFactorFormValues = z.infer<typeof DisableTwoFactorSchema>;
+export type ProfileImageFormValues = z.infer<typeof ProfileImageSchema>;
