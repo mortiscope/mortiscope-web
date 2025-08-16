@@ -11,7 +11,7 @@ import { BeatLoader } from "react-spinners";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { clearTwoFactorSession,verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
 import { cn } from "@/lib/utils";
 
 function TwoFactorProcess() {

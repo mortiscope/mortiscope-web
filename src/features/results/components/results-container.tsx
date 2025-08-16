@@ -56,7 +56,7 @@ const ResultsSkeleton = () => {
             // Grid View Skeleton
             <div
               key={`grid-skeleton-${i}`}
-              className="flex aspect-square flex-col items-center justify-center gap-2 rounded-2xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl"
+              className="flex aspect-square flex-col items-center justify-center gap-2 rounded-3xl border-2 border-slate-200 bg-slate-50 px-3 py-2 text-center sm:gap-4 sm:p-4"
             >
               <Skeleton className="h-12 w-12 rounded-full bg-slate-200 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-20 lg:w-20" />
               <div className="flex w-full flex-col items-center justify-end space-y-2">

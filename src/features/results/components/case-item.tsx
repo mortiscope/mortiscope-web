@@ -76,9 +76,9 @@ export const CaseItem = memo(
             "flex h-full w-full cursor-pointer items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-amber-300 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
             {
               // Applies styles for the 'list' view mode.
-              "justify-between rounded-xl p-2 lg:p-3": viewMode === "list",
+              "justify-between rounded-2xl p-2.5 lg:p-3": viewMode === "list",
               // Applies styles for the 'grid' view mode.
-              "aspect-square flex-col justify-center gap-2 rounded-2xl px-3 py-2 text-center sm:gap-4 sm:p-4 md:rounded-3xl":
+              "aspect-square flex-col justify-center gap-2 rounded-3xl px-3 py-2 text-center sm:gap-4 sm:p-4":
                 viewMode === "grid",
             }
           )}

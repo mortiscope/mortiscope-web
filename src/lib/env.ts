@@ -54,6 +54,11 @@ const envSchema = z.object({
 
   // FastAPI
   FASTAPI_SECRET_KEY: z.string().min(1, "FASTAPI_SECRET_KEY is required"),
+
+  // MaxMind GeoIP
+  MAXMIND_LICENSE_KEY: z
+    .string()
+    .min(1, "MAXMIND_LICENSE_KEY is required."),
 });
 
 /**
