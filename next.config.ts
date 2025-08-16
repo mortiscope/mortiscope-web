@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/uploads/**",
       },
+      {
+        protocol: "https",
+        hostname: "mortiscope.s3.ap-southeast-1.amazonaws.com",
+        port: "",
+        pathname: "/profile-images/**",
+      },
     ],
   },
   typedRoutes: true,

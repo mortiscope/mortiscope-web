@@ -112,10 +112,24 @@ const serverConfig = {
         async session({ token, session }) {
           if (token.sub && session.user) {
             session.user.id = token.sub;
-          }
-          // Preserve the image from the token
-          if (token.picture && session.user) {
-            session.user.image = token.picture;
+
+            // Always fetch fresh user data from database to get updated profile image
+            try {
+              const { getUserById } = await import("@/data/user");
+              const dbUser = await getUserById(token.sub);
+
+              if (dbUser) {
+                // Use database image if available, otherwise fall back to OAuth profile picture
+                session.user.image = dbUser.image || token.picture || null;
+                session.user.name = dbUser.name;
+                session.user.email = dbUser.email;
+              }
+            } catch (error) {
+              // Fallback to token picture if database fetch fails
+              if (token.picture && session.user) {
+                session.user.image = token.picture;
+              }
+            }
           }
           return session;
         },

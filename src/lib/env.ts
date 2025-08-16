@@ -99,8 +99,8 @@ function validateClientEnv() {
   }
 }
 
-// Validate environment variables at module load time
-export const env = validateEnv();
+// Only validate server environment variables on the server-side
+export const env = typeof window === "undefined" ? validateEnv() : ({} as Env);
 export const clientEnv = validateClientEnv();
 
 // Type exports for better TypeScript integration
