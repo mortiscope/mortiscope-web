@@ -1,7 +1,38 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { memo } from "react";
+
+/**
+ * Framer Motion variants for tab content transitions.
+ */
+const tabContentVariants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+    scale: 0.98,
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      damping: 25,
+      stiffness: 200,
+      duration: 0.3,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.98,
+    transition: {
+      duration: 0.2,
+    },
+  },
+};
 
 /**
  * A map of dynamically imported tab components.
@@ -59,7 +90,18 @@ export const AccountContent = memo(({ activeTab }: AccountContentProps) => {
 
   return (
     <div className="w-full">
-      <SelectedTabComponent />
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="show"
+          exit="exit"
+          className="w-full"
+        >
+          <SelectedTabComponent />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 });
