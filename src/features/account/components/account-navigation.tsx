@@ -5,10 +5,12 @@ import { useSession } from "next-auth/react";
 import { memo } from "react";
 import { GoShieldCheck } from "react-icons/go";
 import { HiOutlineUserCircle } from "react-icons/hi2";
-import { IoTrashBinOutline } from "react-icons/io5";
+import { IoImagesOutline, IoTrashBinOutline } from "react-icons/io5";
 import { PiDevices } from "react-icons/pi";
 
 import { UserAvatar } from "@/components/user-avatar";
+import { useProfileImage } from "@/features/account/hooks/use-profile-image";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /**
@@ -38,23 +40,54 @@ const TABS = [
 export const AccountNavigation = memo(({ activeTab, onTabChange }: AccountNavigationProps) => {
   const { data: session, status } = useSession();
   const user = session?.user;
+  const { fileInputRef, isUploading, selectFile, handleFileChange, optimisticImageUrl } =
+    useProfileImage();
 
   // Don't render anything until session is loaded and user is available
   if (status === "loading" || !user) {
     return null;
   }
 
+  // Use optimistic image URL if available, otherwise fall back to session image
+  const effectiveImageUrl = optimisticImageUrl || user.image;
+
   return (
     <div className="w-full lg:px-6 lg:pt-8 lg:pb-8">
       {/* User Profile Section */}
       <div className="hidden lg:mb-6 lg:flex lg:items-center lg:justify-center lg:py-0">
         <div className="flex max-w-full flex-col items-center text-center">
-          <UserAvatar
-            user={user}
-            size="lg"
-            className="mb-4 h-24 w-24 ring-2 ring-emerald-500 ring-offset-4 ring-offset-emerald-50"
+          <div
+            className="group relative mb-4 h-24 w-24 cursor-pointer overflow-hidden rounded-full ring-2 ring-emerald-500 ring-offset-4 ring-offset-emerald-50"
+            onClick={selectFile}
+          >
+            <UserAvatar
+              user={{
+                ...user,
+                image: effectiveImageUrl,
+              }}
+              size="lg"
+              className="!h-24 !w-24 transition-all duration-700 ease-out group-hover:scale-125 group-hover:blur-sm"
+            />
+            {/* Overlay with upload icon */}
+            <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/40 opacity-0 transition-all duration-700 ease-out group-hover:opacity-100">
+              {isUploading ? (
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <IoImagesOutline className="h-8 w-8 text-white" />
+              )}
+            </div>
+          </div>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={Object.keys(ACCEPTED_IMAGE_TYPES).join(",")}
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={isUploading}
           />
-          <h3 className="font-plus-jakarta-sans line-clamp-2 max-w-full px-2 text-xl font-medium text-emerald-700">
+          <h3 className="font-plus-jakarta-sans max-w-full truncate px-2 text-xl font-medium text-emerald-700">
             {user.name}
           </h3>
           {user.email && (

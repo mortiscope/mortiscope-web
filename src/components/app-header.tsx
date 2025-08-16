@@ -26,12 +26,35 @@ import { cn, formatPathToTitle } from "@/lib/utils";
  * Renders the main application header, including the page title, a sidebar
  * trigger for mobile, and a user profile dropdown menu.
  */
-export const AppHeader = () => {
+export const AppHeader = React.memo(() => {
   const { data: session, status, update } = useSession();
   const pathname = usePathname();
+  const [optimisticImageUrl, setOptimisticImageUrl] = useState<string | null>(null);
 
   // State to track sign-out transition
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Listen for optimistic image updates from localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedImage = localStorage.getItem("optimistic-profile-image");
+      setOptimisticImageUrl(storedImage);
+    };
+
+    // Check initial value
+    handleStorageChange();
+
+    // Listen for storage changes
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also listen for custom events for same-tab updates
+    window.addEventListener("optimistic-image-update", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("optimistic-image-update", handleStorageChange);
+    };
+  }, []);
 
   // Auto-refresh session when authentication state issues are detected
   useEffect(() => {
@@ -127,7 +150,6 @@ export const AppHeader = () => {
     try {
       await signOut({ callbackUrl: "/" });
     } catch (error) {
-      console.error("Sign out error:", error);
       setIsSigningOut(false);
     }
   };
@@ -135,6 +157,16 @@ export const AppHeader = () => {
   const user = session?.user;
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated" && !!user;
+
+  // Memoize user data with optimistic image URL to prevent unnecessary re-renders
+  const memoizedUser = React.useMemo(() => {
+    if (!user) return user;
+    const effectiveImage = optimisticImageUrl || user.image;
+    return {
+      ...user,
+      image: effectiveImage,
+    };
+  }, [user?.id, user?.name, user?.email, user?.image, optimisticImageUrl]);
 
   // Defines a consistent class name for dropdown menu items
   const menuItemClassName =
@@ -164,17 +196,19 @@ export const AppHeader = () => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="cursor-pointer transition duration-300 ease-in-out hover:opacity-90">
-                <UserAvatar user={user} />
+                <UserAvatar user={memoizedUser!} />
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
               {/* Displays user profile information. */}
               <DropdownMenuLabel className="font-inter font-normal">
                 <div className="flex items-center gap-2">
-                  <UserAvatar user={user} size="sm" />
+                  <UserAvatar user={memoizedUser!} size="sm" />
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm leading-none font-medium">{user?.name}</p>
-                    <p className="text-muted-foreground text-xs leading-none">{user?.email}</p>
+                    <p className="text-sm leading-none font-medium">{memoizedUser?.name}</p>
+                    <p className="text-muted-foreground text-xs leading-none">
+                      {memoizedUser?.email}
+                    </p>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -219,6 +253,6 @@ export const AppHeader = () => {
       </div>
     </header>
   );
-};
+});
 
 AppHeader.displayName = "AppHeader";

@@ -18,6 +18,7 @@ interface UserAvatarProps {
 export function UserAvatar({ user, className, size = "md" }: UserAvatarProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState<string | null>(null);
 
   const initials = user?.name
     ?.split(" ")
@@ -26,6 +27,15 @@ export function UserAvatar({ user, className, size = "md" }: UserAvatarProps) {
     .toUpperCase();
 
   const avatarSrc = user?.image ?? getDeterministicAvatar(user?.id);
+
+  // Reset loading state when image source changes
+  React.useEffect(() => {
+    if (currentSrc !== avatarSrc) {
+      setImageLoaded(false);
+      setImageError(false);
+      setCurrentSrc(avatarSrc);
+    }
+  }, [avatarSrc, currentSrc]);
 
   const sizeClasses = {
     sm: "h-6 w-6",
@@ -36,16 +46,17 @@ export function UserAvatar({ user, className, size = "md" }: UserAvatarProps) {
   return (
     <Avatar className={`${sizeClasses[size]} ${className || ""}`}>
       <AvatarImage
-        src={imageError ? undefined : avatarSrc}
+        key={currentSrc || avatarSrc}
+        src={imageError ? getDeterministicAvatar(user?.id) : currentSrc || avatarSrc}
         alt={user?.name ?? "User Avatar"}
         onLoad={() => setImageLoaded(true)}
         onError={() => {
           setImageError(true);
           setImageLoaded(true);
         }}
-        className={`transition-opacity duration-200 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+        className={`transition-opacity duration-300 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
       />
-      <AvatarFallback className={imageLoaded && !imageError ? "opacity-0" : "opacity-100"}>
+      <AvatarFallback className={imageLoaded && !imageError ? "opacity-0" : "opacity-10"}>
         {initials || "U"}
       </AvatarFallback>
     </Avatar>
