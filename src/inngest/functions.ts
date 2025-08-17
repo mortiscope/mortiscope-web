@@ -6,3 +6,10 @@ export {
 } from "@/inngest/account";
 export { analysisEvent, recalculateCase } from "@/inngest/analysis";
 export { exportCaseData, exportImageData } from "@/inngest/export";
+export {
+  checkSessionInactivity,
+  deleteInactiveSession,
+  handleSessionTracking,
+  scheduleSessionDeletion,
+  triggerSessionCleanup,
+} from "@/inngest/session";

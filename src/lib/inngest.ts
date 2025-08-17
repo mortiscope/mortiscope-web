@@ -46,6 +46,57 @@ export type Events = {
   };
 
   /**
+   * Fired to check if a session should be scheduled for deletion after 1 day of inactivity.
+   */
+  "account/session.check-inactivity": {
+    data: {
+      sessionToken: string;
+      userId: string;
+      lastActiveAt: string;
+    };
+  };
+
+  /**
+   * Fired to schedule a session for deletion after being inactive for 1 day.
+   */
+  "account/session.schedule-deletion": {
+    data: {
+      sessionToken: string;
+      userId: string;
+      inactiveSince: string;
+    };
+  };
+
+  /**
+   * Fired to execute session deletion after full 3-day inactivity period.
+   */
+  "account/session.delete": {
+    data: {
+      sessionToken: string;
+      userId: string;
+    };
+  };
+
+  /**
+   * Fired to track a session from auth callbacks.
+   */
+  "account/session.track": {
+    data: {
+      userId: string;
+      sessionToken: string;
+      userAgent: string;
+      ipAddress: string;
+    };
+  };
+
+  /**
+   * Fired to manually trigger session cleanup for existing sessions.
+   */
+  "account/session.trigger-cleanup": {
+    data: Record<string, never>;
+  };
+
+  /**
    * Fired when a user successfully creates a new case.
    */
   "analysis/request.sent": {
