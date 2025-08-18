@@ -167,6 +167,20 @@ export const AccountDeletionModalSchema = z.object({
 });
 
 /**
+ * Schema for the all sessions modal.
+ * Validates password and sign-out option selection.
+ */
+export const AccountAllSessionsModalSchema = z.object({
+  password: z
+    .string()
+    .min(1, { message: "Password is required." })
+    .min(8, { message: "Password must be at least 8 characters." }),
+  signOutOption: z.enum(["exclude_current", "include_current"], {
+    message: "Please select a sign-out option.",
+  }),
+});
+
+/**
  * Schema for setting up two-factor authentication.
  */
 export const SetupTwoFactorSchema = z.object({});
@@ -226,6 +240,7 @@ export const ProfileImageSchema = z.object({
 export type AccountProfileFormValues = z.infer<typeof AccountProfileSchema>;
 export type AccountSecurityFormValues = z.infer<typeof AccountSecuritySchema>;
 export type AccountDeletionModalFormValues = z.infer<typeof AccountDeletionModalSchema>;
+export type AccountAllSessionsModalFormValues = z.infer<typeof AccountAllSessionsModalSchema>;
 export type SetupTwoFactorFormValues = z.infer<typeof SetupTwoFactorSchema>;
 export type VerifyTwoFactorFormValues = z.infer<typeof VerifyTwoFactorSchema>;
 export type DisableTwoFactorFormValues = z.infer<typeof DisableTwoFactorSchema>;
