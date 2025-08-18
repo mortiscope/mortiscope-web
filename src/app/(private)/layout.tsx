@@ -15,6 +15,7 @@ const AppBreadcrumb = dynamic(
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useSessionMonitor } from "@/features/account/hooks/use-session-monitor";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useLayoutStore } from "@/stores/layout-store";
 
@@ -30,6 +31,9 @@ interface Props {
  */
 const PrivateLayout = ({ children }: Props) => {
   const pathname = usePathname();
+
+  // Monitor session status and redirect if revoked
+  useSessionMonitor();
 
   // Get the submission status and the action to clear it from the store.
   const submissionStatus = useAnalyzeStore((state) => state.submissionStatus);

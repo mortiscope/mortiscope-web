@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
+import { updateSessionActivity } from "@/features/account/actions/track-session";
 import { hasValidAuthSession } from "@/lib/auth";
 import {
   apiAuthPrefix,
@@ -9,9 +9,6 @@ import {
   publicApiRoutes,
   publicRoutes,
 } from "@/routes";
-
-// Get AUTH_SECRET directly from process.env to avoid importing heavy env validation
-const AUTH_SECRET = process.env.AUTH_SECRET;
 
 /**
  * The main middleware function, wrapped in the `auth` helper from NextAuth.js.
@@ -22,13 +19,52 @@ const AUTH_SECRET = process.env.AUTH_SECRET;
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
 
-  // Get JWT token with proper validation
-  const token = await getToken({
-    req,
-    secret: AUTH_SECRET,
-  });
+  // Check for JWT token using NextAuth's getToken function
+  let isLoggedIn = false;
 
-  const isLoggedIn = !!token;
+  try {
+    // Import getToken function for JWT sessions
+    const { getToken } = await import("next-auth/jwt");
+    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+
+    if (token) {
+      // For JWT sessions, check if the session still exists in database
+      const sessionToken = token.sessionId as string;
+
+      if (sessionToken) {
+        const { db } = await import("@/db");
+        const { sessions } = await import("@/db/schema");
+        const { eq } = await import("drizzle-orm");
+
+        try {
+          const sessionExists = await db
+            .select()
+            .from(sessions)
+            .where(eq(sessions.sessionToken, sessionToken))
+            .limit(1);
+
+          isLoggedIn = sessionExists.length > 0;
+
+          if (!isLoggedIn) {
+          }
+        } catch {
+          // If database check fails, fall back to basic JWT validation
+          isLoggedIn = !!token;
+        }
+      } else {
+        // No session token in JWT, use basic validation
+
+        isLoggedIn = !!token;
+      }
+    } else {
+      isLoggedIn = false;
+    }
+  } catch {
+    // Fallback to cookie check if token function fails
+    const sessionCookie =
+      req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
+    isLoggedIn = !!sessionCookie;
+  }
 
   // Categorize the current route to apply specific rules
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
@@ -69,6 +105,24 @@ export default async function middleware(req: NextRequest) {
   // Protect all non-public routes
   if (!isLoggedIn && !isPublicRoute) {
     return NextResponse.redirect(new URL("/signin", nextUrl));
+  }
+
+  // Update session activity for authenticated users
+  if (isLoggedIn) {
+    try {
+      // Get session cookie for activity update
+      const sessionCookie =
+        req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
+
+      if (sessionCookie?.value) {
+        // Update session activity in background
+        updateSessionActivity(sessionCookie.value).catch(() => {
+          // Session activity update failed, but don't block the request
+        });
+      }
+    } catch {
+      // Session activity update failed, but don't block the request
+    }
   }
 
   // If none of the above conditions are met, allow the request to proceed
