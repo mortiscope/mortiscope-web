@@ -5,24 +5,21 @@ import { motion, type Variants } from "framer-motion";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { PiEye, PiEyeSlash } from "react-icons/pi";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { revokeAllSessions } from "@/features/account/actions/revoke-all-sessions";
 import { verifyCurrentPassword } from "@/features/account/actions/verify-current-password";
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";
+import { AccountPasswordInput } from "@/features/account/components/account-password-input";
 import {
   type AccountAllSessionsModalFormValues,
   AccountAllSessionsModalSchema,
 } from "@/features/account/schemas/account";
-import { uniformInputStyles } from "@/features/cases/constants/styles";
 import { cn } from "@/lib/utils";
 
 /**
@@ -87,8 +84,6 @@ export const AccountAllSessionsModal = ({
 }: AccountAllSessionsModalProps) => {
   /** A local state to track the pending state of the entire sign-out process. */
   const [isSigningOut, setIsSigningOut] = useState(false);
-  /** A local state to manage the visibility of the password input. */
-  const [showPassword, setShowPassword] = useState(false);
 
   // Initializes `react-hook-form` with Zod for schema validation.
   const form = useForm<AccountAllSessionsModalFormValues>({
@@ -107,7 +102,6 @@ export const AccountAllSessionsModal = ({
     if (!open) {
       form.reset();
       setIsSigningOut(false);
-      setShowPassword(false);
     }
     onOpenChange(open);
   };
@@ -269,36 +263,12 @@ export const AccountAllSessionsModal = ({
                         Enter your password to confirm:
                       </Label>
                       <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? "text" : "password"}
-                            placeholder="Enter your password"
-                            disabled={isSigningOut}
-                            className={cn(
-                              uniformInputStyles,
-                              "w-full pr-10 focus-visible:!border-rose-600 data-[state=open]:!border-rose-600",
-                              form.formState.errors.password &&
-                                "border-red-500 focus-visible:!border-red-500"
-                            )}
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={isSigningOut}
-                            className="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700"
-                            onClick={() => setShowPassword(!showPassword)}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                            tabIndex={-1}
-                          >
-                            {showPassword ? (
-                              <PiEyeSlash size={18} className="h-5 w-5" />
-                            ) : (
-                              <PiEye size={18} className="h-5 w-5" />
-                            )}
-                          </Button>
-                        </div>
+                        <AccountPasswordInput
+                          {...field}
+                          disabled={isSigningOut}
+                          focusColor="rose"
+                          hasError={!!form.formState.errors.password}
+                        />
                       </FormControl>
                       <FormMessage className="font-inter text-xs" />
                     </FormItem>

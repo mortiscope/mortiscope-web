@@ -106,6 +106,8 @@ export const AccountSecurity = () => {
   const [isEmailLocked, setIsEmailLocked] = useState(true);
   const [isPasswordLocked, setIsPasswordLocked] = useState(true);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
   const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
   const [isTwoFactorModalOpen, setIsTwoFactorModalOpen] = useState(false);
@@ -593,22 +595,40 @@ export const AccountSecurity = () => {
                           })}
                         >
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="Enter new password"
-                              className={cn(
-                                uniformInputStyles,
-                                "w-full shadow-none",
-                                form.formState.errors.newPassword &&
-                                  "border-red-500 focus-visible:border-red-500",
-                                {
-                                  "border-slate-200 disabled:opacity-100":
-                                    !isPasswordVerified && !form.formState.errors.newPassword,
-                                }
-                              )}
-                              disabled={!isPasswordVerified}
-                              {...field}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={showNewPassword ? "text" : "password"}
+                                placeholder="Enter new password"
+                                className={cn(
+                                  uniformInputStyles,
+                                  "w-full pr-10 shadow-none md:pr-12",
+                                  form.formState.errors.newPassword &&
+                                    "border-red-500 focus-visible:border-red-500",
+                                  {
+                                    "border-slate-200 disabled:opacity-100":
+                                      !isPasswordVerified && !form.formState.errors.newPassword,
+                                  }
+                                )}
+                                disabled={!isPasswordVerified}
+                                {...field}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 shadow-none hover:bg-transparent hover:text-slate-700 md:right-2"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                aria-label={showNewPassword ? "Hide password" : "Show password"}
+                                tabIndex={-1}
+                                disabled={!isPasswordVerified}
+                              >
+                                {showNewPassword ? (
+                                  <PiEye size={18} className="md:h-5 md:w-5" />
+                                ) : (
+                                  <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                                )}
+                              </Button>
+                            </div>
                           </FormControl>
                         </div>
                         {/* Individual validation message for small screens */}
@@ -630,22 +650,43 @@ export const AccountSecurity = () => {
                             })}
                           >
                             <FormControl>
-                              <Input
-                                type="password"
-                                placeholder="Repeat new password"
-                                className={cn(
-                                  uniformInputStyles,
-                                  "w-full shadow-none",
-                                  form.formState.errors.repeatPassword &&
-                                    "border-red-500 focus-visible:border-red-500",
-                                  {
-                                    "border-slate-200 disabled:opacity-100":
-                                      !isPasswordVerified && !form.formState.errors.repeatPassword,
+                              <div className="relative">
+                                <Input
+                                  type={showConfirmPassword ? "text" : "password"}
+                                  placeholder="Repeat new password"
+                                  className={cn(
+                                    uniformInputStyles,
+                                    "w-full pr-10 shadow-none md:pr-12",
+                                    form.formState.errors.repeatPassword &&
+                                      "border-red-500 focus-visible:border-red-500",
+                                    {
+                                      "border-slate-200 disabled:opacity-100":
+                                        !isPasswordVerified &&
+                                        !form.formState.errors.repeatPassword,
+                                    }
+                                  )}
+                                  disabled={!isPasswordVerified}
+                                  {...field}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 shadow-none hover:bg-transparent hover:text-slate-700 md:right-2"
+                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                  aria-label={
+                                    showConfirmPassword ? "Hide password" : "Show password"
                                   }
-                                )}
-                                disabled={!isPasswordVerified}
-                                {...field}
-                              />
+                                  tabIndex={-1}
+                                  disabled={!isPasswordVerified}
+                                >
+                                  {showConfirmPassword ? (
+                                    <PiEye size={18} className="md:h-5 md:w-5" />
+                                  ) : (
+                                    <PiEyeSlash size={18} className="md:h-5 md:w-5" />
+                                  )}
+                                </Button>
+                              </div>
                             </FormControl>
                           </div>
                           <div className={cn({ "cursor-not-allowed": !isNewPasswordSaveEnabled })}>

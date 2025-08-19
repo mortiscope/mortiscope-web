@@ -150,14 +150,18 @@ export const AccountDeletionModal = ({
                 account and all associated data. You will have a{" "}
                 <strong className="font-medium text-slate-800">30-day grace period</strong> to
                 recover your account if you change your mind.
-                <br />
-                <br />
-                Enter the <strong className="font-medium text-slate-800">exact text</strong> in the
-                field below to confirm.
               </>
             }
             variant="rose"
           />
+
+          {/* Instruction text */}
+          <motion.div variants={itemVariants} className="px-6">
+            <p className="font-inter text-left text-sm text-slate-600">
+              Enter the <strong className="font-medium text-slate-800">exact text</strong> in the
+              field below to confirm.
+            </p>
+          </motion.div>
 
           {/* Input Field */}
           <motion.div variants={itemVariants} className="px-6 py-0">

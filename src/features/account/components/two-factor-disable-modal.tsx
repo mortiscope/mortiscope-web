@@ -2,24 +2,20 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { PiEye, PiEyeSlash, PiWarning } from "react-icons/pi";
+import { PiWarning } from "react-icons/pi";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";
+import { AccountPasswordInput } from "@/features/account/components/account-password-input";
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import {
   type DisableTwoFactorFormValues,
   DisableTwoFactorSchema,
 } from "@/features/account/schemas/account";
-import { uniformInputStyles } from "@/features/cases/constants/styles";
-import { cn } from "@/lib/utils";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -67,8 +63,6 @@ export const TwoFactorDisableModal = ({
   onOpenChange,
   onSuccess,
 }: TwoFactorDisableModalProps) => {
-  /** Local state to manage the visibility of the password input. */
-  const [showPassword, setShowPassword] = useState(false);
   /** A custom hook that provides the server action mutation for disabling 2FA. */
   const { disableTwoFactor } = useAccountMutation();
 
@@ -83,11 +77,6 @@ export const TwoFactorDisableModal = ({
 
   /** A derived boolean indicating if the form is valid according to the Zod schema. */
   const isFormValid = form.formState.isValid && !form.formState.errors.currentPassword;
-
-  /** Toggles the visibility of the password input. */
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
 
   /**
    * The submission handler passed to `react-hook-form`. It triggers the server mutation
@@ -136,7 +125,6 @@ export const TwoFactorDisableModal = ({
    */
   const handleClose = () => {
     form.reset();
-    setShowPassword(false);
     onOpenChange(false);
   };
 
@@ -184,37 +172,12 @@ export const TwoFactorDisableModal = ({
                         Current Password
                       </label>
                       <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            type={showPassword ? "text" : "password"}
-                            disabled={disableTwoFactor.isPending}
-                            placeholder="Enter your password"
-                            className={cn(
-                              uniformInputStyles,
-                              "pr-10 focus-visible:!border-rose-600",
-                              form.formState.errors.currentPassword &&
-                                "border-red-500 focus-visible:!border-red-500"
-                            )}
-                            autoComplete="current-password"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={togglePasswordVisibility}
-                            disabled={disableTwoFactor.isPending}
-                            className="absolute top-1/2 right-2 h-7 w-7 -translate-y-1/2 cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700"
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                            tabIndex={-1}
-                          >
-                            {showPassword ? (
-                              <PiEye size={18} className="h-5 w-5" />
-                            ) : (
-                              <PiEyeSlash size={18} className="h-5 w-5" />
-                            )}
-                          </Button>
-                        </div>
+                        <AccountPasswordInput
+                          {...field}
+                          disabled={disableTwoFactor.isPending}
+                          focusColor="rose"
+                          hasError={!!form.formState.errors.currentPassword}
+                        />
                       </FormControl>
                       <FormMessage className="font-inter text-xs" />
                     </FormItem>
