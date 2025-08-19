@@ -11,9 +11,9 @@ import { sectionTitle, uniformInputStyles } from "@/features/cases/constants/sty
 import { cn } from "@/lib/utils";
 
 /**
- * Defines the props for the profile field component.
+ * Defines the props for the profile input field component.
  */
-type ProfileFieldProps = {
+type ProfileInputFieldProps = {
   /** The label text displayed above the input field. */
   label: string;
   /** The placeholder text for the input field. */
@@ -42,7 +42,7 @@ type ProfileFieldProps = {
  * A memoized, reusable component that renders an input field for a user profile. It encapsulates
  * the common interface pattern of having a field that can be unlocked for editing and then saved.
  */
-export const ProfileField = memo(
+export const ProfileInputField = memo(
   ({
     label,
     placeholder,
@@ -55,7 +55,7 @@ export const ProfileField = memo(
     isPending,
     isDisabled = false,
     showLockControls = true,
-  }: ProfileFieldProps) => (
+  }: ProfileInputFieldProps) => (
     <div className="w-full">
       <Label className={`${sectionTitle} font-inter`}>{label}</Label>
       <div className="mt-2 flex items-start gap-2">
@@ -145,4 +145,4 @@ export const ProfileField = memo(
   )
 );
 
-ProfileField.displayName = "ProfileField";
+ProfileInputField.displayName = "ProfileInputField";

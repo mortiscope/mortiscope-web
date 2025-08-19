@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 
 import { Form } from "@/components/ui/form";
 import { AccountTabHeader } from "@/features/account/components/account-tab-header";
-import { ProfileField } from "@/features/account/components/profile-field";
+import { ProfileInputField } from "@/features/account/components/profile-input-field";
 import { useProfileForm } from "@/features/account/hooks/use-profile-form";
 import { selectTriggerStyles, uniformInputStyles } from "@/features/cases/constants/styles";
 
@@ -108,7 +108,7 @@ export const AccountProfile = () => {
           <form className="mt-8 space-y-6">
             {/* Name Field */}
             {!isSocialProviderLoading && (
-              <ProfileField
+              <ProfileInputField
                 label="Name"
                 placeholder="Enter Full Name"
                 value={form.watch("name")}
@@ -124,7 +124,7 @@ export const AccountProfile = () => {
             )}
 
             {/* Professional Title Field */}
-            <ProfileField
+            <ProfileInputField
               label="Professional Title or Designation"
               placeholder="Enter Professional Title or Designation"
               value={form.watch("title")}
@@ -137,7 +137,7 @@ export const AccountProfile = () => {
             />
 
             {/* Institution Field */}
-            <ProfileField
+            <ProfileInputField
               label="Institution or Organization"
               placeholder="Enter Institution or Organization"
               value={form.watch("institution")}
