@@ -9,20 +9,15 @@ import { PiEye, PiEyeSlash } from "react-icons/pi";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { revokeAllSessions } from "@/features/account/actions/revoke-all-sessions";
 import { verifyCurrentPassword } from "@/features/account/actions/verify-current-password";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import {
   type AccountAllSessionsModalFormValues,
   AccountAllSessionsModalSchema,
@@ -201,16 +196,11 @@ export const AccountAllSessionsModal = ({
           animate="show"
         >
           {/* Header Section */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-rose-600 md:text-2xl">
-                Sign Out All Devices
-              </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-600">
-                Revoke access to your account from all the available devices.
-              </DialogDescription>
-            </DialogHeader>
-          </motion.div>
+          <AccountModalHeader
+            title="Sign Out All Devices"
+            description="Revoke access to your account from all the available devices."
+            variant="rose"
+          />
 
           {/* Form Content Section */}
           <motion.div variants={itemVariants} className="px-6 py-0">
@@ -319,34 +309,15 @@ export const AccountAllSessionsModal = ({
           </motion.div>
 
           {/* Footer/Actions Section */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4 pb-6">
-            <DialogFooter className="flex w-full flex-row gap-3">
-              <div className="flex-1">
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100"
-                  disabled={isSigningOut}
-                >
-                  Cancel
-                </Button>
-              </div>
-              <div className={cn("flex-1", { "cursor-not-allowed": !isFormValid })}>
-                <Button
-                  onClick={form.handleSubmit(handleSubmit)}
-                  disabled={!isFormValid}
-                  className={cn(
-                    "font-inter h-10 w-full overflow-hidden uppercase transition-all duration-300 ease-in-out",
-                    isFormValid
-                      ? "cursor-pointer bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20"
-                      : "cursor-not-allowed bg-rose-400 text-rose-100 hover:bg-rose-400"
-                  )}
-                >
-                  {isSigningOut ? "Signing out..." : "Sign Out"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </motion.div>
+          <AccountModalFooter
+            isPending={isSigningOut}
+            onCancel={() => handleOpenChange(false)}
+            onAction={form.handleSubmit(handleSubmit)}
+            actionButtonText="Sign Out"
+            pendingButtonText="Signing out..."
+            disabled={!isFormValid}
+            variant="rose"
+          />
         </motion.div>
       </DialogContent>
     </Dialog>

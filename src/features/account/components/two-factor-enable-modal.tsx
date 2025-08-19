@@ -2,19 +2,13 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ImSpinner2 } from "react-icons/im";
 import QRCode from "react-qr-code";
 import { BeatLoader } from "react-spinners";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { cn } from "@/lib/utils";
 
@@ -131,17 +125,11 @@ export const TwoFactorEnableModal = ({
           animate="show"
         >
           {/* Header */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
-                Enable Two-Factor
-              </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-600">
-                Scan the QR code with an authenticator app and enter the verification code to
-                activate two-factor authentication.
-              </DialogDescription>
-            </DialogHeader>
-          </motion.div>
+          <AccountModalHeader
+            title="Enable Two-Factor"
+            description="Scan the QR code with an authenticator app and enter the verification code to activate two-factor authentication."
+            variant="emerald"
+          />
 
           {/* QR Code */}
           <motion.div variants={itemVariants} className="flex justify-center px-6 py-4">
@@ -189,36 +177,15 @@ export const TwoFactorEnableModal = ({
           </motion.div>
 
           {/* Footer */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4 pb-6">
-            <div className="flex w-full flex-row gap-3">
-              <div className={cn("flex-1", verifyTwoFactor.isPending && "cursor-not-allowed")}>
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={verifyTwoFactor.isPending}
-                  className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </Button>
-              </div>
-              <div className={cn("flex-1", !isFinishEnabled && "cursor-not-allowed")}>
-                <Button
-                  onClick={handleVerifyOtp}
-                  disabled={!isFinishEnabled}
-                  className="font-inter flex h-10 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden bg-emerald-600 text-white uppercase transition-all duration-300 ease-in-out hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20 disabled:cursor-not-allowed"
-                >
-                  {verifyTwoFactor.isPending ? (
-                    <>
-                      <ImSpinner2 className="h-5 w-5 animate-spin" />
-                      <span>Verifying...</span>
-                    </>
-                  ) : (
-                    <span>Verify</span>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+          <AccountModalFooter
+            isPending={verifyTwoFactor.isPending}
+            onCancel={handleClose}
+            onAction={handleVerifyOtp}
+            actionButtonText="Verify"
+            pendingButtonText="Verifying..."
+            disabled={!isFinishEnabled}
+            variant="emerald"
+          />
         </motion.div>
       </DialogContent>
     </Dialog>

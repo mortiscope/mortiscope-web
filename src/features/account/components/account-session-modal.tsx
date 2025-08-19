@@ -7,18 +7,11 @@ import { IoCalendarClearOutline, IoLocationOutline } from "react-icons/io5";
 import { PiDeviceTabletLight, PiMapPinSimpleAreaLight } from "react-icons/pi";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { UserSessionInfo } from "@/features/account/actions/get-user-sessions";
 import { revokeSession } from "@/features/account/actions/revoke-session";
-import { cn } from "@/lib/utils";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -165,16 +158,11 @@ export const AccountSessionModal = ({
           animate="show"
         >
           {/* Header Section */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
-                Session Details
-              </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-600">
-                View detailed information about this session and manage access.
-              </DialogDescription>
-            </DialogHeader>
-          </motion.div>
+          <AccountModalHeader
+            title="Session Details"
+            description="View detailed information about this session and manage access."
+            variant="emerald"
+          />
 
           {/* Session Information List */}
           <motion.div
@@ -259,38 +247,16 @@ export const AccountSessionModal = ({
           </motion.div>
 
           {/* Footer/Actions Section */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-2 pb-6">
-            <DialogFooter className="flex w-full flex-row gap-3">
-              <div className="flex-1">
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100"
-                  disabled={isSigningOut}
-                >
-                  Close
-                </Button>
-              </div>
-              <div
-                className={cn("flex-1", (isCurrentSession || isSigningOut) && "cursor-not-allowed")}
-              >
-                <Button
-                  onClick={handleSignOut}
-                  disabled={isSigningOut || isCurrentSession}
-                  className={cn(
-                    "font-inter h-10 w-full overflow-hidden uppercase transition-all duration-300 ease-in-out",
-                    isCurrentSession
-                      ? "cursor-not-allowed bg-emerald-400 text-white opacity-50"
-                      : isSigningOut
-                        ? "cursor-not-allowed bg-emerald-600 text-white opacity-75"
-                        : "cursor-pointer bg-emerald-600 text-white hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20"
-                  )}
-                >
-                  {isSigningOut ? "Signing out..." : "Sign Out"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </motion.div>
+          <AccountModalFooter
+            isPending={isSigningOut}
+            onCancel={() => handleOpenChange(false)}
+            onAction={handleSignOut}
+            actionButtonText="Sign Out"
+            cancelButtonText="Close"
+            pendingButtonText="Signing out..."
+            disabled={isCurrentSession}
+            variant="emerald"
+          />
         </motion.div>
       </DialogContent>
     </Dialog>

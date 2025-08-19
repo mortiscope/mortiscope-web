@@ -4,20 +4,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { ImSpinner2 } from "react-icons/im";
 import { PiEye, PiEyeSlash, PiWarning } from "react-icons/pi";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import {
   type DisableTwoFactorFormValues,
@@ -160,17 +155,11 @@ export const TwoFactorDisableModal = ({
               animate="show"
             >
               {/* Header Section */}
-              <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-                <DialogHeader>
-                  <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-rose-600 md:text-2xl">
-                    Disable Two-Factor
-                  </DialogTitle>
-                  <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-600">
-                    Enter your password to confirm disabling two-factor authentication for your
-                    account.
-                  </DialogDescription>
-                </DialogHeader>
-              </motion.div>
+              <AccountModalHeader
+                title="Disable Two-Factor"
+                description="Enter your password to confirm disabling two-factor authentication for your account."
+                variant="rose"
+              />
 
               {/* Warning Message Section */}
               <motion.div variants={itemVariants} className="px-6">
@@ -234,42 +223,15 @@ export const TwoFactorDisableModal = ({
               </motion.div>
 
               {/* Footer/Actions Section */}
-              <motion.div variants={itemVariants} className="shrink-0 px-6 pt-2 pb-6">
-                <div className="flex w-full flex-row gap-3">
-                  <div className={cn("flex-1", disableTwoFactor.isPending && "cursor-not-allowed")}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleClose}
-                      disabled={disableTwoFactor.isPending}
-                      className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100 disabled:cursor-not-allowed"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                  <div className={cn("flex-1", !isDisableEnabled && "cursor-not-allowed")}>
-                    <Button
-                      type="submit"
-                      disabled={!isDisableEnabled}
-                      className={cn(
-                        "font-inter flex h-10 w-full items-center justify-center gap-2 overflow-hidden uppercase transition-all duration-300 ease-in-out",
-                        isDisableEnabled
-                          ? "cursor-pointer bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20"
-                          : "cursor-not-allowed bg-rose-400 text-rose-100 hover:bg-rose-400"
-                      )}
-                    >
-                      {disableTwoFactor.isPending ? (
-                        <>
-                          <ImSpinner2 className="h-5 w-5 animate-spin" />
-                          <span>Disabling...</span>
-                        </>
-                      ) : (
-                        <span>Disable</span>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
+              <AccountModalFooter
+                isPending={disableTwoFactor.isPending}
+                onCancel={handleClose}
+                onAction={form.handleSubmit(onSubmit)}
+                actionButtonText="Disable"
+                pendingButtonText="Disabling..."
+                disabled={!isDisableEnabled}
+                variant="rose"
+              />
             </motion.div>
           </form>
         </Form>

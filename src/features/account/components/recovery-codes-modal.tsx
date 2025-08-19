@@ -9,14 +9,10 @@ import { LuDownload } from "react-icons/lu";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { cn } from "@/lib/utils";
 
@@ -280,19 +276,16 @@ export const RecoveryCodesModal = ({
           animate="show"
         >
           {/* Header Section */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
-                Recovery Codes
-              </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-center text-sm text-slate-600">
-                {/* Dynamically changes the description based on whether codes are visible. */}
-                {initialCodes || displayCodes.some((code) => code && !code.includes("••••"))
-                  ? "Save these recovery codes in a safe place. Each code can only be used once to access your account if you lose your authenticator device."
-                  : "For security, recovery codes can only be viewed when first generated or regenerated."}
-              </DialogDescription>
-            </DialogHeader>
-          </motion.div>
+          <AccountModalHeader
+            title="Recovery Codes"
+            description={
+              /* Dynamically changes the description based on whether codes are visible. */
+              initialCodes || displayCodes.some((code) => code && !code.includes("••••"))
+                ? "Save these recovery codes in a safe place. Each code can only be used once to access your account if you lose your authenticator device."
+                : "For security, recovery codes can only be viewed when first generated or regenerated."
+            }
+            variant="emerald"
+          />
 
           {/* Main Content: Codes Grid and Actions */}
           <motion.div
@@ -415,27 +408,16 @@ export const RecoveryCodesModal = ({
           </motion.div>
 
           {/* Footer Section with main actions. */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-2 pb-6">
-            <div className="flex w-full flex-row gap-3">
-              <div className="flex-1">
-                <Button
-                  variant="outline"
-                  onClick={handleClose}
-                  className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100"
-                >
-                  Cancel
-                </Button>
-              </div>
-              <div className="flex-1">
-                <Button
-                  onClick={handleClose}
-                  className="font-inter flex h-10 w-full cursor-pointer items-center justify-center gap-2 overflow-hidden bg-emerald-600 text-white uppercase transition-all duration-300 ease-in-out hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20"
-                >
-                  Finish
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+          <AccountModalFooter
+            isPending={false}
+            onCancel={handleClose}
+            onAction={handleClose}
+            actionButtonText="Finish"
+            cancelButtonText="Cancel"
+            disabled={false}
+            variant="emerald"
+            showSpinner={false}
+          />
         </motion.div>
       </DialogContent>
     </Dialog>

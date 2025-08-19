@@ -7,18 +7,12 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { requestAccountDeletion } from "@/features/account/actions/request-account-deletion";
+import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
+import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import {
   type AccountDeletionModalFormValues,
   AccountDeletionModalSchema,
@@ -147,24 +141,23 @@ export const AccountDeletionModal = ({
           animate="show"
         >
           {/* Header */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-rose-600 md:text-2xl">
-                Delete Account
-              </DialogTitle>
-              <DialogDescription className="font-inter pt-2 text-sm text-slate-600">
+          <AccountModalHeader
+            title="Delete Account"
+            description={
+              <>
                 This action will{" "}
                 <strong className="font-medium text-slate-800">permanently delete</strong> your
                 account and all associated data. You will have a{" "}
                 <strong className="font-medium text-slate-800">30-day grace period</strong> to
                 recover your account if you change your mind.
-              </DialogDescription>
-              <p className="font-inter pt-3 text-sm text-slate-600">
+                <br />
+                <br />
                 Enter the <strong className="font-medium text-slate-800">exact text</strong> in the
                 field below to confirm.
-              </p>
-            </DialogHeader>
-          </motion.div>
+              </>
+            }
+            variant="rose"
+          />
 
           {/* Input Field */}
           <motion.div variants={itemVariants} className="px-6 py-0">
@@ -194,34 +187,15 @@ export const AccountDeletionModal = ({
           </motion.div>
 
           {/* Footer */}
-          <motion.div variants={itemVariants} className="shrink-0 px-6 pt-4 pb-6">
-            <DialogFooter className="flex w-full flex-row gap-3">
-              <div className="flex-1">
-                <Button
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  className="font-inter h-10 w-full cursor-pointer overflow-hidden uppercase transition-all duration-300 ease-in-out hover:bg-slate-100"
-                  disabled={isDeletionPending}
-                >
-                  Cancel
-                </Button>
-              </div>
-              <div className={cn("flex-1", { "cursor-not-allowed": !isDeleteEnabled })}>
-                <Button
-                  onClick={handleDelete}
-                  disabled={!isDeleteEnabled}
-                  className={cn(
-                    "font-inter h-10 w-full overflow-hidden uppercase transition-all duration-300 ease-in-out",
-                    isDeleteEnabled
-                      ? "cursor-pointer bg-rose-600 text-white hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20"
-                      : "cursor-not-allowed bg-rose-400 text-rose-100 hover:bg-rose-400"
-                  )}
-                >
-                  {isDeletionPending ? "Deleting..." : "Delete Account"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </motion.div>
+          <AccountModalFooter
+            isPending={isDeletionPending}
+            onCancel={() => handleOpenChange(false)}
+            onAction={handleDelete}
+            actionButtonText="Delete Account"
+            pendingButtonText="Deleting..."
+            disabled={!isDeleteEnabled}
+            variant="rose"
+          />
         </motion.div>
       </DialogContent>
     </Dialog>
