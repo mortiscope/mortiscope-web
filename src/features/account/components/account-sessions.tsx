@@ -11,6 +11,7 @@ import { PiDeviceTabletLight } from "react-icons/pi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { UserSessionInfo } from "@/features/account/actions/get-current-session";
+import { AccountTabHeader } from "@/features/account/components/account-tab-header";
 import { useSessionToken } from "@/features/account/hooks/use-session";
 import { useUserSessions } from "@/features/account/hooks/use-user-sessions";
 import { cn } from "@/lib/utils";
@@ -150,14 +151,10 @@ export const AccountSessions = () => {
     <motion.div className="w-full" variants={contentVariants} initial="hidden" animate="show">
       {/* Header Section */}
       <motion.div variants={itemVariants} className="mb-6">
-        <div className="text-center lg:text-left">
-          <h1 className="font-plus-jakarta-sans text-2xl font-semibold text-slate-800 uppercase md:text-3xl">
-            Sessions
-          </h1>
-          <p className="font-inter mt-2 text-sm text-slate-600">
-            Review all active logins on your devices and browsers.
-          </p>
-        </div>
+        <AccountTabHeader
+          title="Sessions"
+          description="Review all active logins on your devices and browsers."
+        />
       </motion.div>
 
       {/* "Sign Out All" Button Section */}

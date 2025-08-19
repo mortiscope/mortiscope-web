@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AccountTabHeader } from "@/features/account/components/account-tab-header";
 import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
 import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
@@ -305,14 +306,10 @@ export const AccountSecurity = () => {
   return (
     <motion.div className="w-full" variants={contentVariants} initial="hidden" animate="show">
       {/* Security Header */}
-      <motion.div variants={itemVariants} className="text-center lg:text-left">
-        <h1 className="font-plus-jakarta-sans text-2xl font-semibold text-slate-800 uppercase md:text-3xl">
-          Security
-        </h1>
-        <p className="font-inter mt-2 text-sm text-slate-600">
-          Change your password or enable extra security measures.
-        </p>
-      </motion.div>
+      <AccountTabHeader
+        title="Security"
+        description="Change your password or enable extra security measures."
+      />
 
       {/* Security Form */}
       <motion.div variants={itemVariants}>

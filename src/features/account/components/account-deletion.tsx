@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AccountTabHeader } from "@/features/account/components/account-tab-header";
 
 /**
  * Dynamically imported account deletion modal component.
@@ -166,14 +167,10 @@ export const AccountDeletion = () => {
   return (
     <motion.div className="w-full" variants={contentVariants} initial="hidden" animate="show">
       {/* Deletion Header */}
-      <motion.div variants={itemVariants} className="text-center lg:text-left">
-        <h1 className="font-plus-jakarta-sans text-2xl font-semibold text-slate-800 uppercase md:text-3xl">
-          Deletion
-        </h1>
-        <p className="font-inter mt-2 text-sm text-slate-600">
-          Permanently delete your account and all of its associated data.
-        </p>
-      </motion.div>
+      <AccountTabHeader
+        title="Deletion"
+        description="Permanently delete your account and all of its associated data."
+      />
 
       {/* Deletion Form */}
       <motion.div variants={itemVariants} className="mt-8 space-y-4">
