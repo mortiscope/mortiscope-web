@@ -8,7 +8,7 @@ import { PiDeviceTabletLight, PiMapPinSimpleAreaLight } from "react-icons/pi";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import type { UserSessionInfo } from "@/features/account/actions/get-user-sessions";
+import type { UserSessionInfo } from "@/features/account/actions/get-current-session";
 import { revokeSession } from "@/features/account/actions/revoke-session";
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";

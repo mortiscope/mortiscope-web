@@ -10,7 +10,7 @@ import { PiDeviceTabletLight } from "react-icons/pi";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { UserSessionInfo } from "@/features/account/actions/get-user-sessions";
+import type { UserSessionInfo } from "@/features/account/actions/get-current-session";
 import { useSessionToken } from "@/features/account/hooks/use-session";
 import { useUserSessions } from "@/features/account/hooks/use-user-sessions";
 import { cn } from "@/lib/utils";

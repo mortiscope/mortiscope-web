@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useSession as useNextAuthSession } from "next-auth/react";
 
-import { getCurrentSession } from "@/features/account/actions/get-user-sessions";
+import { getCurrentSession } from "@/features/account/actions/get-current-session";
 
 /**
  * A comprehensive custom hook that combines the standard metadata fetched from the database via a server action.
