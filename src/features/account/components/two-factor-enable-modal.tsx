@@ -9,7 +9,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
+import { useTwoFactorAuth } from "@/features/account/hooks/use-two-factor-auth";
 import { cn } from "@/lib/utils";
 
 /**
@@ -61,7 +61,7 @@ export const TwoFactorEnableModal = ({
   const [secret, setSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
 
-  const { setupTwoFactor, verifyTwoFactor } = useAccountMutation();
+  const { setupTwoFactor, verifyTwoFactor } = useTwoFactorAuth();
 
   // Setup two-factor authentication when modal opens
   useEffect(() => {

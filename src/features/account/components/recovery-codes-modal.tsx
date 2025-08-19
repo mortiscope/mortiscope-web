@@ -13,7 +13,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
+import { useTwoFactorAuth } from "@/features/account/hooks/use-two-factor-auth";
 import { cn } from "@/lib/utils";
 
 /**
@@ -70,7 +70,7 @@ export const RecoveryCodesModal = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Initializes a custom hook that provides the server action mutations.
-  const { getRecoveryCodes, regenerateRecoveryCodes } = useAccountMutation();
+  const { getRecoveryCodes, regenerateRecoveryCodes } = useTwoFactorAuth();
 
   useEffect(() => {
     if (isOpen) {

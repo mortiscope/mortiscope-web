@@ -25,8 +25,8 @@ const AccountDeletionModal = dynamic(
     ),
   { ssr: false }
 );
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
+import { useUpdateProfile } from "@/features/account/hooks/use-update-profile";
 import { uniformInputStyles } from "@/features/cases/constants/styles";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +90,7 @@ export const AccountDeletion = () => {
   const isDataReady = !isSocialProviderLoading;
 
   // Account mutations
-  const { verifyPassword } = useAccountMutation();
+  const { verifyPassword } = useUpdateProfile();
 
   // Form setup with validation
   const form = useForm<AccountDeletionPasswordFormValues>({

@@ -22,10 +22,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountSecurity } from "@/features/account/hooks/use-account-security";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
 import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
+import { useUpdateEmail } from "@/features/account/hooks/use-update-email";
+import { useUpdatePassword } from "@/features/account/hooks/use-update-password";
+import { useUpdateProfile } from "@/features/account/hooks/use-update-profile";
 import {
   type AccountSecurityFormValues,
   AccountSecuritySchema,
@@ -125,7 +127,9 @@ export const AccountSecurity = () => {
   const isDataReady = !isSecurityLoading && !isSocialProviderLoading;
 
   // Account mutations
-  const { verifyPassword, updatePassword, updateEmail } = useAccountMutation();
+  const { verifyPassword } = useUpdateProfile();
+  const { updatePassword } = useUpdatePassword();
+  const { updateEmail } = useUpdateEmail();
 
   // Form setup with validation
   const form = useForm<AccountSecurityFormValues>({

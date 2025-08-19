@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { AccountModalFooter } from "@/features/account/components/account-modal-footer";
 import { AccountModalHeader } from "@/features/account/components/account-modal-header";
 import { AccountPasswordInput } from "@/features/account/components/account-password-input";
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
+import { useTwoFactorAuth } from "@/features/account/hooks/use-two-factor-auth";
 import {
   type DisableTwoFactorFormValues,
   DisableTwoFactorSchema,
@@ -64,7 +64,7 @@ export const TwoFactorDisableModal = ({
   onSuccess,
 }: TwoFactorDisableModalProps) => {
   /** A custom hook that provides the server action mutation for disabling 2FA. */
-  const { disableTwoFactor } = useAccountMutation();
+  const { disableTwoFactor } = useTwoFactorAuth();
 
   // Initializes `react-hook-form` with Zod for schema validation.
   const form = useForm<DisableTwoFactorFormValues>({

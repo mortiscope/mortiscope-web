@@ -14,10 +14,10 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAccountMutation } from "@/features/account/hooks/use-account-mutation";
 import { useAccountProfile } from "@/features/account/hooks/use-account-profile";
 import { useFormChange } from "@/features/account/hooks/use-form-change";
 import { useSocialProvider } from "@/features/account/hooks/use-social-provider";
+import { useUpdateProfile } from "@/features/account/hooks/use-update-profile";
 import {
   sectionTitle,
   selectTriggerStyles,
@@ -99,7 +99,7 @@ export const AccountProfile = () => {
   const isDataReady = !isProfileLoading && !isSocialProviderLoading;
 
   // Account mutations
-  const { updateProfile } = useAccountMutation();
+  const { updateProfile } = useUpdateProfile();
 
   // Form setup
   const form = useForm<AccountProfileForm>({
