@@ -154,6 +154,14 @@ export const AccountSecuritySchema = z
   });
 
 /**
+ * Schema for the account deletion password form.
+ * Uses the same password validation as other forms requiring current password.
+ */
+export const AccountDeletionPasswordSchema = z.object({
+  password: currentPasswordValidationSchema,
+});
+
+/**
  * Schema for the account deletion modal confirmation text.
  * Validates that the user enters the exact confirmation text.
  */
@@ -239,6 +247,7 @@ export const ProfileImageSchema = z.object({
  */
 export type AccountProfileFormValues = z.infer<typeof AccountProfileSchema>;
 export type AccountSecurityFormValues = z.infer<typeof AccountSecuritySchema>;
+export type AccountDeletionPasswordFormValues = z.infer<typeof AccountDeletionPasswordSchema>;
 export type AccountDeletionModalFormValues = z.infer<typeof AccountDeletionModalSchema>;
 export type AccountAllSessionsModalFormValues = z.infer<typeof AccountAllSessionsModalSchema>;
 export type SetupTwoFactorFormValues = z.infer<typeof SetupTwoFactorSchema>;
