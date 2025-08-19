@@ -72,6 +72,22 @@ export default async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
+  // Handle NextAuth error redirects for OAuth 2FA
+  if (
+    nextUrl.pathname === "/api/auth/error" &&
+    nextUrl.searchParams.get("error") === "AccessDenied"
+  ) {
+    try {
+      const hasAuthSession = await hasValidAuthSession();
+      if (hasAuthSession) {
+        // Redirect to 2FA page if there's a valid auth session
+        return NextResponse.redirect(new URL("/signin/two-factor", nextUrl));
+      }
+    } catch {
+      // Failed to check auth session, continue with normal error flow
+    }
+  }
+
   // Allow all public API routes to pass through without checks
   if (isApiAuthRoute || isPublicApiRoute) {
     return NextResponse.next();

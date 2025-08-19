@@ -58,8 +58,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const { email, password } = validatedFields.data;
           const user = await getUserByEmail(email);
 
-          // Return null if the user is not found or has no password (e.g., OAuth user).
-          if (!user || !user.password) {
+          // Return null if the user is not found
+          if (!user) {
             return null;
           }
 
@@ -78,6 +78,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               (user as typeof user & { _2faVerified: boolean })._2faVerified = true;
               return user;
             }
+            return null;
+          }
+
+          // For regular credential signin, require password
+          if (!user.password) {
             return null;
           }
 
@@ -103,10 +108,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (dbUser) {
             session.user.name = dbUser.name;
             session.user.email = dbUser.email;
-            session.user.image = dbUser.image;
+            // Use database image if available, otherwise fall back to OAuth profile picture
+            session.user.image = dbUser.image || (token.picture as string) || null;
           }
         } catch {
-          // Failed to fetch fresh user data, continue with existing data
+          // Failed to fetch fresh user data, fall back to token picture
+          if (token.picture && session.user) {
+            session.user.image = token.picture as string;
+          }
         }
 
         // Add session tracking for JWT sessions
@@ -230,20 +239,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Allow OAuth providers to sign in without email verification check
       if (account?.provider !== "credentials") {
         const providerEmail = profile?.email;
-        if (providerEmail && user.email !== providerEmail) {
-          await db
-            .update(schema.users)
-            .set({
-              email: providerEmail,
-              emailVerified: new Date(),
-            })
-            .where(eq(schema.users.id, user.id));
+        const providerImage = profile?.picture;
 
-          // Send a notification about the automatic email update.
-          try {
-            await sendEmailChangeNotification(providerEmail, "new");
-          } catch {
-            // Failed to send notification, continue
+        // Update user data if email or image has changed
+        const updateData: { email?: string; emailVerified?: Date; image?: string } = {};
+
+        if (providerEmail && user.email !== providerEmail) {
+          updateData.email = providerEmail;
+          updateData.emailVerified = new Date();
+        }
+
+        if (providerImage && user.image !== providerImage) {
+          updateData.image = providerImage;
+        }
+
+        // Only update if there are changes
+        if (Object.keys(updateData).length > 0) {
+          await db.update(schema.users).set(updateData).where(eq(schema.users.id, user.id));
+
+          // Send a notification about the automatic email update if email changed
+          if (updateData.email) {
+            try {
+              await sendEmailChangeNotification(providerEmail!, "new");
+            } catch {
+              // Failed to send notification, continue
+            }
           }
         }
 
