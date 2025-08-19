@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { updateSessionActivity } from "@/features/account/actions/track-session";
+import { updateSessionActivity } from "@/features/account/actions/update-session-activity";
 import { hasValidAuthSession } from "@/lib/auth";
 import {
   apiAuthPrefix,
