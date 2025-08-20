@@ -124,7 +124,7 @@ const serverConfig = {
                 session.user.name = dbUser.name;
                 session.user.email = dbUser.email;
               }
-            } catch (error) {
+            } catch {
               // Fallback to token picture if database fetch fails
               if (token.picture && session.user) {
                 session.user.image = token.picture;

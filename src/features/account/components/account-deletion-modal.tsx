@@ -176,7 +176,7 @@ export const AccountDeletionModal = ({
                         placeholder="Delete this account"
                         className={cn(
                           uniformInputStyles,
-                          "w-full focus-visible:!border-rose-600 data-[state=open]:!border-rose-600",
+                          "w-full shadow-none focus-visible:!border-rose-600 data-[state=open]:!border-rose-600",
                           form.formState.errors.confirmationText &&
                             "border-red-500 focus-visible:!border-red-500"
                         )}

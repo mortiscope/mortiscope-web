@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { GoGear, GoGlobe } from "react-icons/go";
 import { IoCheckmarkCircleOutline, IoCloseCircleOutline, IoLocationOutline } from "react-icons/io5";
 import { PiDeviceTabletLight } from "react-icons/pi";
@@ -13,7 +14,7 @@ interface SessionInformationProps {
  * Session information component that displays session details.
  * Shows browser, device, OS, location, and active status.
  */
-export const SessionInformation = ({ sessionItem }: SessionInformationProps) => {
+export const SessionInformation = memo(({ sessionItem }: SessionInformationProps) => {
   return (
     <div className="flex-1 space-y-3">
       {/* Browser */}
@@ -59,6 +60,6 @@ export const SessionInformation = ({ sessionItem }: SessionInformationProps) => 
       </div>
     </div>
   );
-};
+});
 
 SessionInformation.displayName = "SessionInformation";

@@ -121,7 +121,7 @@ export function useProfileForm() {
       setInitialValues(formData);
       setHasLoadedInitialData(true);
     }
-  }, [profileData, regionList, hasLoadedInitialData, form]);
+  }, [profileData, regionList, hasLoadedInitialData, form, findLocationByName]);
 
   // Button state logic
   const isNameSaveEnabled =

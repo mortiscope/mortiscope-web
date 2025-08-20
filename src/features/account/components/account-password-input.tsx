@@ -78,7 +78,7 @@ export const AccountPasswordInput = forwardRef<HTMLInputElement, AccountPassword
           // Applies a combination of base, focus, error, and custom styles.
           className={cn(
             uniformInputStyles,
-            "w-full pr-10",
+            "w-full pr-10 shadow-none",
             getFocusColorClasses(),
             hasError && "border-red-500 focus-visible:!border-red-500",
             className

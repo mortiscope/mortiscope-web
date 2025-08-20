@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { LuLoaderCircle } from "react-icons/lu";
@@ -35,78 +36,51 @@ interface PasswordVerificationSectionProps {
  * associated actions. It's the first step in the password change process, requiring
  * the user to re-authenticate before proceeding to set a new password.
  */
-export const PasswordVerificationSection = ({
-  form,
-  isPasswordLocked,
-  isPasswordSubmitEnabled,
-  verifyPasswordIsPending,
-  onPasswordLockToggle,
-  onPasswordVerification,
-  onCurrentPasswordChange,
-}: PasswordVerificationSectionProps) => {
-  return (
-    <FormField
-      control={form.control}
-      name="currentPassword"
-      render={({ field }) => (
-        <FormItem className="w-full">
-          <FormLabel className={`${sectionTitle} font-inter`}>Change Password</FormLabel>
-          <div className="mt-2 flex items-start gap-2">
-            <div
-              className={cn("flex-grow", {
-                "cursor-not-allowed": isPasswordLocked,
-              })}
-            >
-              <FormControl>
-                <AccountPasswordInput
-                  placeholder="Enter current password"
-                  disabled={isPasswordLocked}
-                  hasError={!!form.formState.errors.currentPassword}
-                  focusColor="emerald"
-                  className={cn({
-                    // Ensures a consistent disabled appearance.
-                    "border-slate-200 disabled:opacity-100":
-                      isPasswordLocked && !form.formState.errors.currentPassword,
-                  })}
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    onCurrentPasswordChange(e.target.value);
-                  }}
-                />
-              </FormControl>
-            </div>
-            {/* The action buttons for this section. */}
-            <div className="flex gap-2">
-              {/* Lock/Unlock Button */}
-              <TooltipProvider delayDuration={100}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className={cn(
-                        "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
-                        "border-slate-200 disabled:opacity-100"
-                      )}
-                      onClick={onPasswordLockToggle}
-                      aria-label={isPasswordLocked ? "Unlock" : "Lock"}
-                    >
-                      {isPasswordLocked ? (
-                        <HiOutlineLockClosed className="h-5 w-5" />
-                      ) : (
-                        <HiOutlineLockOpen className="h-5 w-5" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="font-inter">
-                    <p>{isPasswordLocked ? "Unlock" : "Lock"}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              {/* Submit for Verification Button */}
-              <div className={cn({ "cursor-not-allowed": !isPasswordSubmitEnabled })}>
+export const PasswordVerificationSection = memo(
+  ({
+    form,
+    isPasswordLocked,
+    isPasswordSubmitEnabled,
+    verifyPasswordIsPending,
+    onPasswordLockToggle,
+    onPasswordVerification,
+    onCurrentPasswordChange,
+  }: PasswordVerificationSectionProps) => {
+    return (
+      <FormField
+        control={form.control}
+        name="currentPassword"
+        render={({ field }) => (
+          <FormItem className="w-full">
+            <FormLabel className={`${sectionTitle} font-inter`}>Change Password</FormLabel>
+            <div className="mt-2 flex items-start gap-2">
+              <div
+                className={cn("flex-grow", {
+                  "cursor-not-allowed": isPasswordLocked,
+                })}
+              >
+                <FormControl>
+                  <AccountPasswordInput
+                    placeholder="Enter current password"
+                    disabled={isPasswordLocked}
+                    hasError={!!form.formState.errors.currentPassword}
+                    focusColor="emerald"
+                    className={cn({
+                      // Ensures a consistent disabled appearance.
+                      "border-slate-200 disabled:opacity-100":
+                        isPasswordLocked && !form.formState.errors.currentPassword,
+                    })}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      onCurrentPasswordChange(e.target.value);
+                    }}
+                  />
+                </FormControl>
+              </div>
+              {/* The action buttons for this section. */}
+              <div className="flex gap-2">
+                {/* Lock/Unlock Button */}
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -115,36 +89,65 @@ export const PasswordVerificationSection = ({
                         variant="outline"
                         size="icon"
                         className={cn(
-                          "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
-                          isPasswordSubmitEnabled
-                            ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
-                            : "cursor-not-allowed border-slate-200"
+                          "h-9 w-9 flex-shrink-0 cursor-pointer border-2 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10 md:w-10",
+                          "border-slate-200 disabled:opacity-100"
                         )}
-                        disabled={!isPasswordSubmitEnabled}
-                        onClick={onPasswordVerification}
-                        aria-label="Submit"
+                        onClick={onPasswordLockToggle}
+                        aria-label={isPasswordLocked ? "Unlock" : "Lock"}
                       >
-                        {verifyPasswordIsPending ? (
-                          <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                        {isPasswordLocked ? (
+                          <HiOutlineLockClosed className="h-5 w-5" />
                         ) : (
-                          <PiPaperPlaneRight className="h-5 w-5" />
+                          <HiOutlineLockOpen className="h-5 w-5" />
                         )}
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent className="font-inter">
-                      <p>Submit</p>
+                      <p>{isPasswordLocked ? "Unlock" : "Lock"}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+                {/* Submit for Verification Button */}
+                <div className={cn({ "cursor-not-allowed": !isPasswordSubmitEnabled })}>
+                  <TooltipProvider delayDuration={100}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className={cn(
+                            "h-9 w-9 flex-shrink-0 border-2 text-slate-400 shadow-none transition-colors ease-in-out disabled:opacity-100 md:h-10 md:w-10",
+                            isPasswordSubmitEnabled
+                              ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
+                              : "cursor-not-allowed border-slate-200"
+                          )}
+                          disabled={!isPasswordSubmitEnabled}
+                          onClick={onPasswordVerification}
+                          aria-label="Submit"
+                        >
+                          {verifyPasswordIsPending ? (
+                            <LuLoaderCircle className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <PiPaperPlaneRight className="h-5 w-5" />
+                          )}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent className="font-inter">
+                        <p>Submit</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               </div>
             </div>
-          </div>
-          {/* Renders the validation message below the input on smaller screens for better layout. */}
-          <FormMessage className="font-inter text-xs md:hidden" />
-        </FormItem>
-      )}
-    />
-  );
-};
+            {/* Renders the validation message below the input on smaller screens for better layout. */}
+            <FormMessage className="font-inter text-xs md:hidden" />
+          </FormItem>
+        )}
+      />
+    );
+  }
+);
 
 PasswordVerificationSection.displayName = "PasswordVerificationSection";

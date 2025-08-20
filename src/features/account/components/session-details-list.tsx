@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { GoClock, GoGear, GoGlobe } from "react-icons/go";
 import { IoCalendarClearOutline, IoLocationOutline } from "react-icons/io5";
 import { PiDeviceTabletLight, PiMapPinSimpleAreaLight } from "react-icons/pi";
@@ -19,7 +20,7 @@ interface SessionDetailsListProps {
  * A component that renders a detailed list of session information
  * including browser, OS, device, location, IP address, and timestamps.
  */
-export const SessionDetailsList = ({ session }: SessionDetailsListProps) => {
+export const SessionDetailsList = memo(({ session }: SessionDetailsListProps) => {
   return (
     <div className="space-y-4">
       {/* Browser */}
@@ -97,6 +98,6 @@ export const SessionDetailsList = ({ session }: SessionDetailsListProps) => {
       </div>
     </div>
   );
-};
+});
 
 SessionDetailsList.displayName = "SessionDetailsList";

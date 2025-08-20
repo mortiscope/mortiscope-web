@@ -166,7 +166,7 @@ export const AccountProfile = () => {
               isSavePending={updateProfile.isPending}
               showLabel={true}
               labelText="Location"
-              inputStyles={`${uniformInputStyles} disabled:opacity-100`}
+              inputStyles={`${uniformInputStyles} shadow-none disabled:opacity-100`}
               labelStyles="text-sm font-medium text-slate-700 font-inter"
               customSelectTriggerStyles={`${selectTriggerStyles} disabled:opacity-100`}
               className="shadow-none [&_button]:border-slate-200 [&_button:disabled]:opacity-100"

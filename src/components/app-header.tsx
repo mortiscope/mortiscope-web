@@ -149,7 +149,7 @@ export const AppHeader = React.memo(() => {
     setIsSigningOut(true);
     try {
       await signOut({ callbackUrl: "/" });
-    } catch (error) {
+    } catch {
       setIsSigningOut(false);
     }
   };
@@ -166,7 +166,7 @@ export const AppHeader = React.memo(() => {
       ...user,
       image: effectiveImage,
     };
-  }, [user?.id, user?.name, user?.email, user?.image, optimisticImageUrl]);
+  }, [user, optimisticImageUrl]);
 
   // Defines a consistent class name for dropdown menu items
   const menuItemClassName =

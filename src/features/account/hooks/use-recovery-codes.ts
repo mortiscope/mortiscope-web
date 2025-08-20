@@ -70,7 +70,7 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
         });
       }
     }
-  }, [isOpen, initialCodes]);
+  }, [isOpen, initialCodes, getRecoveryCodes]);
 
   // Reset state when modal is fully closed to prevent any visual changes during closing
   useEffect(() => {

@@ -80,7 +80,7 @@ export const useProfileImage = () => {
       }
 
       return true;
-    } catch (error) {
+    } catch {
       toast.error("Failed to upload image. Please try again.");
       return false;
     }
@@ -139,7 +139,7 @@ export const useProfileImage = () => {
         window.dispatchEvent(new Event("optimistic-image-update"));
 
         toast.success("Profile image successfully updated.");
-      } catch (error) {
+      } catch {
         toast.error("An unexpected error occurred.");
       } finally {
         setIsUploading(false);

@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
@@ -15,7 +17,7 @@ interface RecoveryCodeGridProps {
 /**
  * A component that renders the grid of recovery codes with proper styling for different states.
  */
-export const RecoveryCodeGrid = ({ displayCodes, isLoading }: RecoveryCodeGridProps) => {
+export const RecoveryCodeGrid = memo(({ displayCodes, isLoading }: RecoveryCodeGridProps) => {
   if (isLoading) {
     // Renders a skeleton grid while fetching or regenerating codes.
     return (
@@ -51,6 +53,6 @@ export const RecoveryCodeGrid = ({ displayCodes, isLoading }: RecoveryCodeGridPr
       ))}
     </div>
   );
-};
+});
 
 RecoveryCodeGrid.displayName = "RecoveryCodeGrid";

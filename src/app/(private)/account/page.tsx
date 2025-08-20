@@ -1,4 +1,5 @@
 import { type Metadata } from "next";
+import { Suspense } from "react";
 
 import { AccountContainer } from "@/features/account/components/account-container";
 
@@ -30,7 +31,9 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
 const AccountPage = () => {
   return (
     <div className="flex flex-1 rounded-2xl bg-white px-4 pt-2 pb-6 sm:px-6 sm:py-8 md:rounded-3xl">
-      <AccountContainer />
+      <Suspense fallback={null}>
+        <AccountContainer />
+      </Suspense>
     </div>
   );
 };

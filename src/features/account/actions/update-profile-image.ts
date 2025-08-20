@@ -89,7 +89,7 @@ export async function generateProfileImageUploadUrl(formData: FormData): Promise
         publicUrl: publicUrl,
       },
     };
-  } catch (error) {
+  } catch {
     return { error: "Failed to generate upload URL. Please try again." };
   }
 }
@@ -115,7 +115,7 @@ export async function updateProfileImageUrl(imageUrl: string): Promise<ActionRes
       .where(eq(users.id, session.user.id));
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { error: "Failed to update profile image. Please try again." };
   }
 }
