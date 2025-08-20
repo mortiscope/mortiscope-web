@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Link from "next/link";
 import { useId } from "react";
 import { useForm } from "react-hook-form";
 
@@ -17,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { forgotPassword } from "@/features/auth/actions/forgot-password";
-import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthFormContainer } from "@/features/auth/components/auth-form-container";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 
@@ -50,13 +49,13 @@ export default function ForgotPasswordForm() {
   const isButtonDisabled = !form.formState.isValid || isPending;
 
   return (
-    // Main container for the forgot password form
-    <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      <AuthFormHeader
-        title="Forgot Password?"
-        description="Enter your email address and we'll send you a link to reset your password."
-      />
-
+    <AuthFormContainer
+      title="Forgot Password?"
+      description="Enter your email address and we'll send you a link to reset your password."
+      footerText="Remembered your password?"
+      footerLinkText="Back to Sign In"
+      footerLinkHref="/signin"
+    >
       {/* Forgot password form */}
       <Form {...form}>
         <form
@@ -101,18 +100,7 @@ export default function ForgotPasswordForm() {
           </AuthSubmitButton>
         </form>
       </Form>
-
-      {/* Link back to Sign In page */}
-      <p className="font-inter text-center text-xs text-slate-600 md:text-sm">
-        Remembered your password?{" "}
-        <Link
-          href="/signin"
-          className="relative font-medium text-green-700 after:absolute after:-bottom-1 after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-green-600 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:text-green-600 hover:after:origin-bottom-left hover:after:scale-x-100"
-        >
-          Back to Sign In
-        </Link>
-      </p>
-    </div>
+    </AuthFormContainer>
   );
 }
 

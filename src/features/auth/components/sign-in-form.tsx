@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { signIn } from "@/features/auth/actions/signin";
-import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthFormContainer } from "@/features/auth/components/auth-form-container";
 import { AuthPasswordInput } from "@/features/auth/components/auth-password-input";
 import { AuthSocialProvider } from "@/features/auth/components/auth-social-provider";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
@@ -64,13 +64,13 @@ export default function SignInForm() {
   const areSocialsDisabled = isCredentialsPending;
 
   return (
-    // Main container for the sign-in form
-    <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      <AuthFormHeader
-        title="Welcome back!"
-        description="Sign in to access your account and continue your work."
-      />
-
+    <AuthFormContainer
+      title="Welcome back!"
+      description="Sign in to access your account and continue your work."
+      footerText="Don't have an account?"
+      footerLinkText="Sign Up"
+      footerLinkHref="/signup"
+    >
       {/* Sign-in form */}
       <Form {...form}>
         <form
@@ -141,18 +141,7 @@ export default function SignInForm() {
       </Form>
 
       <AuthSocialProvider disabled={areSocialsDisabled} separatorText="Or sign in with" />
-
-      {/* Link to Sign Up page for new users */}
-      <p className="font-inter pt-2 text-center text-xs text-slate-600 md:pt-0 md:text-sm">
-        Don&apos;t have an account?{" "}
-        <Link
-          href="/signup"
-          className="relative font-medium text-green-700 after:absolute after:-bottom-1 after:left-0 after:h-[1.5px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-green-600 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:text-green-600 hover:after:origin-bottom-left hover:after:scale-x-100"
-        >
-          Sign Up
-        </Link>
-      </p>
-    </div>
+    </AuthFormContainer>
   );
 }
 
