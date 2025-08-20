@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -23,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { verifySigninRecoveryCode } from "@/features/auth/actions/recovery";
 import { clearTwoFactorSession } from "@/features/auth/actions/two-factor";
+import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import {
   type SigninRecoveryCodeFormValues,
   SigninRecoveryCodeSchema,
@@ -90,29 +90,10 @@ function RecoveryProcess() {
   if (error === "no-session") {
     return (
       <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-        {/* Logo and link to the homepage */}
-        <div className="mb-1 flex flex-col items-center md:mb-2">
-          <Link href="/" aria-label="Go to homepage">
-            <div className="flex cursor-pointer items-center">
-              <Image
-                src="/logos/logo.svg"
-                alt="Mortiscope Logo"
-                width={60}
-                height={60}
-                className="md:h-[80px] md:w-[80px]"
-              />
-            </div>
-          </Link>
-        </div>
-        {/* Page title and description */}
-        <div className="text-center">
-          <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Account Recovery
-          </h1>
-          <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-            This page is used to recover your account using a recovery code.
-          </p>
-        </div>
+        <AuthFormHeader
+          title="Account Recovery"
+          description="This page is used to recover your account using a recovery code."
+        />
         {/* Container for feedback and action button */}
         <div className="font-inter w-full max-w-md space-y-3 text-center md:space-y-4">
           <div className="flex min-h-[36px] w-full items-center justify-center rounded-lg md:min-h-[40px]">
@@ -135,29 +116,10 @@ function RecoveryProcess() {
   return (
     // Main container for the recovery code verification page content
     <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      {/* Logo and link to the homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-            />
-          </div>
-        </Link>
-      </div>
-      {/* Page title and description */}
-      <div className="text-center">
-        <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Account Recovery
-        </h1>
-        <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          Enter one of your recovery codes to complete sign-in.
-        </p>
-      </div>
+      <AuthFormHeader
+        title="Account Recovery"
+        description="Enter one of your recovery codes to complete sign-in."
+      />
 
       {/* Recovery Code Form */}
       <Form {...form}>

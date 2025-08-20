@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "@/features/auth/actions/reset-password";
+import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ResetPasswordForm() {
@@ -74,30 +74,10 @@ export default function ResetPasswordForm() {
   if (!token) {
     return (
       <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-        {/* Logo and link to the homepage */}
-        <div className="mb-1 flex flex-col items-center md:mb-2">
-          <Link href="/" aria-label="Go to homepage">
-            <div className="flex cursor-pointer items-center">
-              <Image
-                src="/logos/logo.svg"
-                alt="Mortiscope Logo"
-                width={60}
-                height={60}
-                className="md:h-[80px] md:w-[80px]"
-              />
-            </div>
-          </Link>
-        </div>
-        {/* Page title and description for invalid token scenario */}
-        <div className="text-center">
-          <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Reset Password
-          </h1>
-          <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-            You&apos;ve reached the password reset page. To continue, use the link sent to your
-            email.
-          </p>
-        </div>
+        <AuthFormHeader
+          title="Reset Password"
+          description="You've reached the password reset page. To continue, use the link sent to your email."
+        />
 
         {/* Container for error message and action button */}
         <div className="font-inter w-full max-w-md space-y-3 text-center md:space-y-4">
@@ -125,31 +105,14 @@ export default function ResetPasswordForm() {
   return (
     // Main container for the reset password form
     <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      {/* Logo section, links to homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-            />
-          </div>
-        </Link>
-      </div>
-      {/* Heading and Description for the reset password page */}
-      <div className="text-center">
-        <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Reset Password
-        </h1>
-        <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          {!data?.success
+      <AuthFormHeader
+        title="Reset Password"
+        description={
+          !data?.success
             ? "Enter your new password below. Make sure that it meets the security requirements."
-            : ""}
-        </p>
-      </div>
+            : ""
+        }
+      />
 
       {/* Render the form only if the password has not been successfully reset */}
       {!data?.success && (

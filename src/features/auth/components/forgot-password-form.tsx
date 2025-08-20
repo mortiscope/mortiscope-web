@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useId } from "react";
 import { useForm } from "react-hook-form";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { forgotPassword } from "@/features/auth/actions/forgot-password";
+import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { type ForgotPasswordFormValues, ForgotPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ForgotPasswordForm() {
@@ -52,29 +52,10 @@ export default function ForgotPasswordForm() {
   return (
     // Main container for the forgot password form
     <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      {/* Logo section, links to homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-            />
-          </div>
-        </Link>
-      </div>
-      {/* Heading and Description for the forgot password page */}
-      <div className="text-center">
-        <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Forgot Password?
-        </h1>
-        <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          Enter your email address and we&apos;ll send you a link to reset your password.
-        </p>
-      </div>
+      <AuthFormHeader
+        title="Forgot Password?"
+        description="Enter your email address and we'll send you a link to reset your password."
+      />
 
       {/* Forgot password form */}
       <Form {...form}>

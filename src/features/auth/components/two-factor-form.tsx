@@ -1,7 +1,6 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -12,6 +11,7 @@ import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { cn } from "@/lib/utils";
 
 function TwoFactorProcess() {
@@ -77,29 +77,10 @@ function TwoFactorProcess() {
   if (error === "no-session") {
     return (
       <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-        {/* Logo and link to the homepage */}
-        <div className="mb-1 flex flex-col items-center md:mb-2">
-          <Link href="/" aria-label="Go to homepage">
-            <div className="flex cursor-pointer items-center">
-              <Image
-                src="/logos/logo.svg"
-                alt="Mortiscope Logo"
-                width={60}
-                height={60}
-                className="md:h-[80px] md:w-[80px]"
-              />
-            </div>
-          </Link>
-        </div>
-        {/* Page title and description */}
-        <div className="text-center">
-          <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Two-Factor Authentication
-          </h1>
-          <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-            This page is used to verify your identity with two-factor authentication.
-          </p>
-        </div>
+        <AuthFormHeader
+          title="Two-Factor Authentication"
+          description="This page is used to verify your identity with two-factor authentication."
+        />
         {/* Container for feedback and action button */}
         <div className="font-inter w-full max-w-md space-y-3 text-center md:space-y-4">
           <div className="flex min-h-[36px] w-full items-center justify-center rounded-lg md:min-h-[40px]">
@@ -122,29 +103,10 @@ function TwoFactorProcess() {
   return (
     // Main container for the two-factor verification page content
     <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      {/* Logo and link to the homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-            />
-          </div>
-        </Link>
-      </div>
-      {/* Page title and description */}
-      <div className="text-center">
-        <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          Two-Factor Authentication
-        </h1>
-        <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          Enter the 6-digit code from your authenticator app to complete sign-in.
-        </p>
-      </div>
+      <AuthFormHeader
+        title="Two-Factor Authentication"
+        description="Enter the 6-digit code from your authenticator app to complete sign-in."
+      />
 
       {/* Two-Factor Form */}
       <div className="font-inter w-full max-w-md space-y-4">

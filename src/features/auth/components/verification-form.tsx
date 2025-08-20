@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
@@ -10,6 +9,7 @@ import { BeatLoader } from "react-spinners";
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
 import { verification } from "@/features/auth/actions/verification";
+import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 
 function VerificationProcess() {
   // Hook to access URL search parameters
@@ -38,31 +38,14 @@ function VerificationProcess() {
   return (
     // Main container for the verification page content
     <div className="flex w-full flex-col items-center space-y-4 px-4 py-6 md:space-y-5 md:px-0 md:py-0">
-      {/* Logo and link to the homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-            />
-          </div>
-        </Link>
-      </div>
-      {/* Page title and description */}
-      <div className="text-center">
-        <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-          {isEmailChange ? "Confirming New Email" : "Email Verification"}
-        </h1>
-        <p className="font-inter mt-1 text-sm text-slate-600 md:mt-2">
-          {isEmailChange
+      <AuthFormHeader
+        title={isEmailChange ? "Confirming New Email" : "Email Verification"}
+        description={
+          isEmailChange
             ? "We are now finalizing the update to your new email address."
-            : "This page processes email verification links to confirm your account."}
-        </p>
-      </div>
+            : "This page processes email verification links to confirm your account."
+        }
+      />
       {/* Container for feedback and action button */}
       <div className="font-inter w-full max-w-md space-y-3 text-center md:space-y-4">
         {/* Displays a loading spinner or a feedback message */}
