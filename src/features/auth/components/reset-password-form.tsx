@@ -4,23 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { PiEye, PiEyeSlash } from "react-icons/pi";
 
 import { FormFeedback } from "@/components/form-feedback";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form, FormField } from "@/components/ui/form";
 import { resetPassword } from "@/features/auth/actions/reset-password";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthPasswordInput } from "@/features/auth/components/auth-password-input";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/features/auth/schemas/auth";
 
@@ -37,11 +27,6 @@ export default function ResetPasswordForm() {
       resetPassword(variables.values, variables.token),
   });
 
-  // State to manage password visibility (show/hide)
-  const [showPassword, setShowPassword] = useState(false);
-  // State to manage confirm password visibility (show/hide)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(ResetPasswordSchema),
@@ -56,16 +41,6 @@ export default function ResetPasswordForm() {
   const onSubmit = (values: ResetPasswordFormValues) => {
     // Triggers the mutation, passing the form values and the token as a single object
     mutate({ values, token });
-  };
-
-  // Function to toggle the password visibility state
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  // Function to toggle the confirm password visibility state
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
   };
 
   // Determine if the button should be visually disabled based on form validity and pending state
@@ -124,37 +99,12 @@ export default function ResetPasswordForm() {
               control={form.control}
               name="newPassword"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-normal md:text-sm">New Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Enter your new password"
-                        disabled={isPending}
-                        className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-                        {...field}
-                      />
-                      {/* Button to toggle password visibility */}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                        onClick={togglePasswordVisibility}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        tabIndex={-1}
-                      >
-                        {showPassword ? (
-                          <PiEye size={18} className="md:h-5 md:w-5" />
-                        ) : (
-                          <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
+                <AuthPasswordInput
+                  field={field}
+                  label="New Password"
+                  placeholder="Enter your new password"
+                  disabled={isPending}
+                />
               )}
             />
 
@@ -163,39 +113,12 @@ export default function ResetPasswordForm() {
               control={form.control}
               name="confirmNewPassword"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs font-normal md:text-sm">
-                    Confirm New Password
-                  </FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm your new password"
-                        disabled={isPending}
-                        className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-                        {...field}
-                      />
-                      {/* Button to toggle confirm password visibility */}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                        onClick={toggleConfirmPasswordVisibility}
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        tabIndex={-1}
-                      >
-                        {showConfirmPassword ? (
-                          <PiEye size={18} className="md:h-5 md:w-5" />
-                        ) : (
-                          <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
+                <AuthPasswordInput
+                  field={field}
+                  label="Confirm New Password"
+                  placeholder="Confirm your new password"
+                  disabled={isPending}
+                />
               )}
             />
 

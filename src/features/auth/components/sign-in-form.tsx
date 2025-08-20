@@ -6,9 +6,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn as socialSignIn } from "next-auth/react";
-import React, { useState, useTransition } from "react";
+import React, { useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { PiEye, PiEyeSlash } from "react-icons/pi";
 
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { signIn } from "@/features/auth/actions/signin";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthPasswordInput } from "@/features/auth/components/auth-password-input";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 
@@ -44,9 +44,6 @@ export default function SignInForm() {
       }
     },
   });
-
-  // State to manage password visibility (show/hide)
-  const [showPassword, setShowPassword] = useState(false);
 
   // Handle the pending state for social OAuth sign-in, which is a separate client-side flow
   const [isSocialPending, startSocialTransition] = useTransition();
@@ -78,11 +75,6 @@ export default function SignInForm() {
         console.error("OAuth sign-in error:", error);
       }
     });
-  };
-
-  // Function to toggle the password visibility state
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
   };
 
   // Determine if the main submit button should be disabled
@@ -133,40 +125,13 @@ export default function SignInForm() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="password" className="text-xs font-normal md:text-sm">
-                  Password
-                </FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-                      {...field}
-                      disabled={isCredentialsPending || isSocialPending}
-                    />
-                    {/* Button to toggle password visibility */}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                      onClick={togglePasswordVisibility}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <PiEye size={18} className="md:h-5 md:w-5" />
-                      ) : (
-                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>
+              <AuthPasswordInput
+                field={field}
+                label="Password"
+                placeholder="Enter your password"
+                disabled={isCredentialsPending || isSocialPending}
+                id="password"
+              />
             )}
           />
 

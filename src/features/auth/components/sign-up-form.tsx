@@ -5,9 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn as socialSignIn } from "next-auth/react";
-import React, { useState, useTransition } from "react";
+import React, { useTransition } from "react";
 import { useForm } from "react-hook-form";
-import { PiEye, PiEyeSlash } from "react-icons/pi";
 
 import { FormFeedback } from "@/components/form-feedback";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { signUp } from "@/features/auth/actions/signup";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthPasswordInput } from "@/features/auth/components/auth-password-input";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type SignUpFormValues, SignUpSchema } from "@/features/auth/schemas/auth";
 
@@ -35,11 +35,6 @@ export default function SignUpForm() {
   } = useMutation({
     mutationFn: signUp,
   });
-
-  // State to manage password visibility (show/hide)
-  const [showPassword, setShowPassword] = useState(false);
-  // State to manage confirm password visibility (show/hide)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Handle the pending state for social OAuth sign-in, which is a separate client-side flow
   const [isSocialPending, startSocialTransition] = useTransition();
@@ -74,16 +69,6 @@ export default function SignUpForm() {
         console.error("OAuth sign-in error:", error);
       }
     });
-  };
-
-  // Function to toggle the password visibility state
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  // Function to toggle the confirm password visibility state
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
   };
 
   // Determine if the main submit button should be visually disabled
@@ -185,37 +170,12 @@ export default function SignUpForm() {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-normal md:text-sm">Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-                      {...field}
-                      disabled={isAnyActionPending}
-                    />
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                      onClick={togglePasswordVisibility}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showPassword ? (
-                        <PiEye size={18} className="md:h-5 md:w-5" />
-                      ) : (
-                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>
+              <AuthPasswordInput
+                field={field}
+                label="Password"
+                placeholder="Enter your password"
+                disabled={isAnyActionPending}
+              />
             )}
           />
 
@@ -224,36 +184,12 @@ export default function SignUpForm() {
             control={form.control}
             name="confirmPassword"
             render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-xs font-normal md:text-sm">Confirm Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
-                      {...field}
-                      disabled={isAnyActionPending}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 transform cursor-pointer text-slate-500 hover:bg-transparent hover:text-slate-700 md:right-2"
-                      onClick={toggleConfirmPasswordVisibility}
-                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                      tabIndex={-1}
-                    >
-                      {showConfirmPassword ? (
-                        <PiEye size={18} className="md:h-5 md:w-5" />
-                      ) : (
-                        <PiEyeSlash size={18} className="md:h-5 md:w-5" />
-                      )}
-                    </Button>
-                  </div>
-                </FormControl>
-                <FormMessage className="text-xs" />
-              </FormItem>
+              <AuthPasswordInput
+                field={field}
+                label="Confirm Password"
+                placeholder="Confirm your password"
+                disabled={isAnyActionPending}
+              />
             )}
           />
 
