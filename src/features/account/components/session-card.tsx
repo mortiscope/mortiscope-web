@@ -22,7 +22,7 @@ export const SessionCard = ({
     <div
       key={sessionItem.id}
       onClick={() => onSessionClick(sessionItem)}
-      className={`group relative flex h-full cursor-pointer flex-col rounded-xl border-2 bg-white p-4 transition-all duration-200 ${
+      className={`group relative flex h-full cursor-pointer flex-col rounded-xl border-2 bg-white p-4 transition-all duration-300 ease-in-out ${
         isCurrentSession
           ? "border-emerald-500 bg-emerald-50"
           : "border-slate-200 hover:border-emerald-300"
@@ -42,7 +42,7 @@ export const SessionCard = ({
         <Button
           size="sm"
           variant="outline"
-          className={`font-inter w-full border-2 font-normal group-hover:border-emerald-300 group-hover:bg-emerald-50 group-hover:text-emerald-700 hover:cursor-pointer hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 ${
+          className={`font-inter w-full border-2 font-normal transition-all duration-300 ease-in-out group-hover:border-emerald-300 group-hover:bg-emerald-50 group-hover:text-emerald-700 hover:cursor-pointer hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 ${
             isCurrentSession
               ? "border-emerald-500 text-emerald-700"
               : "border-slate-200 text-slate-600"
