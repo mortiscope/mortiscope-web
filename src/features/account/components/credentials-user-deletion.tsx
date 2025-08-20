@@ -192,3 +192,5 @@ export const CredentialsUserDeletion = ({
     </>
   );
 };
+
+CredentialsUserDeletion.displayName = "CredentialsUserDetection";

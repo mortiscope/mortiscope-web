@@ -66,3 +66,5 @@ export const SocialProviderUserDeletion = ({
     </div>
   );
 };
+
+SocialProviderUserDeletion.displayName = "SocialProviderUserDeletion";
