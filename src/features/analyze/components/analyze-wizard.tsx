@@ -1,17 +1,38 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { BeatLoader } from "react-spinners";
 import { toast } from "sonner";
 
 import { getCaseUploads } from "@/features/analyze/actions/get-case-uploads";
 import { getDraftCase } from "@/features/analyze/actions/get-draft-case";
-import { AnalyzeDetails } from "@/features/analyze/components/analyze-details";
-import { AnalyzeReview } from "@/features/analyze/components/analyze-review";
-import { AnalyzeUpload } from "@/features/analyze/components/analyze-upload";
 import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { type CaseDetailsFormData } from "@/features/cases/schemas/case-details";
+
+// Dynamic imports for wizard steps
+const AnalyzeDetails = dynamic(
+  () =>
+    import("@/features/analyze/components/analyze-details").then((module) => ({
+      default: module.AnalyzeDetails,
+    })),
+  { ssr: false }
+);
+const AnalyzeUpload = dynamic(
+  () =>
+    import("@/features/analyze/components/analyze-upload").then((module) => ({
+      default: module.AnalyzeUpload,
+    })),
+  { ssr: false }
+);
+const AnalyzeReview = dynamic(
+  () =>
+    import("@/features/analyze/components/analyze-review").then((module) => ({
+      default: module.AnalyzeReview,
+    })),
+  { ssr: false }
+);
 
 /**
  * A client component that orchestrates the multi-step analysis process.
