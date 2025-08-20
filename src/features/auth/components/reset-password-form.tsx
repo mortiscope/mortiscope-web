@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { resetPassword } from "@/features/auth/actions/reset-password";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type ResetPasswordFormValues, ResetPasswordSchema } from "@/features/auth/schemas/auth";
 
 export default function ResetPasswordForm() {
@@ -90,12 +91,9 @@ export default function ResetPasswordForm() {
           </div>
 
           {/* Button to navigate back to the forgot password page */}
-          <Button
-            asChild
-            className="font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-0 md:h-10 md:text-base"
-          >
+          <AuthSubmitButton asChild>
             <Link href="/forgot-password">Go to Forgot Password</Link>
-          </Button>
+          </AuthSubmitButton>
         </div>
       </div>
     );
@@ -204,21 +202,14 @@ export default function ResetPasswordForm() {
             {/* Displaying form feedback messages */}
             <FormFeedback message={data?.error} type="error" />
 
-            {/* Wrapper to apply disabled cursor style to the button */}
-            <div className={`inline-block w-full ${isButtonDisabled ? "cursor-not-allowed" : ""}`}>
-              {/* Reset Password Button */}
-              <Button
-                type="submit"
-                disabled={isButtonDisabled}
-                className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
-                  isButtonDisabled
-                    ? "opacity-60"
-                    : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
-                }`}
-              >
-                {isPending ? "Resetting..." : "Reset Password"}
-              </Button>
-            </div>
+            {/* Reset Password Button */}
+            <AuthSubmitButton
+              isDisabled={isButtonDisabled}
+              isPending={isPending}
+              pendingText="Resetting..."
+            >
+              Reset Password
+            </AuthSubmitButton>
           </form>
         </Form>
       )}
@@ -227,12 +218,9 @@ export default function ResetPasswordForm() {
       {data?.success && (
         <div className="w-full">
           <FormFeedback message={data.success} type="success" />
-          <Button
-            asChild
-            className="font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-4 md:h-10 md:text-base"
-          >
+          <AuthSubmitButton asChild>
             <Link href="/signin">Back to Sign In</Link>
-          </Button>
+          </AuthSubmitButton>
         </div>
       )}
 

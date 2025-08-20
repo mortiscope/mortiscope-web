@@ -8,10 +8,10 @@ import React, { Suspense, useState } from "react";
 import { BeatLoader } from "react-spinners";
 
 import { FormFeedback } from "@/components/form-feedback";
-import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { cn } from "@/lib/utils";
 
 function TwoFactorProcess() {
@@ -89,12 +89,9 @@ function TwoFactorProcess() {
               type="error"
             />
           </div>
-          <Button
-            asChild
-            className="font-inter relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base"
-          >
+          <AuthSubmitButton asChild>
             <Link href="/signin">Back to Sign In</Link>
-          </Button>
+          </AuthSubmitButton>
         </div>
       </div>
     );
@@ -154,19 +151,15 @@ function TwoFactorProcess() {
         {/* Action Buttons */}
         <div className="space-y-3">
           {/* Verify Button */}
-          <div className={`inline-block w-full ${!isVerifyEnabled ? "cursor-not-allowed" : ""}`}>
-            <Button
-              onClick={handleSubmit}
-              disabled={!isVerifyEnabled}
-              className={`font-inter relative h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:h-10 md:text-base ${
-                !isVerifyEnabled
-                  ? "opacity-60"
-                  : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
-              }`}
-            >
-              {isPending ? "Verifying..." : "Verify Code"}
-            </Button>
-          </div>
+          <AuthSubmitButton
+            type="button"
+            onClick={handleSubmit}
+            isDisabled={!isVerifyEnabled}
+            isPending={isPending}
+            pendingText="Verifying..."
+          >
+            Verify Code
+          </AuthSubmitButton>
 
           {/* Alternative Options */}
           <p className="font-inter text-center text-xs text-slate-600 md:text-sm">

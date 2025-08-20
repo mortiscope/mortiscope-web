@@ -7,9 +7,9 @@ import React, { Suspense } from "react";
 import { BeatLoader } from "react-spinners";
 
 import { FormFeedback } from "@/components/form-feedback";
-import { Button } from "@/components/ui/button";
 import { verification } from "@/features/auth/actions/verification";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 
 function VerificationProcess() {
   // Hook to access URL search parameters
@@ -64,14 +64,11 @@ function VerificationProcess() {
           )}
         </div>
         {/* Button to navigate user after verification */}
-        <Button
-          asChild
-          className="font-inter relative h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:h-10 md:text-base"
-        >
+        <AuthSubmitButton asChild>
           <Link href={data?.status === "success" ? "/signin" : "/"}>
             {data?.status === "success" ? "Proceed to Sign In" : "Back to Homepage"}
           </Link>
-        </Button>
+        </AuthSubmitButton>
       </div>
     </div>
   );
@@ -92,3 +89,5 @@ export default function VerificationForm() {
     </Suspense>
   );
 }
+
+VerificationForm.displayName = "VerificationForm";

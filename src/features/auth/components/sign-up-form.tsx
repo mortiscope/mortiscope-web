@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { signUp } from "@/features/auth/actions/signup";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
+import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type SignUpFormValues, SignUpSchema } from "@/features/auth/schemas/auth";
 
 export default function SignUpForm() {
@@ -261,19 +262,13 @@ export default function SignUpForm() {
           <FormFeedback message={data?.success} type="success" />
 
           {/* Sign Up Button */}
-          <div className={`inline-block w-full ${isSubmitDisabled ? "cursor-not-allowed" : ""}`}>
-            <Button
-              type="submit"
-              disabled={isSubmitDisabled}
-              className={`font-inter relative mt-2 h-9 w-full overflow-hidden rounded-lg border-none bg-green-600 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out md:mt-0 md:h-10 md:text-base ${
-                isSubmitDisabled
-                  ? "opacity-60"
-                  : "cursor-pointer before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-emerald-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0"
-              }`}
-            >
-              {isCredentialsPending ? "Signing Up..." : "Sign Up"}
-            </Button>
-          </div>
+          <AuthSubmitButton
+            isDisabled={isSubmitDisabled}
+            isPending={isCredentialsPending}
+            pendingText="Signing Up..."
+          >
+            Sign Up
+          </AuthSubmitButton>
         </form>
       </Form>
 
