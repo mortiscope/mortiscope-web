@@ -2,15 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn as socialSignIn } from "next-auth/react";
-import React, { useTransition } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 
 import { FormFeedback } from "@/components/form-feedback";
-import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -20,10 +17,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { signIn } from "@/features/auth/actions/signin";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { AuthPasswordInput } from "@/features/auth/components/auth-password-input";
+import { AuthSocialProvider } from "@/features/auth/components/auth-social-provider";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/auth";
 
@@ -45,9 +42,6 @@ export default function SignInForm() {
     },
   });
 
-  // Handle the pending state for social OAuth sign-in, which is a separate client-side flow
-  const [isSocialPending, startSocialTransition] = useTransition();
-
   // Initialize the form using react-hook-form with Zod for validation
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(SignInSchema),
@@ -64,23 +58,10 @@ export default function SignInForm() {
     credentialsSignIn(values);
   };
 
-  // Function to handle OAuth sign-in
-  const handleOAuthSignIn = (provider: "google" | "orcid" | "microsoft-entra-id") => {
-    startSocialTransition(async () => {
-      try {
-        await socialSignIn(provider, {
-          callbackUrl: "/dashboard",
-        });
-      } catch (error) {
-        console.error("OAuth sign-in error:", error);
-      }
-    });
-  };
-
   // Determine if the main submit button should be disabled
-  const isSubmitDisabled = !form.formState.isValid || isCredentialsPending || isSocialPending;
+  const isSubmitDisabled = !form.formState.isValid || isCredentialsPending;
   // Determine if social login buttons should be disabled
-  const areSocialsDisabled = isCredentialsPending || isSocialPending;
+  const areSocialsDisabled = isCredentialsPending;
 
   return (
     // Main container for the sign-in form
@@ -112,7 +93,7 @@ export default function SignInForm() {
                     placeholder="Enter your email"
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                     {...field}
-                    disabled={isCredentialsPending || isSocialPending}
+                    disabled={isCredentialsPending}
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -129,7 +110,7 @@ export default function SignInForm() {
                 field={field}
                 label="Password"
                 placeholder="Enter your password"
-                disabled={isCredentialsPending || isSocialPending}
+                disabled={isCredentialsPending}
                 id="password"
               />
             )}
@@ -159,50 +140,7 @@ export default function SignInForm() {
         <FormFeedback message={data?.error} type="error" />
       </Form>
 
-      {/* Separator with text in the middle */}
-      <div className="relative w-full pt-2 md:pt-0">
-        <Separator />
-        <span className="font-inter absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform bg-white px-2 text-xs text-slate-500">
-          Or sign in with
-        </span>
-      </div>
-
-      {/* Social Login Buttons section */}
-      <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3">
-        {/* Array of social providers, mapped to create buttons */}
-        {[
-          { src: "/logos/logo-google.svg", alt: "Google", label: "Google" },
-          { src: "/logos/logo-linkedin.svg", alt: "LinkedIn", label: "LinkedIn" },
-          { src: "/logos/logo-microsoft.svg", alt: "Microsoft", label: "Microsoft" },
-          { src: "/logos/logo-orcid.svg", alt: "ORCID", label: "ORCID" },
-        ].map((provider) => (
-          <Button
-            key={provider.label}
-            variant="outline"
-            onClick={() => {
-              const providerName = provider.label.toLowerCase();
-              if (providerName === "google") {
-                handleOAuthSignIn("google");
-              } else if (providerName === "orcid") {
-                handleOAuthSignIn("orcid");
-              } else if (providerName === "microsoft") {
-                handleOAuthSignIn("microsoft-entra-id");
-              }
-            }}
-            disabled={areSocialsDisabled}
-            className="relative h-9 w-full cursor-pointer overflow-hidden rounded px-5 py-2.5 text-white transition-all duration-500 hover:rounded-sm hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:h-10"
-          >
-            {/* Social provider logos */}
-            <Image
-              src={provider.src}
-              alt={provider.alt}
-              width={18}
-              height={18}
-              className="relative md:h-5 md:w-5"
-            />
-          </Button>
-        ))}
-      </div>
+      <AuthSocialProvider disabled={areSocialsDisabled} separatorText="Or sign in with" />
 
       {/* Link to Sign Up page for new users */}
       <p className="font-inter pt-2 text-center text-xs text-slate-600 md:pt-0 md:text-sm">
