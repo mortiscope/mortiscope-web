@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { updateSessionActivity } from "@/features/account/actions/update-session-activity";
 import { hasValidAuthSession } from "@/lib/auth";
 import {
   apiAuthPrefix,
@@ -28,32 +27,31 @@ export default async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
     if (token) {
-      // For JWT sessions, check if the session still exists in database
+      // For JWT sessions, validate session via API endpoint
       const sessionToken = token.sessionId as string;
 
       if (sessionToken) {
-        const { db } = await import("@/db");
-        const { sessions } = await import("@/db/schema");
-        const { eq } = await import("drizzle-orm");
-
         try {
-          const sessionExists = await db
-            .select()
-            .from(sessions)
-            .where(eq(sessions.sessionToken, sessionToken))
-            .limit(1);
+          // Use fetch to validate session without heavy DB imports
+          const response = await fetch(new URL("/api/session", req.url), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionToken, updateActivity: false }),
+          });
 
-          isLoggedIn = sessionExists.length > 0;
-
-          if (!isLoggedIn) {
+          if (response.ok) {
+            const { valid } = await response.json();
+            isLoggedIn = valid;
+          } else {
+            // API call failed, fall back to basic JWT validation
+            isLoggedIn = !!token;
           }
         } catch {
-          // If database check fails, fall back to basic JWT validation
+          // If API call fails, fall back to basic JWT validation
           isLoggedIn = !!token;
         }
       } else {
         // No session token in JWT, use basic validation
-
         isLoggedIn = !!token;
       }
     } else {
@@ -123,16 +121,21 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/signin", nextUrl));
   }
 
-  // Update session activity for authenticated users
-  if (isLoggedIn) {
+  // Update session activity for authenticated users on protected routes
+  if (isLoggedIn && !isPublicRoute && !isApiAuthRoute && !isPublicApiRoute) {
     try {
-      // Get session cookie for activity update
-      const sessionCookie =
-        req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
+      // Get session token from JWT for activity update
+      const { getToken } = await import("next-auth/jwt");
+      const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+      const sessionToken = token?.sessionId as string;
 
-      if (sessionCookie?.value) {
-        // Update session activity in background
-        updateSessionActivity(sessionCookie.value).catch(() => {
+      if (sessionToken) {
+        // Update session activity via API endpoint (fire and forget)
+        fetch(new URL("/api/session", req.url), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionToken, updateActivity: true }),
+        }).catch(() => {
           // Session activity update failed, but don't block the request
         });
       }

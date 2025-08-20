@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useTwoFactorAuth } from "@/features/account/hooks/use-two-factor-auth";
@@ -16,6 +16,8 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
   const [isInitialSetup, setIsInitialSetup] = useState(false);
   /** A flag for the loading state, used for both fetching and regenerating codes. */
   const [isLoading, setIsLoading] = useState(false);
+  /** Track the data is already fetched for this modal session to prevent infinite loops */
+  const hasFetchedRef = useRef(false);
 
   // Initializes a custom hook that provides the server action mutations.
   const { getRecoveryCodes, regenerateRecoveryCodes } = useTwoFactorAuth();
@@ -32,10 +34,13 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
           paddedCodes.push(null);
         }
         setDisplayCodes(paddedCodes.slice(0, 16));
-      } else {
+        hasFetchedRef.current = true;
+      } else if (!hasFetchedRef.current) {
         // View Status Mode
         setIsInitialSetup(false);
         setIsLoading(true);
+        hasFetchedRef.current = true;
+
         getRecoveryCodes.mutate(undefined, {
           onSuccess: (
             data:
@@ -69,6 +74,9 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
           },
         });
       }
+    } else {
+      // Reset the fetch flag when modal closes
+      hasFetchedRef.current = false;
     }
   }, [isOpen, initialCodes, getRecoveryCodes]);
 
