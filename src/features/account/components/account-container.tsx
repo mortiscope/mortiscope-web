@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 
 import { AccountContent } from "@/features/account/components/account-content";
 import { AccountNavigation } from "@/features/account/components/account-navigation";
@@ -42,32 +42,21 @@ const sectionVariants = {
  * Manages tab state and coordinates between navigation and content.
  */
 export const AccountContainer = () => {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState("profile");
 
   // Initialize active tab from URL search params
-  useEffect(() => {
+  const getInitialTab = () => {
     const tabFromUrl = searchParams.get("tab");
     const validTabs = ["profile", "security", "sessions", "deletion"];
+    return tabFromUrl && validTabs.includes(tabFromUrl) ? tabFromUrl : "profile";
+  };
 
-    if (tabFromUrl && validTabs.includes(tabFromUrl)) {
-      setActiveTab(tabFromUrl);
-    } else {
-      setActiveTab("profile");
-    }
-  }, [searchParams]);
+  const [activeTab, setActiveTab] = useState(getInitialTab);
 
-  // Handle tab change and update URL
-  const handleTabChange = useCallback(
-    (newTab: string) => {
-      setActiveTab(newTab);
-      const params = new URLSearchParams(searchParams.toString());
-      params.set("tab", newTab);
-      router.replace(`/account?${params.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
-  );
+  // Handle tab change with pure local state
+  const handleTabChange = useCallback((newTab: string) => {
+    setActiveTab(newTab);
+  }, []);
 
   return (
     <motion.div
