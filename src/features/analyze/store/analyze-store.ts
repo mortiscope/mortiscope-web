@@ -92,6 +92,7 @@ type PersistedAnalyzeState = {
   status: AnalyzeWizardStatus;
   caseId: string | null;
   details: Partial<CaseDetailsFormData>;
+  sortOption: SortOptionValue;
 };
 
 /**
@@ -373,6 +374,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
         status: state.status,
         caseId: state.caseId,
         details: state.details,
+        sortOption: state.sortOption,
       }),
       // Set the isHydrated flag to true once rehydration is complete.
       onRehydrateStorage: () => (state) => {

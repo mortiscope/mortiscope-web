@@ -1,5 +1,5 @@
 import { motion, type Variants } from "framer-motion";
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,8 +27,8 @@ type EditImageBodyProps = {
  * A presentational component that renders the body content for the edit image modal.
  * It provides a radio group for the user to select how they want to open the annotation editor.
  */
-export const EditImageBody = forwardRef<HTMLDivElement, EditImageBodyProps>(
-  ({ editOption, onEditOptionChange }, ref) => (
+export const EditImageBody = memo(
+  forwardRef<HTMLDivElement, EditImageBodyProps>(({ editOption, onEditOptionChange }, ref) => (
     // The main animated container for the modal body
     <motion.div ref={ref} variants={itemVariants} className="shrink-0 overflow-hidden px-6 pt-2">
       <RadioGroup
@@ -96,7 +96,7 @@ export const EditImageBody = forwardRef<HTMLDivElement, EditImageBodyProps>(
         </Label>
       </RadioGroup>
     </motion.div>
-  )
+  ))
 );
 
 EditImageBody.displayName = "EditImageBody";

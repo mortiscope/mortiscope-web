@@ -3,16 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { type detections, type uploads } from "@/db/schema";
+import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { useSelectionNavigator } from "@/features/cases/hooks/use-selection-navigator";
 import { type ImageFile } from "@/features/images/components/results-images";
-import { type SortOptionValue } from "@/lib/constants";
 
 // Type definitions for the initial data passed from the server.
 type InitialImages = (typeof uploads.$inferSelect & { detections: Detection[] })[];
 type Detection = typeof detections.$inferSelect;
 
 /**
- * A 'smart' hook that encapsulates all state management and logic for the `ResultsImages` component.
+ * A smart hook that encapsulates all state management and logic for the results images component.
  * It handles data mapping, local state for UI controls (sorting, filtering), and orchestrates
  * child hooks and modals for previewing, exporting, and deleting images.
  *
@@ -41,8 +41,11 @@ export const useResultsImages = (initialImages?: InitialImages) => {
 
   // Local State Management
   const [files, setFiles] = useState<ImageFile[]>(mappedImages);
-  const [sortOption, setSortOption] = useState<SortOptionValue>("date-uploaded-desc");
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Use the global sort option from the analyze store
+  const sortOption = useAnalyzeStore((state) => state.sortOption);
+  const setSortOption = useAnalyzeStore((state) => state.setSortOption);
 
   // State to control the visibility and data context for the export, edit, and delete modals.
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);

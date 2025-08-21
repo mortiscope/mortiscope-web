@@ -67,6 +67,8 @@ type ResultsImagesProps = {
   })[];
   /** If true, the component will render its skeleton loading state. */
   isLoading?: boolean;
+  /** The results/case ID for navigation purposes. */
+  resultsId?: string;
 };
 
 /**
@@ -74,7 +76,7 @@ type ResultsImagesProps = {
  * It uses the `useResultsImages` hook to manage all client-side state and logic,
  * and orchestrates the rendering of the toolbar, image grid, and various modals.
  */
-export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) => {
+export const ResultsImages = ({ initialImages, isLoading, resultsId }: ResultsImagesProps) => {
   // State to ensure components with random IDs only render on the client.
   const [isMounted, setIsMounted] = useState(false);
 
@@ -191,6 +193,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
           isOpen={isEditModalOpen}
           onOpenChange={setIsEditModalOpen}
           image={imageToEdit}
+          resultsId={resultsId}
         />
       )}
       {isDeleteModalOpen && (

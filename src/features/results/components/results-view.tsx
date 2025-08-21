@@ -109,7 +109,7 @@ export function ResultsView({ initialCaseData }: ResultsViewProps) {
           isRecalculationNeeded={needsRecalculation}
         />
         {/* Renders the image gallery, passing the initial set of images. */}
-        <ResultsImages initialImages={uploadsWithDetections} />
+        <ResultsImages initialImages={uploadsWithDetections} resultsId={caseData.id} />
       </div>
 
       {/* The component is rendered based on `isSheetMounted`. */}
