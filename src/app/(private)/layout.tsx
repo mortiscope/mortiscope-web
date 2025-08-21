@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 // Dynamically import app breadcrumb and disable Server-Side Rendering (SSR) to prevent hydration issues
 const AppBreadcrumb = dynamic(
@@ -31,6 +31,7 @@ interface Props {
  */
 const PrivateLayout = ({ children }: Props) => {
   const pathname = usePathname();
+  const [isNotFoundPage, setIsNotFoundPage] = useState(false);
 
   // Monitor session status and redirect if revoked
   useSessionMonitor();
@@ -52,8 +53,33 @@ const PrivateLayout = ({ children }: Props) => {
     // This effect runs when the status changes or when the user navigates to a new page.
   }, [submissionStatus, clearSubmissionStatus, pathname]);
 
+  /**
+   * Detect if the children contain a not-found page by checking for specific markers.
+   */
+  useEffect(() => {
+    // Reset on pathname change
+    setIsNotFoundPage(false);
+
+    // Check if children contains not-found indicators
+    const checkForNotFound = () => {
+      const pageContent = document.querySelector('[aria-label="Page Not Found"]');
+      if (pageContent) {
+        setIsNotFoundPage(true);
+      }
+    };
+
+    // Small delay to allow DOM to render
+    const timer = setTimeout(checkForNotFound, 0);
+    return () => clearTimeout(timer);
+  }, [children, pathname]);
+
   // Determine if the breadcrumb should be visible.
   const isBreadcrumbVisible = pathname !== "/dashboard" && pathname !== "/results";
+
+  // If it's a not-found page, render without layout chrome
+  if (isNotFoundPage) {
+    return <>{children}</>;
+  }
 
   return (
     // Provides sidebar state management to all nested components
