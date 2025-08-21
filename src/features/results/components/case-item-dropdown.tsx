@@ -74,7 +74,7 @@ export const CaseItemDropdown = memo(
           align="end"
           // Prevents the default behavior of returning focus to the trigger on close.
           onCloseAutoFocus={(e) => e.preventDefault()}
-          className="w-40"
+          className="w-40 border-2 border-slate-200"
         >
           <DropdownMenuItem
             onSelect={() => onView(caseItem.id)}

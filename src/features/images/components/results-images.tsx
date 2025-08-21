@@ -35,6 +35,13 @@ const DeleteImageModal = dynamic(
     ),
   { loading: () => null }
 );
+const EditImageModal = dynamic(
+  () =>
+    import("@/features/annotation/components/edit-image-modal").then(
+      (module) => module.EditImageModal
+    ),
+  { loading: () => null }
+);
 
 /**
  * Defines the client-side data structure for a single image file, which is mapped from the server data.
@@ -88,6 +95,10 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
     setIsExportModalOpen,
     imageToExport,
     handleOpenExportModal,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    imageToEdit,
+    handleOpenEditModal,
     isDeleteModalOpen,
     setIsDeleteModalOpen,
     imageToDelete,
@@ -141,6 +152,7 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
                 images={sortedFiles}
                 sortOption={sortOption}
                 onView={handleOpenModal}
+                onEdit={handleOpenEditModal}
                 onExport={handleOpenExportModal}
                 onDelete={handleOpenDeleteModal}
               />
@@ -172,6 +184,13 @@ export const ResultsImages = ({ initialImages, isLoading }: ResultsImagesProps) 
           isOpen={isExportModalOpen}
           onOpenChange={setIsExportModalOpen}
           image={imageToExport}
+        />
+      )}
+      {isEditModalOpen && (
+        <EditImageModal
+          isOpen={isEditModalOpen}
+          onOpenChange={setIsEditModalOpen}
+          image={imageToEdit}
         />
       )}
       {isDeleteModalOpen && (

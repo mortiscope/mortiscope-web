@@ -44,9 +44,11 @@ export const useResultsImages = (initialImages?: InitialImages) => {
   const [sortOption, setSortOption] = useState<SortOptionValue>("date-uploaded-desc");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // State to control the visibility and data context for the export and delete modals.
+  // State to control the visibility and data context for the export, edit, and delete modals.
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [imageToExport, setImageToExport] = useState<ImageFile | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<ImageFile | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [imageToDelete, setImageToDelete] = useState<ImageFile | null>(null);
 
@@ -96,6 +98,11 @@ export const useResultsImages = (initialImages?: InitialImages) => {
     setImageToExport(imageFile);
     setIsExportModalOpen(true);
   };
+  /** Opens the edit modal and sets the context for the selected image. */
+  const handleOpenEditModal = (imageFile: ImageFile) => {
+    setImageToEdit(imageFile);
+    setIsEditModalOpen(true);
+  };
   /** Opens the delete modal and sets the context for the selected image. */
   const handleOpenDeleteModal = (imageFile: ImageFile) => {
     setImageToDelete(imageFile);
@@ -119,6 +126,11 @@ export const useResultsImages = (initialImages?: InitialImages) => {
     setIsExportModalOpen,
     imageToExport,
     handleOpenExportModal,
+    // Edit modal state and handlers
+    isEditModalOpen,
+    setIsEditModalOpen,
+    imageToEdit,
+    handleOpenEditModal,
     // Delete modal state and handlers
     isDeleteModalOpen,
     setIsDeleteModalOpen,

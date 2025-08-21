@@ -48,6 +48,8 @@ interface ImageCardProps {
   sortOption: string;
   /** A callback function invoked when the view action is triggered. */
   onView: (imageId: string) => void;
+  /** A callback function to initiate editing/annotation of the image. */
+  onEdit: (imageFile: ImageFile) => void;
   /** A callback function to initiate a download/export of the image. */
   onExport: (imageFile: ImageFile) => void;
   /** A callback function to initiate the deletion of the image. */
@@ -60,7 +62,7 @@ interface ImageCardProps {
  * re-animation when the list is re-sorted.
  */
 export const ImageCard = memo(
-  ({ imageFile, sortOption, onView, onExport, onDelete }: ImageCardProps) => {
+  ({ imageFile, sortOption, onView, onEdit, onExport, onDelete }: ImageCardProps) => {
     return (
       <motion.div
         layout
@@ -103,6 +105,7 @@ export const ImageCard = memo(
                   variant="ghost"
                   size="icon"
                   aria-label={`Edit ${imageFile.name}`}
+                  onClick={() => onEdit(imageFile)}
                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-sky-100 hover:text-sky-600"
                 >
                   <HiOutlinePencilSquare className="h-4 w-4 md:h-5 md:w-5" />
