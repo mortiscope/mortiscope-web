@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { memo } from "react";
+import { HiOutlinePencilSquare } from "react-icons/hi2";
 import { LuDownload, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 
@@ -79,7 +80,7 @@ export const ImageCard = memo(
         </div>
         {/* A toolbar at the bottom of the card containing action buttons. */}
         <div className="flex w-full flex-col items-center justify-center p-1">
-          <div className="my-1 flex flex-shrink-0 items-center gap-1">
+          <div className="my-1 flex flex-shrink-0 items-center gap-0.5 lg:gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -89,7 +90,7 @@ export const ImageCard = memo(
                   onClick={() => onView(imageFile.id)}
                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-amber-100 hover:text-amber-600"
                 >
-                  <MdOutlineRemoveRedEye className="h-5 w-5" />
+                  <MdOutlineRemoveRedEye className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -101,11 +102,26 @@ export const ImageCard = memo(
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label={`Edit ${imageFile.name}`}
+                  className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-sky-100 hover:text-sky-600"
+                >
+                  <HiOutlinePencilSquare className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="font-inter">Edit</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   aria-label={`Download ${imageFile.name}`}
                   onClick={() => onExport(imageFile)}
                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-emerald-100 hover:text-emerald-600"
                 >
-                  <LuDownload className="h-5 w-5" />
+                  <LuDownload className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -121,7 +137,7 @@ export const ImageCard = memo(
                   onClick={() => onDelete(imageFile)}
                   className="h-8 w-8 flex-shrink-0 cursor-pointer text-slate-500 transition-colors duration-300 ease-in-out hover:bg-rose-100 hover:text-rose-600"
                 >
-                  <LuTrash2 className="h-5 w-5" />
+                  <LuTrash2 className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
