@@ -130,19 +130,30 @@ export const ResultsToolbar = memo(
                 <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-64" align="end">
-              {relevantSortOptions.map((option: (typeof SORT_OPTIONS)[number]) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onSelect={() => onSortOptionChange(option.value)}
-                  className={cn(
-                    "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
-                  )}
-                >
-                  <SortIcon value={option.value} />
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent className="w-64 border-2 border-slate-200" align="end">
+              {relevantSortOptions.map((option: (typeof SORT_OPTIONS)[number], index) => {
+                const isActive = option.value === sortOption;
+                const prevOption = relevantSortOptions[index - 1];
+                const isPrevActive = prevOption?.value === sortOption;
+
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => onSortOptionChange(option.value)}
+                    className={cn(
+                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600",
+                      index > 0 && "mt-0.5",
+                      isActive &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                      isActive && index > 0 && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1"
+                    )}
+                  >
+                    <SortIcon value={option.value} />
+                    {option.label}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
 

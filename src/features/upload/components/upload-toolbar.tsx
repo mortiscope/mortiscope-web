@@ -59,6 +59,8 @@ type UploadToolbarProps = {
   onSearchTermChange: (term: string) => void;
   /** The display label for the currently selected sort option. */
   currentSortLabel: string;
+  /** The currently selected sort option value. */
+  sortOption: SortOptionValue;
   /** A callback function to update the sort option in the parent component's state. */
   onSortOptionChange: (value: SortOptionValue) => void;
   /** The current view mode ('list' or 'grid'). */
@@ -76,6 +78,7 @@ export const UploadToolbar = memo(
     searchTerm,
     onSearchTermChange,
     currentSortLabel,
+    sortOption,
     onSortOptionChange,
     viewMode,
     onViewModeChange,
@@ -111,19 +114,30 @@ export const UploadToolbar = memo(
                 <LuArrowUpDown className="h-4 w-4 shrink-0 text-slate-600" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              {SORT_OPTIONS.map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onSelect={() => onSortOptionChange(option.value as SortOptionValue)}
-                  className={cn(
-                    "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
-                  )}
-                >
-                  <SortIcon value={option.value as SortOptionValue} />
-                  {option.label}
-                </DropdownMenuItem>
-              ))}
+            <DropdownMenuContent align="end" className="w-64 border-2 border-slate-200">
+              {SORT_OPTIONS.map((option, index) => {
+                const isActive = option.value === sortOption;
+                const prevOption = SORT_OPTIONS[index - 1];
+                const isPrevActive = prevOption?.value === sortOption;
+
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => onSortOptionChange(option.value as SortOptionValue)}
+                    className={cn(
+                      "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600",
+                      index > 0 && "mt-0.5",
+                      isActive &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                      isActive && index > 0 && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1"
+                    )}
+                  >
+                    <SortIcon value={option.value as SortOptionValue} />
+                    {option.label}
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
 

@@ -74,7 +74,7 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
-          <DropdownMenuContent align="end" className="max-w-xs">
+          <DropdownMenuContent align="end" className="max-w-xs border-2 border-slate-200">
             <DropdownMenuItem
               onSelect={(e) => {
                 e.preventDefault();
@@ -93,7 +93,7 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
                 handleOpenModal("labelled_images");
               }}
               className={cn(
-                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
               )}
             >
               <FaRegFileImage className="mr-2 h-4 w-4 shrink-0 text-slate-600" />
@@ -105,7 +105,7 @@ export const ExportDropdown = ({ caseId }: ExportDropdownProps) => {
                 handleOpenModal("raw_data");
               }}
               className={cn(
-                "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
+                "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600"
               )}
             >
               <FaRegFileAlt className="mr-2 h-4 w-4 shrink-0 text-slate-600" />

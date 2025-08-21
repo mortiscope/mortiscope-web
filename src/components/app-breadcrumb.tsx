@@ -122,13 +122,15 @@ const StyledDropdownMenuItem = ({
   href,
   label,
   isStatic = false,
-}: BreadcrumbItemType & { isStatic?: boolean }) => (
+  index = 0,
+}: BreadcrumbItemType & { isStatic?: boolean; index?: number }) => (
   <DropdownMenuItem
     asChild
     disabled={isStatic}
     className={cn(
       "border-2 border-transparent transition-colors duration-300 ease-in-out",
-      !isStatic && "cursor-pointer hover:border-emerald-200 focus:bg-emerald-100"
+      !isStatic && "cursor-pointer hover:border-emerald-200 focus:bg-emerald-100",
+      index > 0 && "mt-0.5"
     )}
   >
     {/* Cast the dynamically generated href string as a Route type. */}
@@ -248,10 +250,17 @@ export function AppBreadcrumb() {
             <BreadcrumbItem>
               <DropdownMenu>
                 <EllipsisTrigger />
-                <DropdownMenuContent align="start" className="font-inter">
-                  {linkItems.map((item) => {
+                <DropdownMenuContent align="start" className="font-inter border-2 border-slate-200">
+                  {linkItems.map((item, index) => {
                     const isStatic = pathname === "/analyze" && item.href === "/analyze";
-                    return <StyledDropdownMenuItem key={item.href} {...item} isStatic={isStatic} />;
+                    return (
+                      <StyledDropdownMenuItem
+                        key={item.href}
+                        {...item}
+                        isStatic={isStatic}
+                        index={index}
+                      />
+                    );
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -300,12 +309,13 @@ export function AppBreadcrumb() {
             <BreadcrumbItem>
               <DropdownMenu>
                 <EllipsisTrigger />
-                <DropdownMenuContent align="start" className="font-inter">
-                  {linkItems.slice(1, -1).map((item) => (
+                <DropdownMenuContent align="start" className="font-inter border-2 border-slate-200">
+                  {linkItems.slice(1, -1).map((item, index) => (
                     <StyledDropdownMenuItem
                       key={item.href}
                       {...item}
                       isStatic={pathname === "/analyze" && item.href === "/analyze"}
+                      index={index}
                     />
                   ))}
                 </DropdownMenuContent>

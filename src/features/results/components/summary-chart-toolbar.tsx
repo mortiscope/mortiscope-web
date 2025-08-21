@@ -119,21 +119,31 @@ export const SummaryChartToolbar = memo(
             <TooltipContent>
               <p className="font-inter">Select chart</p>
             </TooltipContent>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 border-2 border-slate-200">
               {/* Maps over the configuration array to render the chart options. */}
-              {chartOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onSelect={() => onChartSelect(option.value)}
-                  className={cn(
-                    dropdownItemStyle,
-                    selectedChart === option.value && "bg-slate-200"
-                  )}
-                >
-                  <option.icon className="mr-2 h-4 w-4" />
-                  <span>{option.label}</span>
-                </DropdownMenuItem>
-              ))}
+              {chartOptions.map((option, index) => {
+                const isActive = selectedChart === option.value;
+                const prevOption = chartOptions[index - 1];
+                const isPrevActive = prevOption?.value === selectedChart;
+
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => onChartSelect(option.value)}
+                    className={cn(
+                      dropdownItemStyle,
+                      index > 0 && "mt-0.5",
+                      isActive &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                      isActive && index > 0 && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1"
+                    )}
+                  >
+                    <option.icon className="mr-2 h-4 w-4" />
+                    <span>{option.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </Tooltip>
@@ -176,13 +186,14 @@ export const SummaryChartToolbar = memo(
             <TooltipContent>
               <p className="font-inter">Select data source</p>
             </TooltipContent>
-            <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuContent align="end" className="w-64 border-2 border-slate-200">
               {/* Static options for aggregated data sources. */}
               <DropdownMenuItem
                 onSelect={() => onDataSourceSelect("overall")}
                 className={cn(
                   dropdownItemStyle,
-                  selectedDataSource === "overall" && "bg-slate-200"
+                  selectedDataSource === "overall" &&
+                    "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600"
                 )}
               >
                 <IoGridOutline className="mr-2 h-4 w-4" /> Overall
@@ -191,26 +202,46 @@ export const SummaryChartToolbar = memo(
                 onSelect={() => onDataSourceSelect("maximum-stages")}
                 className={cn(
                   dropdownItemStyle,
-                  selectedDataSource === "maximum-stages" && "bg-slate-200"
+                  "mt-0.5",
+                  selectedDataSource === "maximum-stages" &&
+                    "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                  selectedDataSource === "maximum-stages" &&
+                    selectedDataSource === "maximum-stages" &&
+                    "mt-1",
+                  selectedDataSource !== "maximum-stages" &&
+                    selectedDataSource === "overall" &&
+                    "mt-1"
                 )}
               >
                 <IoPodiumOutline className="mr-2 h-4 w-4" /> Maximum Stages
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {/* Dynamically generated options for each individual uploaded image. */}
-              {uploads.map((upload) => (
-                <DropdownMenuItem
-                  key={upload.id}
-                  onSelect={() => onDataSourceSelect(upload.id)}
-                  className={cn(
-                    dropdownItemStyle,
-                    selectedDataSource === upload.id && "bg-slate-200"
-                  )}
-                >
-                  <IoImagesOutline className="mr-2 h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{upload.name}</span>
-                </DropdownMenuItem>
-              ))}
+              {uploads.map((upload, index) => {
+                const isActive = selectedDataSource === upload.id;
+                const prevUpload = uploads[index - 1];
+                const isPrevActive = prevUpload
+                  ? selectedDataSource === prevUpload.id
+                  : selectedDataSource === "maximum-stages";
+
+                return (
+                  <DropdownMenuItem
+                    key={upload.id}
+                    onSelect={() => onDataSourceSelect(upload.id)}
+                    className={cn(
+                      dropdownItemStyle,
+                      "mt-0.5",
+                      isActive &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                      isActive && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1"
+                    )}
+                  >
+                    <IoImagesOutline className="mr-2 h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">{upload.name}</span>
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </Tooltip>

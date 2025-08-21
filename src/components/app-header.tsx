@@ -199,7 +199,7 @@ export const AppHeader = React.memo(() => {
                 <UserAvatar user={memoizedUser!} />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuContent className="w-56 border-2 border-slate-200" align="end">
               {/* Displays user profile information. */}
               <DropdownMenuLabel className="font-inter font-normal">
                 <div className="flex items-center gap-2">
@@ -215,30 +215,90 @@ export const AppHeader = React.memo(() => {
               <DropdownMenuSeparator />
 
               {/* Navigation links within the dropdown menu. */}
-              <DropdownMenuItem asChild className={menuItemClassName}>
+              <DropdownMenuItem
+                asChild
+                className={cn(
+                  menuItemClassName,
+                  pathname === "/dashboard" && "border-emerald-200 bg-emerald-50 text-emerald-700"
+                )}
+              >
                 <Link href="/dashboard">
-                  <LuHouse className="mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500" />
-                  <span className="transition-colors group-hover:text-emerald-500">Home</span>
+                  <LuHouse
+                    className={cn(
+                      "mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500",
+                      pathname === "/dashboard" && "text-emerald-600"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "transition-colors group-hover:text-emerald-500",
+                      pathname === "/dashboard" && "text-emerald-700"
+                    )}
+                  >
+                    Home
+                  </span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className={menuItemClassName}>
+              <DropdownMenuItem
+                asChild
+                className={cn(
+                  menuItemClassName,
+                  "mt-1",
+                  pathname === "/account" && "border-emerald-200 bg-emerald-50 text-emerald-700"
+                )}
+              >
                 <Link href="/account">
-                  <IoSettingsOutline className="mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500" />
-                  <span className="transition-colors group-hover:text-emerald-500">Account</span>
+                  <IoSettingsOutline
+                    className={cn(
+                      "mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500",
+                      pathname === "/account" && "text-emerald-600"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "transition-colors group-hover:text-emerald-500",
+                      pathname === "/account" && "text-emerald-700"
+                    )}
+                  >
+                    Account
+                  </span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild className={menuItemClassName}>
+              <DropdownMenuItem
+                asChild
+                className={cn(
+                  menuItemClassName,
+                  "mt-1",
+                  pathname === "/help" && "border-emerald-200 bg-emerald-50 text-emerald-700"
+                )}
+              >
                 {/* @ts-expect-error: Route is yet to be implemented. */}
                 <Link href="/help">
-                  <PiLightbulbFilament className="mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500" />
-                  <span className="transition-colors group-hover:text-emerald-500">Help</span>
+                  <PiLightbulbFilament
+                    className={cn(
+                      "mr-2 h-4 w-4 transition-colors group-hover:text-emerald-500",
+                      pathname === "/help" && "text-emerald-600"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "transition-colors group-hover:text-emerald-500",
+                      pathname === "/help" && "text-emerald-700"
+                    )}
+                  >
+                    Help
+                  </span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
 
               {/* The sign-out action item. */}
               <DropdownMenuItem
-                className={cn(menuItemClassName, isSigningOut && "cursor-not-allowed opacity-50")}
+                className={cn(
+                  menuItemClassName,
+                  "mt-1",
+                  isSigningOut && "cursor-not-allowed opacity-50"
+                )}
                 onSelect={isSigningOut ? undefined : handleSignOut}
                 disabled={isSigningOut}
               >

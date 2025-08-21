@@ -190,6 +190,7 @@ export const UploadPreview = () => {
               searchTerm={searchTerm}
               onSearchTermChange={setSearchTerm}
               currentSortLabel={currentSortLabel}
+              sortOption={sortOption}
               onSortOptionChange={(value) => setSortOption(value as SortOptionValue)}
               viewMode={viewMode}
               onViewModeChange={(value) => setViewMode(value as ViewMode)}

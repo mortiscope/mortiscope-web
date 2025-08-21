@@ -92,7 +92,7 @@ export const CaseItemDropdown = memo(
               setTimeout(() => onStartRename(e, caseItem.id, caseItem.caseName), 0);
             }}
             className={cn(
-              "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
+              "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
             )}
           >
             <GoPencil className="mr-2 h-4 w-4" />
@@ -101,7 +101,7 @@ export const CaseItemDropdown = memo(
           <DropdownMenuItem
             onSelect={() => onDelete(caseItem.id, caseItem.caseName)}
             className={cn(
-              "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
+              "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-rose-200 hover:!text-rose-600 focus:bg-red-100 hover:[&_svg]:!text-rose-600"
             )}
           >
             <LuTrash2 className="mr-2 h-4 w-4" />

@@ -193,13 +193,17 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
         disabled={isLocked}
       >
         <FormControl>
-          <SelectTrigger className={commonSelectTriggerClasses}>
+          <SelectTrigger className={cn(commonSelectTriggerClasses, "rounded-lg")}>
             <SelectValue placeholder="Select Region" />
           </SelectTrigger>
         </FormControl>
-        <SelectContent className="max-h-72 overflow-x-auto">
+        <SelectContent className="max-h-72 overflow-x-auto rounded-lg border-2 border-slate-200 shadow-none">
           {regionList.map((r) => (
-            <SelectItem key={r.code} value={r.code} className={customSelectItemStyles}>
+            <SelectItem
+              key={r.code}
+              value={r.code}
+              className={cn(customSelectItemStyles, "rounded-md")}
+            >
               {r.name}
             </SelectItem>
           ))}
@@ -226,13 +230,17 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
         disabled={disabledStates.province}
       >
         <FormControl>
-          <SelectTrigger className={commonSelectTriggerClasses}>
+          <SelectTrigger className={cn(commonSelectTriggerClasses, "rounded-lg")}>
             <SelectValue placeholder="Select Province" />
           </SelectTrigger>
         </FormControl>
-        <SelectContent className="max-h-72 overflow-x-auto">
+        <SelectContent className="max-h-72 overflow-x-auto rounded-lg border-2 border-slate-200 shadow-none">
           {provinceList.map((p) => (
-            <SelectItem key={p.code} value={p.code} className={customSelectItemStyles}>
+            <SelectItem
+              key={p.code}
+              value={p.code}
+              className={cn(customSelectItemStyles, "rounded-md")}
+            >
               {p.name}
             </SelectItem>
           ))}
@@ -259,13 +267,17 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
         disabled={disabledStates.city}
       >
         <FormControl>
-          <SelectTrigger className={commonSelectTriggerClasses}>
+          <SelectTrigger className={cn(commonSelectTriggerClasses, "rounded-lg")}>
             <SelectValue placeholder="Select City/Municipality" />
           </SelectTrigger>
         </FormControl>
-        <SelectContent className="max-h-72 overflow-x-auto">
+        <SelectContent className="max-h-72 overflow-x-auto rounded-lg border-2 border-slate-200 shadow-none">
           {cityList.map((c) => (
-            <SelectItem key={c.code} value={c.code} className={customSelectItemStyles}>
+            <SelectItem
+              key={c.code}
+              value={c.code}
+              className={cn(customSelectItemStyles, "rounded-md")}
+            >
               {c.name}
             </SelectItem>
           ))}
@@ -287,13 +299,17 @@ export function LocationDropdown<T extends FieldValues = FieldValues>({
         disabled={disabledStates.barangay}
       >
         <FormControl>
-          <SelectTrigger className={commonSelectTriggerClasses}>
+          <SelectTrigger className={cn(commonSelectTriggerClasses, "rounded-lg")}>
             <SelectValue placeholder="Select Barangay" />
           </SelectTrigger>
         </FormControl>
-        <SelectContent className="max-h-72 overflow-x-auto">
+        <SelectContent className="max-h-72 overflow-x-auto rounded-lg border-2 border-slate-200 shadow-none">
           {barangayList.map((b) => (
-            <SelectItem key={b.code} value={b.code} className={customSelectItemStyles}>
+            <SelectItem
+              key={b.code}
+              value={b.code}
+              className={cn(customSelectItemStyles, "rounded-md")}
+            >
               {b.name}
             </SelectItem>
           ))}

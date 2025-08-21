@@ -144,19 +144,32 @@ export const PmiWidgetToolbar = memo(
             <DropdownMenuContent
               align="end"
               onCloseAutoFocus={(e) => e.preventDefault()}
-              className="w-40"
+              className="w-40 border-2 border-slate-200"
             >
               {/* Maps over the configuration array to render the dropdown options. */}
-              {timeUnitOptions.map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onSelect={() => onUnitSelect(option.value)}
-                  className={cn(dropdownItemStyle, selectedUnit === option.value && "bg-slate-200")}
-                >
-                  <option.icon className="mr-2 h-4 w-4" />
-                  <span>{option.label}</span>
-                </DropdownMenuItem>
-              ))}
+              {timeUnitOptions.map((option, index) => {
+                const isActive = selectedUnit === option.value;
+                const prevOption = timeUnitOptions[index - 1];
+                const isPrevActive = prevOption?.value === selectedUnit;
+
+                return (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onSelect={() => onUnitSelect(option.value)}
+                    className={cn(
+                      dropdownItemStyle,
+                      index > 0 && "mt-0.5",
+                      isActive &&
+                        "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
+                      isActive && index > 0 && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1"
+                    )}
+                  >
+                    <option.icon className="mr-2 h-4 w-4" />
+                    <span>{option.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
             </DropdownMenuContent>
           </DropdownMenu>
         </Tooltip>
