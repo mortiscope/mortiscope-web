@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -26,20 +27,37 @@ interface EditImageModalProps {
   isOpen: boolean;
   /** A callback function to handle changes to the modal's open state. */
   onOpenChange: (isOpen: boolean) => void;
+  /** The results/case ID for navigation purposes. */
+  resultsId?: string;
 }
 
 /**
  * A smart modal component that allows a user to configure how they want to edit and review
  * annotations for a single image. It manages its own internal state for the user's selection.
  */
-export const EditImageModal = ({ image, isOpen, onOpenChange }: EditImageModalProps) => {
+export const EditImageModal = ({ image, isOpen, onOpenChange, resultsId }: EditImageModalProps) => {
   /** Local state to manage the user's selected edit option. */
   const [editOption, setEditOption] = useState<"current_tab" | "new_tab">("current_tab");
 
+  const router = useRouter();
+
   /**
-   * A placeholder function for the primary proceed action.
+   * Handles the primary proceed action by navigating to the edit page.
    */
-  const handlePrimaryAction = () => {};
+  const handlePrimaryAction = () => {
+    if (!image || !resultsId) return;
+
+    const editUrl = `/results/${resultsId}/image/${image.id}/edit`;
+
+    if (editOption === "new_tab") {
+      window.open(editUrl, "_blank");
+    } else {
+      router.push(editUrl as `/results/${string}/image/${string}/edit`);
+    }
+
+    // Close the modal after navigation
+    handleOpenChange(false);
+  };
 
   /**
    * A wrapper for the `onOpenChange` callback that resets all local state when the modal is closed.
