@@ -86,6 +86,13 @@ export const EditorHeader = memo(
             <IoIosArrowRoundBack className="transition-all duration-200 group-hover:-translate-x-1 group-hover:text-emerald-200" />
           </Button>
 
+          {/* MORTISCOPE title, visible only on medium devices */}
+          <span className="font-plus-jakarta-sans hidden text-2xl font-semibold md:block lg:hidden">
+            <span className="text-amber-400">MORTI</span>
+            <span className="text-white">SCOPE</span>
+            <span className="text-amber-400">.</span>
+          </span>
+
           {/* Mobile sidebar toggle button, hidden on medium screens and above. */}
           <div
             className={`flex-shrink-0 md:hidden ${hasOpenPanel && isMobileSidebarOpen ? "cursor-not-allowed" : "cursor-pointer"}`}
@@ -122,42 +129,40 @@ export const EditorHeader = memo(
         </div>
 
         {/* Center section */}
-        {totalImages > 1 && (
-          <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
-            {/* Previous image button */}
-            <div className={currentImageIndex <= 0 ? "cursor-not-allowed" : ""}>
-              <Button
-                onClick={handlePreviousImage}
-                variant="ghost"
-                size="icon"
-                disabled={currentImageIndex <= 0}
-                className="group h-8 w-8 bg-transparent text-white hover:cursor-pointer hover:bg-transparent hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10 [&_svg]:!size-4 md:[&_svg]:!size-5"
-                aria-label="Previous image"
-              >
-                <ChevronLeft className="transition-colors duration-200 group-hover:text-emerald-200" />
-              </Button>
-            </div>
-
-            {/* Image position indicator */}
-            <span className="font-plus-jakarta-sans min-w-[3rem] px-2 text-center text-sm font-medium text-slate-100 md:text-base">
-              {currentPosition} / {totalImages}
-            </span>
-
-            {/* Next image button. */}
-            <div className={currentImageIndex >= totalImages - 1 ? "cursor-not-allowed" : ""}>
-              <Button
-                onClick={handleNextImage}
-                variant="ghost"
-                size="icon"
-                disabled={currentImageIndex >= totalImages - 1}
-                className="group h-8 w-8 bg-transparent text-white hover:cursor-pointer hover:bg-transparent hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10 [&_svg]:!size-4 md:[&_svg]:!size-5"
-                aria-label="Next image"
-              >
-                <ChevronRight className="transition-colors duration-200 group-hover:text-emerald-200" />
-              </Button>
-            </div>
+        <div className="absolute top-1/2 left-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
+          {/* Previous image button */}
+          <div className={currentImageIndex <= 0 ? "cursor-not-allowed" : ""}>
+            <Button
+              onClick={handlePreviousImage}
+              variant="ghost"
+              size="icon"
+              disabled={currentImageIndex <= 0}
+              className="group h-8 w-8 bg-transparent text-white hover:cursor-pointer hover:bg-transparent hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10 [&_svg]:!size-4 md:[&_svg]:!size-5"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="transition-colors duration-200 group-hover:text-emerald-200" />
+            </Button>
           </div>
-        )}
+
+          {/* Image position indicator */}
+          <span className="font-plus-jakarta-sans min-w-[3rem] px-2 text-center text-sm font-medium text-slate-100 md:text-base">
+            {currentPosition} / {totalImages}
+          </span>
+
+          {/* Next image button. */}
+          <div className={currentImageIndex >= totalImages - 1 ? "cursor-not-allowed" : ""}>
+            <Button
+              onClick={handleNextImage}
+              variant="ghost"
+              size="icon"
+              disabled={currentImageIndex >= totalImages - 1}
+              className="group h-8 w-8 bg-transparent text-white hover:cursor-pointer hover:bg-transparent hover:text-white focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:h-10 md:w-10 [&_svg]:!size-4 md:[&_svg]:!size-5"
+              aria-label="Next image"
+            >
+              <ChevronRight className="transition-colors duration-200 group-hover:text-emerald-200" />
+            </Button>
+          </div>
+        </div>
 
         {/* Right section */}
         <div className="flex flex-shrink-0 items-center gap-1">
