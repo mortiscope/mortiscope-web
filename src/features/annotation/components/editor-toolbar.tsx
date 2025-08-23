@@ -2,13 +2,12 @@ import { HiMiniArrowPath } from "react-icons/hi2";
 import { IoArrowRedoOutline, IoArrowUndoOutline } from "react-icons/io5";
 import { IoHandRightOutline } from "react-icons/io5";
 import { LuFocus, LuZoomIn, LuZoomOut } from "react-icons/lu";
-import { PiBoundingBox, PiCheckSquare, PiCursor, PiEye } from "react-icons/pi";
+import { PiBoundingBox, PiCheckSquare, PiCursor, PiEye, PiSquare } from "react-icons/pi";
 import { TbRotate } from "react-icons/tb";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 
 /**
  * Defines the props for the editor toolbar component.
@@ -24,6 +23,10 @@ type EditorToolbarProps = {
   onCenterView?: () => void;
   /** Optional callback to reset the view to initial state. */
   onResetView?: () => void;
+  /** A boolean indicating if the minimap is currently enabled. */
+  isMinimapEnabled?: boolean;
+  /** Optional callback to toggle the minimap visibility. */
+  onToggleMinimap?: () => void;
 };
 
 /**
@@ -34,20 +37,16 @@ type EditorToolbarProps = {
  * @returns A React component representing the floating toolbar.
  */
 export function EditorToolbar({
-  hasOpenPanel,
   onZoomIn,
   onZoomOut,
   onCenterView,
   onResetView,
+  isMinimapEnabled = false,
+  onToggleMinimap,
 }: EditorToolbarProps) {
   return (
     // The main container for the toolbar
-    <div
-      className={cn(
-        "fixed top-[calc(50%+2.5rem)] right-2 z-50 flex -translate-y-1/2 flex-col gap-1 rounded-lg bg-emerald-800/80 p-2 shadow-lg backdrop-blur-sm transition-opacity duration-300 md:right-4 md:gap-2 md:rounded-xl md:opacity-100",
-        hasOpenPanel && "opacity-0 md:opacity-100"
-      )}
-    >
+    <div className="fixed top-[calc(50%+2.5rem)] right-2 z-[5] flex -translate-y-1/2 flex-col gap-1 rounded-lg bg-emerald-800/80 p-2 shadow-lg backdrop-blur-sm md:right-4 md:z-50 md:gap-2 md:rounded-xl">
       {/* Section 1: Primary tools */}
       <div className="flex flex-col gap-1">
         <Tooltip>
@@ -138,14 +137,19 @@ export function EditorToolbar({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              aria-label="Enable minimap"
+              onClick={onToggleMinimap}
+              aria-label={isMinimapEnabled ? "Disable minimap" : "Enable minimap"}
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
-              <PiCheckSquare className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              {isMinimapEnabled ? (
+                <PiCheckSquare className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              ) : (
+                <PiSquare className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent side="left">
-            <p className="font-inter">Enable minimap</p>
+            <p className="font-inter">{isMinimapEnabled ? "Disable minimap" : "Enable minimap"}</p>
           </TooltipContent>
         </Tooltip>
 

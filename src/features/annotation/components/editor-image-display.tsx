@@ -19,6 +19,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 interface EditorImageDisplayProps {
   /** The image data to display, including detections. */
   image: EditorImage;
+  /** Optional callback fired when the transform state changes for minimap. */
+  onTransformed?: (
+    ref: ReactZoomPanPinchRef,
+    state: { scale: number; positionX: number; positionY: number }
+  ) => void;
 }
 
 /**
@@ -26,7 +31,7 @@ interface EditorImageDisplayProps {
  * It displays a pannable/zoomable image with detection bounding boxes overlaid on top.
  */
 export const EditorImageDisplay = memo(
-  forwardRef<ReactZoomPanPinchRef, EditorImageDisplayProps>(({ image }, ref) => {
+  forwardRef<ReactZoomPanPinchRef, EditorImageDisplayProps>(({ image, onTransformed }, ref) => {
     const isMobile = useIsMobile();
     const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -45,7 +50,7 @@ export const EditorImageDisplay = memo(
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="relative flex h-[calc(100vh-4rem)] w-full cursor-grab items-center justify-center overflow-hidden md:h-[calc(100vh-5rem)]"
+        className="relative z-0 flex h-[calc(100vh-4rem)] w-full cursor-grab items-center justify-center overflow-hidden md:h-[calc(100vh-5rem)]"
       >
         {/* This transform wrapper enables interactive panning and zooming. */}
         <TransformWrapper
@@ -58,6 +63,7 @@ export const EditorImageDisplay = memo(
           panning={{ disabled: false, velocityDisabled: false }}
           wheel={{ step: 0.1 }}
           doubleClick={{ mode: "reset" }}
+          onTransformed={onTransformed}
         >
           <TransformComponent
             wrapperClass="!w-full !h-full"
