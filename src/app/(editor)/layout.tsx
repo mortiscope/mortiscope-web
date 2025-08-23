@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
@@ -72,6 +73,30 @@ export default function EditorLayout({ children }: EditorLayoutProps) {
    */
   const isImageEditRoute = pathname?.includes("/image/") && pathname?.includes("/edit");
 
+  /**
+   * A ref to access the react-zoom-pan-pinch instance for programmatic control.
+   */
+  const transformRef = useRef<ReactZoomPanPinchRef>(null);
+
+  /**
+   * Wrapper functions to control the zoom and pan of the image.
+   */
+  const handleZoomIn = useCallback(() => {
+    transformRef.current?.zoomIn();
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    transformRef.current?.zoomOut();
+  }, []);
+
+  const handleCenterView = useCallback(() => {
+    transformRef.current?.centerView();
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    transformRef.current?.resetTransform();
+  }, []);
+
   return (
     // Wraps the entire layout in a tooltip provider to enable tooltips for all child components.
     <TooltipProvider>
@@ -88,11 +113,17 @@ export default function EditorLayout({ children }: EditorLayoutProps) {
           onPanelStateChange={setHasOpenPanel}
         />
         {/* Renders the floating right-side toolbar for editor actions. */}
-        <DynamicEditorToolbar hasOpenPanel={hasOpenPanel} />
+        <DynamicEditorToolbar
+          hasOpenPanel={hasOpenPanel}
+          onZoomIn={handleZoomIn}
+          onZoomOut={handleZoomOut}
+          onCenterView={handleCenterView}
+          onResetView={handleResetView}
+        />
         <main className={isImageEditRoute ? "md:ml-24" : "ml-16 md:ml-24"}>
           {/* Conditionally render the image display when on an image edit route. */}
           {isImageEditRoute && !isLoading && image ? (
-            <DynamicEditorImageDisplay image={image} />
+            <DynamicEditorImageDisplay ref={transformRef} image={image} />
           ) : (
             children
           )}

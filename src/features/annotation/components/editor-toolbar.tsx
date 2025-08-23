@@ -16,6 +16,14 @@ import { cn } from "@/lib/utils";
 type EditorToolbarProps = {
   /** A boolean indicating if any details panel is currently open. */
   hasOpenPanel: boolean;
+  /** Optional callback to zoom in on the image. */
+  onZoomIn?: () => void;
+  /** Optional callback to zoom out on the image. */
+  onZoomOut?: () => void;
+  /** Optional callback to center the view on the image. */
+  onCenterView?: () => void;
+  /** Optional callback to reset the view to initial state. */
+  onResetView?: () => void;
 };
 
 /**
@@ -25,7 +33,13 @@ type EditorToolbarProps = {
  * @param {EditorToolbarProps} props The props for the component.
  * @returns A React component representing the floating toolbar.
  */
-export function EditorToolbar({ hasOpenPanel }: EditorToolbarProps) {
+export function EditorToolbar({
+  hasOpenPanel,
+  onZoomIn,
+  onZoomOut,
+  onCenterView,
+  onResetView,
+}: EditorToolbarProps) {
   return (
     // The main container for the toolbar
     <div
@@ -108,6 +122,7 @@ export function EditorToolbar({ hasOpenPanel }: EditorToolbarProps) {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={onZoomIn}
               aria-label="Zoom in"
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
@@ -138,6 +153,7 @@ export function EditorToolbar({ hasOpenPanel }: EditorToolbarProps) {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={onCenterView}
               aria-label="Center focus"
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
@@ -153,6 +169,7 @@ export function EditorToolbar({ hasOpenPanel }: EditorToolbarProps) {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={onResetView}
               aria-label="Reset view"
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
@@ -168,6 +185,7 @@ export function EditorToolbar({ hasOpenPanel }: EditorToolbarProps) {
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={onZoomOut}
               aria-label="Zoom out"
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
