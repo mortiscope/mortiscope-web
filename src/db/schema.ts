@@ -26,6 +26,14 @@ export const analysisStatusEnum = pgEnum("analysis_status", [
 // Enum to define the lifecycle status of a case.
 export const caseStatusEnum = pgEnum("case_status", ["draft", "active"]);
 
+// Enum to define the status of a user-verified or created detection.
+export const detectionStatusEnum = pgEnum("detection_status", [
+  "model_generated",
+  "user_created",
+  "user_confirmed",
+  "user_edited",
+]);
+
 // Enum to define the possible statuses of an export job.
 export const exportStatusEnum = pgEnum("export_status", [
   "pending",
@@ -214,6 +222,8 @@ export const uploads = pgTable("uploads", {
   url: text("url").notNull(),
   size: integer("size").notNull(),
   type: text("type").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
@@ -252,11 +262,25 @@ export const detections = pgTable("detections", {
     .notNull()
     .references(() => uploads.id, { onDelete: "cascade" }),
   label: text("label").notNull(),
-  confidence: real("confidence").notNull(),
+  confidence: real("confidence"),
+  originalConfidence: real("original_confidence"),
   xMin: real("x_min").notNull(),
   yMin: real("y_min").notNull(),
   xMax: real("x_max").notNull(),
   yMax: real("y_max").notNull(),
+  status: detectionStatusEnum("status").notNull().default("model_generated"),
+  createdById: text("created_by_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  lastModifiedById: text("last_modified_by_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 // Tracks the state and result of data export jobs initiated by a user.
@@ -358,6 +382,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   recoveryCodes: many(twoFactorRecoveryCodes),
   revokedJwtTokens: many(revokedJwtTokens),
+  createdDetections: many(detections, { relationName: "createdBy" }),
+  modifiedDetections: many(detections, { relationName: "lastModifiedBy" }),
 }));
 
 // Defines the relationship from an `account` back to its owning `user`.
@@ -430,6 +456,16 @@ export const detectionsRelations = relations(detections, ({ one }) => ({
   upload: one(uploads, {
     fields: [detections.uploadId],
     references: [uploads.id],
+  }),
+  createdBy: one(users, {
+    fields: [detections.createdById],
+    references: [users.id],
+    relationName: "createdBy",
+  }),
+  lastModifiedBy: one(users, {
+    fields: [detections.lastModifiedById],
+    references: [users.id],
+    relationName: "lastModifiedBy",
   }),
 }));
 
