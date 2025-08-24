@@ -44,7 +44,7 @@ export const EditorDetailsPanel = memo(({ title, isOpen, children }: EditorDetai
       </div>
 
       {/* The main content area. */}
-      <div className="flex-1 overflow-y-auto p-3 md:p-4">{children}</div>
+      <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
     </motion.aside>
   );
 });
