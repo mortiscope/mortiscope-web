@@ -90,7 +90,7 @@ export const EditorImageMinimap = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed top-[calc(50%+13.75rem)] right-[64px] z-[5] h-24 w-24 -translate-y-1/2 overflow-hidden rounded-lg border-2 border-emerald-400 bg-slate-100/20 py-1 shadow-lg backdrop-blur-sm md:top-[calc(50%+16.25rem)] md:right-[80px] md:z-40 md:h-32 md:w-32 md:rounded-2xl"
+      className="fixed top-[calc(50%+12.5rem)] right-[64px] z-[5] h-24 w-24 -translate-y-1/2 overflow-hidden rounded-lg border-2 border-emerald-400 bg-slate-100/20 py-1 shadow-lg backdrop-blur-sm md:top-[calc(50%+15rem)] md:right-[80px] md:z-40 md:h-32 md:w-32 md:rounded-2xl"
       aria-label="Image minimap"
     >
       {/* The background image is a scaled-down version of the main preview. */}

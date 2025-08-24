@@ -2,7 +2,7 @@ import { HiMiniArrowPath } from "react-icons/hi2";
 import { IoArrowRedoOutline, IoArrowUndoOutline } from "react-icons/io5";
 import { IoHandRightOutline } from "react-icons/io5";
 import { LuFocus, LuZoomIn, LuZoomOut } from "react-icons/lu";
-import { PiBoundingBox, PiCheckSquare, PiCursor, PiEye, PiSquare } from "react-icons/pi";
+import { PiBoundingBox, PiCheckSquare, PiCursor, PiSquare } from "react-icons/pi";
 import { TbRotate } from "react-icons/tb";
 
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export function EditorToolbar({
 }: EditorToolbarProps) {
   return (
     // The main container for the toolbar
-    <div className="fixed top-[calc(50%+2.5rem)] right-2 z-[5] flex -translate-y-1/2 flex-col gap-1 rounded-lg bg-emerald-800/80 p-2 shadow-lg backdrop-blur-sm md:right-4 md:z-50 md:gap-2 md:rounded-xl">
+    <div className="fixed top-[calc(50%+2.5rem)] right-2 z-[5] flex -translate-y-1/2 flex-col gap-1 rounded-lg bg-emerald-800/80 p-2 shadow-lg backdrop-blur-sm md:right-4 md:z-50 md:gap-2 md:rounded-xl md:py-2.5">
       {/* Section 1: Primary tools */}
       <div className="flex flex-col gap-1">
         <Tooltip>
@@ -91,21 +91,6 @@ export function EditorToolbar({
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Draw</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              aria-label="Hide annotations"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
-            >
-              <PiEye className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="left">
-            <p className="font-inter">Hide annotations</p>
           </TooltipContent>
         </Tooltip>
       </div>
