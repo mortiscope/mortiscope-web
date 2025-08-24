@@ -6,6 +6,28 @@ import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/a
 import { createUpload } from "@/features/upload/actions/create-upload";
 import { saveUpload } from "@/features/upload/actions/save-upload";
 
+/**
+ * Extracts image dimensions from a `File` object
+ */
+async function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Failed to load image"));
+    };
+
+    img.src = url;
+  });
+}
+
 type UseFileProcessorProps = {
   files: UploadableFile[];
   caseId: string | null;
@@ -52,17 +74,29 @@ export const useFileProcessor = ({ files, caseId }: UseFileProcessorProps) => {
           updateFileProgress(uploadableFile.id, percentComplete);
         }
       };
-      xhr.onload = () => {
+      xhr.onload = async () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          if (uploadableFile.key) {
-            saveUploadMutation.mutate({
-              id: uploadableFile.id,
-              key: uploadableFile.key,
-              name: uploadableFile.name,
-              size: uploadableFile.size,
-              type: uploadableFile.type,
-              caseId,
-            });
+          if (uploadableFile.key && uploadableFile.file) {
+            try {
+              // Extract image dimensions before saving
+              const { width, height } = await getImageDimensions(uploadableFile.file);
+
+              saveUploadMutation.mutate({
+                id: uploadableFile.id,
+                key: uploadableFile.key,
+                name: uploadableFile.name,
+                size: uploadableFile.size,
+                type: uploadableFile.type,
+                width,
+                height,
+                caseId,
+              });
+            } catch (error) {
+              setUploadStatus(uploadableFile.id, "error");
+              toast.error(
+                `Could not extract dimensions for ${uploadableFile.name}: ${error instanceof Error ? error.message : "Unknown error"}`
+              );
+            }
           } else {
             setUploadStatus(uploadableFile.id, "error");
             toast.error(`Could not save ${uploadableFile.name}: S3 key is missing.`);

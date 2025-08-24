@@ -143,11 +143,11 @@ export function formatLabel(label: string): string {
 /**
  * Formats a confidence score (0-1) into a percentage string.
  *
- * @param confidence - The confidence score as a number.
- * @returns A formatted string with two decimal places and a percent sign.
+ * @param confidence - The confidence score as a number or null.
+ * @returns A formatted string with two decimal places and a percent sign, or "N/A" if null.
  */
-export function formatConfidence(confidence: number): string {
-  if (typeof confidence !== "number") return "N/A";
+export function formatConfidence(confidence: number | null): string {
+  if (typeof confidence !== "number" || confidence === null) return "N/A";
   return `${(confidence * 100).toFixed(2)}%`;
 }
 

@@ -14,6 +14,8 @@ const saveUploadSchema = z.object({
   name: z.string(),
   size: z.number(),
   type: z.string(),
+  width: z.number(),
+  height: z.number(),
   caseId: z.string().min(1, { message: "Case ID is required to save the upload." }),
 });
 
@@ -59,7 +61,7 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
     return { success: false, error: "Invalid input provided for saving upload." };
   }
 
-  const { id, key, name, size, type, caseId } = parseResult.data;
+  const { id, key, name, size, type, width, height, caseId } = parseResult.data;
   const url = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${key}`;
 
   try {
@@ -70,6 +72,8 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
       url,
       size,
       type,
+      width,
+      height,
       userId,
       caseId,
     });
