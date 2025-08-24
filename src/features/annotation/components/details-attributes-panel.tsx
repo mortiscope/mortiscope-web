@@ -106,7 +106,6 @@ export const DetailsAttributesPanel = () => {
       transition={{ delayChildren: 0.1, staggerChildren: 0.1 }}
       className="space-y-4"
     >
-
       {/* Case Name */}
       <motion.div
         initial={{ y: 10, opacity: 0 }}
@@ -117,7 +116,9 @@ export const DetailsAttributesPanel = () => {
         <IoFolderOpenOutline className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Case Name</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.caseName || "N/A"}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.caseName || "N/A"}
+          </p>
         </div>
       </motion.div>
 
@@ -131,7 +132,7 @@ export const DetailsAttributesPanel = () => {
         <IoImageOutline className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Image Name</p>
-          <p className="font-inter truncate text-sm text-white">{imageName}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">{imageName}</p>
         </div>
       </motion.div>
 
@@ -145,7 +146,7 @@ export const DetailsAttributesPanel = () => {
         <BsAspectRatio className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Resolution</p>
-          <p className="font-inter truncate text-sm text-white">{resolution}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">{resolution}</p>
         </div>
       </motion.div>
 
@@ -159,7 +160,9 @@ export const DetailsAttributesPanel = () => {
         <IoCalendarClearOutline className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Case Date</p>
-          <p className="font-inter truncate text-sm text-white">{formattedCaseDate}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {formattedCaseDate}
+          </p>
         </div>
       </motion.div>
 
@@ -173,7 +176,9 @@ export const DetailsAttributesPanel = () => {
         <IoCalendarOutline className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Upload Date</p>
-          <p className="font-inter truncate text-sm text-white">{formattedUploadDate}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {formattedUploadDate}
+          </p>
         </div>
       </motion.div>
 
@@ -187,7 +192,9 @@ export const DetailsAttributesPanel = () => {
         <IoThermometerOutline className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Temperature</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.temperatureCelsius}°C</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.temperatureCelsius}°C
+          </p>
         </div>
       </motion.div>
 
@@ -201,7 +208,9 @@ export const DetailsAttributesPanel = () => {
         <PiMapTrifold className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Region</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.locationRegion}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.locationRegion}
+          </p>
         </div>
       </motion.div>
 
@@ -215,7 +224,9 @@ export const DetailsAttributesPanel = () => {
         <HiOutlineBuildingOffice className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Province</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.locationProvince}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.locationProvince}
+          </p>
         </div>
       </motion.div>
 
@@ -229,7 +240,9 @@ export const DetailsAttributesPanel = () => {
         <PiCity className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">City/Municipality</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.locationCity}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.locationCity}
+          </p>
         </div>
       </motion.div>
 
@@ -243,7 +256,9 @@ export const DetailsAttributesPanel = () => {
         <GoHome className="h-6 w-6 flex-shrink-0 text-white" />
         <div className="min-w-0 flex-1">
           <p className="font-inter text-xs tracking-wide text-emerald-200">Barangay</p>
-          <p className="font-inter truncate text-sm text-white">{caseData.locationBarangay}</p>
+          <p className="font-inter text-sm break-words hyphens-auto text-white">
+            {caseData.locationBarangay}
+          </p>
         </div>
       </motion.div>
     </motion.div>
