@@ -8,6 +8,8 @@ import { TbRotate } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
+import { cn } from "@/lib/utils";
 
 /**
  * Defines the props for the editor toolbar component.
@@ -44,6 +46,14 @@ export function EditorToolbar({
   isMinimapEnabled = false,
   onToggleMinimap,
 }: EditorToolbarProps) {
+  // Get selection state from store
+  const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
+  const clearSelection = useAnnotationStore((state) => state.clearSelection);
+
+  // Determine active tool based on selection state
+  const isPanActive = selectedDetectionId === null;
+  const isSelectActive = selectedDetectionId !== null;
+
   return (
     // The main container for the toolbar
     <div className="fixed top-[calc(50%+2.5rem)] right-2 z-[5] flex -translate-y-1/2 flex-col gap-1 rounded-lg bg-emerald-800/80 p-2 shadow-lg backdrop-blur-sm md:right-4 md:z-50 md:gap-2 md:rounded-xl md:py-2.5">
@@ -54,7 +64,13 @@ export function EditorToolbar({
             <Button
               variant="ghost"
               aria-label="Pan"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              onClick={clearSelection}
+              className={cn(
+                "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
+                isPanActive
+                  ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
+                  : "text-white hover:bg-transparent hover:text-emerald-300"
+              )}
             >
               <IoHandRightOutline className="!h-5.5 !w-5.5 md:!h-6 md:!w-6" />
             </Button>
@@ -69,7 +85,12 @@ export function EditorToolbar({
             <Button
               variant="ghost"
               aria-label="Select"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              className={cn(
+                "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
+                isSelectActive
+                  ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
+                  : "text-white hover:bg-transparent hover:text-emerald-300"
+              )}
             >
               <PiCursor className="!h-5 !w-5 md:!h-6 md:!w-6" />
             </Button>
