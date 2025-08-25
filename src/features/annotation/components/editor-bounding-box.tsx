@@ -26,7 +26,8 @@ export const EditorBoundingBox = memo(
     // Retrieves selection state and actions from the annotation store.
     const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
     const selectDetection = useAnnotationStore((state) => state.selectDetection);
-    const updateDetection = useAnnotationStore((state) => state.updateDetection);
+    const updateDetectionNoHistory = useAnnotationStore((state) => state.updateDetectionNoHistory);
+    const saveStateBeforeEdit = useAnnotationStore((state) => state.saveStateBeforeEdit);
     const transformScale = useAnnotationStore((state) => state.transformScale);
 
     // Local state to manage the dragging interaction.
@@ -97,8 +98,8 @@ export const EditorBoundingBox = memo(
             newYMin = imageDimensions.height - boxHeight;
           }
 
-          // Update the detection's coordinates in the global store.
-          updateDetection(draggedDetectionId, {
+          // Update the detection's coordinates without saving to history.
+          updateDetectionNoHistory(draggedDetectionId, {
             xMin: newXMin,
             yMin: newYMin,
             xMax: newXMax,
@@ -141,7 +142,7 @@ export const EditorBoundingBox = memo(
           if (newXMax - newXMin < 20) return;
           if (newYMax - newYMin < 20) return;
 
-          updateDetection(selectedDetectionId!, {
+          updateDetectionNoHistory(selectedDetectionId!, {
             xMin: newXMin,
             yMin: newYMin,
             xMax: newXMax,
@@ -162,7 +163,7 @@ export const EditorBoundingBox = memo(
         renderedImageStyle,
         transformScale,
         selectedDetectionId,
-        updateDetection,
+        updateDetectionNoHistory,
       ]
     );
 
@@ -242,6 +243,7 @@ export const EditorBoundingBox = memo(
                     // Initiates a drag operation only if the box is already selected.
                     if (isSelected) {
                       e.stopPropagation();
+                      saveStateBeforeEdit();
                       setIsDragging(true);
                       setDragStart({ x: e.clientX, y: e.clientY });
                       setDraggedDetectionId(det.id);
@@ -285,6 +287,7 @@ export const EditorBoundingBox = memo(
                             onMouseDown={(e) => {
                               // Initiates a resize operation.
                               e.stopPropagation();
+                              saveStateBeforeEdit();
                               setIsResizing(true);
                               setResizeHandle(handle);
                               setResizeStart({ x: e.clientX, y: e.clientY, detection: det });
@@ -335,6 +338,7 @@ export const EditorBoundingBox = memo(
                             }}
                             onMouseDown={(e) => {
                               e.stopPropagation();
+                              saveStateBeforeEdit();
                               setIsResizing(true);
                               setResizeHandle(handle);
                               setResizeStart({ x: e.clientX, y: e.clientY, detection: det });
