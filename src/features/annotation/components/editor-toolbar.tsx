@@ -50,6 +50,13 @@ export function EditorToolbar({
   const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
   const clearSelection = useAnnotationStore((state) => state.clearSelection);
 
+  // Get history actions and state from store
+  const undo = useAnnotationStore((state) => state.undo);
+  const redo = useAnnotationStore((state) => state.redo);
+  const canUndo = useAnnotationStore((state) => state.canUndo());
+  const canRedo = useAnnotationStore((state) => state.canRedo());
+  const resetDetections = useAnnotationStore((state) => state.resetDetections);
+
   // Determine active tool based on selection state
   const isPanActive = selectedDetectionId === null;
   const isSelectActive = selectedDetectionId !== null;
@@ -219,8 +226,15 @@ export function EditorToolbar({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={redo}
+              disabled={!canRedo}
               aria-label="Redo change"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              className={cn(
+                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                canRedo
+                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                  : "cursor-not-allowed text-white/30"
+              )}
             >
               <IoArrowRedoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
             </Button>
@@ -234,6 +248,7 @@ export function EditorToolbar({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={resetDetections}
               aria-label="Reset changes"
               className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
             >
@@ -249,8 +264,15 @@ export function EditorToolbar({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
+              onClick={undo}
+              disabled={!canUndo}
               aria-label="Undo change"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              className={cn(
+                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                canUndo
+                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                  : "cursor-not-allowed text-white/30"
+              )}
             >
               <IoArrowUndoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
             </Button>
