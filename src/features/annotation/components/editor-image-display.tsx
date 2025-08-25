@@ -10,6 +10,7 @@ import {
 
 import { EditorBoundingBox } from "@/features/annotation/components/editor-bounding-box";
 import { type EditorImage } from "@/features/annotation/hooks/use-editor-image";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 import { useRenderedImage } from "@/features/images/hooks/use-rendered-image";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -34,6 +35,22 @@ export const EditorImageDisplay = memo(
   forwardRef<ReactZoomPanPinchRef, EditorImageDisplayProps>(({ image, onTransformed }, ref) => {
     const isMobile = useIsMobile();
     const imageContainerRef = useRef<HTMLDivElement>(null);
+    const clearSelection = useAnnotationStore((state) => state.clearSelection);
+    const setDetections = useAnnotationStore((state) => state.setDetections);
+    const setTransformScale = useAnnotationStore((state) => state.setTransformScale);
+    const detections = useAnnotationStore((state) => state.detections);
+
+    // Handle transform changes to track zoom scale
+    const handleTransformed = React.useCallback(
+      (
+        ref: ReactZoomPanPinchRef,
+        state: { scale: number; positionX: number; positionY: number }
+      ) => {
+        setTransformScale(state.scale);
+        onTransformed?.(ref, state);
+      },
+      [setTransformScale, onTransformed]
+    );
 
     // Append a cache-busting query parameter to ensure the latest image is shown.
     const imageUrl = `${image.url}?t=${image.dateUploaded.getTime()}`;
@@ -44,6 +61,13 @@ export const EditorImageDisplay = memo(
       containerRef: imageContainerRef,
     });
 
+    // Initialize detections in store when image loads
+    React.useEffect(() => {
+      if (image.detections) {
+        setDetections(image.detections);
+      }
+    }, [image.id, image.detections, setDetections]);
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -51,6 +75,7 @@ export const EditorImageDisplay = memo(
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         className="relative z-0 flex h-[calc(100vh-4rem)] w-full cursor-grab items-center justify-center overflow-hidden md:h-[calc(100vh-5rem)]"
+        onClick={clearSelection}
       >
         {/* This transform wrapper enables interactive panning and zooming. */}
         <TransformWrapper
@@ -63,7 +88,7 @@ export const EditorImageDisplay = memo(
           panning={{ disabled: false, velocityDisabled: false }}
           wheel={{ step: 0.1 }}
           doubleClick={{ mode: "reset" }}
-          onTransformed={onTransformed}
+          onTransformed={handleTransformed}
         >
           <TransformComponent
             wrapperClass="!w-full !h-full"
@@ -103,9 +128,9 @@ export const EditorImageDisplay = memo(
                 />
               )}
               {/* Render bounding boxes once the image is loaded and dimensions are calculated. */}
-              {renderedImageStyle && isImageLoaded && imageDimensions && (
+              {renderedImageStyle && isImageLoaded && imageDimensions && detections.length > 0 && (
                 <EditorBoundingBox
-                  image={image}
+                  detections={detections}
                   imageDimensions={imageDimensions}
                   renderedImageStyle={renderedImageStyle}
                 />
