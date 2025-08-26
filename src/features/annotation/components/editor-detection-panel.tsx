@@ -104,7 +104,9 @@ const DetectionPanelContent = memo(() => {
         <div className="flex items-center justify-between">
           <span className="font-inter text-sm font-medium text-emerald-100">Confidence</span>
           <span className="font-inter text-sm text-white">
-            {formatConfidence(selectedDetection.confidence)}
+            {isVerified || selectedDetection.confidence === null
+              ? "Reviewed"
+              : formatConfidence(selectedDetection.confidence)}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -203,6 +205,7 @@ export const EditorDetectionPanel = memo(
     // Subscribes to the global store to get the selected detection ID and the clear action.
     const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
     const clearSelection = useAnnotationStore((state) => state.clearSelection);
+    const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
 
     // Renders a bottom drawer when on a mobile device.
     if (isMobile) {
@@ -210,8 +213,11 @@ export const EditorDetectionPanel = memo(
         <Sheet
           open={!!selectedDetectionId}
           onOpenChange={(open) => {
-            // When the sheet is closed, clear the selection in the global store.
-            if (!open) clearSelection();
+            // When the sheet is closed, clear the selection and switch to pan mode.
+            if (!open) {
+              clearSelection();
+              setSelectMode(false);
+            }
           }}
         >
           <SheetContent

@@ -351,7 +351,11 @@ export const EditorBoundingBox = memo(
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="font-inter">{`${formatLabel(det.label)}: ${formatConfidence(det.confidence)}`}</p>
+                <p className="font-inter">
+                  {det.status === "user_confirmed" || det.confidence === null
+                    ? formatLabel(det.label)
+                    : `${formatLabel(det.label)}: ${formatConfidence(det.confidence)}`}
+                </p>
               </TooltipContent>
             </Tooltip>
           );

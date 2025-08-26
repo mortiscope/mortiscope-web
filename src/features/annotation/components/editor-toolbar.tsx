@@ -47,7 +47,6 @@ export function EditorToolbar({
   onToggleMinimap,
 }: EditorToolbarProps) {
   // Get selection state from store
-  const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
   const clearSelection = useAnnotationStore((state) => state.clearSelection);
 
   // Get history actions and state from store
@@ -57,9 +56,16 @@ export function EditorToolbar({
   const canRedo = useAnnotationStore((state) => state.canRedo());
   const resetDetections = useAnnotationStore((state) => state.resetDetections);
 
+  // Get draw mode state and action
+  const drawMode = useAnnotationStore((state) => state.drawMode);
+  const setDrawMode = useAnnotationStore((state) => state.setDrawMode);
+  const selectMode = useAnnotationStore((state) => state.selectMode);
+  const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
+
   // Determine active tool based on selection state
-  const isPanActive = selectedDetectionId === null;
-  const isSelectActive = selectedDetectionId !== null;
+  const isPanActive = !selectMode && !drawMode;
+  const isSelectActive = selectMode;
+  const isDrawActive = drawMode;
 
   return (
     // The main container for the toolbar
@@ -71,7 +77,11 @@ export function EditorToolbar({
             <Button
               variant="ghost"
               aria-label="Pan"
-              onClick={clearSelection}
+              onClick={() => {
+                clearSelection();
+                setDrawMode(false);
+                setSelectMode(false);
+              }}
               className={cn(
                 "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
                 isPanActive
@@ -92,6 +102,11 @@ export function EditorToolbar({
             <Button
               variant="ghost"
               aria-label="Select"
+              onClick={() => {
+                clearSelection();
+                setDrawMode(false);
+                setSelectMode(true);
+              }}
               className={cn(
                 "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
                 isSelectActive
@@ -112,7 +127,17 @@ export function EditorToolbar({
             <Button
               variant="ghost"
               aria-label="Draw"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              onClick={() => {
+                clearSelection();
+                setSelectMode(false);
+                setDrawMode(!drawMode);
+              }}
+              className={cn(
+                "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
+                isDrawActive
+                  ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
+                  : "text-white hover:bg-transparent hover:text-emerald-300"
+              )}
             >
               <PiBoundingBox className="!h-5 !w-5 md:!h-6 md:!w-6" />
             </Button>
