@@ -38,11 +38,22 @@ export const EditorImageDisplay = memo(
     const clearSelection = useAnnotationStore((state) => state.clearSelection);
     const setDetections = useAnnotationStore((state) => state.setDetections);
     const setTransformScale = useAnnotationStore((state) => state.setTransformScale);
-    const detections = useAnnotationStore((state) => state.detections);
+    const allDetections = useAnnotationStore((state) => state.detections);
+    const displayFilter = useAnnotationStore((state) => state.displayFilter);
     const drawMode = useAnnotationStore((state) => state.drawMode);
     const selectMode = useAnnotationStore((state) => state.selectMode);
     const addDetection = useAnnotationStore((state) => state.addDetection);
     const transformScale = useAnnotationStore((state) => state.transformScale);
+
+    // Filter detections based on display filter
+    const detections = React.useMemo(() => {
+      if (displayFilter === "all") return allDetections;
+      if (displayFilter === "verified")
+        return allDetections.filter((det) => det.status === "user_confirmed");
+      if (displayFilter === "unverified")
+        return allDetections.filter((det) => det.status !== "user_confirmed");
+      return allDetections;
+    }, [allDetections, displayFilter]);
 
     // Drawing state
     const [isDrawing, setIsDrawing] = React.useState(false);

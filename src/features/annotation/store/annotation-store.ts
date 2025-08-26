@@ -57,6 +57,10 @@ interface AnnotationState {
   transformScale: number;
   /** Updates the transform scale, typically called by the zoom/pan component on transform events. */
   setTransformScale: (scale: number) => void;
+  /** Display filter such as all, verified, and unverified. */
+  displayFilter: "all" | "verified" | "unverified";
+  /** Sets the display filter for detections. */
+  setDisplayFilter: (filter: "all" | "verified" | "unverified") => void;
 }
 
 /**
@@ -84,6 +88,8 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   future: [],
   // The viewer starts at 100% scale.
   transformScale: 1,
+  // Display filter defaults to showing all detections.
+  displayFilter: "all",
 
   /**
    * Updates the state to set the provided ID as the currently selected one.
@@ -269,4 +275,9 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
    * Updates the current transform scale of the image viewer.
    */
   setTransformScale: (scale) => set({ transformScale: scale }),
+
+  /**
+   * Sets the display filter for detections.
+   */
+  setDisplayFilter: (filter) => set({ displayFilter: filter }),
 }));

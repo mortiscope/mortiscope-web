@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
 // Dynamically import the delete modal component
 const DynamicEditorDeleteImageModal = dynamic(() =>
@@ -42,12 +43,18 @@ export const DetailsSettingsPanel = () => {
   // Fetch case data to get total image count
   const { totalImages } = useAnnotatedData(resultsId);
 
-  // Local state management
-  const [showAll, setShowAll] = useState(true);
-  const [showVerified, setShowVerified] = useState(false);
-  const [showUnverified, setShowUnverified] = useState(false);
+  // Get display filter from store
+  const displayFilter = useAnnotationStore((state) => state.displayFilter);
+  const setDisplayFilter = useAnnotationStore((state) => state.setDisplayFilter);
+
+  // Local state for modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isVerifyAllModalOpen, setIsVerifyAllModalOpen] = useState(false);
+
+  // Derived state for switches based on display filter
+  const showAll = displayFilter === "all";
+  const showVerified = displayFilter === "verified";
+  const showUnverified = displayFilter === "unverified";
 
   return (
     <div className="space-y-8">
@@ -78,7 +85,9 @@ export const DetailsSettingsPanel = () => {
               id="show-all"
               className="cursor-pointer data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-emerald-200"
               checked={showAll}
-              onCheckedChange={setShowAll}
+              onCheckedChange={(checked) => {
+                if (checked) setDisplayFilter("all");
+              }}
             />
             <span className="font-inter text-sm text-white">Show all annotations</span>
           </motion.div>
@@ -93,7 +102,9 @@ export const DetailsSettingsPanel = () => {
               id="show-verified"
               className="cursor-pointer data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-emerald-200"
               checked={showVerified}
-              onCheckedChange={setShowVerified}
+              onCheckedChange={(checked) => {
+                if (checked) setDisplayFilter("verified");
+              }}
             />
             <span className="font-inter text-sm text-white">Show only verified</span>
           </motion.div>
@@ -108,7 +119,9 @@ export const DetailsSettingsPanel = () => {
               id="show-unverified"
               className="cursor-pointer data-[state=checked]:bg-emerald-600 data-[state=unchecked]:bg-emerald-200"
               checked={showUnverified}
-              onCheckedChange={setShowUnverified}
+              onCheckedChange={(checked) => {
+                if (checked) setDisplayFilter("unverified");
+              }}
             />
             <span className="font-inter text-sm text-white">Show only unverified</span>
           </motion.div>
