@@ -8,6 +8,8 @@ import { type ReactZoomPanPinchRef, type ReactZoomPanPinchState } from "react-zo
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Dynamically import the editor components.
 const DynamicEditorHeader = dynamic(() =>
@@ -34,6 +36,12 @@ const DynamicEditorImageMinimap = dynamic(() =>
   )
 );
 
+const DynamicEditorDetectionPanel = dynamic(() =>
+  import("@/features/annotation/components/editor-detection-panel").then(
+    (module) => module.EditorDetectionPanel
+  )
+);
+
 /**
  * Defines the props for the editor layout component.
  */
@@ -52,6 +60,8 @@ interface EditorLayoutProps {
  */
 export default function EditorLayout({ children }: EditorLayoutProps) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
 
   /**
    * A state to manage the visibility of the main sidebar specifically on mobile viewports.
@@ -198,6 +208,16 @@ export default function EditorLayout({ children }: EditorLayoutProps) {
               alt={`Minimap of ${image.name}`}
               transformState={transformState}
               viewingBox={viewingBox}
+              hasOpenPanel={hasOpenPanel}
+            />
+          )}
+        </AnimatePresence>
+        {/* Render the detection panel when on an image edit route and a detection is selected. */}
+        <AnimatePresence>
+          {isImageEditRoute && !isLoading && image && selectedDetectionId && (
+            <DynamicEditorDetectionPanel
+              key="editor-detection-panel"
+              isMobile={isMobile}
               hasOpenPanel={hasOpenPanel}
             />
           )}
