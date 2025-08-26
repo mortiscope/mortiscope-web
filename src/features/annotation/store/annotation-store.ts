@@ -41,6 +41,8 @@ interface AnnotationState {
   addDetection: (detection: Omit<Detection, "id">) => void;
   /** Removes a detection by its ID and saves to history. */
   removeDetection: (id: string) => void;
+  /** Marks all detections as verified and saves to history. */
+  verifyAllDetections: () => void;
   /** Resets all modifications by restoring the detections to their original state from the backup. */
   resetDetections: () => void;
   /** Undoes the last change. */
@@ -185,6 +187,24 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
         future: [],
         selectedDetectionId: state.selectedDetectionId === id ? null : state.selectedDetectionId,
         selectMode: state.selectedDetectionId === id ? false : state.selectMode,
+      };
+    }),
+
+  /**
+   * Marks all detections as verified and saves to history.
+   */
+  verifyAllDetections: () =>
+    set((state) => {
+      // Save current state to history before making changes
+      const newPast = [...state.past.slice(-MAX_HISTORY + 1), cloneDetections(state.detections)];
+
+      return {
+        detections: state.detections.map((det) => ({
+          ...det,
+          status: "user_confirmed" as const,
+        })),
+        past: newPast,
+        future: [],
       };
     }),
 

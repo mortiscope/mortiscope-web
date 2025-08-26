@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -53,10 +54,15 @@ export const VerifyAllDetectionsModal = ({
   isOpen,
   onOpenChange,
 }: VerifyAllDetectionsModalProps) => {
+  const verifyAllDetections = useAnnotationStore((state) => state.verifyAllDetections);
+
   /**
    * Handles the click event for the verify confirmation button.
    */
-  const handleVerify = () => {};
+  const handleVerify = () => {
+    verifyAllDetections();
+    onOpenChange(false);
+  };
 
   /**
    * Handles the modal close action
