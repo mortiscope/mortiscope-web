@@ -7,32 +7,26 @@ import { PiScan } from "react-icons/pi";
 import BeatLoader from "react-spinners/BeatLoader";
 
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
 /**
  * A presentational component that displays the annotation details for the currently active
  * image within the editor's side panel. It shows a breakdown of detected objects by life stage.
  */
 export const DetailsAnnotationPanel = () => {
-  // A custom hook to get the specific image data for the current editor view, including its detections.
-  const { image, isLoading } = useEditorImage();
+  // A custom hook to get the specific image data for the current editor view.
+  const { isLoading } = useEditorImage();
+
+  // Get the live detections from the store (includes user edits)
+  const detections = useAnnotationStore((state) => state.detections);
 
   /**
-   * Memoizes the calculation of detection counts for each life stage.
+   * Memoizes the calculation of detection counts for each life stage,
+   * separated by verification status.
    */
-  const detectionCounts = useMemo(() => {
-    // If there are no detections, return a default object with all counts as zero.
-    if (!image?.detections) {
-      return {
-        instar_1: 0,
-        instar_2: 0,
-        instar_3: 0,
-        pupa: 0,
-        adult: 0,
-      };
-    }
-
-    // Initialize a record to store the counts.
-    const counts: Record<string, number> = {
+  const { totalCounts, unverifiedCounts, verifiedCounts } = useMemo(() => {
+    // Initialize count objects
+    const total: Record<string, number> = {
       instar_1: 0,
       instar_2: 0,
       instar_3: 0,
@@ -40,15 +34,43 @@ export const DetailsAnnotationPanel = () => {
       adult: 0,
     };
 
-    // Iterate over the detections and increment the count for each label.
-    image.detections.forEach((detection) => {
-      if (counts[detection.label] !== undefined) {
-        counts[detection.label]++;
+    const unverified: Record<string, number> = {
+      instar_1: 0,
+      instar_2: 0,
+      instar_3: 0,
+      pupa: 0,
+      adult: 0,
+    };
+
+    const verified: Record<string, number> = {
+      instar_1: 0,
+      instar_2: 0,
+      instar_3: 0,
+      pupa: 0,
+      adult: 0,
+    };
+
+    // Iterate over detections and count by label and status
+    detections.forEach((detection) => {
+      if (total[detection.label] !== undefined) {
+        // Increment total count
+        total[detection.label]++;
+
+        // Increment verified or unverified count based on status
+        if (detection.status === "user_confirmed") {
+          verified[detection.label]++;
+        } else {
+          unverified[detection.label]++;
+        }
       }
     });
 
-    return counts;
-  }, [image?.detections]);
+    return {
+      totalCounts: total,
+      unverifiedCounts: unverified,
+      verifiedCounts: verified,
+    };
+  }, [detections]);
 
   // If the image data is still loading, show a centered spinner.
   if (isLoading) {
@@ -83,7 +105,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{detectionCounts.instar_1}</p>
+            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_1}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -92,7 +114,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{detectionCounts.instar_2}</p>
+            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_2}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -101,7 +123,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{detectionCounts.instar_3}</p>
+            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_3}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -110,7 +132,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-emerald-200">{detectionCounts.pupa}</p>
+            <p className="font-inter text-sm text-emerald-200">{totalCounts.pupa}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -119,7 +141,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-emerald-200">{detectionCounts.adult}</p>
+            <p className="font-inter text-sm text-emerald-200">{totalCounts.adult}</p>
           </motion.div>
         </div>
       </div>
@@ -145,7 +167,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-amber-200">0</p>
+            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_1}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -154,7 +176,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-amber-200">0</p>
+            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_2}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -163,7 +185,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-amber-200">0</p>
+            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_3}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -172,7 +194,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-amber-200">0</p>
+            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.pupa}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -181,7 +203,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-amber-200">0</p>
+            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.adult}</p>
           </motion.div>
         </div>
       </div>
@@ -207,7 +229,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-teal-200">0</p>
+            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_1}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -216,7 +238,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-teal-200">0</p>
+            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_2}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -225,7 +247,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-teal-200">0</p>
+            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_3}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -234,7 +256,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-teal-200">0</p>
+            <p className="font-inter text-sm text-teal-200">{verifiedCounts.pupa}</p>
           </motion.div>
           <motion.div
             initial={{ y: 10, opacity: 0 }}
@@ -243,7 +265,7 @@ export const DetailsAnnotationPanel = () => {
             className="flex items-center justify-between"
           >
             <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-teal-200">0</p>
+            <p className="font-inter text-sm text-teal-200">{verifiedCounts.adult}</p>
           </motion.div>
         </div>
       </div>
