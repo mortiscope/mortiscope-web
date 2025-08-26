@@ -1,3 +1,5 @@
+import dynamic from "next/dynamic";
+import { useState } from "react";
 import { HiMiniArrowPath } from "react-icons/hi2";
 import { IoArrowRedoOutline, IoArrowUndoOutline } from "react-icons/io5";
 import { IoHandRightOutline } from "react-icons/io5";
@@ -8,8 +10,16 @@ import { TbRotate } from "react-icons/tb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 import { cn } from "@/lib/utils";
+
+// Dynamically import the reset changes modal component
+const DynamicResetChangesModal = dynamic(() =>
+  import("@/features/annotation/components/reset-changes-modal").then(
+    (module) => module.ResetChangesModal
+  )
+);
 
 /**
  * Defines the props for the editor toolbar component.
@@ -46,6 +56,12 @@ export function EditorToolbar({
   isMinimapEnabled = false,
   onToggleMinimap,
 }: EditorToolbarProps) {
+  // Get current image for modal
+  const { image } = useEditorImage();
+
+  // Modal state
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+
   // Get selection state from store
   const clearSelection = useAnnotationStore((state) => state.clearSelection);
 
@@ -54,7 +70,7 @@ export function EditorToolbar({
   const redo = useAnnotationStore((state) => state.redo);
   const canUndo = useAnnotationStore((state) => state.canUndo());
   const canRedo = useAnnotationStore((state) => state.canRedo());
-  const resetDetections = useAnnotationStore((state) => state.resetDetections);
+  const hasChanges = useAnnotationStore((state) => state.hasChanges());
 
   // Get draw mode state and action
   const drawMode = useAnnotationStore((state) => state.drawMode);
@@ -273,9 +289,15 @@ export function EditorToolbar({
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
-              onClick={resetDetections}
+              onClick={() => setIsResetModalOpen(true)}
+              disabled={!hasChanges}
               aria-label="Reset changes"
-              className="h-8 w-8 cursor-pointer rounded-lg p-0 text-white transition-colors duration-600 ease-in-out hover:bg-transparent hover:text-emerald-300 md:h-10 md:w-10"
+              className={cn(
+                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                hasChanges
+                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                  : "cursor-not-allowed text-white/30"
+              )}
             >
               <HiMiniArrowPath className="!h-5 !w-5 md:!h-6 md:!w-6" />
             </Button>
@@ -307,6 +329,13 @@ export function EditorToolbar({
           </TooltipContent>
         </Tooltip>
       </div>
+
+      {/* Reset Changes Modal */}
+      <DynamicResetChangesModal
+        imageName={image?.name || null}
+        isOpen={isResetModalOpen}
+        onOpenChange={setIsResetModalOpen}
+      />
     </div>
   );
 }

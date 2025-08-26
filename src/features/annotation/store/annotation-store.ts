@@ -53,6 +53,8 @@ interface AnnotationState {
   canUndo: () => boolean;
   /** Returns true if there are changes that can be redone. */
   canRedo: () => boolean;
+  /** Returns true if there are unsaved changes. Referring to detections different from the original. */
+  hasChanges: () => boolean;
   /** The current zoom scale of the image viewer, used to correctly calculate drag/resize deltas. */
   transformScale: number;
   /** Updates the transform scale, typically called by the zoom/pan component on transform events. */
@@ -270,6 +272,14 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
    * Returns true if there are changes that can be redone.
    */
   canRedo: () => get().future.length > 0,
+
+  /**
+   * Returns true if there are unsaved changes (detections differ from original).
+   */
+  hasChanges: () => {
+    const state = get();
+    return JSON.stringify(state.detections) !== JSON.stringify(state.originalDetections);
+  },
 
   /**
    * Updates the current transform scale of the image viewer.
