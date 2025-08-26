@@ -29,6 +29,16 @@ interface AnnotationState {
   updateDetectionNoHistory: (id: string, updates: Partial<Detection>) => void;
   /** Saves current state to history before starting a drag/resize operation. */
   saveStateBeforeEdit: () => void;
+  /** Whether draw mode is currently active. */
+  drawMode: boolean;
+  /** Enables or disables draw mode. */
+  setDrawMode: (enabled: boolean) => void;
+  /** Whether select mode is currently active (disables panning). */
+  selectMode: boolean;
+  /** Enables or disables select mode. */
+  setSelectMode: (enabled: boolean) => void;
+  /** Adds a new detection (for user-drawn boxes). */
+  addDetection: (detection: Omit<Detection, "id">) => void;
   /** Removes a detection by its ID and saves to history. */
   removeDetection: (id: string) => void;
   /** Resets all modifications by restoring the detections to their original state from the backup. */
@@ -61,6 +71,10 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   selectedDetectionId: null,
   // The working list of detections starts empty.
   detections: [],
+  // Draw mode is disabled by default.
+  drawMode: false,
+  // Select mode is disabled by default.
+  selectMode: false,
   // The backup list of detections starts empty.
   originalDetections: [],
   // History starts empty.
@@ -71,13 +85,14 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
 
   /**
    * Updates the state to set the provided ID as the currently selected one.
+   * Also enables select mode and disables draw mode.
    */
-  selectDetection: (id) => set({ selectedDetectionId: id }),
+  selectDetection: (id) => set({ selectedDetectionId: id, selectMode: true, drawMode: false }),
 
   /**
-   * Resets the selection, setting the selected ID back to null.
+   * Resets the selection, setting the selected ID back to null and switching to pan mode.
    */
-  clearSelection: () => set({ selectedDetectionId: null }),
+  clearSelection: () => set({ selectedDetectionId: null, selectMode: false }),
 
   /**
    * Initializes the store with a new set of detections and resets history.
@@ -126,6 +141,37 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
     }),
 
   /**
+   * Enables or disables draw mode.
+   */
+  setDrawMode: (enabled) => set({ drawMode: enabled }),
+
+  /**
+   * Enables or disables select mode.
+   */
+  setSelectMode: (enabled) => set({ selectMode: enabled }),
+
+  /**
+   * Adds a new user-drawn detection.
+   */
+  addDetection: (detection) =>
+    set((state) => {
+      const newDetection = {
+        ...detection,
+        id: crypto.randomUUID(),
+      };
+      const newDetections = [...state.detections, newDetection];
+      const newPast = [...state.past.slice(-MAX_HISTORY + 1), cloneDetections(state.detections)];
+
+      return {
+        detections: newDetections,
+        past: newPast,
+        future: [],
+        selectedDetectionId: newDetection.id,
+        drawMode: false,
+      };
+    }),
+
+  /**
    * Removes a detection by its ID and saves to history.
    */
   removeDetection: (id) =>
@@ -138,6 +184,7 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
         past: newPast,
         future: [],
         selectedDetectionId: state.selectedDetectionId === id ? null : state.selectedDetectionId,
+        selectMode: state.selectedDetectionId === id ? false : state.selectMode,
       };
     }),
 
