@@ -63,6 +63,10 @@ interface AnnotationState {
   displayFilter: "all" | "verified" | "unverified";
   /** Sets the display filter for detections. */
   setDisplayFilter: (filter: "all" | "verified" | "unverified") => void;
+  /** Whether the editor is locked (read-only mode). */
+  isLocked: boolean;
+  /** Toggles the locked state of the editor. */
+  setIsLocked: (locked: boolean) => void;
 }
 
 /**
@@ -92,6 +96,8 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   transformScale: 1,
   // Display filter defaults to showing all detections.
   displayFilter: "all",
+  // Editor is unlocked by default.
+  isLocked: false,
 
   /**
    * Updates the state to set the provided ID as the currently selected one.
@@ -290,4 +296,9 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
    * Sets the display filter for detections.
    */
   setDisplayFilter: (filter) => set({ displayFilter: filter }),
+
+  /**
+   * Toggles the locked state of the editor.
+   */
+  setIsLocked: (locked) => set({ isLocked: locked }),
 }));

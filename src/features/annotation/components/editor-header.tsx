@@ -3,13 +3,14 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { memo } from "react";
-import { HiOutlineLockOpen } from "react-icons/hi2";
+import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { LuChevronRight, LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
 import { PiFloppyDiskBack } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
 /**
  * Defines the props for the editor header component.
@@ -40,6 +41,13 @@ export const EditorHeader = memo(
     // A hook to fetch all necessary data for the annotation context.
     const { caseName, images, totalImages } = useAnnotatedData(resultsId);
 
+    // Get lock state and actions from store
+    const isLocked = useAnnotationStore((state) => state.isLocked);
+    const setIsLocked = useAnnotationStore((state) => state.setIsLocked);
+    const clearSelection = useAnnotationStore((state) => state.clearSelection);
+    const setDrawMode = useAnnotationStore((state) => state.setDrawMode);
+    const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
+
     /** The index of the current image within the fetched `images` array. */
     const currentImageIndex = images.findIndex((img) => img.id === imageId);
     /** The 1-based position of the current image for display. */
@@ -50,6 +58,19 @@ export const EditorHeader = memo(
     /** Navigates the user back to the main results page for the current case. */
     const handleBackNavigation = () => {
       router.push(`/results/${resultsId}` as `/results/${string}`);
+    };
+
+    /** Toggles the lock state of the editor. */
+    const handleToggleLock = () => {
+      const newLockedState = !isLocked;
+      setIsLocked(newLockedState);
+
+      // When locking, force pan mode
+      if (newLockedState) {
+        clearSelection();
+        setDrawMode(false);
+        setSelectMode(false);
+      }
     };
 
     /** Navigates to the previous image in the sequence, if one exists. */
@@ -169,10 +190,15 @@ export const EditorHeader = memo(
           <Button
             variant="ghost"
             size="icon"
-            aria-label="Lock editor"
+            onClick={handleToggleLock}
+            aria-label={isLocked ? "Unlock editor" : "Lock editor"}
             className="group h-8 w-8 bg-transparent text-slate-100 hover:cursor-pointer hover:bg-transparent hover:text-slate-100 focus:outline-none md:h-10 md:w-10 [&_svg]:!size-5 md:[&_svg]:!size-6"
           >
-            <HiOutlineLockOpen className="transition-colors duration-200 group-hover:text-emerald-200" />
+            {isLocked ? (
+              <HiOutlineLockClosed className="transition-colors duration-200 group-hover:text-amber-200" />
+            ) : (
+              <HiOutlineLockOpen className="transition-colors duration-200 group-hover:text-emerald-200" />
+            )}
           </Button>
           <Button
             variant="ghost"
