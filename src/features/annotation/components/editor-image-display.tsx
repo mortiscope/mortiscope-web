@@ -39,6 +39,16 @@ export const EditorImageDisplay = memo(
     const setDetections = useAnnotationStore((state) => state.setDetections);
     const setTransformScale = useAnnotationStore((state) => state.setTransformScale);
     const detections = useAnnotationStore((state) => state.detections);
+    const drawMode = useAnnotationStore((state) => state.drawMode);
+    const selectMode = useAnnotationStore((state) => state.selectMode);
+    const addDetection = useAnnotationStore((state) => state.addDetection);
+    const transformScale = useAnnotationStore((state) => state.transformScale);
+
+    // Drawing state
+    const [isDrawing, setIsDrawing] = React.useState(false);
+    const [drawStart, setDrawStart] = React.useState<{ x: number; y: number } | null>(null);
+    const [drawCurrent, setDrawCurrent] = React.useState<{ x: number; y: number } | null>(null);
+    const justFinishedDrawing = useRef(false);
 
     // Handle transform changes to track zoom scale
     const handleTransformed = React.useCallback(
@@ -68,6 +78,126 @@ export const EditorImageDisplay = memo(
       }
     }, [image.id, image.detections, setDetections]);
 
+    // Drawing handlers
+    const handleDrawMouseDown = React.useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!drawMode || !renderedImageStyle || !imageDimensions) return;
+        e.stopPropagation();
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        setIsDrawing(true);
+        setDrawStart({ x, y });
+        setDrawCurrent({ x, y });
+      },
+      [drawMode, renderedImageStyle, imageDimensions]
+    );
+
+    const handleDrawMouseMove = React.useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDrawing || !drawStart) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        setDrawCurrent({ x, y });
+      },
+      [isDrawing, drawStart]
+    );
+
+    const handleDrawMouseUp = React.useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDrawing || !drawStart || !drawCurrent || !renderedImageStyle || !imageDimensions)
+          return;
+
+        // Prevent event from bubbling up and triggering clear selection on parent
+        e.stopPropagation();
+
+        // Calculate box dimensions in container space
+        const containerXMin = Math.min(drawStart.x, drawCurrent.x);
+        const containerYMin = Math.min(drawStart.y, drawCurrent.y);
+        const containerXMax = Math.max(drawStart.x, drawCurrent.x);
+        const containerYMax = Math.max(drawStart.y, drawCurrent.y);
+
+        // Check minimum size (20px)
+        if (containerXMax - containerXMin < 20 || containerYMax - containerYMin < 20) {
+          setIsDrawing(false);
+          setDrawStart(null);
+          setDrawCurrent(null);
+          return;
+        }
+
+        // Convert from transformed space to untransformed space by dividing by zoom scale
+        const untransformedXMin = containerXMin / transformScale;
+        const untransformedYMin = containerYMin / transformScale;
+        const untransformedXMax = containerXMax / transformScale;
+        const untransformedYMax = containerYMax / transformScale;
+
+        // Calculate relative position within the rendered image
+        const relativeXMin = untransformedXMin - renderedImageStyle.left;
+        const relativeYMin = untransformedYMin - renderedImageStyle.top;
+        const relativeXMax = untransformedXMax - renderedImageStyle.left;
+        const relativeYMax = untransformedYMax - renderedImageStyle.top;
+
+        // Convert to actual image pixel coordinates
+        const imageScaleX = imageDimensions.width / renderedImageStyle.width;
+        const imageScaleY = imageDimensions.height / renderedImageStyle.height;
+
+        let xMin = relativeXMin * imageScaleX;
+        let yMin = relativeYMin * imageScaleY;
+        let xMax = relativeXMax * imageScaleX;
+        let yMax = relativeYMax * imageScaleY;
+
+        // Clamp to image boundaries
+        xMin = Math.max(0, Math.min(imageDimensions.width, xMin));
+        yMin = Math.max(0, Math.min(imageDimensions.height, yMin));
+        xMax = Math.max(0, Math.min(imageDimensions.width, xMax));
+        yMax = Math.max(0, Math.min(imageDimensions.height, yMax));
+
+        // Create new detection (auto-verified since user drew it)
+        addDetection({
+          uploadId: image.id,
+          label: "adult",
+          confidence: null,
+          xMin,
+          yMin,
+          xMax,
+          yMax,
+          status: "user_confirmed",
+          originalConfidence: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          createdById: "",
+          lastModifiedById: null,
+          deletedAt: null,
+        });
+
+        // Mark that the user just finished drawing to prevent clear selection
+        justFinishedDrawing.current = true;
+        setTimeout(() => {
+          justFinishedDrawing.current = false;
+        }, 100);
+
+        // Reset drawing state
+        setIsDrawing(false);
+        setDrawStart(null);
+        setDrawCurrent(null);
+      },
+      [
+        isDrawing,
+        drawStart,
+        drawCurrent,
+        renderedImageStyle,
+        imageDimensions,
+        transformScale,
+        addDetection,
+        image.id,
+      ]
+    );
+
     return (
       <motion.div
         initial={{ opacity: 0 }}
@@ -85,7 +215,7 @@ export const EditorImageDisplay = memo(
           maxScale={10}
           centerOnInit
           limitToBounds={false}
-          panning={{ disabled: false, velocityDisabled: false }}
+          panning={{ disabled: drawMode || selectMode, velocityDisabled: false }}
           wheel={{ step: 0.1 }}
           doubleClick={{ mode: "reset" }}
           onTransformed={handleTransformed}
@@ -98,6 +228,18 @@ export const EditorImageDisplay = memo(
             <div
               ref={imageContainerRef}
               className={isMobile ? "relative h-full w-full" : "relative h-3/4 w-3/4"}
+              style={{
+                cursor: drawMode ? "crosshair" : selectMode ? "default" : "grab",
+              }}
+              onClick={(e) => {
+                // Prevent click from bubbling to parent and clearing selection when in draw mode or just finished drawing
+                if (drawMode || justFinishedDrawing.current) {
+                  e.stopPropagation();
+                }
+              }}
+              onMouseDown={handleDrawMouseDown}
+              onMouseMove={handleDrawMouseMove}
+              onMouseUp={handleDrawMouseUp}
             >
               {/* Renders a loading spinner overlay while the image is being fetched. */}
               {!isImageLoaded && (
@@ -133,6 +275,19 @@ export const EditorImageDisplay = memo(
                   detections={detections}
                   imageDimensions={imageDimensions}
                   renderedImageStyle={renderedImageStyle}
+                />
+              )}
+
+              {/* Render drawing preview box */}
+              {isDrawing && drawStart && drawCurrent && (
+                <div
+                  className="pointer-events-none absolute border-2 border-dashed border-emerald-400 bg-emerald-400/10"
+                  style={{
+                    left: Math.min(drawStart.x, drawCurrent.x) / transformScale,
+                    top: Math.min(drawStart.y, drawCurrent.y) / transformScale,
+                    width: Math.abs(drawCurrent.x - drawStart.x) / transformScale,
+                    height: Math.abs(drawCurrent.y - drawStart.y) / transformScale,
+                  }}
                 />
               )}
             </div>
