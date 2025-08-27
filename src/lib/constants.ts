@@ -141,3 +141,38 @@ export const DETECTION_CLASS_ORDER = ["instar_1", "instar_2", "instar_3", "pupa"
  * @constant {string}
  */
 export const HIDE_SAVE_CONFIRMATION = "annotation-hide-save-confirmation";
+
+/**
+ * Defines all keyboard shortcuts for the annotation editor.
+ * The `as const` assertion ensures the object is read-only for type safety.
+ * @constant {object}
+ */
+export const KEYBOARD_SHORTCUTS = {
+  // Editor header actions
+  BACK_NAVIGATION: "escape",
+  PREVIOUS_IMAGE: "BracketLeft",
+  NEXT_IMAGE: "BracketRight",
+  TOGGLE_LOCK: "l",
+  SAVE: "ctrl+s, meta+s",
+
+  // Tool selection
+  PAN_MODE: "h",
+  SELECT_MODE: "v",
+  DRAW_MODE: "b",
+
+  // View controls for manipulating the canvas
+  ZOOM_IN: "Equal, shift+Equal",
+  ZOOM_OUT: "Minus",
+  TOGGLE_MINIMAP: "m",
+  CENTER_FOCUS: "0",
+  RESET_VIEW: "ctrl+alt+0, meta+alt+0",
+
+  // History management for undo/redo actions
+  UNDO: "ctrl+z, meta+z",
+  REDO: "ctrl+y, meta+y",
+  RESET_CHANGES: "ctrl+shift+r, meta+shift+r",
+
+  // Actions related to the currently selected detection
+  DELETE_SELECTED: "delete, backspace",
+  DESELECT: "escape",
+} as const;
