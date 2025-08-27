@@ -20,14 +20,23 @@ import {
 } from "@/features/annotation/actions/save-detections";
 import { shouldShowSaveConfirmation } from "@/features/annotation/components/save-confirmation-modal";
 import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data";
+import { useNavigationGuard } from "@/features/annotation/hooks/use-navigation-guard";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 import { type Detection } from "@/features/images/hooks/use-results-image-viewer";
 
-// Dynamically import the save confirmation modal component
+// Dynamically import modal components
 const SaveConfirmationModal = dynamic(
   () =>
     import("@/features/annotation/components/save-confirmation-modal").then(
       (module) => module.SaveConfirmationModal
+    ),
+  { ssr: false }
+);
+
+const UnsavedChangesModal = dynamic(
+  () =>
+    import("@/features/annotation/components/unsaved-changes-modal").then(
+      (module) => module.UnsavedChangesModal
     ),
   { ssr: false }
 );
@@ -130,9 +139,14 @@ export const EditorHeader = memo(
     const originalDetections = useAnnotationStore((state) => state.originalDetections);
     const commitChanges = useAnnotationStore((state) => state.commitChanges);
 
-    // State for save modal and saving status
+    // Navigation guard hook
+    const { hasUnsavedChanges } = useNavigationGuard({ detections, originalDetections });
+
+    // State for modals and saving status
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [isUnsavedChangesModalOpen, setIsUnsavedChangesModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
 
     /** The index of the current image within the fetched `images` array. */
     const currentImageIndex = images.findIndex((img) => img.id === imageId);
@@ -141,9 +155,21 @@ export const EditorHeader = memo(
     /** The name of the current image being viewed. */
     const currentImageName = currentImageIndex >= 0 ? images[currentImageIndex].name : "";
 
+    /** Wraps navigation with unsaved changes check. */
+    const guardedNavigation = (navigationFn: () => void) => {
+      if (hasUnsavedChanges) {
+        setPendingNavigation(() => navigationFn);
+        setIsUnsavedChangesModalOpen(true);
+      } else {
+        navigationFn();
+      }
+    };
+
     /** Navigates the user back to the main results page for the current case. */
     const handleBackNavigation = () => {
-      router.push(`/results/${resultsId}` as `/results/${string}`);
+      guardedNavigation(() => {
+        router.push(`/results/${resultsId}` as `/results/${string}`);
+      });
     };
 
     /** Toggles the lock state of the editor. */
@@ -162,19 +188,23 @@ export const EditorHeader = memo(
     /** Navigates to the previous image in the sequence, if one exists. */
     const handlePreviousImage = () => {
       if (currentImageIndex <= 0) return;
-      const previousImage = images[currentImageIndex - 1];
-      router.push(
-        `/results/${resultsId}/image/${previousImage.id}/edit` as `/results/${string}/image/${string}/edit`
-      );
+      guardedNavigation(() => {
+        const previousImage = images[currentImageIndex - 1];
+        router.push(
+          `/results/${resultsId}/image/${previousImage.id}/edit` as `/results/${string}/image/${string}/edit`
+        );
+      });
     };
 
     /** Navigates to the next image in the sequence, if one exists. */
     const handleNextImage = () => {
       if (currentImageIndex >= totalImages - 1) return;
-      const nextImage = images[currentImageIndex + 1];
-      router.push(
-        `/results/${resultsId}/image/${nextImage.id}/edit` as `/results/${string}/image/${string}/edit`
-      );
+      guardedNavigation(() => {
+        const nextImage = images[currentImageIndex + 1];
+        router.push(
+          `/results/${resultsId}/image/${nextImage.id}/edit` as `/results/${string}/image/${string}/edit`
+        );
+      });
     };
 
     /** Handles the save button click. Shows the modal or saves directly based on user preference. */
@@ -217,6 +247,27 @@ export const EditorHeader = memo(
         toast.error("An unexpected error occurred while saving.");
       } finally {
         setIsSaving(false);
+      }
+    };
+
+    /** Handles the unsaved changes modal proceed action. */
+    const handleUnsavedChangesProceed = async (action: "leave" | "save-and-leave") => {
+      if (action === "leave") {
+        setIsUnsavedChangesModalOpen(false);
+        if (pendingNavigation) {
+          pendingNavigation();
+          setPendingNavigation(null);
+        }
+        return;
+      }
+
+      if (action === "save-and-leave") {
+        await handleSave();
+        setIsUnsavedChangesModalOpen(false);
+        if (pendingNavigation) {
+          pendingNavigation();
+          setPendingNavigation(null);
+        }
       }
     };
 
@@ -361,6 +412,14 @@ export const EditorHeader = memo(
           isOpen={isSaveModalOpen}
           onOpenChange={setIsSaveModalOpen}
           onConfirm={handleSave}
+        />
+
+        {/* Unsaved changes modal */}
+        <UnsavedChangesModal
+          isOpen={isUnsavedChangesModalOpen}
+          onOpenChange={setIsUnsavedChangesModalOpen}
+          onProceed={handleUnsavedChangesProceed}
+          isPending={isSaving}
         />
       </>
     );

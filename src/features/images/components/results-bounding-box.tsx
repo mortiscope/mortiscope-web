@@ -50,8 +50,12 @@ export const ResultsBoundingBox = memo(
               />
             </TooltipTrigger>
             <TooltipContent>
-              {/* The content of the tooltip, displaying the formatted class label and confidence score. */}
-              <p className="font-inter">{`${formatLabel(det.label)}: ${formatConfidence(det.confidence)}`}</p>
+              {/* The content of the tooltip, displaying the formatted class label and optionally the confidence score. */}
+              <p className="font-inter">
+                {det.status === "user_confirmed" || det.confidence === null
+                  ? formatLabel(det.label)
+                  : `${formatLabel(det.label)}: ${formatConfidence(det.confidence)}`}
+              </p>
             </TooltipContent>
           </Tooltip>
         ))}
