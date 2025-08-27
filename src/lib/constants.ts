@@ -135,3 +135,9 @@ export const DETECTION_CLASS_COLORS: Record<string, string> = {
  * @constant {string[]}
  */
 export const DETECTION_CLASS_ORDER = ["instar_1", "instar_2", "instar_3", "pupa", "adult"];
+
+/**
+ * Local storage key for storing user preference to hide the annotation save confirmation modal.
+ * @constant {string}
+ */
+export const HIDE_SAVE_CONFIRMATION = "annotation-hide-save-confirmation";
