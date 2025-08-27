@@ -67,6 +67,8 @@ interface AnnotationState {
   isLocked: boolean;
   /** Toggles the locked state of the editor. */
   setIsLocked: (locked: boolean) => void;
+  /** Commits current changes as the new baseline after successful save. */
+  commitChanges: () => void;
 }
 
 /**
@@ -301,4 +303,14 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
    * Toggles the locked state of the editor.
    */
   setIsLocked: (locked) => set({ isLocked: locked }),
+
+  /**
+   * Commits current changes as the new baseline after successful save.
+   */
+  commitChanges: () =>
+    set((state) => ({
+      originalDetections: cloneDetections(state.detections),
+      past: [],
+      future: [],
+    })),
 }));

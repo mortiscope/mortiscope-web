@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
@@ -8,11 +9,19 @@ import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { LuChevronRight, LuLoaderCircle, LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
 import { PiFloppyDiskBack } from "react-icons/pi";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  type DetectionChanges,
+  type ModifiedDetection,
+  type NewDetection,
+  saveDetections,
+} from "@/features/annotation/actions/save-detections";
 import { shouldShowSaveConfirmation } from "@/features/annotation/components/save-confirmation-modal";
 import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
+import { type Detection } from "@/features/images/hooks/use-results-image-viewer";
 
 // Dynamically import the save confirmation modal component
 const SaveConfirmationModal = dynamic(
@@ -22,6 +31,63 @@ const SaveConfirmationModal = dynamic(
     ),
   { ssr: false }
 );
+
+/**
+ * Helper function to calculate changes between current and original detections.
+ */
+const calculateChanges = (
+  currentDetections: Detection[],
+  originalDetections: Detection[],
+  imageId: string
+): DetectionChanges => {
+  const originalMap = new Map(originalDetections.map((d) => [d.id, d]));
+  const currentMap = new Map(currentDetections.map((d) => [d.id, d]));
+
+  const added: NewDetection[] = currentDetections
+    .filter((d) => !originalMap.has(d.id))
+    .map((d) => ({
+      uploadId: imageId,
+      label: d.label,
+      confidence: d.confidence,
+      originalConfidence: d.originalConfidence,
+      xMin: d.xMin,
+      yMin: d.yMin,
+      xMax: d.xMax,
+      yMax: d.yMax,
+      status: d.status as "user_created" | "user_confirmed" | "user_edited",
+    }));
+
+  const deleted: string[] = originalDetections
+    .filter((d) => !currentMap.has(d.id))
+    .map((d) => d.id);
+
+  const modified: ModifiedDetection[] = currentDetections
+    .filter((d) => {
+      const original = originalMap.get(d.id);
+      if (!original) return false;
+      return (
+        d.label !== original.label ||
+        d.confidence !== original.confidence ||
+        d.xMin !== original.xMin ||
+        d.yMin !== original.yMin ||
+        d.xMax !== original.xMax ||
+        d.yMax !== original.yMax ||
+        d.status !== original.status
+      );
+    })
+    .map((d) => ({
+      id: d.id,
+      label: d.label,
+      confidence: d.confidence,
+      xMin: d.xMin,
+      yMin: d.yMin,
+      xMax: d.xMax,
+      yMax: d.yMax,
+      status: d.status,
+    }));
+
+  return { added, modified, deleted };
+};
 
 /**
  * Defines the props for the editor header component.
@@ -44,6 +110,7 @@ export const EditorHeader = memo(
   ({ isMobileSidebarOpen, onToggleMobileSidebar, hasOpenPanel }: EditorHeaderProps) => {
     const router = useRouter();
     const params = useParams();
+    const queryClient = useQueryClient();
 
     // Extracts and types the `resultsId` and `imageId` from the URL parameters.
     const resultsId = params.resultsId as string;
@@ -59,6 +126,9 @@ export const EditorHeader = memo(
     const setDrawMode = useAnnotationStore((state) => state.setDrawMode);
     const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
     const hasChanges = useAnnotationStore((state) => state.hasChanges());
+    const detections = useAnnotationStore((state) => state.detections);
+    const originalDetections = useAnnotationStore((state) => state.originalDetections);
+    const commitChanges = useAnnotationStore((state) => state.commitChanges);
 
     // State for save modal and saving status
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
@@ -120,10 +190,34 @@ export const EditorHeader = memo(
     const handleSave = async () => {
       setIsSaving(true);
 
-      // Simulate a save operation for now
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      try {
+        const changes = calculateChanges(detections, originalDetections, imageId);
 
-      setIsSaving(false);
+        if (
+          changes.added.length === 0 &&
+          changes.modified.length === 0 &&
+          changes.deleted.length === 0
+        ) {
+          toast.info("No changes to save");
+          setIsSaving(false);
+          return;
+        }
+
+        const result = await saveDetections(imageId, resultsId, changes);
+
+        if (result.success) {
+          commitChanges();
+          await queryClient.invalidateQueries({ queryKey: ["case", resultsId] });
+          toast.success("Changes saved successfully.");
+        } else {
+          toast.error(result.error || "Failed to save changes.");
+        }
+      } catch (error) {
+        console.error("Error saving detections:", error);
+        toast.error("An unexpected error occurred while saving.");
+      } finally {
+        setIsSaving(false);
+      }
     };
 
     return (
