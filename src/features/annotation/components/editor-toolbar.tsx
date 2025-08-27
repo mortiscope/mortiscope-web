@@ -78,6 +78,9 @@ export function EditorToolbar({
   const selectMode = useAnnotationStore((state) => state.selectMode);
   const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
 
+  // Get lock state
+  const isLocked = useAnnotationStore((state) => state.isLocked);
+
   // Determine active tool based on selection state
   const isPanActive = !selectMode && !drawMode;
   const isSelectActive = selectMode;
@@ -113,50 +116,60 @@ export function EditorToolbar({
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
+        <Tooltip open={isLocked ? false : undefined}>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              aria-label="Select"
-              onClick={() => {
-                clearSelection();
-                setDrawMode(false);
-                setSelectMode(true);
-              }}
-              className={cn(
-                "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
-                isSelectActive
-                  ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
-                  : "text-white hover:bg-transparent hover:text-emerald-300"
-              )}
-            >
-              <PiCursor className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
+            <div className={isLocked ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="ghost"
+                aria-label="Select"
+                disabled={isLocked}
+                onClick={() => {
+                  clearSelection();
+                  setDrawMode(false);
+                  setSelectMode(true);
+                }}
+                className={cn(
+                  "h-8 w-8 rounded-lg p-0 md:h-10 md:w-10",
+                  isLocked
+                    ? "cursor-not-allowed text-white/30"
+                    : isSelectActive
+                      ? "cursor-pointer bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
+                      : "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                )}
+              >
+                <PiCursor className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Select</p>
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
+        <Tooltip open={isLocked ? false : undefined}>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              aria-label="Draw"
-              onClick={() => {
-                clearSelection();
-                setSelectMode(false);
-                setDrawMode(!drawMode);
-              }}
-              className={cn(
-                "h-8 w-8 cursor-pointer rounded-lg p-0 md:h-10 md:w-10",
-                isDrawActive
-                  ? "bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
-                  : "text-white hover:bg-transparent hover:text-emerald-300"
-              )}
-            >
-              <PiBoundingBox className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
+            <div className={isLocked ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="ghost"
+                aria-label="Draw"
+                disabled={isLocked}
+                onClick={() => {
+                  clearSelection();
+                  setSelectMode(false);
+                  setDrawMode(!drawMode);
+                }}
+                className={cn(
+                  "h-8 w-8 rounded-lg p-0 md:h-10 md:w-10",
+                  isLocked
+                    ? "cursor-not-allowed text-white/30"
+                    : isDrawActive
+                      ? "cursor-pointer bg-emerald-100 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-600"
+                      : "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                )}
+              >
+                <PiBoundingBox className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Draw</p>
@@ -263,66 +276,72 @@ export function EditorToolbar({
 
       {/* Section 3: History and state management tools */}
       <div className="flex flex-col gap-1">
-        <Tooltip>
+        <Tooltip open={!canRedo || isLocked ? false : undefined}>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              onClick={redo}
-              disabled={!canRedo}
-              aria-label="Redo change"
-              className={cn(
-                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
-                canRedo
-                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
-                  : "cursor-not-allowed text-white/30"
-              )}
-            >
-              <IoArrowRedoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
+            <div className={isLocked || !canRedo ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="ghost"
+                onClick={redo}
+                disabled={!canRedo || isLocked}
+                aria-label="Redo change"
+                className={cn(
+                  "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                  canRedo && !isLocked
+                    ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                    : "cursor-not-allowed text-white/30"
+                )}
+              >
+                <IoArrowRedoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Redo change</p>
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
+        <Tooltip open={!hasChanges || isLocked ? false : undefined}>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              onClick={() => setIsResetModalOpen(true)}
-              disabled={!hasChanges}
-              aria-label="Reset changes"
-              className={cn(
-                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
-                hasChanges
-                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
-                  : "cursor-not-allowed text-white/30"
-              )}
-            >
-              <HiMiniArrowPath className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
+            <div className={isLocked || !hasChanges ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="ghost"
+                onClick={() => setIsResetModalOpen(true)}
+                disabled={!hasChanges || isLocked}
+                aria-label="Reset changes"
+                className={cn(
+                  "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                  hasChanges && !isLocked
+                    ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                    : "cursor-not-allowed text-white/30"
+                )}
+              >
+                <HiMiniArrowPath className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Reset changes</p>
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
+        <Tooltip open={!canUndo || isLocked ? false : undefined}>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              onClick={undo}
-              disabled={!canUndo}
-              aria-label="Undo change"
-              className={cn(
-                "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
-                canUndo
-                  ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
-                  : "cursor-not-allowed text-white/30"
-              )}
-            >
-              <IoArrowUndoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
-            </Button>
+            <div className={isLocked || !canUndo ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="ghost"
+                onClick={undo}
+                disabled={!canUndo || isLocked}
+                aria-label="Undo change"
+                className={cn(
+                  "h-8 w-8 rounded-lg p-0 transition-colors duration-600 ease-in-out md:h-10 md:w-10",
+                  canUndo && !isLocked
+                    ? "cursor-pointer text-white hover:bg-transparent hover:text-emerald-300"
+                    : "cursor-not-allowed text-white/30"
+                )}
+              >
+                <IoArrowUndoOutline className="!h-5 !w-5 md:!h-6 md:!w-6" />
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent side="left">
             <p className="font-inter">Undo change</p>

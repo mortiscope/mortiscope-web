@@ -47,6 +47,9 @@ export const DetailsSettingsPanel = () => {
   const displayFilter = useAnnotationStore((state) => state.displayFilter);
   const setDisplayFilter = useAnnotationStore((state) => state.setDisplayFilter);
 
+  // Get lock state from store
+  const isLocked = useAnnotationStore((state) => state.isLocked);
+
   // Local state for modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isVerifyAllModalOpen, setIsVerifyAllModalOpen] = useState(false);
@@ -150,15 +153,18 @@ export const DetailsSettingsPanel = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.25 }}
           >
-            <Button
-              variant="outline"
-              onClick={() => setIsVerifyAllModalOpen(true)}
-              className="font-inter group h-10 w-full cursor-pointer justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-500 hover:bg-emerald-500 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 md:border-2"
-              aria-label="Verify all detections"
-            >
-              <GoVerified className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
-              Verify All Detections
-            </Button>
+            <div className={isLocked ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="outline"
+                onClick={() => setIsVerifyAllModalOpen(true)}
+                disabled={isLocked}
+                className="font-inter group h-10 w-full justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-500 hover:bg-emerald-500 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
+                aria-label="Verify all detections"
+              >
+                <GoVerified className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
+                Verify All Detections
+              </Button>
+            </div>
           </motion.div>
 
           <motion.div
@@ -166,15 +172,18 @@ export const DetailsSettingsPanel = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.3 }}
           >
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="font-inter group h-10 w-full cursor-pointer justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-rose-400 hover:bg-rose-400 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 md:border-2"
-              aria-label="Delete image"
-            >
-              <IoTrashBinOutline className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
-              Delete Image
-            </Button>
+            <div className={isLocked ? "cursor-not-allowed" : ""}>
+              <Button
+                variant="outline"
+                onClick={() => setIsDeleteModalOpen(true)}
+                disabled={isLocked}
+                className="font-inter group h-10 w-full justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-rose-400 hover:bg-rose-400 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
+                aria-label="Delete image"
+              >
+                <IoTrashBinOutline className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
+                Delete Image
+              </Button>
+            </div>
           </motion.div>
         </div>
       </div>

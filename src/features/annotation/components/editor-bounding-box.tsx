@@ -29,6 +29,7 @@ export const EditorBoundingBox = memo(
     const updateDetectionNoHistory = useAnnotationStore((state) => state.updateDetectionNoHistory);
     const saveStateBeforeEdit = useAnnotationStore((state) => state.saveStateBeforeEdit);
     const transformScale = useAnnotationStore((state) => state.transformScale);
+    const isLocked = useAnnotationStore((state) => state.isLocked);
 
     // Local state to manage the dragging interaction.
     const [isDragging, setIsDragging] = React.useState(false);
@@ -225,7 +226,7 @@ export const EditorBoundingBox = memo(
                 <div
                   className="absolute box-border transition-all duration-150"
                   style={{
-                    cursor: isSelected && !isResizing ? "move" : "pointer",
+                    cursor: isLocked ? "pointer" : isSelected && !isResizing ? "move" : "pointer",
                     // The core rendering logic
                     top: `${(det.yMin / imageDimensions.height) * 100}%`,
                     left: `${(det.xMin / imageDimensions.width) * 100}%`,
@@ -236,10 +237,12 @@ export const EditorBoundingBox = memo(
                     zIndex: isSelected ? 10 : 1,
                   }}
                   onClick={(e) => {
+                    if (isLocked) return;
                     e.stopPropagation();
                     selectDetection(det.id);
                   }}
                   onMouseDown={(e) => {
+                    if (isLocked) return;
                     // Initiates a drag operation only if the box is already selected.
                     if (isSelected) {
                       e.stopPropagation();
