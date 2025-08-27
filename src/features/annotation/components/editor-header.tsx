@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { memo, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { LuChevronRight, LuLoaderCircle, LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
@@ -23,6 +24,7 @@ import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data
 import { useNavigationGuard } from "@/features/annotation/hooks/use-navigation-guard";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 import { type Detection } from "@/features/images/hooks/use-results-image-viewer";
+import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
 
 // Dynamically import modal components
 const SaveConfirmationModal = dynamic(
@@ -270,6 +272,30 @@ export const EditorHeader = memo(
         }
       }
     };
+
+    // Keyboard shortcuts for the header
+    useHotkeys(KEYBOARD_SHORTCUTS.BACK_NAVIGATION, handleBackNavigation, {
+      preventDefault: true,
+    });
+
+    useHotkeys(KEYBOARD_SHORTCUTS.PREVIOUS_IMAGE, handlePreviousImage, {
+      enabled: currentImageIndex > 0,
+      preventDefault: true,
+    });
+
+    useHotkeys(KEYBOARD_SHORTCUTS.NEXT_IMAGE, handleNextImage, {
+      enabled: currentImageIndex < totalImages - 1,
+      preventDefault: true,
+    });
+
+    useHotkeys(KEYBOARD_SHORTCUTS.TOGGLE_LOCK, handleToggleLock, {
+      preventDefault: true,
+    });
+
+    useHotkeys(KEYBOARD_SHORTCUTS.SAVE, handleSaveClick, {
+      enabled: hasChanges && !isSaving,
+      preventDefault: true,
+    });
 
     return (
       <>

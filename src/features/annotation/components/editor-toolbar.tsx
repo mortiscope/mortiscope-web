@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { HiMiniArrowPath } from "react-icons/hi2";
 import { IoArrowRedoOutline, IoArrowUndoOutline } from "react-icons/io5";
 import { IoHandRightOutline } from "react-icons/io5";
@@ -12,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
+import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // Dynamically import the reset changes modal component
@@ -85,6 +87,105 @@ export function EditorToolbar({
   const isPanActive = !selectMode && !drawMode;
   const isSelectActive = selectMode;
   const isDrawActive = drawMode;
+
+  // Retrieves the currently selected detection ID and the `removeDetection` action from the global store.
+  const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
+  const removeDetection = useAnnotationStore((state) => state.removeDetection);
+
+  // Keyboard shortcuts for tool selection
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.PAN_MODE,
+    () => {
+      clearSelection();
+      setDrawMode(false);
+      setSelectMode(false);
+    },
+    { enabled: !isLocked, preventDefault: true }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.SELECT_MODE,
+    () => {
+      clearSelection();
+      setDrawMode(false);
+      setSelectMode(true);
+    },
+    { enabled: !isLocked, preventDefault: true }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.DRAW_MODE,
+    () => {
+      clearSelection();
+      setSelectMode(false);
+      setDrawMode(!drawMode);
+    },
+    { enabled: !isLocked, preventDefault: true }
+  );
+
+  // Keyboard shortcuts for view controls
+  useHotkeys(KEYBOARD_SHORTCUTS.ZOOM_IN, () => onZoomIn?.(), { preventDefault: true });
+
+  useHotkeys(KEYBOARD_SHORTCUTS.ZOOM_OUT, () => onZoomOut?.(), { preventDefault: true });
+
+  useHotkeys(KEYBOARD_SHORTCUTS.TOGGLE_MINIMAP, () => onToggleMinimap?.(), {
+    preventDefault: true,
+  });
+
+  useHotkeys(KEYBOARD_SHORTCUTS.CENTER_FOCUS, () => onCenterView?.(), { preventDefault: true });
+
+  useHotkeys(KEYBOARD_SHORTCUTS.RESET_VIEW, () => onResetView?.(), { preventDefault: true });
+
+  // Keyboard shortcuts for history management
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.UNDO,
+    undo,
+    {
+      enabled: canUndo && !isLocked,
+      preventDefault: true,
+    }
+  );
+
+  useHotkeys(KEYBOARD_SHORTCUTS.REDO, redo, {
+    enabled: canRedo && !isLocked,
+    preventDefault: true,
+  });
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.RESET_CHANGES,
+    () => setIsResetModalOpen(true),
+    {
+      enabled: hasChanges && !isLocked,
+      preventDefault: true,
+    }
+  );
+
+  // Keyboard shortcuts for selection-based actions
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.DELETE_SELECTED,
+    () => {
+      if (selectedDetectionId) {
+        removeDetection(selectedDetectionId);
+      }
+    },
+    {
+      enabled: !!selectedDetectionId && !isLocked,
+      preventDefault: true,
+    }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.DESELECT,
+    () => {
+      if (selectedDetectionId) {
+        clearSelection();
+      }
+    },
+    {
+      enabled: !!selectedDetectionId,
+      preventDefault: true,
+    }
+  );
 
   return (
     // The main container for the toolbar
