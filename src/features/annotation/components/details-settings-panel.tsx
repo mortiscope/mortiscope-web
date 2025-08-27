@@ -158,7 +158,7 @@ export const DetailsSettingsPanel = () => {
                 variant="outline"
                 onClick={() => setIsVerifyAllModalOpen(true)}
                 disabled={isLocked}
-                className="font-inter group h-10 w-full justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-500 hover:bg-emerald-500 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
+                className="font-inter group h-10 w-full cursor-pointer justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-500 hover:bg-emerald-500 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
                 aria-label="Verify all detections"
               >
                 <GoVerified className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
@@ -177,7 +177,7 @@ export const DetailsSettingsPanel = () => {
                 variant="outline"
                 onClick={() => setIsDeleteModalOpen(true)}
                 disabled={isLocked}
-                className="font-inter group h-10 w-full justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-rose-400 hover:bg-rose-400 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
+                className="font-inter group h-10 w-full cursor-pointer justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-rose-400 hover:bg-rose-400 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
                 aria-label="Delete image"
               >
                 <IoTrashBinOutline className="mr-2 h-6 w-6 flex-shrink-0 text-white transition-colors duration-300 ease-in-out group-hover:text-white" />
