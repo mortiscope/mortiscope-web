@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Fragment, useEffect, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { FaRegKeyboard } from "react-icons/fa";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { GoFileCode } from "react-icons/go";
@@ -12,6 +13,7 @@ import { RxImage } from "react-icons/rx";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { EditorDetailsPanel } from "@/features/annotation/components/editor-details-panel";
+import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 // Dynamically import the details panel components.
@@ -130,6 +132,39 @@ export const EditorSidebar = ({ isMobileSidebarOpen, onPanelStateChange }: Edito
   const handleClosePanel = () => {
     setSelectedItem(null);
   };
+
+  // Keyboard shortcuts for panel navigation
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.TOGGLE_ANNOTATION_PANEL,
+    () => {
+      setSelectedItem((current) => (current === "annotation" ? null : "annotation"));
+    },
+    { preventDefault: true, enableOnFormTags: false }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.TOGGLE_ATTRIBUTES_PANEL,
+    () => {
+      setSelectedItem((current) => (current === "attributes" ? null : "attributes"));
+    },
+    { preventDefault: true, enableOnFormTags: false }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.TOGGLE_SHORTCUTS_PANEL,
+    () => {
+      setSelectedItem((current) => (current === "shortcuts" ? null : "shortcuts"));
+    },
+    { preventDefault: true, enableOnFormTags: false }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.TOGGLE_SETTINGS_PANEL,
+    () => {
+      setSelectedItem((current) => (current === "settings" ? null : "settings"));
+    },
+    { preventDefault: true, enableOnFormTags: false }
+  );
 
   /** A shared class string for consistent styling of the sidebar buttons. */
   const buttonClasses =

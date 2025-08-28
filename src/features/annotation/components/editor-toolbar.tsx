@@ -83,6 +83,9 @@ export function EditorToolbar({
   // Get lock state
   const isLocked = useAnnotationStore((state) => state.isLocked);
 
+  // Get display filter action
+  const setDisplayFilter = useAnnotationStore((state) => state.setDisplayFilter);
+
   // Determine active tool based on selection state
   const isPanActive = !selectMode && !drawMode;
   const isSelectActive = selectMode;
@@ -137,28 +140,20 @@ export function EditorToolbar({
   useHotkeys(KEYBOARD_SHORTCUTS.RESET_VIEW, () => onResetView?.(), { preventDefault: true });
 
   // Keyboard shortcuts for history management
-  useHotkeys(
-    KEYBOARD_SHORTCUTS.UNDO,
-    undo,
-    {
-      enabled: canUndo && !isLocked,
-      preventDefault: true,
-    }
-  );
+  useHotkeys(KEYBOARD_SHORTCUTS.UNDO, undo, {
+    enabled: canUndo && !isLocked,
+    preventDefault: true,
+  });
 
   useHotkeys(KEYBOARD_SHORTCUTS.REDO, redo, {
     enabled: canRedo && !isLocked,
     preventDefault: true,
   });
 
-  useHotkeys(
-    KEYBOARD_SHORTCUTS.RESET_CHANGES,
-    () => setIsResetModalOpen(true),
-    {
-      enabled: hasChanges && !isLocked,
-      preventDefault: true,
-    }
-  );
+  useHotkeys(KEYBOARD_SHORTCUTS.RESET_CHANGES, () => setIsResetModalOpen(true), {
+    enabled: hasChanges && !isLocked,
+    preventDefault: true,
+  });
 
   // Keyboard shortcuts for selection-based actions
   useHotkeys(
@@ -185,6 +180,31 @@ export function EditorToolbar({
       enabled: !!selectedDetectionId,
       preventDefault: true,
     }
+  );
+
+  // Keyboard shortcuts for display filters
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.SHOW_ALL_ANNOTATIONS,
+    () => {
+      setDisplayFilter("all");
+    },
+    { preventDefault: true }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.SHOW_VERIFIED_ONLY,
+    () => {
+      setDisplayFilter("verified");
+    },
+    { preventDefault: true }
+  );
+
+  useHotkeys(
+    KEYBOARD_SHORTCUTS.SHOW_UNVERIFIED_ONLY,
+    () => {
+      setDisplayFilter("unverified");
+    },
+    { preventDefault: true }
   );
 
   return (

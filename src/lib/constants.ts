@@ -148,6 +148,12 @@ export const HIDE_SAVE_CONFIRMATION = "annotation-hide-save-confirmation";
  * @constant {object}
  */
 export const KEYBOARD_SHORTCUTS = {
+  // Panel navigation
+  TOGGLE_ANNOTATION_PANEL: "alt+1",
+  TOGGLE_ATTRIBUTES_PANEL: "alt+2",
+  TOGGLE_SHORTCUTS_PANEL: "alt+3",
+  TOGGLE_SETTINGS_PANEL: "alt+4",
+
   // Editor header actions
   BACK_NAVIGATION: "q",
   PREVIOUS_IMAGE: "BracketLeft",
@@ -175,4 +181,9 @@ export const KEYBOARD_SHORTCUTS = {
   // Actions related to the currently selected detection
   DELETE_SELECTED: "delete, backspace",
   DESELECT: "escape",
+
+  // Display filters
+  SHOW_ALL_ANNOTATIONS: "shift+a",
+  SHOW_VERIFIED_ONLY: "shift+v",
+  SHOW_UNVERIFIED_ONLY: "shift+u",
 } as const;
