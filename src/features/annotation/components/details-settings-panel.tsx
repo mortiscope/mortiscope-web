@@ -50,6 +50,10 @@ export const DetailsSettingsPanel = () => {
   // Get lock state from store
   const isLocked = useAnnotationStore((state) => state.isLocked);
 
+  // Get detections from store to check if image has any
+  const detections = useAnnotationStore((state) => state.detections);
+  const hasDetections = detections.length > 0;
+
   // Local state for modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isVerifyAllModalOpen, setIsVerifyAllModalOpen] = useState(false);
@@ -153,11 +157,11 @@ export const DetailsSettingsPanel = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.25 }}
           >
-            <div className={isLocked ? "cursor-not-allowed" : ""}>
+            <div className={isLocked || !hasDetections ? "cursor-not-allowed" : ""}>
               <Button
                 variant="outline"
                 onClick={() => setIsVerifyAllModalOpen(true)}
-                disabled={isLocked}
+                disabled={isLocked || !hasDetections}
                 className="font-inter group h-10 w-full cursor-pointer justify-start rounded-lg border-1 border-white bg-transparent text-left font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-500 hover:bg-emerald-500 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-white disabled:hover:bg-transparent md:border-2"
                 aria-label="Verify all detections"
               >
