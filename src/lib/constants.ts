@@ -149,7 +149,7 @@ export const HIDE_SAVE_CONFIRMATION = "annotation-hide-save-confirmation";
  */
 export const KEYBOARD_SHORTCUTS = {
   // Editor header actions
-  BACK_NAVIGATION: "escape",
+  BACK_NAVIGATION: "q",
   PREVIOUS_IMAGE: "BracketLeft",
   NEXT_IMAGE: "BracketRight",
   TOGGLE_LOCK: "l",
@@ -158,7 +158,7 @@ export const KEYBOARD_SHORTCUTS = {
   // Tool selection
   PAN_MODE: "h",
   SELECT_MODE: "v",
-  DRAW_MODE: "b",
+  DRAW_MODE: "d",
 
   // View controls for manipulating the canvas
   ZOOM_IN: "Equal, shift+Equal",

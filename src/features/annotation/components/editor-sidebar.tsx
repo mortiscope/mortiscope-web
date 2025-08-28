@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { Fragment, useEffect, useState } from "react";
+import { FaRegKeyboard } from "react-icons/fa";
 import { FiMoreHorizontal } from "react-icons/fi";
 import { GoFileCode } from "react-icons/go";
 import { IoSettingsOutline } from "react-icons/io5";
@@ -32,10 +33,16 @@ const DynamicDetailsSettingsPanel = dynamic(() =>
   )
 );
 
+const DynamicDetailsShortcutsPanel = dynamic(() =>
+  import("@/features/annotation/components/details-shortcuts-panel").then(
+    (module) => module.DetailsShortcutsPanel
+  )
+);
+
 /**
  * Defines the possible identifiers for each sidebar item and its corresponding panel.
  */
-type SidebarItem = "annotation" | "attributes" | "settings";
+type SidebarItem = "annotation" | "shortcuts" | "attributes" | "settings";
 
 /**
  * Defines the structure for a single sidebar button configuration.
@@ -60,6 +67,11 @@ const sidebarButtons: SidebarButton[] = [
     id: "attributes",
     icon: RxImage,
     label: "Attributes",
+  },
+  {
+    id: "shortcuts",
+    icon: FaRegKeyboard,
+    label: "Shortcuts",
   },
   {
     id: "settings",
@@ -132,6 +144,8 @@ export const EditorSidebar = ({ isMobileSidebarOpen, onPanelStateChange }: Edito
     switch (selectedItem) {
       case "annotation":
         return <DynamicDetailsAnnotationPanel />;
+      case "shortcuts":
+        return <DynamicDetailsShortcutsPanel />;
       case "attributes":
         return <DynamicDetailsAttributesPanel />;
       case "settings":
@@ -146,6 +160,8 @@ export const EditorSidebar = ({ isMobileSidebarOpen, onPanelStateChange }: Edito
     switch (selectedItem) {
       case "annotation":
         return "Annotation";
+      case "shortcuts":
+        return "Keyboard Shortcuts";
       case "attributes":
         return "Attributes";
       case "settings":
@@ -167,11 +183,18 @@ export const EditorSidebar = ({ isMobileSidebarOpen, onPanelStateChange }: Edito
         <nav className="flex w-full flex-col gap-1.5 px-1 md:gap-2 md:px-2">
           {sidebarButtons.map((button, index) => {
             const isActive = selectedItem === button.id;
+            // Hide shortcuts button on small devices only
+            const isHidden = button.id === "shortcuts";
+
             // The button is defined as a variable to be passed to the tooltip trigger.
             const ButtonElement = (
               <Button
                 onClick={() => handleButtonClick(button.id)}
-                className={cn(buttonClasses, isActive && activeClasses)}
+                className={cn(
+                  buttonClasses,
+                  isActive && activeClasses,
+                  isHidden && "hidden md:flex"
+                )}
                 aria-label={button.label}
                 aria-pressed={isActive}
                 variant="ghost"
@@ -192,7 +215,7 @@ export const EditorSidebar = ({ isMobileSidebarOpen, onPanelStateChange }: Edito
                 </Tooltip>
                 {/* Renders a separator between buttons. */}
                 {index < sidebarButtons.length - 1 && (
-                  <div className="flex justify-center">
+                  <div className={cn("flex justify-center", isHidden && "hidden md:flex")}>
                     <FiMoreHorizontal className="h-4 w-4 text-emerald-400 md:h-5 md:w-5" />
                   </div>
                 )}
