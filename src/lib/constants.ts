@@ -143,6 +143,19 @@ export const DETECTION_CLASS_ORDER = ["instar_1", "instar_2", "instar_3", "pupa"
 export const HIDE_SAVE_CONFIRMATION = "annotation-hide-save-confirmation";
 
 /**
+ * Stage hierarchy for PMI calculation.
+ * Higher numbers represent older life stages.
+ * @constant {Record<string, number>}
+ */
+export const STAGE_HIERARCHY: Record<string, number> = {
+  pupa: 4,
+  instar_3: 3,
+  instar_2: 2,
+  instar_1: 1,
+  adult: 0,
+};
+
+/**
  * Defines all keyboard shortcuts for the annotation editor.
  * The `as const` assertion ensures the object is read-only for type safety.
  * @constant {object}

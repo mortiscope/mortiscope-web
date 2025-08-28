@@ -10,7 +10,6 @@ import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { LuChevronRight, LuLoaderCircle, LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
 import { PiFloppyDiskBack } from "react-icons/pi";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -230,7 +229,6 @@ export const EditorHeader = memo(
           changes.modified.length === 0 &&
           changes.deleted.length === 0
         ) {
-          toast.info("No changes to save");
           setIsSaving(false);
           return;
         }
@@ -240,13 +238,9 @@ export const EditorHeader = memo(
         if (result.success) {
           commitChanges();
           await queryClient.invalidateQueries({ queryKey: ["case", resultsId] });
-          toast.success("Changes saved successfully.");
-        } else {
-          toast.error(result.error || "Failed to save changes.");
         }
       } catch (error) {
         console.error("Error saving detections:", error);
-        toast.error("An unexpected error occurred while saving.");
       } finally {
         setIsSaving(false);
       }

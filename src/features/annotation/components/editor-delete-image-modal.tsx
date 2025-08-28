@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { ImSpinner2 } from "react-icons/im";
 import { PiWarning } from "react-icons/pi";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -98,9 +97,6 @@ export const EditorDeleteImageModal = ({
       isDeleting.current = false;
 
       if (data.success) {
-        // Use the refined, more generic success message.
-        toast.success(data.success);
-
         // Mark case for recalculation since image deletion affects PMI
         if (caseId) {
           markForRecalculation(caseId);
@@ -108,8 +104,6 @@ export const EditorDeleteImageModal = ({
 
         // Invalidate the case data query to refresh the interface immediately
         queryClient.invalidateQueries({ queryKey: ["case", caseId] });
-      } else {
-        toast.error(data.error || "Failed to delete file.");
       }
 
       // Close the modal
@@ -118,7 +112,6 @@ export const EditorDeleteImageModal = ({
     // Handles closing the modal on failure.
     onError: () => {
       isDeleting.current = false;
-      toast.error("Deletion failed. An unexpected error occurred.");
       onOpenChange(false);
     },
   });
@@ -129,7 +122,6 @@ export const EditorDeleteImageModal = ({
   const handleDelete = () => {
     // Prevent deletion if it's the last image.
     if (totalImages <= 1) {
-      toast.error("A case must have at least one image.");
       onOpenChange(false);
       return;
     }

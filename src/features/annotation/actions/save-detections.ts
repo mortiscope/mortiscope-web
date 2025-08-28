@@ -4,8 +4,36 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases, detections, uploads } from "@/db/schema";
+import { analysisResults, cases, detections, uploads } from "@/db/schema";
 import { type Detection } from "@/features/images/hooks/use-results-image-viewer";
+import { STAGE_HIERARCHY } from "@/lib/constants";
+
+/**
+ * Checks if a new detection stage is older than the stage used for calculation,
+ * which would require recalculation of PMI.
+ *
+ * @param currentStage The stage currently used for PMI calculation
+ * @param newStage The stage of the newly added/modified detection
+ * @returns True if recalculation is needed
+ */
+function shouldTriggerRecalculation(
+  currentStage: string | null | undefined,
+  newStage: string
+): boolean {
+  // Adults are disregarded for calculation
+  if (newStage === "adult") return false;
+
+  // If no current stage or current is adult (disregarded), any non-adult stage triggers recalculation
+  if (!currentStage || currentStage === "adult") {
+    return newStage !== "adult";
+  }
+
+  // Compare hierarchy - trigger if new stage is older (higher number)
+  const currentHierarchy = STAGE_HIERARCHY[currentStage] ?? 0;
+  const newHierarchy = STAGE_HIERARCHY[newStage] ?? 0;
+
+  return newHierarchy > currentHierarchy;
+}
 
 /**
  * Defines the shape for a newly created detection that has not yet been saved to the database.
@@ -146,6 +174,28 @@ export async function saveDetections(
     const updatedDetections = await db.query.detections.findMany({
       where: and(eq(detections.uploadId, imageId), isNull(detections.deletedAt)),
     });
+
+    // Check if recalculation is needed based on added/modified detections
+    const analysisResult = await db.query.analysisResults.findFirst({
+      where: eq(analysisResults.caseId, resultsId),
+      columns: { stageUsedForCalculation: true },
+    });
+
+    // Collect all stages from added and modified detections
+    const newStages = [
+      ...changes.added.map((d) => d.label),
+      ...changes.modified.map((d) => d.label),
+    ];
+
+    // Check if any new stage requires recalculation
+    const needsRecalculation = newStages.some((stage) =>
+      shouldTriggerRecalculation(analysisResult?.stageUsedForCalculation, stage)
+    );
+
+    // If recalculation is needed, update the case flag
+    if (needsRecalculation) {
+      await db.update(cases).set({ recalculationNeeded: true }).where(eq(cases.id, resultsId));
+    }
 
     // Return the updated list to the client for state synchronization.
     return {
