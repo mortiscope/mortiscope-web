@@ -134,6 +134,26 @@ export const ResultsAnalysis = ({
   // A clear flag to check if a valid PMI estimation exists.
   const hasEstimation = typeof displayedPmiValue === "number";
 
+  /**
+   * Calculates the number of reviewed images and total reviewable images.
+   * An image is considered reviewed if all its detections are verified.
+   * Only images with at least one detection are counted in the total.
+   */
+  const { reviewedImagesCount, totalReviewableImages } = useMemo(() => {
+    // Filter to only images with detections.
+    const imagesWithDetections = uploads.filter((upload) => upload.detections.length > 0);
+
+    // Count how many of those have all detections verified.
+    const reviewedCount = imagesWithDetections.filter((upload) =>
+      upload.detections.every((d) => d.status === "user_confirmed")
+    ).length;
+
+    return {
+      reviewedImagesCount: reviewedCount,
+      totalReviewableImages: imagesWithDetections.length,
+    };
+  }, [uploads]);
+
   // The conditional return now happens *after* all hooks have been called.
   if (isLoading || !analysisResult || !caseData) {
     return <ResultsAnalysisSkeleton />;
@@ -184,7 +204,11 @@ export const ResultsAnalysis = ({
             onUnitSelect={setSelectedUnit}
             onInfoClick={() => setIsPmiModalOpen(true)}
           />
-          <ReviewedImagesWidget hasEstimation={hasEstimation} />
+          <ReviewedImagesWidget
+            hasEstimation={hasEstimation}
+            reviewedCount={reviewedImagesCount}
+            totalCount={totalReviewableImages}
+          />
         </div>
       </TooltipProvider>
 
