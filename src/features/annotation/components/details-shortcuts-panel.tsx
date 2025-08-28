@@ -2,18 +2,21 @@
 
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { FaRegKeyboard } from "react-icons/fa";
+import { GoFileCode, GoUnverified, GoVerified } from "react-icons/go";
 import { HiMiniArrowPath, HiOutlineLockClosed } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoArrowRedoOutline, IoArrowUndoOutline, IoHandRightOutline } from "react-icons/io5";
-import { IoTrashBinOutline } from "react-icons/io5";
+import { IoSettingsOutline, IoTrashBinOutline } from "react-icons/io5";
 import { LuFocus } from "react-icons/lu";
 import {
   PiBoundingBox,
+  PiCheckSquare,
   PiCursor,
   PiFloppyDiskBack,
-  PiSelectionInverse,
-  PiSquare,
-} from "react-icons/pi";
+  PiScan,
+  PiSelectionInverse} from "react-icons/pi";
+import { RxImage } from "react-icons/rx";
 import { TbRotate } from "react-icons/tb";
 
 import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
@@ -25,7 +28,7 @@ import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
  * Mac-specific meta key combinations for a cleaner display on most platforms.
  *
  * @param {object} props The component props.
- * @param {string} props.keys A string representing the key combination(s) (e.g., "ctrl+s, meta+s").
+ * @param {string} props.keys A string representing the key combination(s).
  * @returns A React span element with the formatted shortcut text.
  */
 const KeyBadge = ({ keys }: { keys: string }) => {
@@ -86,6 +89,56 @@ export const DetailsShortcutsPanel = () => {
    * This approach centralizes the data, making the interface easy to manage and update.
    */
   const shortcuts = [
+    // Panel Navigation
+    {
+      icon: GoFileCode,
+      label: "Annotation Panel",
+      keys: KEYBOARD_SHORTCUTS.TOGGLE_ANNOTATION_PANEL,
+    },
+    {
+      icon: RxImage,
+      label: "Attributes Panel",
+      keys: KEYBOARD_SHORTCUTS.TOGGLE_ATTRIBUTES_PANEL,
+    },
+    {
+      icon: FaRegKeyboard,
+      label: "Shortcuts Panel",
+      keys: KEYBOARD_SHORTCUTS.TOGGLE_SHORTCUTS_PANEL,
+    },
+    {
+      icon: IoSettingsOutline,
+      label: "Settings Panel",
+      keys: KEYBOARD_SHORTCUTS.TOGGLE_SETTINGS_PANEL,
+    },
+
+    // Display Filters
+    { icon: PiScan, label: "Show All Annotations", keys: KEYBOARD_SHORTCUTS.SHOW_ALL_ANNOTATIONS },
+    { icon: GoVerified, label: "Show Verified Only", keys: KEYBOARD_SHORTCUTS.SHOW_VERIFIED_ONLY },
+    {
+      icon: GoUnverified,
+      label: "Show Unverified Only",
+      keys: KEYBOARD_SHORTCUTS.SHOW_UNVERIFIED_ONLY,
+    },
+
+    // Tool Selection
+    { icon: IoHandRightOutline, label: "Pan Mode", keys: KEYBOARD_SHORTCUTS.PAN_MODE },
+    { icon: PiCursor, label: "Select Mode", keys: KEYBOARD_SHORTCUTS.SELECT_MODE },
+    { icon: PiBoundingBox, label: "Draw Mode", keys: KEYBOARD_SHORTCUTS.DRAW_MODE },
+
+    // View Controls
+    { icon: PiCheckSquare, label: "Toggle Minimap", keys: KEYBOARD_SHORTCUTS.TOGGLE_MINIMAP },
+    { icon: LuFocus, label: "Center Focus", keys: KEYBOARD_SHORTCUTS.CENTER_FOCUS },
+    { icon: TbRotate, label: "Reset View", keys: KEYBOARD_SHORTCUTS.RESET_VIEW },
+
+    // History
+    { icon: IoArrowUndoOutline, label: "Undo", keys: KEYBOARD_SHORTCUTS.UNDO },
+    { icon: IoArrowRedoOutline, label: "Redo", keys: KEYBOARD_SHORTCUTS.REDO },
+    { icon: HiMiniArrowPath, label: "Reset Changes", keys: KEYBOARD_SHORTCUTS.RESET_CHANGES },
+
+    // Selection Actions
+    { icon: IoTrashBinOutline, label: "Delete Selected", keys: KEYBOARD_SHORTCUTS.DELETE_SELECTED },
+    { icon: PiSelectionInverse, label: "Deselect", keys: KEYBOARD_SHORTCUTS.DESELECT },
+
     // Editor Header
     {
       icon: IoIosArrowRoundBack,
@@ -100,25 +153,6 @@ export const DetailsShortcutsPanel = () => {
       keys: KEYBOARD_SHORTCUTS.TOGGLE_LOCK,
     },
     { icon: PiFloppyDiskBack, label: "Save", keys: KEYBOARD_SHORTCUTS.SAVE },
-
-    // Tool Selection
-    { icon: IoHandRightOutline, label: "Pan Mode", keys: KEYBOARD_SHORTCUTS.PAN_MODE },
-    { icon: PiCursor, label: "Select Mode", keys: KEYBOARD_SHORTCUTS.SELECT_MODE },
-    { icon: PiBoundingBox, label: "Draw Mode", keys: KEYBOARD_SHORTCUTS.DRAW_MODE },
-
-    // View Controls
-    { icon: PiSquare, label: "Toggle Minimap", keys: KEYBOARD_SHORTCUTS.TOGGLE_MINIMAP },
-    { icon: LuFocus, label: "Center Focus", keys: KEYBOARD_SHORTCUTS.CENTER_FOCUS },
-    { icon: TbRotate, label: "Reset View", keys: KEYBOARD_SHORTCUTS.RESET_VIEW },
-
-    // History
-    { icon: IoArrowUndoOutline, label: "Undo", keys: KEYBOARD_SHORTCUTS.UNDO },
-    { icon: IoArrowRedoOutline, label: "Redo", keys: KEYBOARD_SHORTCUTS.REDO },
-    { icon: HiMiniArrowPath, label: "Reset Changes", keys: KEYBOARD_SHORTCUTS.RESET_CHANGES },
-
-    // Selection Actions
-    { icon: IoTrashBinOutline, label: "Delete Selected", keys: KEYBOARD_SHORTCUTS.DELETE_SELECTED },
-    { icon: PiSelectionInverse, label: "Deselect", keys: KEYBOARD_SHORTCUTS.DESELECT },
   ];
 
   return (
