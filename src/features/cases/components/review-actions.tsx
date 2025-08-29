@@ -50,29 +50,43 @@ export const ReviewActions = memo(
           {/* The component renders one of two layouts based on the `isProcessing` flag. */}
           {isProcessing ? (
             // A single, full-width cancel button shown during the final processing state.
-            <Button onClick={onCancel} disabled={isCancelling} className={cn(cancelButtonClasses)}>
-              {isCancelling ? "Cancelling..." : "Cancel"}
-            </Button>
+            <div className={cn("flex flex-1", { "cursor-not-allowed": isCancelling })}>
+              <Button
+                onClick={onCancel}
+                disabled={isCancelling}
+                className={cn(cancelButtonClasses)}
+              >
+                {isCancelling ? "Cancelling..." : "Cancel"}
+              </Button>
+            </div>
           ) : (
             // The standard layout with previous and submit buttons.
             <>
               {/* The previous navigation button. */}
-              <Button
-                onClick={onPrevious}
-                className={cn(buttonClasses)}
-                disabled={isPending || isSubmitting}
+              <div
+                className={cn("flex flex-1", { "cursor-not-allowed": isPending || isSubmitting })}
               >
-                Previous
-              </Button>
+                <Button
+                  onClick={onPrevious}
+                  className={cn(buttonClasses)}
+                  disabled={isPending || isSubmitting}
+                >
+                  Previous
+                </Button>
+              </div>
 
               {/* The final submit button. */}
-              <Button
-                onClick={onSubmit}
-                className={cn(buttonClasses)}
-                disabled={isSubmitting || isPending}
+              <div
+                className={cn("flex flex-1", { "cursor-not-allowed": isSubmitting || isPending })}
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </Button>
+                <Button
+                  onClick={onSubmit}
+                  className={cn(buttonClasses)}
+                  disabled={isSubmitting || isPending}
+                >
+                  {isSubmitting ? "Submitting..." : "Submit"}
+                </Button>
+              </div>
             </>
           )}
         </CardFooter>

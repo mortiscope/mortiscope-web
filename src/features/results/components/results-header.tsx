@@ -59,7 +59,7 @@ export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => 
     onSuccess: () => {
       setIsPolling(false);
       setIsRecalculateModalOpen(false);
-      toast.success(`${caseData.caseName} recalculation completed!`);
+      toast.success(`${caseData.caseName} recalculation completed.`);
 
       // Clear any pending recalculation flags in the store
       if (caseId) {

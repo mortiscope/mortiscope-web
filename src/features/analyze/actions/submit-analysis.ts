@@ -61,11 +61,20 @@ export async function submitAnalysis(values: { caseId: string }): Promise<Action
     // Update the case status from 'draft' to 'active'.
     await db.update(cases).set({ status: "active" }).where(eq(cases.id, caseId));
 
-    // Create the initial 'pending' record in the analysis_results table.
-    await db.insert(analysisResults).values({
-      caseId,
-      status: "pending",
-    });
+    // Create or update the 'pending' record in the analysis_results table.
+    await db
+      .insert(analysisResults)
+      .values({
+        caseId,
+        status: "pending",
+      })
+      .onConflictDoUpdate({
+        target: analysisResults.caseId,
+        set: {
+          status: "pending",
+          updatedAt: new Date(),
+        },
+      });
 
     // If the database operations were successful, send the event to Inngest.
     await inngest.send({

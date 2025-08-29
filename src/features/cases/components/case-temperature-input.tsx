@@ -88,7 +88,12 @@ export const CaseTemperatureInput = memo(
                             <FormControl>
                               <SelectTrigger
                                 disabled={isUnitDisabled || isLocked}
-                                className={cn(uniformInputStyles, selectTriggerStyles, "w-[90px]")}
+                                className={cn(
+                                  uniformInputStyles,
+                                  selectTriggerStyles,
+                                  "w-[90px]",
+                                  !isUnitDisabled && !isLocked && "cursor-pointer"
+                                )}
                               >
                                 <SelectValue placeholder="Unit" />
                               </SelectTrigger>

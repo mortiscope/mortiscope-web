@@ -51,7 +51,7 @@ export const UploadFileItem = memo(
         className={cn(
           "font-inter group relative border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50",
           {
-            "flex cursor-pointer items-center justify-between rounded-lg p-2 sm:p-3":
+            "flex cursor-pointer items-center justify-between rounded-xl p-2 sm:p-3":
               viewMode === "list",
             "flex aspect-square cursor-pointer flex-col overflow-hidden rounded-2xl":
               viewMode === "grid",

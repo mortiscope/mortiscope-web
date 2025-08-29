@@ -34,7 +34,7 @@ export const ReviewDetailsSummary = memo(
     return (
       // The main animated container for the details summary card.
       <motion.div variants={variants}>
-        <Card className="border-2 border-slate-200 shadow-none">
+        <Card className="rounded-2xl border-2 border-slate-200 shadow-none">
           <CardHeader className="py-0 text-center md:text-left">
             <CardTitle className="font-plus-jakarta-sans text-lg">Analysis Details</CardTitle>
           </CardHeader>
