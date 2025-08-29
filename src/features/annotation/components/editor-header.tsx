@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { memo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { GoUnverified, GoVerified } from "react-icons/go";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { LuChevronRight, LuLoaderCircle, LuPanelLeftClose, LuPanelLeftOpen } from "react-icons/lu";
@@ -38,6 +39,22 @@ const UnsavedChangesModal = dynamic(
   () =>
     import("@/features/annotation/components/unsaved-changes-modal").then(
       (module) => module.UnsavedChangesModal
+    ),
+  { ssr: false }
+);
+
+const VerifiedStatusModal = dynamic(
+  () =>
+    import("@/features/annotation/components/verified-status-modal").then(
+      (module) => module.VerifiedStatusModal
+    ),
+  { ssr: false }
+);
+
+const UnverifiedStatusModal = dynamic(
+  () =>
+    import("@/features/annotation/components/unverified-status-modal").then(
+      (module) => module.UnverifiedStatusModal
     ),
   { ssr: false }
 );
@@ -146,6 +163,8 @@ export const EditorHeader = memo(
     // State for modals and saving status
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [isUnsavedChangesModalOpen, setIsUnsavedChangesModalOpen] = useState(false);
+    const [isVerifiedModalOpen, setIsVerifiedModalOpen] = useState(false);
+    const [isUnverifiedModalOpen, setIsUnverifiedModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
 
@@ -155,6 +174,11 @@ export const EditorHeader = memo(
     const currentPosition = currentImageIndex >= 0 ? currentImageIndex + 1 : 0;
     /** The name of the current image being viewed. */
     const currentImageName = currentImageIndex >= 0 ? images[currentImageIndex].name : "";
+
+    /** Check if all detections in the current image are verified. */
+    const isImageFullyVerified =
+      detections.length > 0 &&
+      detections.every((detection) => detection.status === "user_confirmed");
 
     /** Wraps navigation with unsaved changes check. */
     const guardedNavigation = (navigationFn: () => void) => {
@@ -388,6 +412,32 @@ export const EditorHeader = memo(
 
           {/* Right section */}
           <div className="flex flex-shrink-0 items-center gap-1">
+            {/* Verification status icon. This will only show if image has detections */}
+            {detections.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() =>
+                  isImageFullyVerified
+                    ? setIsVerifiedModalOpen(true)
+                    : setIsUnverifiedModalOpen(true)
+                }
+                aria-label={
+                  isImageFullyVerified
+                    ? "All detections verified"
+                    : "Image has unverified detections"
+                }
+                className="group h-8 w-8 cursor-pointer bg-transparent text-slate-100 hover:bg-transparent hover:text-slate-100 focus:outline-none md:h-10 md:w-10 [&_svg]:!size-5 md:[&_svg]:!size-6"
+              >
+                {isImageFullyVerified ? (
+                  <GoVerified className="text-emerald-300" />
+                ) : (
+                  <GoUnverified className="text-amber-300" />
+                )}
+              </Button>
+            )}
+
+            {/* Lock/Unlock button */}
             <Button
               variant="ghost"
               size="icon"
@@ -401,6 +451,8 @@ export const EditorHeader = memo(
                 <HiOutlineLockOpen className="transition-colors duration-200 group-hover:text-emerald-200" />
               )}
             </Button>
+
+            {/* Save button */}
             <div className={!hasChanges || isSaving ? "cursor-not-allowed" : ""}>
               <Button
                 variant="ghost"
@@ -440,6 +492,15 @@ export const EditorHeader = memo(
           onOpenChange={setIsUnsavedChangesModalOpen}
           onProceed={handleUnsavedChangesProceed}
           isPending={isSaving}
+        />
+
+        {/* Verified status modal */}
+        <VerifiedStatusModal isOpen={isVerifiedModalOpen} onOpenChange={setIsVerifiedModalOpen} />
+
+        {/* Unverified status modal */}
+        <UnverifiedStatusModal
+          isOpen={isUnverifiedModalOpen}
+          onOpenChange={setIsUnverifiedModalOpen}
         />
       </>
     );

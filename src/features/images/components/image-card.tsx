@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React, { memo } from "react";
+import { GoUnverified, GoVerified } from "react-icons/go";
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import { LuDownload, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
@@ -63,6 +64,11 @@ interface ImageCardProps {
  */
 export const ImageCard = memo(
   ({ imageFile, sortOption, onView, onEdit, onExport, onDelete }: ImageCardProps) => {
+    // Check if the image has detections and if all are verified
+    const hasDetections = imageFile.detections && imageFile.detections.length > 0;
+    const isFullyVerified =
+      hasDetections && imageFile.detections!.every((d) => d.status === "user_confirmed");
+
     return (
       <motion.div
         layout
@@ -71,7 +77,7 @@ export const ImageCard = memo(
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.6, ease: "easeInOut" }}
-        className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 md:rounded-2xl lg:rounded-3xl"
+        className="font-inter group relative flex aspect-square flex-col overflow-hidden rounded-2xl border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-emerald-300 hover:bg-emerald-50 lg:rounded-3xl"
       >
         {/* The main image area is a large clickable target to trigger the `onView` action. */}
         <div
@@ -79,6 +85,16 @@ export const ImageCard = memo(
           onClick={() => onView(imageFile.id)}
         >
           <Thumbnail imageFile={imageFile} className="h-full w-full" />
+          {/* Verification status icon which will only be shown if image has detections */}
+          {hasDetections && (
+            <div className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 shadow-md">
+              {isFullyVerified ? (
+                <GoVerified className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" />
+              ) : (
+                <GoUnverified className="h-4 w-4 text-amber-600 md:h-5 md:w-5" />
+              )}
+            </div>
+          )}
         </div>
         {/* A toolbar at the bottom of the card containing action buttons. */}
         <div className="flex w-full flex-col items-center justify-center p-1">
