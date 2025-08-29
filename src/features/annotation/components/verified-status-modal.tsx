@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
+import { memo } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +46,7 @@ interface VerifiedStatusModalProps {
  *
  * @param {VerifiedStatusModalProps} props The props for controlling the modal's state.
  */
-export const VerifiedStatusModal = ({ isOpen, onOpenChange }: VerifiedStatusModalProps) => {
+export const VerifiedStatusModal = memo(({ isOpen, onOpenChange }: VerifiedStatusModalProps) => {
   /**
    * Handles the modal close action
    */
@@ -118,6 +119,6 @@ export const VerifiedStatusModal = ({ isOpen, onOpenChange }: VerifiedStatusModa
       </DialogContent>
     </Dialog>
   );
-};
+});
 
 VerifiedStatusModal.displayName = "VerifiedStatusModal";

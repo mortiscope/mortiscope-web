@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { BsAspectRatio } from "react-icons/bs";
 import { GoHome } from "react-icons/go";
 import { HiOutlineBuildingOffice } from "react-icons/hi2";
@@ -22,10 +22,10 @@ import { getCaseById } from "@/features/results/actions/get-case-by-id";
 import { formatDate } from "@/lib/utils";
 
 /**
- * A presentational component that displays the key attributes of the case and the currently selected 
+ * A presentational component that displays the key attributes of the case and the currently selected
  * image within the editor's side panel. It fetches its own data and presents it in a read-only.
  */
-export const DetailsAttributesPanel = () => {
+export const DetailsAttributesPanel = memo(() => {
   const params = useParams();
   const resultsId = params?.resultsId as string | undefined;
 
@@ -263,6 +263,6 @@ export const DetailsAttributesPanel = () => {
       </motion.div>
     </motion.div>
   );
-};
+});
 
 DetailsAttributesPanel.displayName = "DetailsAttributesPanel";

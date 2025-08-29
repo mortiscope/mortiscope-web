@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { HiMiniArrowPath } from "react-icons/hi2";
 import { IoArrowRedoOutline, IoArrowUndoOutline } from "react-icons/io5";
@@ -50,7 +50,7 @@ type EditorToolbarProps = {
  * @param {EditorToolbarProps} props The props for the component.
  * @returns A React component representing the floating toolbar.
  */
-export function EditorToolbar({
+export const EditorToolbar = memo(function EditorToolbar({
   onZoomIn,
   onZoomOut,
   onCenterView,
@@ -478,6 +478,6 @@ export function EditorToolbar({
       />
     </div>
   );
-}
+});
 
 EditorToolbar.displayName = "EditorToolbar";

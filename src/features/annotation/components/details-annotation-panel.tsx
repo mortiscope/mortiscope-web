@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { GoUnverified, GoVerified } from "react-icons/go";
 import { PiScan } from "react-icons/pi";
 import BeatLoader from "react-spinners/BeatLoader";
@@ -13,7 +13,7 @@ import { useAnnotationStore } from "@/features/annotation/store/annotation-store
  * A presentational component that displays the annotation details for the currently active
  * image within the editor's side panel. It shows a breakdown of detected objects by life stage.
  */
-export const DetailsAnnotationPanel = () => {
+export const DetailsAnnotationPanel = memo(() => {
   // A custom hook to get the specific image data for the current editor view.
   const { isLoading } = useEditorImage();
 
@@ -271,4 +271,6 @@ export const DetailsAnnotationPanel = () => {
       </div>
     </div>
   );
-};
+});
+
+DetailsAnnotationPanel.displayName = "DetailsAnnotationPanel";

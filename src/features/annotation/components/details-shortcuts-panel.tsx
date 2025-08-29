@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { memo } from "react";
 import { FaRegKeyboard } from "react-icons/fa";
 import { GoFileCode, GoUnverified, GoVerified } from "react-icons/go";
 import { HiMiniArrowPath, HiOutlineLockClosed } from "react-icons/hi2";
@@ -15,7 +16,8 @@ import {
   PiCursor,
   PiFloppyDiskBack,
   PiScan,
-  PiSelectionInverse} from "react-icons/pi";
+  PiSelectionInverse,
+} from "react-icons/pi";
 import { RxImage } from "react-icons/rx";
 import { TbRotate } from "react-icons/tb";
 
@@ -31,7 +33,7 @@ import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
  * @param {string} props.keys A string representing the key combination(s).
  * @returns A React span element with the formatted shortcut text.
  */
-const KeyBadge = ({ keys }: { keys: string }) => {
+const KeyBadge = memo(({ keys }: { keys: string }) => {
   const keyArray = keys.split(", ");
 
   // Filter out Mac-specific shortcuts (containing 'meta') for a cleaner, more universal display.
@@ -74,7 +76,9 @@ const KeyBadge = ({ keys }: { keys: string }) => {
       })}
     </span>
   );
-};
+});
+
+KeyBadge.displayName = "KeyBadge";
 
 /**
  * A presentational component that displays a comprehensive list of all available
@@ -83,7 +87,7 @@ const KeyBadge = ({ keys }: { keys: string }) => {
  *
  * @returns A React component representing the shortcuts panel.
  */
-export const DetailsShortcutsPanel = () => {
+export const DetailsShortcutsPanel = memo(() => {
   /**
    * A configuration array that defines the content for each shortcut entry in the list.
    * This approach centralizes the data, making the interface easy to manage and update.
@@ -186,6 +190,6 @@ export const DetailsShortcutsPanel = () => {
       })}
     </motion.div>
   );
-};
+});
 
 DetailsShortcutsPanel.displayName = "DetailsShortcutsPanel";
