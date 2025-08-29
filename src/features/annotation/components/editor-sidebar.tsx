@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { Fragment, memo, useEffect, useState } from "react";
+import { Fragment, memo, useCallback, useEffect, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { FaRegKeyboard } from "react-icons/fa";
 import { FiMoreHorizontal } from "react-icons/fi";
@@ -125,14 +125,14 @@ export const EditorSidebar = memo(
     /**
      * Toggles the selection of a sidebar item.
      */
-    const handleButtonClick = (itemId: SidebarItem) => {
+    const handleButtonClick = useCallback((itemId: SidebarItem) => {
       setSelectedItem((current) => (current === itemId ? null : itemId));
-    };
+    }, []);
 
     /** Closes any currently open details panel. */
-    const handleClosePanel = () => {
+    const handleClosePanel = useCallback(() => {
       setSelectedItem(null);
-    };
+    }, []);
 
     // Keyboard shortcuts for panel navigation
     useHotkeys(

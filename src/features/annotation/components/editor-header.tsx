@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { GoUnverified, GoVerified } from "react-icons/go";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
@@ -181,24 +181,27 @@ export const EditorHeader = memo(
       detections.every((detection) => detection.status === "user_confirmed");
 
     /** Wraps navigation with unsaved changes check. */
-    const guardedNavigation = (navigationFn: () => void) => {
-      if (hasUnsavedChanges) {
-        setPendingNavigation(() => navigationFn);
-        setIsUnsavedChangesModalOpen(true);
-      } else {
-        navigationFn();
-      }
-    };
+    const guardedNavigation = useCallback(
+      (navigationFn: () => void) => {
+        if (hasUnsavedChanges) {
+          setPendingNavigation(() => navigationFn);
+          setIsUnsavedChangesModalOpen(true);
+        } else {
+          navigationFn();
+        }
+      },
+      [hasUnsavedChanges]
+    );
 
     /** Navigates the user back to the main results page for the current case. */
-    const handleBackNavigation = () => {
+    const handleBackNavigation = useCallback(() => {
       guardedNavigation(() => {
         router.push(`/results/${resultsId}` as `/results/${string}`);
       });
-    };
+    }, [guardedNavigation, router, resultsId]);
 
     /** Toggles the lock state of the editor. */
-    const handleToggleLock = () => {
+    const handleToggleLock = useCallback(() => {
       const newLockedState = !isLocked;
       setIsLocked(newLockedState);
 
@@ -208,10 +211,10 @@ export const EditorHeader = memo(
         setDrawMode(false);
         setSelectMode(false);
       }
-    };
+    }, [isLocked, setIsLocked, clearSelection, setDrawMode, setSelectMode]);
 
     /** Navigates to the previous image in the sequence, if one exists. */
-    const handlePreviousImage = () => {
+    const handlePreviousImage = useCallback(() => {
       if (currentImageIndex <= 0) return;
       guardedNavigation(() => {
         const previousImage = images[currentImageIndex - 1];
@@ -219,10 +222,10 @@ export const EditorHeader = memo(
           `/results/${resultsId}/image/${previousImage.id}/edit` as `/results/${string}/image/${string}/edit`
         );
       });
-    };
+    }, [currentImageIndex, guardedNavigation, images, router, resultsId]);
 
     /** Navigates to the next image in the sequence, if one exists. */
-    const handleNextImage = () => {
+    const handleNextImage = useCallback(() => {
       if (currentImageIndex >= totalImages - 1) return;
       guardedNavigation(() => {
         const nextImage = images[currentImageIndex + 1];
@@ -230,19 +233,10 @@ export const EditorHeader = memo(
           `/results/${resultsId}/image/${nextImage.id}/edit` as `/results/${string}/image/${string}/edit`
         );
       });
-    };
-
-    /** Handles the save button click. Shows the modal or saves directly based on user preference. */
-    const handleSaveClick = () => {
-      if (shouldShowSaveConfirmation()) {
-        setIsSaveModalOpen(true);
-      } else {
-        handleSave();
-      }
-    };
+    }, [currentImageIndex, totalImages, guardedNavigation, images, router, resultsId]);
 
     /** Performs the actual save operation. */
-    const handleSave = async () => {
+    const handleSave = useCallback(async () => {
       setIsSaving(true);
 
       try {
@@ -268,28 +262,40 @@ export const EditorHeader = memo(
       } finally {
         setIsSaving(false);
       }
-    };
+    }, [detections, originalDetections, imageId, resultsId, commitChanges, queryClient]);
+
+    /** Handles the save button click. Shows the modal or saves directly based on user preference. */
+    const handleSaveClick = useCallback(() => {
+      if (shouldShowSaveConfirmation()) {
+        setIsSaveModalOpen(true);
+      } else {
+        handleSave();
+      }
+    }, [handleSave]);
 
     /** Handles the unsaved changes modal proceed action. */
-    const handleUnsavedChangesProceed = async (action: "leave" | "save-and-leave") => {
-      if (action === "leave") {
-        setIsUnsavedChangesModalOpen(false);
-        if (pendingNavigation) {
-          pendingNavigation();
-          setPendingNavigation(null);
+    const handleUnsavedChangesProceed = useCallback(
+      async (action: "leave" | "save-and-leave") => {
+        if (action === "leave") {
+          setIsUnsavedChangesModalOpen(false);
+          if (pendingNavigation) {
+            pendingNavigation();
+            setPendingNavigation(null);
+          }
+          return;
         }
-        return;
-      }
 
-      if (action === "save-and-leave") {
-        await handleSave();
-        setIsUnsavedChangesModalOpen(false);
-        if (pendingNavigation) {
-          pendingNavigation();
-          setPendingNavigation(null);
+        if (action === "save-and-leave") {
+          await handleSave();
+          setIsUnsavedChangesModalOpen(false);
+          if (pendingNavigation) {
+            pendingNavigation();
+            setPendingNavigation(null);
+          }
         }
-      }
-    };
+      },
+      [pendingNavigation, handleSave]
+    );
 
     // Keyboard shortcuts for the header
     useHotkeys(KEYBOARD_SHORTCUTS.BACK_NAVIGATION, handleBackNavigation, {

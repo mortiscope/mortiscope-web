@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,32 +69,34 @@ const DetectionPanelContent = memo(() => {
     }
   }, [currentDetection]);
 
+  /** Handles changes to the class label via the radio group. */
+  const handleLabelChange = useCallback(
+    (newLabel: string) => {
+      if (selectedDetectionId) {
+        updateDetection(selectedDetectionId, { label: newLabel });
+      }
+    },
+    [selectedDetectionId, updateDetection]
+  );
+
+  /** Sets the detection's status to `user_confirmed`. */
+  const handleVerify = useCallback(() => {
+    if (selectedDetectionId) {
+      updateDetection(selectedDetectionId, { status: "user_confirmed" });
+    }
+  }, [selectedDetectionId, updateDetection]);
+
+  /** Removes the currently selected detection from the store. */
+  const handleDelete = useCallback(() => {
+    if (selectedDetectionId) {
+      removeDetection(selectedDetectionId);
+    }
+  }, [selectedDetectionId, removeDetection]);
+
   // If there's no detection to display, render nothing.
   if (!displayedDetection) return null;
 
   const selectedDetection = displayedDetection;
-
-  /** Handles changes to the class label via the radio group. */
-  const handleLabelChange = (newLabel: string) => {
-    if (selectedDetectionId) {
-      updateDetection(selectedDetectionId, { label: newLabel });
-    }
-  };
-
-  /** Sets the detection's status to `user_confirmed`. */
-  const handleVerify = () => {
-    if (selectedDetectionId) {
-      updateDetection(selectedDetectionId, { status: "user_confirmed" });
-    }
-  };
-
-  /** Removes the currently selected detection from the store. */
-  const handleDelete = () => {
-    if (selectedDetectionId) {
-      removeDetection(selectedDetectionId);
-    }
-  };
-
   const isVerified = selectedDetection.status === "user_confirmed";
 
   return (
