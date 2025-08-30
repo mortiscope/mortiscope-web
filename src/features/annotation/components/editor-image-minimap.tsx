@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { type ReactZoomPanPinchState } from "react-zoom-pan-pinch";
 
 /**
@@ -50,15 +50,16 @@ export const EditorImageMinimap = memo(
     const { scale, positionX, positionY } = transformState;
     const { content, wrapper } = viewingBox;
 
-    // Render nothing if there is no dimensions yet.
-    if (!content || !wrapper) {
-      return null;
-    }
-
     /**
      * Calculates the style for the viewport rectangle based on real dimensions.
+     * Memoized to avoid recalculating on every render.
      */
-    const getViewportStyle = () => {
+    const viewportStyle = useMemo(() => {
+      // Return null if dimensions are not available yet
+      if (!content || !wrapper) {
+        return null;
+      }
+
       // Total size of the pannable content.
       const scaledContentWidth = content.width * scale;
       const scaledContentHeight = content.height * scale;
@@ -77,9 +78,12 @@ export const EditorImageMinimap = memo(
         left: `${viewportLeft}%`,
         top: `${viewportTop}%`,
       };
-    };
+    }, [scale, positionX, positionY, content, wrapper]);
 
-    const viewportStyle = getViewportStyle();
+    // Render nothing if there are no dimensions yet.
+    if (!content || !wrapper || !viewportStyle) {
+      return null;
+    }
 
     return (
       <motion.div

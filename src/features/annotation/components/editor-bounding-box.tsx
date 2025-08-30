@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type Detection } from "@/features/annotation/hooks/use-editor-image";
@@ -49,7 +49,10 @@ export const EditorBoundingBox = memo(
     const [showTooltipFor, setShowTooltipFor] = React.useState<string | null>(null);
 
     // Calculates a dynamic border width based on the rendered image size to maintain a consistent visual thickness.
-    const baseBorderWidth = Math.max(2, renderedImageStyle.width * 0.0025);
+    const baseBorderWidth = useMemo(
+      () => Math.max(2, renderedImageStyle.width * 0.0025),
+      [renderedImageStyle.width]
+    );
 
     /**
      * A memoized mouse move event handler for both dragging and resizing operations.
