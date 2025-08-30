@@ -9,6 +9,7 @@ import { IoEyeOutline, IoSettingsOutline, IoTrashBinOutline } from "react-icons/
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { PanelSectionHeader } from "@/features/annotation/components/panel-section-header";
 import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
@@ -72,17 +73,12 @@ export const DetailsSettingsPanel = () => {
       {/* Display Filters Section */}
       <div className="space-y-3">
         {/* Section Header */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0 }}
-          className="flex items-center gap-2 pb-2"
-        >
-          <IoEyeOutline className="h-6 w-6 text-sky-300" />
-          <h3 className="font-plus-jakarta-sans font-semibold tracking-wide text-sky-200 uppercase">
-            Display Filters
-          </h3>
-        </motion.div>
+        <PanelSectionHeader
+          icon={IoEyeOutline}
+          title="Display Filters"
+          colorVariant="sky"
+          delay={0}
+        />
 
         {/* Individual filter toggles. */}
         <div className="space-y-4">
@@ -142,17 +138,12 @@ export const DetailsSettingsPanel = () => {
       {/* Actions Section */}
       <div className="space-y-3">
         {/* Section Header */}
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.2 }}
-          className="flex items-center gap-2 pb-2"
-        >
-          <IoSettingsOutline className="h-6 w-6 text-teal-300" />
-          <h3 className="font-plus-jakarta-sans font-semibold tracking-wide text-teal-200 uppercase">
-            Image Actions
-          </h3>
-        </motion.div>
+        <PanelSectionHeader
+          icon={IoSettingsOutline}
+          title="Image Actions"
+          colorVariant="teal"
+          delay={0.2}
+        />
 
         {/* Individual action buttons. */}
         <div className="space-y-4">

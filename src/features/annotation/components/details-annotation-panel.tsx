@@ -1,11 +1,12 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
 import { GoUnverified, GoVerified } from "react-icons/go";
 import { PiScan } from "react-icons/pi";
 import BeatLoader from "react-spinners/BeatLoader";
 
+import { PanelListItem } from "@/features/annotation/components/panel-list-item";
+import { PanelSectionHeader } from "@/features/annotation/components/panel-section-header";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
@@ -86,187 +87,107 @@ export const DetailsAnnotationPanel = memo(() => {
     <div className="space-y-6">
       {/* Detections Section */}
       <div className="space-y-3">
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0 }}
-          className="flex items-center gap-2 pb-2"
-        >
-          <PiScan className="h-6 w-6 text-emerald-300" />
-          <h3 className="font-plus-jakarta-sans font-semibold tracking-wide text-emerald-200 uppercase">
-            Detections
-          </h3>
-        </motion.div>
+        <PanelSectionHeader icon={PiScan} title="Detections" colorVariant="emerald" delay={0} />
         <div className="space-y-2">
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.05 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_1}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.1 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_2}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.15 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-emerald-200">{totalCounts.instar_3}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.2 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-emerald-200">{totalCounts.pupa}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.25 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-emerald-200">{totalCounts.adult}</p>
-          </motion.div>
+          <PanelListItem
+            label="First Instar"
+            value={totalCounts.instar_1}
+            colorVariant="emerald"
+            delay={0.05}
+          />
+          <PanelListItem
+            label="Second Instar"
+            value={totalCounts.instar_2}
+            colorVariant="emerald"
+            delay={0.1}
+          />
+          <PanelListItem
+            label="Third Instar"
+            value={totalCounts.instar_3}
+            colorVariant="emerald"
+            delay={0.15}
+          />
+          <PanelListItem label="Pupa" value={totalCounts.pupa} colorVariant="emerald" delay={0.2} />
+          <PanelListItem
+            label="Adult Flies"
+            value={totalCounts.adult}
+            colorVariant="emerald"
+            delay={0.25}
+          />
         </div>
       </div>
 
       {/* Unverified Section */}
       <div className="space-y-3">
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.3 }}
-          className="flex items-center gap-2 pb-2"
-        >
-          <GoUnverified className="h-6 w-6 text-amber-300" />
-          <h3 className="font-plus-jakarta-sans font-semibold tracking-wide text-amber-200 uppercase">
-            Unverified
-          </h3>
-        </motion.div>
+        <PanelSectionHeader
+          icon={GoUnverified}
+          title="Unverified"
+          colorVariant="amber"
+          delay={0.3}
+        />
         <div className="space-y-2">
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.35 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_1}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.4 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_2}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.45 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.instar_3}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.5 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.pupa}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.55 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-amber-200">{unverifiedCounts.adult}</p>
-          </motion.div>
+          <PanelListItem
+            label="First Instar"
+            value={unverifiedCounts.instar_1}
+            colorVariant="amber"
+            delay={0.35}
+          />
+          <PanelListItem
+            label="Second Instar"
+            value={unverifiedCounts.instar_2}
+            colorVariant="amber"
+            delay={0.4}
+          />
+          <PanelListItem
+            label="Third Instar"
+            value={unverifiedCounts.instar_3}
+            colorVariant="amber"
+            delay={0.45}
+          />
+          <PanelListItem
+            label="Pupa"
+            value={unverifiedCounts.pupa}
+            colorVariant="amber"
+            delay={0.5}
+          />
+          <PanelListItem
+            label="Adult Flies"
+            value={unverifiedCounts.adult}
+            colorVariant="amber"
+            delay={0.55}
+          />
         </div>
       </div>
 
       {/* Verified Section */}
       <div className="space-y-3">
-        <motion.div
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.6 }}
-          className="flex items-center gap-2 pb-2"
-        >
-          <GoVerified className="h-6 w-6 text-teal-300" />
-          <h3 className="font-plus-jakarta-sans font-semibold tracking-wide text-teal-200 uppercase">
-            Verified
-          </h3>
-        </motion.div>
+        <PanelSectionHeader icon={GoVerified} title="Verified" colorVariant="teal" delay={0.6} />
         <div className="space-y-2">
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.65 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">First Instar</p>
-            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_1}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.7 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Second Instar</p>
-            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_2}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.75 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Third Instar</p>
-            <p className="font-inter text-sm text-teal-200">{verifiedCounts.instar_3}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.8 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Pupa</p>
-            <p className="font-inter text-sm text-teal-200">{verifiedCounts.pupa}</p>
-          </motion.div>
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.85 }}
-            className="flex items-center justify-between"
-          >
-            <p className="font-inter text-sm text-white">Adult Flies</p>
-            <p className="font-inter text-sm text-teal-200">{verifiedCounts.adult}</p>
-          </motion.div>
+          <PanelListItem
+            label="First Instar"
+            value={verifiedCounts.instar_1}
+            colorVariant="teal"
+            delay={0.65}
+          />
+          <PanelListItem
+            label="Second Instar"
+            value={verifiedCounts.instar_2}
+            colorVariant="teal"
+            delay={0.7}
+          />
+          <PanelListItem
+            label="Third Instar"
+            value={verifiedCounts.instar_3}
+            colorVariant="teal"
+            delay={0.75}
+          />
+          <PanelListItem label="Pupa" value={verifiedCounts.pupa} colorVariant="teal" delay={0.8} />
+          <PanelListItem
+            label="Adult Flies"
+            value={verifiedCounts.adult}
+            colorVariant="teal"
+            delay={0.85}
+          />
         </div>
       </div>
     </div>

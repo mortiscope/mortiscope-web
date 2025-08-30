@@ -17,6 +17,7 @@ import {
 import { PiCity, PiMapTrifold } from "react-icons/pi";
 import BeatLoader from "react-spinners/BeatLoader";
 
+import { PanelInformationRow } from "@/features/annotation/components/panel-information-row";
 import { useEditorImage } from "@/features/annotation/hooks/use-editor-image";
 import { getCaseById } from "@/features/results/actions/get-case-by-id";
 import { formatDate } from "@/lib/utils";
@@ -107,160 +108,74 @@ export const DetailsAttributesPanel = memo(() => {
       className="space-y-4"
     >
       {/* Case Name */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150 }}
-        className="flex items-center gap-3"
-      >
-        <IoFolderOpenOutline className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Case Name</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.caseName || "N/A"}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={IoFolderOpenOutline}
+        label="Case Name"
+        value={caseData.caseName || "N/A"}
+        delay={0}
+      />
 
       {/* Image Name */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.1 }}
-        className="flex items-center gap-3"
-      >
-        <IoImageOutline className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Image Name</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">{imageName}</p>
-        </div>
-      </motion.div>
+      <PanelInformationRow icon={IoImageOutline} label="Image Name" value={imageName} delay={0.1} />
 
       {/* Resolution */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.2 }}
-        className="flex items-center gap-3"
-      >
-        <BsAspectRatio className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Resolution</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">{resolution}</p>
-        </div>
-      </motion.div>
+      <PanelInformationRow icon={BsAspectRatio} label="Resolution" value={resolution} delay={0.2} />
 
       {/* Case Date */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.3 }}
-        className="flex items-center gap-3"
-      >
-        <IoCalendarClearOutline className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Case Date</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {formattedCaseDate}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={IoCalendarClearOutline}
+        label="Case Date"
+        value={formattedCaseDate}
+        delay={0.3}
+      />
 
-      {/*Upload Date */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.4 }}
-        className="flex items-center gap-3"
-      >
-        <IoCalendarOutline className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Upload Date</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {formattedUploadDate}
-          </p>
-        </div>
-      </motion.div>
+      {/* Upload Date */}
+      <PanelInformationRow
+        icon={IoCalendarOutline}
+        label="Upload Date"
+        value={formattedUploadDate}
+        delay={0.4}
+      />
 
       {/* Temperature */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.5 }}
-        className="flex items-center gap-3"
-      >
-        <IoThermometerOutline className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Temperature</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.temperatureCelsius}°C
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={IoThermometerOutline}
+        label="Temperature"
+        value={`${caseData.temperatureCelsius}°C`}
+        delay={0.5}
+      />
 
       {/* Region */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.6 }}
-        className="flex items-center gap-3"
-      >
-        <PiMapTrifold className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Region</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.locationRegion}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={PiMapTrifold}
+        label="Region"
+        value={caseData.locationRegion}
+        delay={0.6}
+      />
 
       {/* Province */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.7 }}
-        className="flex items-center gap-3"
-      >
-        <HiOutlineBuildingOffice className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Province</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.locationProvince}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={HiOutlineBuildingOffice}
+        label="Province"
+        value={caseData.locationProvince}
+        delay={0.7}
+      />
 
       {/* City/Municipality */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.8 }}
-        className="flex items-center gap-3"
-      >
-        <PiCity className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">City/Municipality</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.locationCity}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={PiCity}
+        label="City/Municipality"
+        value={caseData.locationCity}
+        delay={0.8}
+      />
 
       {/* Barangay */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", damping: 20, stiffness: 150, delay: 0.9 }}
-        className="flex items-center gap-3"
-      >
-        <GoHome className="h-6 w-6 flex-shrink-0 text-white" />
-        <div className="min-w-0 flex-1">
-          <p className="font-inter text-xs tracking-wide text-emerald-200">Barangay</p>
-          <p className="font-inter text-sm break-words hyphens-auto text-white">
-            {caseData.locationBarangay}
-          </p>
-        </div>
-      </motion.div>
+      <PanelInformationRow
+        icon={GoHome}
+        label="Barangay"
+        value={caseData.locationBarangay}
+        delay={0.9}
+      />
     </motion.div>
   );
 });

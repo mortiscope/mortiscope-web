@@ -21,6 +21,7 @@ import {
 import { RxImage } from "react-icons/rx";
 import { TbRotate } from "react-icons/tb";
 
+import { PanelInformationRow } from "@/features/annotation/components/panel-information-row";
 import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
 
 /**
@@ -167,27 +168,15 @@ export const DetailsShortcutsPanel = memo(() => {
       transition={{ delayChildren: 0.1, staggerChildren: 0.05 }}
       className="space-y-4"
     >
-      {shortcuts.map((shortcut, index) => {
-        const Icon = shortcut.icon;
-        return (
-          // Each individual shortcut item has its own entry animation.
-          <motion.div
-            key={shortcut.label}
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ type: "spring", damping: 20, stiffness: 150, delay: index * 0.05 }}
-            className="flex items-center gap-3"
-          >
-            <Icon className="h-6 w-6 flex-shrink-0 text-white" />
-            <div className="min-w-0 flex-1">
-              <p className="font-inter text-xs tracking-wide text-emerald-200">{shortcut.label}</p>
-              <div className="font-inter text-sm break-words hyphens-auto text-white">
-                <KeyBadge keys={shortcut.keys} />
-              </div>
-            </div>
-          </motion.div>
-        );
-      })}
+      {shortcuts.map((shortcut, index) => (
+        <PanelInformationRow
+          key={shortcut.label}
+          icon={shortcut.icon}
+          label={shortcut.label}
+          value={<KeyBadge keys={shortcut.keys} />}
+          delay={index * 0.05}
+        />
+      ))}
     </motion.div>
   );
 });
