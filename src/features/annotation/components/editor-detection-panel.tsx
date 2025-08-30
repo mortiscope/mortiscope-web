@@ -1,12 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import React, { memo, useCallback } from "react";
+import { memo } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -14,26 +11,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
-import { DETECTION_CLASS_COLORS, DETECTION_CLASS_ORDER } from "@/lib/constants";
-import { cn, formatConfidence, formatLabel } from "@/lib/utils";
-
-/**
- * A utility function to lighten a given hex color. This is used to generate
- * the border color for the selected radio button item.
- *
- * @param hex The base hex color string.
- * @param classLabel The class label, used for a special case.
- * @returns A lightened hex color string.
- */
-const getLightenedColor = (hex: string): string => {
-  const num = parseInt(hex.replace("#", ""), 16);
-  const factor = 1.25;
-  const r = Math.min(255, Math.floor((num >> 16) * factor));
-  const g = Math.min(255, Math.floor(((num >> 8) & 0x00ff) * factor));
-  const b = Math.min(255, Math.floor((num & 0x0000ff) * factor));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-};
+import { DetectionPanelContent } from "@/features/annotation/components/detection-panel-content";
+import { useDetectionPanel } from "@/features/annotation/hooks/use-detection-panel";
 
 /**
  * Defines the props for the editor detection panel component.
@@ -46,168 +25,14 @@ type EditorDetectionPanelProps = {
 };
 
 /**
- * The core smart content of the detection panel. It subscribes to the Zustand store,
- * displays details of the selected detection, and provides controls to modify its state.
- */
-const DetectionPanelContent = memo(() => {
-  // Retrieves state and actions from the global `useAnnotationStore`.
-  const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
-  const detections = useAnnotationStore((state) => state.detections);
-  const updateDetection = useAnnotationStore((state) => state.updateDetection);
-  const removeDetection = useAnnotationStore((state) => state.removeDetection);
-
-  // Finds the full object for the currently selected detection.
-  const currentDetection = detections.find((det) => det.id === selectedDetectionId);
-
-  // A local state to hold a snapshot of the detection being displayed.
-  const [displayedDetection, setDisplayedDetection] = React.useState(currentDetection);
-
-  /** A side effect to update the local `displayedDetection` when the global selection changes. */
-  React.useEffect(() => {
-    if (currentDetection) {
-      setDisplayedDetection(currentDetection);
-    }
-  }, [currentDetection]);
-
-  /** Handles changes to the class label via the radio group. */
-  const handleLabelChange = useCallback(
-    (newLabel: string) => {
-      if (selectedDetectionId) {
-        updateDetection(selectedDetectionId, { label: newLabel });
-      }
-    },
-    [selectedDetectionId, updateDetection]
-  );
-
-  /** Sets the detection's status to `user_confirmed`. */
-  const handleVerify = useCallback(() => {
-    if (selectedDetectionId) {
-      updateDetection(selectedDetectionId, { status: "user_confirmed" });
-    }
-  }, [selectedDetectionId, updateDetection]);
-
-  /** Removes the currently selected detection from the store. */
-  const handleDelete = useCallback(() => {
-    if (selectedDetectionId) {
-      removeDetection(selectedDetectionId);
-    }
-  }, [selectedDetectionId, removeDetection]);
-
-  // If there's no detection to display, render nothing.
-  if (!displayedDetection) return null;
-
-  const selectedDetection = displayedDetection;
-  const isVerified = selectedDetection.status === "user_confirmed";
-
-  return (
-    <div className="space-y-3">
-      {/* Read-only information about the detection. */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between">
-          <span className="font-inter text-sm font-medium text-emerald-100">Confidence</span>
-          <span className="font-inter text-sm text-white">
-            {isVerified || selectedDetection.confidence === null
-              ? "Reviewed"
-              : formatConfidence(selectedDetection.confidence)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="font-inter text-sm font-medium text-emerald-100">Status</span>
-          <span
-            className={cn(
-              "font-inter text-sm font-medium",
-              isVerified ? "text-teal-200" : "text-amber-200"
-            )}
-          >
-            {isVerified ? "Verified" : "Unverified"}
-          </span>
-        </div>
-      </div>
-
-      {/* The radio group for changing the detection's class label. */}
-      <div className="space-y-2">
-        <RadioGroup
-          value={selectedDetection.label}
-          onValueChange={handleLabelChange}
-          className="gap-1.5 space-y-1.5"
-        >
-          {DETECTION_CLASS_ORDER.map((classLabel) => {
-            const isSelected = selectedDetection.label === classLabel;
-            const selectedColor = isSelected
-              ? getLightenedColor(
-                  DETECTION_CLASS_COLORS[classLabel] || DETECTION_CLASS_COLORS.default
-                )
-              : null;
-
-            return (
-              <Label
-                key={classLabel}
-                htmlFor={classLabel}
-                className="flex cursor-pointer items-center gap-3 rounded-xl border-2 p-2.5 transition-all duration-200"
-                style={{
-                  borderColor: selectedColor || "rgba(167, 243, 208, 0.4)",
-                  backgroundColor: isSelected ? "rgba(5, 150, 105)" : "rgba(16, 185, 129, 0.15)",
-                }}
-              >
-                <RadioGroupItem
-                  value={classLabel}
-                  id={classLabel}
-                  className="focus-visible:ring-offset-0 [&_svg]:fill-current"
-                  style={{
-                    borderColor: selectedColor || "rgba(167, 243, 208, 0.6)",
-                    color: selectedColor || "#ffffff",
-                  }}
-                />
-                <span className="font-inter text-sm font-normal text-white">
-                  {formatLabel(classLabel)}
-                </span>
-              </Label>
-            );
-          })}
-        </RadioGroup>
-      </div>
-
-      {/* Action buttons for the selected detection. */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* The verify button is only shown for unverified detections. */}
-        {!isVerified && (
-          <Button
-            onClick={handleVerify}
-            variant="outline"
-            className="font-inter h-10 cursor-pointer rounded-lg border-2 border-white bg-transparent font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-emerald-400 hover:bg-emerald-400 hover:text-white focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
-          >
-            Verify
-          </Button>
-        )}
-        <Button
-          onClick={handleDelete}
-          variant="outline"
-          className={cn(
-            "font-inter h-10 cursor-pointer rounded-lg border-2 border-white bg-transparent font-normal text-white shadow-none transition-all duration-300 ease-in-out hover:border-rose-400 hover:bg-rose-400 hover:text-white focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2",
-            // The delete button spans both columns if the verify button is not present.
-            isVerified && "col-span-2"
-          )}
-        >
-          Delete
-        </Button>
-      </div>
-    </div>
-  );
-});
-
-DetectionPanelContent.displayName = "DetectionPanelContent";
-
-/**
- * A responsive smart component that displays details and controls for the currently selected detection.
+ * A responsive smart container component that displays details and controls for the currently selected detection.
  * It renders as a slide-up `Sheet` on mobile and a floating `Card` on desktop. Its visibility is
  * controlled by the `selectedDetectionId` from the global annotation store.
  */
 export const EditorDetectionPanel = memo(
   ({ isMobile = false, hasOpenPanel = false }: EditorDetectionPanelProps) => {
-    // Subscribes to the global store to get the selected detection ID and the clear action.
-    const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
-    const clearSelection = useAnnotationStore((state) => state.clearSelection);
-    const setSelectMode = useAnnotationStore((state) => state.setSelectMode);
+    // Use the detection panel hook to get state and handlers
+    const { selectedDetectionId, handleClose } = useDetectionPanel();
 
     // Renders a bottom drawer when on a mobile device.
     if (isMobile) {
@@ -217,8 +42,7 @@ export const EditorDetectionPanel = memo(
           onOpenChange={(open) => {
             // When the sheet is closed, clear the selection and switch to pan mode.
             if (!open) {
-              clearSelection();
-              setSelectMode(false);
+              handleClose();
             }
           }}
         >
