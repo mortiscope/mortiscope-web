@@ -205,7 +205,7 @@ export const ResultsAnalysis = ({
             onInfoClick={() => setIsPmiModalOpen(true)}
           />
           <ReviewedImagesWidget
-            hasEstimation={hasEstimation}
+            hasDetections={totalReviewableImages > 0}
             reviewedCount={reviewedImagesCount}
             totalCount={totalReviewableImages}
           />
