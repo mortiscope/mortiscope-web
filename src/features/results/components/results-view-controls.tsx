@@ -109,14 +109,14 @@ export const ResultsViewControls = memo(
                     resetTransform();
                     centerView();
                   }}
-                  aria-label="Reset view"
+                  aria-label="Center focus"
                   className="h-10 w-10 cursor-pointer rounded-lg p-0 text-emerald-600 transition-all duration-300 ease-in-out hover:bg-transparent hover:text-amber-400 md:hover:bg-amber-100 md:hover:text-amber-600"
                 >
                   <LuFocus className="!h-6 !w-6" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="font-inter">Reset view</p>
+                <p className="font-inter">Center focus</p>
               </TooltipContent>
             </Tooltip>
             <Tooltip>

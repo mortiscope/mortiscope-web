@@ -179,7 +179,7 @@ export const UploadPreviewModal = (props: UploadPreviewModalProps) => {
               "font-inter flex flex-col p-0",
               isMobile
                 ? "h-dvh w-screen max-w-none rounded-none border-none bg-black"
-                : "rounded-3xl sm:max-w-2xl"
+                : "rounded-4xl sm:max-w-2xl"
             )}
             onInteractOutside={isMobile ? (e) => e.preventDefault() : undefined}
           >
