@@ -103,7 +103,7 @@ export const PreviewModalHeader = memo(
       return (
         <motion.div
           variants={variants}
-          className="absolute top-4 right-4 left-4 z-20 flex items-center justify-between gap-4 rounded-lg bg-emerald-600/80 p-3 shadow-lg backdrop-blur-sm"
+          className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between gap-4 rounded-none bg-emerald-600/80 p-4 shadow-lg backdrop-blur-sm"
         >
           {/* File name section (editable or static) */}
           <div className="min-w-0 flex-grow">

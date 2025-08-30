@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import React, { memo } from "react";
+import { GoUnverified, GoVerified } from "react-icons/go";
 import { LuX } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,11 @@ interface ResultsModalHeaderProps {
  */
 export const ResultsModalHeader = memo(
   ({ activeImage, imageDimensions, isMobile, onClose, variants }: ResultsModalHeaderProps) => {
+    // Check if the image has detections and if all are verified
+    const hasDetections = activeImage.detections && activeImage.detections.length > 0;
+    const isFullyVerified =
+      hasDetections && activeImage.detections!.every((d) => d.status === "user_confirmed");
+
     // Renders a floating bar at the top of the screen containing the title and a close button.
     if (isMobile) {
       return (
@@ -40,13 +46,21 @@ export const ResultsModalHeader = memo(
           {/* The main animated container for the floating header. */}
           <motion.div
             variants={variants}
-            className="absolute top-4 right-4 left-4 z-20 flex items-center justify-between gap-4 rounded-lg bg-emerald-600/80 p-3 shadow-lg backdrop-blur-sm"
+            className="absolute top-0 right-0 left-0 z-20 flex items-center justify-between gap-4 rounded-none bg-emerald-600/80 p-4 shadow-lg backdrop-blur-sm"
           >
-            {/* File name section. */}
+            {/* File name section with verification indicator. */}
             <div className="min-w-0 flex-grow">
-              <h2 className="font-plus-jakarta-sans truncate text-lg font-bold text-white">
-                {activeImage.name}
-              </h2>
+              <div className="flex items-center gap-2">
+                {hasDetections &&
+                  (isFullyVerified ? (
+                    <GoVerified className="h-5 w-5 flex-shrink-0 text-white md:text-emerald-200" />
+                  ) : (
+                    <GoUnverified className="h-5 w-5 flex-shrink-0 text-white md:text-amber-300" />
+                  ))}
+                <h2 className="font-plus-jakarta-sans truncate text-lg font-semibold text-white">
+                  {activeImage.name}
+                </h2>
+              </div>
             </div>
             {/* Close button section. */}
             <div className="flex flex-shrink-0 items-center">
@@ -69,8 +83,18 @@ export const ResultsModalHeader = memo(
     return (
       <motion.div variants={variants} className="px-6 pt-0 pb-0 md:pt-6">
         <DialogHeader>
-          <DialogTitle className="font-plus-jakarta-sans mx-auto w-full max-w-sm truncate text-center text-xl font-bold text-emerald-600 md:max-w-md md:text-2xl">
-            {activeImage.name}
+          <DialogTitle
+            className={`font-plus-jakarta-sans mx-auto flex w-full max-w-sm items-center justify-center gap-2 text-center text-xl font-bold md:max-w-md md:text-2xl ${
+              hasDetections && !isFullyVerified ? "text-amber-500" : "text-emerald-600"
+            }`}
+          >
+            {hasDetections &&
+              (isFullyVerified ? (
+                <GoVerified className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
+              ) : (
+                <GoUnverified className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
+              ))}
+            <span className="min-w-0 truncate">{activeImage.name}</span>
           </DialogTitle>
           {/* Renders file metadata (date, dimensions, size). */}
           <DialogDescription className="font-inter flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-slate-600">

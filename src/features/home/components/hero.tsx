@@ -101,7 +101,8 @@ const Hero = () => {
   // Prevent rendering until mounted to avoid layout issues
   if (!isMounted) {
     return (
-      <section className="flex min-h-auto w-full flex-col overflow-hidden bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat opacity-0">
+      <section className="relative flex min-h-auto w-full flex-col overflow-hidden opacity-0">
+        <div className="absolute inset-0 z-[-1] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat" />
         <div className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6">
           <div className="flex items-center">
             <Image
@@ -127,12 +128,32 @@ const Hero = () => {
     <>
       <motion.section
         ref={heroSectionRef}
-        className="flex min-h-auto w-full flex-col overflow-hidden bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat"
+        className="relative flex min-h-auto w-full flex-col overflow-hidden"
         aria-label="Hero background image"
         variants={heroVariant}
         initial="hidden"
         animate={isMounted ? "show" : "hidden"}
       >
+        {/* Animated Background */}
+        <motion.div
+          className="absolute inset-0 -top-[10%] -left-[10%] z-[-1] h-[120%] w-[120%] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat"
+          animate={
+            isMounted
+              ? {
+                  scale: [1, 1.15, 1],
+                  x: [0, -40, 0],
+                  y: [0, -30, 0],
+                }
+              : {}
+          }
+          transition={{
+            duration: 12,
+            ease: "easeInOut",
+            repeat: Infinity,
+            repeatType: "loop",
+          }}
+        />
+
         {/* Navigation bar wrapper */}
         <div className="w-full">
           <motion.nav
@@ -168,7 +189,7 @@ const Hero = () => {
             </motion.div>
             <motion.div variants={slideInFromTop}>
               <Link href="/signin">
-                <Button className="font-inter relative cursor-pointer overflow-hidden rounded-full border-2 border-slate-900 bg-transparent px-4 py-1.5 text-sm font-normal text-slate-900 uppercase transition-all duration-500 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-full before:bg-gradient-to-r before:from-slate-900 before:to-slate-800 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-transparent hover:text-white hover:before:left-0 md:px-5 md:py-2 md:text-base lg:px-6 lg:text-lg">
+                <Button className="font-inter relative cursor-pointer overflow-hidden rounded-full border border-slate-900 bg-transparent px-4 py-1.5 text-sm font-normal text-slate-900 uppercase transition-all duration-500 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-full before:bg-gradient-to-r before:from-slate-900 before:to-slate-800 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-transparent hover:text-white hover:before:left-0 md:border-2 md:px-5 md:py-2 md:text-base lg:px-6 lg:text-lg">
                   Sign In
                 </Button>
               </Link>
