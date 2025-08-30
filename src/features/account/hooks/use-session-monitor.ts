@@ -21,6 +21,24 @@ export function useSessionMonitor() {
   const hasRedirectedRef = useRef(false);
 
   /**
+   * Checks if the server is reachable by attempting to fetch the session endpoint.
+   * @returns A promise that resolves to true if the server is reachable, false otherwise.
+   */
+  const isServerReachable = async (): Promise<boolean> => {
+    try {
+      await fetch("/api/auth/session", {
+        method: "GET",
+        cache: "no-store",
+      });
+      // If we get any response (even 401/403), the server is reachable
+      return true;
+    } catch {
+      // Network error means server is not reachable
+      return false;
+    }
+  };
+
+  /**
    * This effect runs on every change to the session or its status. It contains the
    * core state-machine logic to detect a logout event.
    */
@@ -43,11 +61,15 @@ export function useSessionMonitor() {
 
     // Core logout detection logic.
     if (previousSessionRef.current && !currentSessionId && status === "unauthenticated") {
-      // Mark that a redirect is being performed.
-      hasRedirectedRef.current = true;
-
-      // Redirect the user to the homepage.
-      router.replace("/");
+      // Before redirecting, verify the server is actually reachable
+      isServerReachable().then((reachable) => {
+        if (reachable && !hasRedirectedRef.current) {
+          // Server is reachable and session is genuinely unauthenticated
+          hasRedirectedRef.current = true;
+          router.replace("/");
+        }
+        // If server is not reachable, don't redirect - just stay on the page
+      });
       return;
     }
 
