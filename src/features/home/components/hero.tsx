@@ -112,7 +112,7 @@ const Hero = () => {
               priority
               style={{ width: "auto", height: "auto" }}
             />
-            <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
+            <span className="font-plus-jakarta-sans ml-2 text-2xl font-semibold tracking-tight md:text-3xl">
               <span className="text-green-800">MORTI</span>
               <span className="text-slate-800">SCOPE</span>
               <span className="text-amber-400">.</span>
@@ -136,7 +136,7 @@ const Hero = () => {
         {/* Navigation bar wrapper */}
         <div className="w-full">
           <motion.nav
-            className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6 2xl:px-32"
+            className="relative container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6 2xl:px-32"
             variants={navStaggerContainer}
             initial="hidden"
             animate={isMounted ? "show" : "hidden"}
@@ -144,14 +144,14 @@ const Hero = () => {
             <motion.div className="flex items-center" variants={slideInFromTop}>
               <Image src="/logos/logo.svg" alt="Mortiscope Logo" width={50} height={50} priority />
               {/* Site title */}
-              <span className="font-inter ml-2 text-2xl font-bold tracking-tighter md:text-3xl">
+              <span className="font-plus-jakarta-sans ml-2 text-2xl font-semibold tracking-tight md:text-3xl">
                 <span className="text-green-800">MORTI</span>
                 <span className="text-slate-800">SCOPE</span>
                 <span className="text-amber-400">.</span>
               </span>
             </motion.div>
             <motion.div
-              className="hidden items-center md:flex md:space-x-6 lg:space-x-10"
+              className="hidden items-center md:flex md:space-x-6 lg:absolute lg:left-1/2 lg:-translate-x-1/2 lg:space-x-10"
               variants={slideInFromTop}
             >
               <a className="font-inter relative cursor-pointer text-slate-900 uppercase after:absolute after:right-0 after:-bottom-1 after:left-0 after:h-[2px] after:w-full after:origin-bottom after:scale-x-0 after:bg-slate-800 after:transition-transform after:duration-500 after:ease-[cubic-bezier(0.65_0.05_0.36_1)] hover:after:origin-bottom hover:after:scale-x-100 md:text-base lg:text-lg xl:text-xl">
@@ -206,7 +206,7 @@ const Hero = () => {
               </motion.p>
               <motion.div variants={slideInFromLeft}>
                 <Link href="/signup">
-                  <Button className="font-inter relative cursor-pointer overflow-hidden rounded-lg border-none bg-yellow-500 px-4 py-4 text-sm font-normal text-white uppercase transition-all duration-200 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-green-700 before:to-green-600 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-amber-500 hover:text-white hover:before:left-0 md:px-5 md:py-5 md:text-base lg:px-6 lg:py-6 lg:text-lg">
+                  <Button className="font-plus-jakarta-sans relative cursor-pointer overflow-hidden rounded-lg border-none bg-yellow-500 px-4 py-4 text-sm font-medium tracking-wide text-white uppercase transition-all duration-200 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-green-700 before:to-green-600 before:transition-all before:duration-500 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-amber-500 hover:text-white hover:before:left-0 md:px-5 md:py-5 md:text-base lg:px-6 lg:py-6 lg:text-lg">
                     Start Analysis
                   </Button>
                 </Link>
