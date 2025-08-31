@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -23,8 +23,39 @@ export const getCases = async () => {
   // Query the database for all cases belonging to the current user that are 'active'.
   const userCases = await db.query.cases.findMany({
     where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
-    orderBy: (cases, { desc }) => [desc(cases.createdAt)],
+    orderBy: [desc(cases.createdAt)],
+    with: {
+      uploads: {
+        columns: { id: true },
+        with: {
+          detections: {
+            columns: { status: true },
+          },
+        },
+      },
+    },
   });
 
-  return userCases;
+  // Transform the result to include the 'verificationStatus' and 'hasDetections' properties.
+  return userCases.map((c) => {
+    const allDetections = c.uploads.flatMap((u) => u.detections);
+    const hasDetections = allDetections.length > 0;
+    const unverifiedCount = allDetections.filter((d) => d.status === "model_generated").length;
+    const totalCount = allDetections.length;
+
+    let verificationStatus: "verified" | "in_progress" | "unverified" | "no_detections" =
+      "no_detections";
+
+    if (!hasDetections) {
+      verificationStatus = "no_detections";
+    } else if (unverifiedCount === 0) {
+      verificationStatus = "verified";
+    } else if (unverifiedCount === totalCount) {
+      verificationStatus = "unverified";
+    } else {
+      verificationStatus = "in_progress";
+    }
+
+    return { ...c, verificationStatus, hasDetections };
+  });
 };

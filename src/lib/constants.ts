@@ -1,3 +1,6 @@
+import { GoUnverified, GoVerified } from "react-icons/go";
+import { PiSealPercent, PiSealWarning } from "react-icons/pi";
+
 /**
  * The number of days after a deletion request before an account is permanently deleted.
  * @constant {number}
@@ -199,4 +202,31 @@ export const KEYBOARD_SHORTCUTS = {
   SHOW_ALL_ANNOTATIONS: "shift+a",
   SHOW_VERIFIED_ONLY: "shift+v",
   SHOW_UNVERIFIED_ONLY: "shift+u",
+} as const;
+
+/**
+ * Configuration mapping for verification status.
+ * @constant {object}
+ */
+export const STATUS_CONFIG = {
+  verified: {
+    label: "Verified",
+    icon: GoVerified,
+    color: "text-emerald-500",
+  },
+  in_progress: {
+    label: "In Progress",
+    icon: PiSealPercent,
+    color: "text-sky-500",
+  },
+  unverified: {
+    label: "Unverified",
+    icon: GoUnverified,
+    color: "text-amber-500",
+  },
+  no_detections: {
+    label: "No Detections",
+    icon: PiSealWarning,
+    color: "text-rose-500",
+  },
 } as const;
