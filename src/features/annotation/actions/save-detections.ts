@@ -9,30 +9,31 @@ import { type Detection } from "@/features/images/hooks/use-results-image-viewer
 import { STAGE_HIERARCHY } from "@/lib/constants";
 
 /**
- * Checks if a new detection stage is older than the stage used for calculation,
- * which would require recalculation of PMI.
+ * Finds the oldest stage among the given detections.
+ * Adults are excluded from consideration as they are not used for PMI calculation.
  *
- * @param currentStage The stage currently used for PMI calculation
- * @param newStage The stage of the newly added/modified detection
- * @returns True if recalculation is needed
+ * @param detections Array of detections to analyze
+ * @returns The oldest stage label, or null if all detections are adults or no detections exist
  */
-function shouldTriggerRecalculation(
-  currentStage: string | null | undefined,
-  newStage: string
-): boolean {
-  // Adults are disregarded for calculation
-  if (newStage === "adult") return false;
+function findOldestStage(detections: Detection[]): string | null {
+  const immatureDetections = detections.filter((d) => d.label !== "adult");
 
-  // If no current stage or current is adult (disregarded), any non-adult stage triggers recalculation
-  if (!currentStage || currentStage === "adult") {
-    return newStage !== "adult";
+  if (immatureDetections.length === 0) {
+    return null;
   }
 
-  // Compare hierarchy - trigger if new stage is older (higher number)
-  const currentHierarchy = STAGE_HIERARCHY[currentStage] ?? 0;
-  const newHierarchy = STAGE_HIERARCHY[newStage] ?? 0;
+  let oldestStage = immatureDetections[0].label;
+  let highestHierarchy = STAGE_HIERARCHY[oldestStage] ?? 0;
 
-  return newHierarchy > currentHierarchy;
+  for (const detection of immatureDetections) {
+    const hierarchy = STAGE_HIERARCHY[detection.label] ?? 0;
+    if (hierarchy > highestHierarchy) {
+      highestHierarchy = hierarchy;
+      oldestStage = detection.label;
+    }
+  }
+
+  return oldestStage;
 }
 
 /**
@@ -175,25 +176,36 @@ export async function saveDetections(
       where: and(eq(detections.uploadId, imageId), isNull(detections.deletedAt)),
     });
 
-    // Check if recalculation is needed based on added/modified detections
+    // Check if recalculation is needed by comparing the oldest stage before and after changes
     const analysisResult = await db.query.analysisResults.findFirst({
       where: eq(analysisResults.caseId, resultsId),
       columns: { stageUsedForCalculation: true },
     });
 
-    // Collect all stages from added and modified detections
-    const newStages = [
-      ...changes.added.map((d) => d.label),
-      ...changes.modified.map((d) => d.label),
-    ];
+    // Get all uploads for this case
+    const caseUploads = await db.query.uploads.findMany({
+      where: eq(uploads.caseId, resultsId),
+      columns: { id: true },
+    });
 
-    // Check if any new stage requires recalculation
-    const needsRecalculation = newStages.some((stage) =>
-      shouldTriggerRecalculation(analysisResult?.stageUsedForCalculation, stage)
-    );
+    const uploadIds = caseUploads.map((u) => u.id);
 
-    // If recalculation is needed, update the case flag
-    if (needsRecalculation) {
+    // Find the oldest stage across all detections in the case
+    let oldestStageAfterChanges: string | null = null;
+
+    if (uploadIds.length > 0) {
+      const allCaseDetections = await db.query.detections.findMany({
+        where: and(inArray(detections.uploadId, uploadIds), isNull(detections.deletedAt)),
+      });
+
+      oldestStageAfterChanges = findOldestStage(allCaseDetections as Detection[]);
+    }
+
+    // Compare with the stage that was previously used for calculation
+    const stageChanged = oldestStageAfterChanges !== analysisResult?.stageUsedForCalculation;
+
+    // Update the case flag if recalculation is needed
+    if (stageChanged) {
       await db.update(cases).set({ recalculationNeeded: true }).where(eq(cases.id, resultsId));
     }
 

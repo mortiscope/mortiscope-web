@@ -1,14 +1,43 @@
 "use server";
 
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { and, count, eq } from "drizzle-orm";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases, uploads } from "@/db/schema";
+import { analysisResults, cases, detections, uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
 import { config } from "@/lib/config";
+import { STAGE_HIERARCHY } from "@/lib/constants";
+
+/**
+ * Finds the oldest stage among the given detections.
+ * Adults are excluded from consideration as they are not used for PMI calculation.
+ *
+ * @param detections Array of detections to analyze
+ * @returns The oldest stage label, or null if all detections are adults or no detections exist
+ */
+function findOldestStage(detections: Array<{ label: string }>): string | null {
+  const immatureDetections = detections.filter((d) => d.label !== "adult");
+
+  if (immatureDetections.length === 0) {
+    return null;
+  }
+
+  let oldestStage = immatureDetections[0].label;
+  let highestHierarchy = STAGE_HIERARCHY[oldestStage] ?? 0;
+
+  for (const detection of immatureDetections) {
+    const hierarchy = STAGE_HIERARCHY[detection.label] ?? 0;
+    if (hierarchy > highestHierarchy) {
+      highestHierarchy = hierarchy;
+      oldestStage = detection.label;
+    }
+  }
+
+  return oldestStage;
+}
 
 /**
  * Securely deletes an image from S3 and the database.
@@ -73,12 +102,42 @@ export const deleteImage = async ({
     // If S3 deletion is successful, delete the record from the database.
     await db.delete(uploads).where(eq(uploads.id, imageId));
 
-    // If the image belonged to a case, mark that case as needing recalculation.
+    // If the image belonged to a case, check if recalculation is needed
     if (imageRecord.caseId) {
-      await db
-        .update(cases)
-        .set({ recalculationNeeded: true })
-        .where(eq(cases.id, imageRecord.caseId));
+      // Get the current stage used for calculation
+      const analysisResult = await db.query.analysisResults.findFirst({
+        where: eq(analysisResults.caseId, imageRecord.caseId),
+        columns: { stageUsedForCalculation: true },
+      });
+
+      // Get all remaining uploads for the case after deletion
+      const caseUploads = await db.query.uploads.findMany({
+        where: eq(uploads.caseId, imageRecord.caseId),
+        columns: { id: true },
+      });
+
+      const uploadIds = caseUploads.map((u) => u.id);
+
+      // Find the oldest stage among remaining detections in the case
+      let oldestStageAfterDeletion: string | null = null;
+
+      if (uploadIds.length > 0) {
+        const allCaseDetections = await db.query.detections.findMany({
+          where: and(inArray(detections.uploadId, uploadIds), isNull(detections.deletedAt)),
+        });
+
+        oldestStageAfterDeletion = findOldestStage(allCaseDetections);
+      }
+
+      // Compare with the stage that was previously used for calculation
+      const stageChanged = oldestStageAfterDeletion !== analysisResult?.stageUsedForCalculation;
+
+      if (stageChanged) {
+        await db
+          .update(cases)
+          .set({ recalculationNeeded: true })
+          .where(eq(cases.id, imageRecord.caseId));
+      }
     }
 
     // Revalidate the path to ensure server-rendered components are updated.
