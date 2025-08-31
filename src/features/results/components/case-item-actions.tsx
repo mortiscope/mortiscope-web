@@ -6,6 +6,7 @@ import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type Case } from "@/features/results/components/results-preview";
+import { VerificationIndicator } from "@/features/results/components/verification-indicator";
 
 /**
  * Defines the props required by the case item actions component.
@@ -29,6 +30,8 @@ export const CaseItemActions = memo(
     return (
       // The main container is hidden by default and becomes a flex container on large screens and up.
       <div className="hidden flex-shrink-0 items-center gap-1 lg:flex">
+        {/* Verified Indicator */}
+        <VerificationIndicator verificationStatus={caseItem.verificationStatus} className="mr-2" />
         {/* View Action */}
         <Tooltip>
           <TooltipTrigger asChild>

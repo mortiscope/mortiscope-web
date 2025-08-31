@@ -5,6 +5,7 @@ import { CaseItemActions } from "@/features/results/components/case-item-actions
 import { CaseItemContent } from "@/features/results/components/case-item-content";
 import { CaseItemDropdown } from "@/features/results/components/case-item-dropdown";
 import { type Case } from "@/features/results/components/results-preview";
+import { VerificationIndicator } from "@/features/results/components/verification-indicator";
 import { type ViewMode } from "@/features/results/store/results-store";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +74,14 @@ export const CaseItem = memo(
           tabIndex={0}
           aria-label={`${caseItem.caseName}. Double-click to open, or use the menu for more actions.`}
           className={cn(
-            "flex h-full w-full cursor-pointer items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out hover:border-amber-300 hover:bg-amber-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
+            "flex h-full w-full cursor-pointer items-center border-2 border-slate-200 bg-slate-50 transition-colors duration-300 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2",
+            caseItem.verificationStatus === "verified"
+              ? "hover:bg-emerald-50"
+              : caseItem.verificationStatus === "in_progress"
+                ? "hover:bg-blue-50"
+                : caseItem.verificationStatus === "unverified"
+                  ? "hover:bg-amber-50"
+                  : "hover:bg-rose-50",
             {
               // Applies styles for the 'list' view mode.
               "justify-between rounded-2xl p-2.5 lg:p-3": viewMode === "list",
@@ -90,7 +98,8 @@ export const CaseItem = memo(
               {/* Renders the full row of actions only on large screens (`lg` and up). */}
               <CaseItemActions {...props} />
               {/* Renders the dropdown menu only on smaller screens (hidden on `lg` and up). */}
-              <div className="lg:hidden">
+              <div className="flex items-center gap-1 lg:hidden">
+                <VerificationIndicator verificationStatus={caseItem.verificationStatus} />
                 <CaseItemDropdown {...props} isRenameActive={isRenameActive} />
               </div>
             </>

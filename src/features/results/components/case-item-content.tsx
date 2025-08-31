@@ -1,6 +1,7 @@
 import React, { forwardRef, memo } from "react";
 import { FaFolder } from "react-icons/fa6";
 
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { type Case } from "@/features/results/components/results-preview";
 import { type ViewMode } from "@/features/results/store/results-store";
@@ -54,40 +55,58 @@ export const CaseItemContent = memo(
             {/* The folder icon. */}
             <div
               className={cn(
-                "flex flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 transition-all duration-300 group-hover:bg-amber-100",
-                "h-9 w-9 lg:h-12 lg:w-12"
+                "flex flex-shrink-0 items-center justify-center rounded-full transition-all duration-300",
+                "h-9 w-9 lg:h-12 lg:w-12",
+                caseItem.verificationStatus === "verified"
+                  ? "bg-emerald-100"
+                  : caseItem.verificationStatus === "in_progress"
+                    ? "bg-sky-100"
+                    : caseItem.verificationStatus === "unverified"
+                      ? "bg-amber-100"
+                      : "bg-rose-100"
               )}
             >
               <FaFolder
                 className={cn(
-                  "text-emerald-600 transition-colors duration-300 group-hover:text-amber-500",
-                  "h-4 w-4 lg:h-6 lg:w-6"
+                  "transition-colors duration-300",
+                  "h-4 w-4 lg:h-6 lg:w-6",
+                  caseItem.verificationStatus === "verified"
+                    ? "text-emerald-600"
+                    : caseItem.verificationStatus === "in_progress"
+                      ? "text-sky-600"
+                      : caseItem.verificationStatus === "unverified"
+                        ? "text-amber-500"
+                        : "text-rose-500"
                 )}
               />
             </div>
             {/* Container for the case name and date. */}
             <div className="min-w-0 flex-1">
-              {isRenameActive ? (
-                // Renders an editable input when in renaming mode.
-                <Input
-                  ref={ref}
-                  value={tempCaseName}
-                  onChange={(e) => onTempCaseNameChange(e.target.value)}
-                  onBlur={onConfirmRename}
-                  onKeyDown={onRenameKeyDown}
-                  disabled={isRenaming}
-                  maxLength={256}
-                  className="font-plus-jakarta-sans h-auto truncate border-none bg-transparent p-0 pb-0.5 text-sm font-medium text-slate-800 shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 lg:text-base"
-                />
-              ) : (
-                // Renders a static paragraph when not renaming.
-                <p className="font-plus-jakarta-sans truncate pb-0.5 text-sm font-medium text-slate-800 lg:text-base">
-                  {caseItem.caseName}
+              <div className="flex items-center gap-2">
+                {isRenameActive ? (
+                  // Renders an editable input when in renaming mode.
+                  <Input
+                    ref={ref}
+                    value={tempCaseName}
+                    onChange={(e) => onTempCaseNameChange(e.target.value)}
+                    onBlur={onConfirmRename}
+                    onKeyDown={onRenameKeyDown}
+                    disabled={isRenaming}
+                    maxLength={256}
+                    className="font-plus-jakarta-sans h-auto truncate border-none bg-transparent p-0 pb-0.5 text-sm font-medium text-slate-800 shadow-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 lg:text-base"
+                  />
+                ) : (
+                  // Renders a static paragraph when not renaming.
+                  <p className="font-plus-jakarta-sans truncate pb-0.5 text-sm font-medium text-slate-800 lg:text-base">
+                    {caseItem.caseName}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-xs text-slate-500 lg:text-sm">
+                  {formatDate(caseItem.caseDate)}
                 </p>
-              )}
-              <p className="truncate text-xs text-slate-500 lg:text-sm">
-                {formatDate(caseItem.caseDate)}
-              </p>
+              </div>
             </div>
           </div>
         );
@@ -96,22 +115,63 @@ export const CaseItemContent = memo(
       // Grid View Layout
       return (
         <>
-          {/* The folder icon, with responsive sizing. */}
-          <div
-            className={cn(
-              "flex items-center justify-center rounded-full bg-emerald-100 transition-all duration-300 group-hover:bg-amber-100",
-              "h-12 w-12 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-20 lg:w-20"
-            )}
-          >
-            <FaFolder
+          {/* Container for Icon and Badge */}
+          <div className="relative mb-3">
+            {/* The folder icon, with responsive sizing. */}
+            <div
               className={cn(
-                "text-emerald-600 transition-colors duration-300 group-hover:text-amber-500",
-                "h-6 w-6 sm:h-8 sm:w-8 md:h-8 md:w-8 lg:h-10 lg:w-10"
+                "flex items-center justify-center rounded-full transition-all duration-300",
+                "h-12 w-12 sm:h-16 sm:w-16 md:h-16 md:w-16 lg:h-20 lg:w-20",
+                caseItem.verificationStatus === "verified"
+                  ? "bg-emerald-100"
+                  : caseItem.verificationStatus === "in_progress"
+                    ? "bg-sky-100"
+                    : caseItem.verificationStatus === "unverified"
+                      ? "bg-amber-100"
+                      : "bg-rose-100"
               )}
-            />
+            >
+              <FaFolder
+                className={cn(
+                  "transition-colors duration-300",
+                  "h-6 w-6 sm:h-8 sm:w-8 md:h-8 md:w-8 lg:h-10 lg:w-10",
+                  caseItem.verificationStatus === "verified"
+                    ? "text-emerald-600"
+                    : caseItem.verificationStatus === "in_progress"
+                      ? "text-sky-600"
+                      : caseItem.verificationStatus === "unverified"
+                        ? "text-amber-500"
+                        : "text-rose-500"
+                )}
+              />
+            </div>
+
+            {/* Badge positioned absolutely over the bottom of the icon */}
+            <Badge
+              variant="secondary"
+              className={cn(
+                "absolute -bottom-4 left-1/2 z-10 h-5 -translate-x-1/2 rounded-sm px-1.5 text-xs font-normal whitespace-nowrap",
+                caseItem.verificationStatus === "verified"
+                  ? "bg-emerald-200 text-emerald-700 hover:bg-emerald-200"
+                  : caseItem.verificationStatus === "in_progress"
+                    ? "bg-sky-200 text-sky-700 hover:bg-sky-200"
+                    : caseItem.verificationStatus === "unverified"
+                      ? "bg-amber-200 text-amber-700 hover:bg-amber-200"
+                      : "bg-rose-200 text-rose-700 hover:bg-rose-200"
+              )}
+            >
+              {caseItem.verificationStatus === "verified"
+                ? "Verified"
+                : caseItem.verificationStatus === "in_progress"
+                  ? "In Progress"
+                  : caseItem.verificationStatus === "unverified"
+                    ? "Unverified"
+                    : "No Detections"}
+            </Badge>
           </div>
+
           {/* The centered container for the case name and date. */}
-          <div className="flex w-full flex-col items-center justify-end">
+          <div className="flex w-full flex-col items-center justify-end gap-1">
             {isRenameActive ? (
               <Input
                 ref={ref}
