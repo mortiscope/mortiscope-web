@@ -32,13 +32,13 @@ type EditorDetectionPanelProps = {
 export const EditorDetectionPanel = memo(
   ({ isMobile = false, hasOpenPanel = false }: EditorDetectionPanelProps) => {
     // Use the detection panel hook to get state and handlers
-    const { selectedDetectionId, handleClose } = useDetectionPanel();
+    const { selectedDetectionId, isPanelOpen, handleClose } = useDetectionPanel();
 
     // Renders a bottom drawer when on a mobile device.
     if (isMobile) {
       return (
         <Sheet
-          open={!!selectedDetectionId}
+          open={isPanelOpen && !!selectedDetectionId}
           onOpenChange={(open) => {
             // When the sheet is closed, clear the selection and switch to pan mode.
             if (!open) {

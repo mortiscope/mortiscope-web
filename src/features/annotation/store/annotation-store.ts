@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { create } from "zustand";
 
 import { type Detection } from "@/features/annotation/hooks/use-editor-image";
@@ -9,6 +10,8 @@ import { MAX_HISTORY } from "@/lib/constants";
 interface AnnotationState {
   /** The unique ID of the currently selected detection, or `null` if no detection is selected. */
   selectedDetectionId: string | null;
+  /** Whether the detection panel should be visible. */
+  isPanelOpen: boolean;
   /** The array of detection objects currently being edited. This is the 'working' copy of the state. */
   detections: Detection[];
   /** A read-only backup of the initial detections fetched from the server, used for resetting any changes. */
@@ -18,7 +21,9 @@ interface AnnotationState {
   /** Array of future detection states for redo functionality. */
   future: Detection[][];
   /** Selects a detection by its unique ID. */
-  selectDetection: (id: string) => void;
+  selectDetection: (id: string, shouldOpenPanel?: boolean) => void;
+  /** Opens the detection panel. */
+  openPanel: () => void;
   /** Clears the current detection selection. */
   clearSelection: () => void;
   /** Initializes or replaces the current set of detections with a new array from an external source. */
@@ -83,6 +88,8 @@ const cloneDetections = (detections: Detection[]): Detection[] =>
 export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   // No detection is selected by default.
   selectedDetectionId: null,
+  // Panel is closed by default.
+  isPanelOpen: false,
   // The working list of detections starts empty.
   detections: [],
   // Draw mode is disabled by default.
@@ -104,13 +111,26 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   /**
    * Updates the state to set the provided ID as the currently selected one.
    * Also enables select mode and disables draw mode.
+   * @param id - The detection ID to select
+   * @param shouldOpenPanel - Whether to open the panel immediately (default: false for mobile compatibility)
    */
-  selectDetection: (id) => set({ selectedDetectionId: id, selectMode: true, drawMode: false }),
+  selectDetection: (id, shouldOpenPanel = false) =>
+    set({
+      selectedDetectionId: id,
+      selectMode: true,
+      drawMode: false,
+      isPanelOpen: shouldOpenPanel,
+    }),
+
+  /**
+   * Opens the detection panel for the currently selected detection.
+   */
+  openPanel: () => set({ isPanelOpen: true }),
 
   /**
    * Resets the selection, setting the selected ID back to null and switching to pan mode.
    */
-  clearSelection: () => set({ selectedDetectionId: null, selectMode: false }),
+  clearSelection: () => set({ selectedDetectionId: null, selectMode: false, isPanelOpen: false }),
 
   /**
    * Initializes the store with a new set of detections and resets history.
@@ -175,7 +195,7 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
     set((state) => {
       const newDetection = {
         ...detection,
-        id: crypto.randomUUID(),
+        id: uuidv4(),
       };
       const newDetections = [...state.detections, newDetection];
       const newPast = [...state.past.slice(-MAX_HISTORY + 1), cloneDetections(state.detections)];
@@ -185,6 +205,7 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
         past: newPast,
         future: [],
         selectedDetectionId: newDetection.id,
+        isPanelOpen: true,
         drawMode: false,
       };
     }),
@@ -202,6 +223,7 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
         past: newPast,
         future: [],
         selectedDetectionId: state.selectedDetectionId === id ? null : state.selectedDetectionId,
+        isPanelOpen: state.selectedDetectionId === id ? false : state.isPanelOpen,
         selectMode: state.selectedDetectionId === id ? false : state.selectMode,
       };
     }),

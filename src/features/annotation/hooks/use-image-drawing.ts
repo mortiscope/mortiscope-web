@@ -41,15 +41,17 @@ export const useImageDrawing = ({
   const [drawCurrent, setDrawCurrent] = useState<{ x: number; y: number } | null>(null);
   const justFinishedDrawing = useRef(false);
 
-  /** Handles the mouse down event to start drawing. */
-  const handleDrawMouseDown = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  /** Handles the pointer down event (mouse or touch) to start drawing. */
+  const handleDrawStart = useCallback(
+    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       if (!drawMode || !renderedImageStyle || !imageDimensions) return;
       e.stopPropagation();
 
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
 
       setIsDrawing(true);
       setDrawStart({ x, y });
@@ -58,23 +60,25 @@ export const useImageDrawing = ({
     [drawMode, renderedImageStyle, imageDimensions]
   );
 
-  /** Handles the mouse move event to update the drawing preview. */
-  const handleDrawMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  /** Handles the pointer move event (mouse or touch) to update the drawing preview. */
+  const handleDrawMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       if (!isDrawing || !drawStart) return;
 
       const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
 
       setDrawCurrent({ x, y });
     },
     [isDrawing, drawStart]
   );
 
-  /** Handles the mouse up event to complete drawing and create a detection. */
-  const handleDrawMouseUp = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  /** Handles the pointer up event (mouse or touch) to complete drawing and create a detection. */
+  const handleDrawEnd = useCallback(
+    (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
       if (!isDrawing || !drawStart || !drawCurrent || !renderedImageStyle || !imageDimensions)
         return;
 
@@ -170,8 +174,8 @@ export const useImageDrawing = ({
     drawCurrent,
     justFinishedDrawing,
     // Drawing handlers
-    handleDrawMouseDown,
-    handleDrawMouseMove,
-    handleDrawMouseUp,
+    handleDrawStart,
+    handleDrawMove,
+    handleDrawEnd,
   };
 };

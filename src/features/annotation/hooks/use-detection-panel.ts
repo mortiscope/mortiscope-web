@@ -12,6 +12,7 @@ import { useAnnotationStore } from "@/features/annotation/store/annotation-store
 export const useDetectionPanel = () => {
   // Retrieves state and actions from the global `useAnnotationStore`.
   const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
+  const isPanelOpen = useAnnotationStore((state) => state.isPanelOpen);
   const detections = useAnnotationStore((state) => state.detections);
   const updateDetection = useAnnotationStore((state) => state.updateDetection);
   const removeDetection = useAnnotationStore((state) => state.removeDetection);
@@ -65,6 +66,7 @@ export const useDetectionPanel = () => {
 
   return {
     selectedDetectionId,
+    isPanelOpen,
     displayedDetection,
     handleLabelChange,
     handleVerify,

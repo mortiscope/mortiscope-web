@@ -56,9 +56,9 @@ export const EditorImageDisplay = memo(
       drawStart,
       drawCurrent,
       justFinishedDrawing,
-      handleDrawMouseDown,
-      handleDrawMouseMove,
-      handleDrawMouseUp,
+      handleDrawStart,
+      handleDrawMove,
+      handleDrawEnd,
     } = useImageDrawing({
       imageId: image.id,
       drawMode,
@@ -106,9 +106,12 @@ export const EditorImageDisplay = memo(
                   e.stopPropagation();
                 }
               }}
-              onMouseDown={handleDrawMouseDown}
-              onMouseMove={handleDrawMouseMove}
-              onMouseUp={handleDrawMouseUp}
+              onMouseDown={handleDrawStart}
+              onMouseMove={handleDrawMove}
+              onMouseUp={handleDrawEnd}
+              onTouchStart={handleDrawStart}
+              onTouchMove={handleDrawMove}
+              onTouchEnd={handleDrawEnd}
             >
               {/* Renders a loading spinner overlay while the image is being fetched. */}
               {!isImageLoaded && (

@@ -1,6 +1,7 @@
 import { memo } from "react";
 
 import { type Detection } from "@/features/annotation/hooks/use-editor-image";
+import { eventCoordinates } from "@/features/annotation/utils/event-coordinates";
 
 /**
  * Defines the props for the bounding box handles component.
@@ -27,6 +28,15 @@ export const BoundingBoxHandles = memo(function BoundingBoxHandles({
   onStartResize,
 }: BoundingBoxHandlesProps) {
   const handleOffset = -(4 + borderWidth / 2);
+
+  /**
+   * Handles pointer down to initiate resize.
+   */
+  const handlePointerDown = (handle: string) => (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    const { clientX, clientY } = eventCoordinates(e);
+    onStartResize(handle, clientX, clientY, detection);
+  };
 
   return (
     <>
@@ -59,11 +69,8 @@ export const BoundingBoxHandles = memo(function BoundingBoxHandles({
               cursor: "se-resize",
             }),
           }}
-          onMouseDown={(e) => {
-            // Initiates a resize operation.
-            e.stopPropagation();
-            onStartResize(handle, e.clientX, e.clientY, detection);
-          }}
+          onMouseDown={handlePointerDown(handle)}
+          onTouchStart={handlePointerDown(handle)}
         />
       ))}
 
@@ -106,10 +113,8 @@ export const BoundingBoxHandles = memo(function BoundingBoxHandles({
               cursor: "w-resize",
             }),
           }}
-          onMouseDown={(e) => {
-            e.stopPropagation();
-            onStartResize(handle, e.clientX, e.clientY, detection);
-          }}
+          onMouseDown={handlePointerDown(handle)}
+          onTouchStart={handlePointerDown(handle)}
         />
       ))}
     </>

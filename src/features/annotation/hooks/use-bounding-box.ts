@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { type Detection } from "@/features/annotation/hooks/use-editor-image";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
+import { eventCoordinates } from "@/features/annotation/utils/event-coordinates";
 
 /**
  * Defines the props for the bounding box hook.
@@ -30,6 +31,7 @@ export const useBoundingBox = ({
   // Retrieves selection state and actions from the annotation store.
   const selectedDetectionId = useAnnotationStore((state) => state.selectedDetectionId);
   const selectDetection = useAnnotationStore((state) => state.selectDetection);
+  const openPanel = useAnnotationStore((state) => state.openPanel);
   const updateDetectionNoHistory = useAnnotationStore((state) => state.updateDetectionNoHistory);
   const saveStateBeforeEdit = useAnnotationStore((state) => state.saveStateBeforeEdit);
   const transformScale = useAnnotationStore((state) => state.transformScale);
@@ -53,19 +55,21 @@ export const useBoundingBox = ({
   const [showTooltipFor, setShowTooltipFor] = useState<string | null>(null);
 
   /**
-   * A memoized mouse move event handler for both dragging and resizing operations.
+   * A memoized mouse/touch move event handler for both dragging and resizing operations.
    * It calculates the change in mouse position and translates it into changes in the
    * bounding box's coordinates in the original image's pixel space.
    */
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const handleMove = useCallback(
+    (e: MouseEvent | TouchEvent) => {
+      const { clientX, clientY } = eventCoordinates(e);
+
       if (isDragging && dragStart && draggedDetectionId) {
         const detection = detections.find((d) => d.id === draggedDetectionId);
         if (!detection) return;
 
         // Calculate mouse delta in screen pixels.
-        const deltaX = e.clientX - dragStart.x;
-        const deltaY = e.clientY - dragStart.y;
+        const deltaX = clientX - dragStart.x;
+        const deltaY = clientY - dragStart.y;
 
         // Calculate the scaling factor between the rendered image and the original image.
         const imageScaleX = imageDimensions.width / renderedImageStyle.width;
@@ -109,13 +113,13 @@ export const useBoundingBox = ({
         });
 
         // Update the drag start position for the next mouse move event.
-        setDragStart({ x: e.clientX, y: e.clientY });
+        setDragStart({ x: clientX, y: clientY });
       }
 
       // Resizing logic
       if (isResizing && resizeStart && resizeHandle) {
-        const deltaX = e.clientX - resizeStart.x;
-        const deltaY = e.clientY - resizeStart.y;
+        const deltaX = clientX - resizeStart.x;
+        const deltaY = clientY - resizeStart.y;
 
         const imageScaleX = imageDimensions.width / renderedImageStyle.width;
         const imageScaleY = imageDimensions.height / renderedImageStyle.height;
@@ -170,9 +174,9 @@ export const useBoundingBox = ({
   );
 
   /**
-   * A memoized `mouseup` event handler to terminate dragging or resizing operations and clean up state.
+   * A memoized `mouseup`/`touchend` event handler to terminate dragging or resizing operations and clean up state.
    */
-  const handleMouseUp = useCallback(() => {
+  const handleEnd = useCallback(() => {
     // After an interaction, briefly show the tooltip to provide feedback on the final position/size.
     if (isDragging && draggedDetectionId) {
       setShowTooltipFor(draggedDetectionId);
@@ -193,19 +197,23 @@ export const useBoundingBox = ({
   }, [isDragging, draggedDetectionId, isResizing, selectedDetectionId]);
 
   /**
-   * A side effect that attaches global `mousemove` and `mouseup` event listeners to the `window` only when a
+   * A side effect that attaches global mouse and touch event listeners to the `window` only when a
    * drag or resize operation is active. The cleanup function removes these listeners to prevent memory leaks.
    */
   useEffect(() => {
     if (isDragging || isResizing) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("mousemove", handleMove);
+      window.addEventListener("mouseup", handleEnd);
+      window.addEventListener("touchmove", handleMove);
+      window.addEventListener("touchend", handleEnd);
       return () => {
-        window.removeEventListener("mousemove", handleMouseMove);
-        window.removeEventListener("mouseup", handleMouseUp);
+        window.removeEventListener("mousemove", handleMove);
+        window.removeEventListener("mouseup", handleEnd);
+        window.removeEventListener("touchmove", handleMove);
+        window.removeEventListener("touchend", handleEnd);
       };
     }
-  }, [isDragging, isResizing, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handleMove, handleEnd]);
 
   /**
    * Initiates a drag operation for a detection.
@@ -237,6 +245,7 @@ export const useBoundingBox = ({
     // Selection state
     selectedDetectionId,
     selectDetection,
+    openPanel,
     isLocked,
     // Interaction state
     isDragging,

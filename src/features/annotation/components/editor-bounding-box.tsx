@@ -26,6 +26,7 @@ export const EditorBoundingBox = memo(
     const {
       selectedDetectionId,
       selectDetection,
+      openPanel,
       isLocked,
       isResizing,
       showTooltipFor,
@@ -64,6 +65,7 @@ export const EditorBoundingBox = memo(
               imageDimensions={imageDimensions}
               showTooltip={showTooltipFor === det.id}
               onSelect={selectDetection}
+              onOpenPanel={openPanel}
               onStartDrag={startDrag}
               onStartResize={startResize}
             />
