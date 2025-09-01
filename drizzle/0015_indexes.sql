@@ -1,0 +1,21 @@
+CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "case_audit_logs_case_id_idx" ON "case_audit_logs" USING btree ("case_id");--> statement-breakpoint
+CREATE INDEX "case_audit_logs_case_id_timestamp_idx" ON "case_audit_logs" USING btree ("case_id","timestamp");--> statement-breakpoint
+CREATE INDEX "cases_user_id_idx" ON "cases" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "cases_status_idx" ON "cases" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "cases_created_at_idx" ON "cases" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "detections_upload_id_idx" ON "detections" USING btree ("upload_id");--> statement-breakpoint
+CREATE INDEX "detections_deleted_at_idx" ON "detections" USING btree ("deleted_at");--> statement-breakpoint
+CREATE INDEX "email_change_tokens_user_id_idx" ON "email_change_tokens" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "exports_user_id_idx" ON "exports" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "exports_case_id_idx" ON "exports" USING btree ("case_id");--> statement-breakpoint
+CREATE INDEX "exports_status_idx" ON "exports" USING btree ("status");--> statement-breakpoint
+CREATE INDEX "exports_created_at_idx" ON "exports" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "revoked_jwt_tokens_session_token_idx" ON "revoked_jwt_tokens" USING btree ("session_token");--> statement-breakpoint
+CREATE INDEX "sessions_user_id_idx" ON "sessions" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "two_factor_recovery_codes_user_id_idx" ON "two_factor_recovery_codes" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "uploads_user_id_idx" ON "uploads" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "uploads_case_id_idx" ON "uploads" USING btree ("case_id");--> statement-breakpoint
+CREATE INDEX "user_sessions_session_token_idx" ON "user_sessions" USING btree ("session_token");--> statement-breakpoint
+CREATE INDEX "user_sessions_user_id_idx" ON "user_sessions" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "user_sessions_user_id_last_active_idx" ON "user_sessions" USING btree ("user_id","last_active_at");
