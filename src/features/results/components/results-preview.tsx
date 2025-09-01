@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CaseInformationModal } from "@/features/cases/components/case-information-modal";
 import { type getCases } from "@/features/results/actions/get-cases";
 import { renameCase } from "@/features/results/actions/rename-case";
 import { CaseList } from "@/features/results/components/case-list";
@@ -55,6 +56,11 @@ export const ResultsPreview = () => {
     isOpen: false,
     caseId: null as string | null,
     caseName: null as string | null,
+  });
+  // Local state to control the visibility and data of the case information modal.
+  const [infoModal, setInfoModal] = useState({
+    isOpen: false,
+    caseItem: null as Case | null,
   });
 
   /**
@@ -184,6 +190,16 @@ export const ResultsPreview = () => {
     setDeleteModal({ isOpen: true, caseId, caseName });
   };
 
+  /**
+   * Opens the case information modal with the context of the selected case.
+   */
+  const openInfoModal = (caseId: string) => {
+    const caseItem = cases.find((c) => c.id === caseId);
+    if (caseItem) {
+      setInfoModal({ isOpen: true, caseItem });
+    }
+  };
+
   // Renders an empty state component if there are no cases at all.
   if (cases.length === 0 && !searchTerm) {
     return <ResultsEmptyState />;
@@ -196,6 +212,11 @@ export const ResultsPreview = () => {
         onOpenChange={(isOpen) => setDeleteModal({ ...deleteModal, isOpen })}
         caseId={deleteModal.caseId}
         caseName={deleteModal.caseName}
+      />
+      <CaseInformationModal
+        isOpen={infoModal.isOpen}
+        onOpenChange={(isOpen) => setInfoModal({ ...infoModal, isOpen })}
+        caseItem={infoModal.caseItem}
       />
       <div className="flex w-full flex-1 flex-col">
         <ResultsToolbar
@@ -222,6 +243,7 @@ export const ResultsPreview = () => {
               onRenameKeyDown={handleRenameKeyDown}
               onView={(caseId) => router.push(`/results/${caseId}`)}
               onDelete={openDeleteModal}
+              onDetails={openInfoModal}
             />
           ) : (
             // Renders a "no results" message if filtering/searching yields no cases.

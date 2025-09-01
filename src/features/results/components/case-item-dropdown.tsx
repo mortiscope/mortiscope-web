@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { GoPencil } from "react-icons/go";
 import { LuEllipsisVertical, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { PiLightbulbFilament } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,8 @@ interface CaseItemDropdownProps {
   onDelete: (caseId: string, caseName: string) => void;
   /** A callback to confirm a rename, typically triggered when the menu closes while editing. */
   onConfirmRename: () => void;
+  /** A callback function to handle opening the case information modal. */
+  onDetails: (caseId: string) => void;
 }
 
 /**
@@ -47,6 +50,7 @@ export const CaseItemDropdown = memo(
     onStartRename,
     onDelete,
     onConfirmRename,
+    onDetails,
   }: CaseItemDropdownProps) => {
     return (
       <DropdownMenu
@@ -86,13 +90,22 @@ export const CaseItemDropdown = memo(
             <span>Open</span>
           </DropdownMenuItem>
           <DropdownMenuItem
+            onSelect={() => onDetails(caseItem.id)}
+            className={cn(
+              "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
+            )}
+          >
+            <PiLightbulbFilament className="mr-2 h-4 w-4" />
+            <span>Details</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={(e) => {
               e.stopPropagation();
               // Using `setTimeout` defers the execution of `onStartRename` to the next event loop cycle.
               setTimeout(() => onStartRename(e, caseItem.id, caseItem.caseName), 0);
             }}
             className={cn(
-              "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-sky-200 hover:!text-sky-600 focus:bg-sky-100 hover:[&_svg]:!text-sky-600"
+              "font-inter mt-0.5 cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-amber-200 hover:!text-amber-600 focus:bg-amber-100 hover:[&_svg]:!text-amber-600"
             )}
           >
             <GoPencil className="mr-2 h-4 w-4" />

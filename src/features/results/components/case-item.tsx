@@ -35,6 +35,8 @@ interface CaseItemProps {
   onView: (caseId: string) => void;
   /** A callback to initiate the deletion of the case. */
   onDelete: (caseId: string, caseName: string) => void;
+  /** A callback to handle opening the case information modal. */
+  onDetails: (caseId: string) => void;
 }
 
 /**

@@ -33,6 +33,7 @@ export const getCases = async () => {
           },
         },
       },
+      analysisResult: true,
     },
   });
 
