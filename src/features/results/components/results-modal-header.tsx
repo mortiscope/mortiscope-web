@@ -1,13 +1,13 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import React, { memo } from "react";
-import { GoUnverified, GoVerified } from "react-icons/go";
+import React, { memo, useMemo } from "react";
 import { LuX } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { type ImageFile } from "@/features/images/hooks/use-results-image-viewer";
+import { STATUS_CONFIG } from "@/lib/constants";
 import { formatBytes } from "@/lib/utils";
 
 /**
@@ -33,10 +33,30 @@ interface ResultsModalHeaderProps {
  */
 export const ResultsModalHeader = memo(
   ({ activeImage, imageDimensions, isMobile, onClose, variants }: ResultsModalHeaderProps) => {
-    // Check if the image has detections and if all are verified
-    const hasDetections = activeImage.detections && activeImage.detections.length > 0;
-    const isFullyVerified =
-      hasDetections && activeImage.detections!.every((d) => d.status === "user_confirmed");
+    // Determine the verification status of the image
+    const verificationStatus = useMemo(() => {
+      const detections = activeImage.detections || [];
+      const hasDetections = detections.length > 0;
+
+      if (!hasDetections) {
+        return "no_detections";
+      }
+
+      const unverifiedCount = detections.filter((d) => d.status === "model_generated").length;
+      const totalCount = detections.length;
+
+      if (unverifiedCount === 0) {
+        return "verified";
+      } else if (unverifiedCount === totalCount) {
+        return "unverified";
+      } else {
+        return "in_progress";
+      }
+    }, [activeImage.detections]);
+
+    // Get the icon and color from STATUS_CONFIG
+    const statusConfig = STATUS_CONFIG[verificationStatus];
+    const StatusIcon = statusConfig.icon;
 
     // Renders a floating bar at the top of the screen containing the title and a close button.
     if (isMobile) {
@@ -51,12 +71,7 @@ export const ResultsModalHeader = memo(
             {/* File name section with verification indicator. */}
             <div className="min-w-0 flex-grow">
               <div className="flex items-center gap-2">
-                {hasDetections &&
-                  (isFullyVerified ? (
-                    <GoVerified className="h-5 w-5 flex-shrink-0 text-white md:text-emerald-200" />
-                  ) : (
-                    <GoUnverified className="h-5 w-5 flex-shrink-0 text-white md:text-amber-300" />
-                  ))}
+                <StatusIcon className="h-5 w-5 flex-shrink-0 text-white" />
                 <h2 className="font-plus-jakarta-sans truncate text-lg font-semibold text-white">
                   {activeImage.name}
                 </h2>
@@ -85,15 +100,16 @@ export const ResultsModalHeader = memo(
         <DialogHeader>
           <DialogTitle
             className={`font-plus-jakarta-sans mx-auto flex w-full max-w-sm items-center justify-center gap-2 text-center text-xl font-bold md:max-w-md md:text-2xl ${
-              hasDetections && !isFullyVerified ? "text-amber-500" : "text-emerald-600"
+              verificationStatus === "verified"
+                ? "text-emerald-600"
+                : verificationStatus === "in_progress"
+                  ? "text-sky-600"
+                  : verificationStatus === "unverified"
+                    ? "text-amber-500"
+                    : "text-rose-500"
             }`}
           >
-            {hasDetections &&
-              (isFullyVerified ? (
-                <GoVerified className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
-              ) : (
-                <GoUnverified className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
-              ))}
+            <StatusIcon className="h-5 w-5 flex-shrink-0 md:h-6 md:w-6" />
             <span className="min-w-0 truncate">{activeImage.name}</span>
           </DialogTitle>
           {/* Renders file metadata (date, dimensions, size). */}

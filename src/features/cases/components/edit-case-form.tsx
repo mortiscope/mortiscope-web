@@ -78,6 +78,7 @@ export const EditCaseForm = ({
       <CaseTemperatureInput
         control={form.control}
         isLocked={lockedFields.temperature}
+        showSwitch={false}
         onToggleLock={() => toggleLock("temperature")}
       />
       {/* Renders the set of cascading dropdowns for the location. */}

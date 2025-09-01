@@ -130,7 +130,7 @@ export const CaseInformationModal = ({
   const verifiedDetectionsText = useMemo(() => {
     if (!caseItem) return "N/A";
     return `${caseItem.verifiedDetections || 0} / ${caseItem.totalDetections || 0}`;
-  }, [caseItem?.verifiedDetections, caseItem?.totalDetections]);
+  }, [caseItem]);
 
   // Memoize PMI estimation text
   const pmiEstimationText = useMemo(() => {
@@ -159,7 +159,7 @@ export const CaseInformationModal = ({
     if (analysisResult.pmiHours) {
       const hours = analysisResult.pmiHours;
       const hoursText = `${hours.toFixed(2)} hours`;
-      return caseItem.recalculationNeeded ? `${hoursText} (Recalculation Needed)` : hoursText;
+      return caseItem?.recalculationNeeded ? `${hoursText} (Recalculation Needed)` : hoursText;
     }
 
     return "Pending Analysis";
