@@ -17,7 +17,7 @@ const itemVariants: Variants = {
 /**
  * Defines the available color variants for the modal header.
  */
-type ColorVariant = "rose" | "amber" | "emerald";
+type ColorVariant = "rose" | "amber" | "emerald" | "sky";
 
 /**
  * Defines the props for the annotation modal header component.
@@ -41,6 +41,7 @@ export const AnnotationModalHeader = memo(
       rose: "text-rose-600",
       amber: "text-amber-500",
       emerald: "text-emerald-600",
+      sky: "text-sky-600",
     };
 
     return (

@@ -4,20 +4,19 @@ import { memo } from "react";
 import { GoUnverified, GoVerified } from "react-icons/go";
 import { HiOutlineLockClosed, HiOutlineLockOpen } from "react-icons/hi2";
 import { LuLoaderCircle } from "react-icons/lu";
-import { PiFloppyDiskBack } from "react-icons/pi";
+import { PiFloppyDiskBack, PiSealPercent, PiSealWarning } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
+import { STATUS_CONFIG } from "@/lib/constants";
 
 /**
  * Defines the props for the editor header actions component.
  */
 interface EditorHeaderActionsProps {
-  /** Whether there are detections in the current image. */
-  hasDetections: boolean;
-  /** Whether all detections are verified. */
-  isImageFullyVerified: boolean;
+  /** The verification status of the current image. */
+  verificationStatus: keyof typeof STATUS_CONFIG;
   /** Handler for clicking the verification status icon. */
-  onVerificationClick: (isVerified: boolean) => void;
+  onVerificationClick: (status: keyof typeof STATUS_CONFIG) => void;
   /** Whether the editor is locked. */
   isLocked: boolean;
   /** Handler for toggling the lock state. */
@@ -35,8 +34,7 @@ interface EditorHeaderActionsProps {
  */
 export const EditorHeaderActions = memo(
   ({
-    hasDetections,
-    isImageFullyVerified,
+    verificationStatus,
     onVerificationClick,
     isLocked,
     onToggleLock,
@@ -44,26 +42,28 @@ export const EditorHeaderActions = memo(
     isSaving,
     onSaveClick,
   }: EditorHeaderActionsProps) => {
+    const { label } = STATUS_CONFIG[verificationStatus];
+
     return (
       <div className="flex flex-shrink-0 items-center gap-1">
-        {/* Verification status icon which only show if image has detections */}
-        {hasDetections && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onVerificationClick(isImageFullyVerified)}
-            aria-label={
-              isImageFullyVerified ? "All detections verified" : "Image has unverified detections"
-            }
-            className="group h-8 w-8 cursor-pointer bg-transparent text-slate-100 hover:bg-transparent hover:text-slate-100 focus:outline-none md:h-10 md:w-10 [&_svg]:!size-5 md:[&_svg]:!size-6"
-          >
-            {isImageFullyVerified ? (
-              <GoVerified className="text-emerald-300" />
-            ) : (
-              <GoUnverified className="text-amber-300" />
-            )}
-          </Button>
-        )}
+        {/* Verification status icon */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onVerificationClick(verificationStatus)}
+          aria-label={label}
+          className="group h-8 w-8 cursor-pointer bg-transparent text-slate-100 hover:bg-transparent hover:text-slate-100 focus:outline-none md:h-10 md:w-10 [&_svg]:!size-5 md:[&_svg]:!size-6"
+        >
+          {verificationStatus === "verified" ? (
+            <GoVerified className="text-emerald-300" />
+          ) : verificationStatus === "in_progress" ? (
+            <PiSealPercent className="text-sky-300" />
+          ) : verificationStatus === "unverified" ? (
+            <GoUnverified className="text-amber-300" />
+          ) : (
+            <PiSealWarning className="text-rose-300" />
+          )}
+        </Button>
 
         {/* Lock/Unlock button */}
         <Button

@@ -19,7 +19,7 @@ const itemVariants: Variants = {
 /**
  * Defines the available button variants for the modal footer.
  */
-type ButtonVariant = "destructive" | "warning" | "success";
+type ButtonVariant = "destructive" | "warning" | "success" | "info";
 
 /**
  * Defines the props for the annotation modal footer component.
@@ -64,6 +64,7 @@ export const AnnotationModalFooter = memo(
       destructive: "bg-rose-600 hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20",
       warning: "bg-amber-500 hover:bg-amber-400 hover:shadow-lg hover:shadow-amber-400/20",
       success: "bg-emerald-600 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/20",
+      info: "bg-sky-600 hover:bg-sky-500 hover:shadow-lg hover:shadow-sky-500/20",
     };
 
     return (

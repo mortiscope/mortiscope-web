@@ -12,7 +12,7 @@ import { useAnnotatedData } from "@/features/annotation/hooks/use-annotated-data
 import { useEditorNavigation } from "@/features/annotation/hooks/use-editor-navigation";
 import { useEditorSaveHandler } from "@/features/annotation/hooks/use-editor-save-handler";
 import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
-import { KEYBOARD_SHORTCUTS } from "@/lib/constants";
+import { KEYBOARD_SHORTCUTS, STATUS_CONFIG } from "@/lib/constants";
 
 // Dynamically import modal components
 const SaveConfirmationModal = dynamic(
@@ -43,6 +43,22 @@ const UnverifiedStatusModal = dynamic(
   () =>
     import("@/features/annotation/components/unverified-status-modal").then(
       (module) => module.UnverifiedStatusModal
+    ),
+  { ssr: false }
+);
+
+const InProgressStatusModal = dynamic(
+  () =>
+    import("@/features/annotation/components/in-progress-status-modal").then(
+      (module) => module.InProgressStatusModal
+    ),
+  { ssr: false }
+);
+
+const NoDetectionsStatusModal = dynamic(
+  () =>
+    import("@/features/annotation/components/no-detections-status-modal").then(
+      (module) => module.NoDetectionsStatusModal
     ),
   { ssr: false }
 );
@@ -83,10 +99,18 @@ export const EditorHeader = memo(
     const currentPosition = currentImageIndex >= 0 ? currentImageIndex + 1 : 0;
     const currentImageName = currentImageIndex >= 0 ? images[currentImageIndex].name : "";
 
-    /** Check if all detections in the current image are verified. */
-    const isImageFullyVerified =
-      detections.length > 0 &&
-      detections.every((detection) => detection.status === "user_confirmed");
+    /** Calculate the verification status of the current image. */
+    const verificationStatus: keyof typeof STATUS_CONFIG = (() => {
+      if (detections.length === 0) return "no_detections";
+
+      const verifiedCount = detections.filter(
+        (detection) => detection.status === "user_confirmed"
+      ).length;
+
+      if (verifiedCount === detections.length) return "verified";
+      if (verifiedCount === 0) return "unverified";
+      return "in_progress";
+    })();
 
     // Use custom hooks for save and navigation logic
     const {
@@ -113,13 +137,24 @@ export const EditorHeader = memo(
     // State for verification status modals
     const [isVerifiedModalOpen, setIsVerifiedModalOpen] = useState(false);
     const [isUnverifiedModalOpen, setIsUnverifiedModalOpen] = useState(false);
+    const [isInProgressModalOpen, setIsInProgressModalOpen] = useState(false);
+    const [isNoDetectionsModalOpen, setIsNoDetectionsModalOpen] = useState(false);
 
     /** Handles clicking the verification status icon. */
-    const handleVerificationClick = useCallback((isVerified: boolean) => {
-      if (isVerified) {
-        setIsVerifiedModalOpen(true);
-      } else {
-        setIsUnverifiedModalOpen(true);
+    const handleVerificationClick = useCallback((status: keyof typeof STATUS_CONFIG) => {
+      switch (status) {
+        case "verified":
+          setIsVerifiedModalOpen(true);
+          break;
+        case "unverified":
+          setIsUnverifiedModalOpen(true);
+          break;
+        case "in_progress":
+          setIsInProgressModalOpen(true);
+          break;
+        case "no_detections":
+          setIsNoDetectionsModalOpen(true);
+          break;
       }
     }, []);
 
@@ -196,8 +231,7 @@ export const EditorHeader = memo(
 
           {/* Right section - Actions */}
           <EditorHeaderActions
-            hasDetections={detections.length > 0}
-            isImageFullyVerified={isImageFullyVerified}
+            verificationStatus={verificationStatus}
             onVerificationClick={handleVerificationClick}
             isLocked={isLocked}
             onToggleLock={handleToggleLock}
@@ -227,6 +261,16 @@ export const EditorHeader = memo(
         <UnverifiedStatusModal
           isOpen={isUnverifiedModalOpen}
           onOpenChange={setIsUnverifiedModalOpen}
+        />
+
+        <InProgressStatusModal
+          isOpen={isInProgressModalOpen}
+          onOpenChange={setIsInProgressModalOpen}
+        />
+
+        <NoDetectionsStatusModal
+          isOpen={isNoDetectionsModalOpen}
+          onOpenChange={setIsNoDetectionsModalOpen}
         />
       </>
     );
