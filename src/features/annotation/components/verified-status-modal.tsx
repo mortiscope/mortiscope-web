@@ -38,29 +38,29 @@ export const VerifiedStatusModal = memo(({ isOpen, onOpenChange }: VerifiedStatu
         description={
           <div className="text-left">
             <p className="mb-3">
-              This status indicates that all detections in the current image have been reviewed and
-              confirmed.
+              This status indicates that all detections in the current image have been verified and
+              confirmed as accurate.
             </p>
             <ul className="space-y-1 text-slate-600">
               <li className="flex items-start">
                 <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                 <p>
-                  <strong className="font-medium text-slate-700">Reviewed:</strong> All detections
-                  have been manually inspected and assessed.
+                  <strong className="font-medium text-slate-700">Fully Reviewed:</strong> Every
+                  detection has been manually inspected and verified.
                 </p>
               </li>
               <li className="flex items-start">
                 <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                 <p>
-                  <strong className="font-medium text-slate-700">Confirmed:</strong> Each detection
-                  has been marked as accurate and correct.
+                  <strong className="font-medium text-slate-700">Complete:</strong> This image is
+                  ready and all annotations have been confirmed.
                 </p>
               </li>
               <li className="flex items-start">
                 <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
                 <p>
-                  <strong className="font-medium text-slate-700">Editable:</strong> You can still
-                  modify detections if you notice missed or incorrect annotations.
+                  <strong className="font-medium text-slate-700">Still Editable:</strong> You can
+                  modify detections if you notice any missed or incorrect annotations.
                 </p>
               </li>
             </ul>

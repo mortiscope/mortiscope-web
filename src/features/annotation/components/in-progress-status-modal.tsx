@@ -7,9 +7,9 @@ import { AnnotationModalFooter } from "@/features/annotation/components/annotati
 import { AnnotationModalHeader } from "@/features/annotation/components/annotation-modal-header";
 
 /**
- * Defines the props for the unverified status modal component.
+ * Defines the props for the in-progress status modal component.
  */
-interface UnverifiedStatusModalProps {
+interface InProgressStatusModalProps {
   /** Controls whether the modal is open or closed. */
   isOpen: boolean;
   /** Function to call when the modal's open state changes. */
@@ -17,13 +17,13 @@ interface UnverifiedStatusModalProps {
 }
 
 /**
- * An informational modal that explains what the unverified status means.
- * This modal provides details about unverified detections in an image.
+ * An informational modal that explains what the in-progress status means.
+ * This modal provides details about partially verified detections in an image.
  *
- * @param {UnverifiedStatusModalProps} props The props for controlling the modal's state.
+ * @param {InProgressStatusModalProps} props The props for controlling the modal's state.
  */
-export const UnverifiedStatusModal = memo(
-  ({ isOpen, onOpenChange }: UnverifiedStatusModalProps) => {
+export const InProgressStatusModal = memo(
+  ({ isOpen, onOpenChange }: InProgressStatusModalProps) => {
     /**
      * Handles the modal close action
      */
@@ -34,34 +34,34 @@ export const UnverifiedStatusModal = memo(
     return (
       <AnnotationModalContainer isOpen={isOpen} onOpenChange={handleModalClose}>
         <AnnotationModalHeader
-          title="Unverified"
-          colorVariant="amber"
+          title="In Progress"
+          colorVariant="sky"
           description={
             <div className="text-left">
               <p className="mb-3">
-                This status indicates that none of the detections in the current image have been
-                verified yet.
+                This status indicates that some detections in the current image have been verified,
+                but others still require review.
               </p>
               <ul className="space-y-1 text-slate-600">
                 <li className="flex items-start">
-                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
                   <p>
-                    <strong className="font-medium text-slate-700">Not Yet Reviewed:</strong> All
-                    detections are still pending manual inspection.
+                    <strong className="font-medium text-slate-700">Partial Progress:</strong> Some
+                    detections have been verified, but not all.
                   </p>
                 </li>
                 <li className="flex items-start">
-                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
                   <p>
-                    <strong className="font-medium text-slate-700">Needs Verification:</strong> Each
-                    detection requires confirmation or correction before proceeding.
+                    <strong className="font-medium text-slate-700">Ongoing Review:</strong> Continue
+                    verifying remaining detections to complete the image.
                   </p>
                 </li>
                 <li className="flex items-start">
-                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                  <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-400" />
                   <p>
-                    <strong className="font-medium text-slate-700">Action Required:</strong> Start
-                    reviewing and verifying detections to mark this image as complete.
+                    <strong className="font-medium text-slate-700">Action Required:</strong> Review
+                    and verify all remaining detections to mark it as fully verified.
                   </p>
                 </li>
               </ul>
@@ -71,7 +71,7 @@ export const UnverifiedStatusModal = memo(
         <AnnotationModalFooter
           onConfirm={() => handleModalClose(false)}
           confirmText="Understood"
-          buttonVariant="warning"
+          buttonVariant="info"
           singleButton
         />
       </AnnotationModalContainer>
@@ -79,4 +79,4 @@ export const UnverifiedStatusModal = memo(
   }
 );
 
-UnverifiedStatusModal.displayName = "UnverifiedStatusModal";
+InProgressStatusModal.displayName = "InProgressStatusModal";
