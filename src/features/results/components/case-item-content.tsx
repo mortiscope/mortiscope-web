@@ -163,7 +163,16 @@ export const CaseItemContent = memo(
               {caseItem.verificationStatus === "verified"
                 ? "Verified"
                 : caseItem.verificationStatus === "in_progress"
-                  ? "In Progress"
+                  ? (() => {
+                      const percentage =
+                        caseItem.totalDetections && caseItem.totalDetections > 0
+                          ? (
+                              (caseItem.verifiedDetections / caseItem.totalDetections) *
+                              100
+                            ).toFixed(1)
+                          : "0.0";
+                      return `${percentage}% Progress`;
+                    })()
                   : caseItem.verificationStatus === "unverified"
                     ? "Unverified"
                     : "No Detections"}

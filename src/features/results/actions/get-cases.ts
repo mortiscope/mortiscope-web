@@ -42,6 +42,7 @@ export const getCases = async () => {
     const hasDetections = allDetections.length > 0;
     const unverifiedCount = allDetections.filter((d) => d.status === "model_generated").length;
     const totalCount = allDetections.length;
+    const verifiedCount = totalCount - unverifiedCount;
 
     let verificationStatus: "verified" | "in_progress" | "unverified" | "no_detections" =
       "no_detections";
@@ -56,6 +57,12 @@ export const getCases = async () => {
       verificationStatus = "in_progress";
     }
 
-    return { ...c, verificationStatus, hasDetections };
+    return {
+      ...c,
+      verificationStatus,
+      hasDetections,
+      totalDetections: totalCount,
+      verifiedDetections: verifiedCount,
+    };
   });
 };

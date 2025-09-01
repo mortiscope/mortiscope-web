@@ -99,7 +99,12 @@ export const CaseItem = memo(
               <CaseItemActions {...props} />
               {/* Renders the dropdown menu only on smaller screens (hidden on `lg` and up). */}
               <div className="flex items-center gap-1 lg:hidden">
-                <VerificationIndicator verificationStatus={caseItem.verificationStatus} />
+                <VerificationIndicator
+                  verificationStatus={caseItem.verificationStatus}
+                  totalDetections={caseItem.totalDetections}
+                  verifiedDetections={caseItem.verifiedDetections}
+                  showBadge={false}
+                />
                 <CaseItemDropdown {...props} isRenameActive={isRenameActive} />
               </div>
             </>

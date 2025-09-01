@@ -31,7 +31,13 @@ export const CaseItemActions = memo(
       // The main container is hidden by default and becomes a flex container on large screens and up.
       <div className="hidden flex-shrink-0 items-center gap-1 lg:flex">
         {/* Verified Indicator */}
-        <VerificationIndicator verificationStatus={caseItem.verificationStatus} className="mr-2" />
+        <VerificationIndicator
+          verificationStatus={caseItem.verificationStatus}
+          className="mr-2"
+          totalDetections={caseItem.totalDetections}
+          verifiedDetections={caseItem.verifiedDetections}
+          showBadge={false}
+        />
         {/* View Action */}
         <Tooltip>
           <TooltipTrigger asChild>

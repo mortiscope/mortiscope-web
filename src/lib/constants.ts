@@ -215,7 +215,7 @@ export const STATUS_CONFIG = {
     color: "text-emerald-500",
   },
   in_progress: {
-    label: "In Progress",
+    label: "Progress",
     icon: PiSealPercent,
     color: "text-sky-500",
   },
