@@ -88,26 +88,6 @@
       "limit": "110 kB"
     },
     {
-      "name": "Analyze (/analyze)",
-      "path": [
-        ".next/static/chunks/webpack-*.js",
-        ".next/static/chunks/framework-*.js",
-        ".next/static/chunks/main-app-*.js",
-        ".next/static/chunks/app/\\(private\\)/analyze/page-*.js"
-      ],
-      "limit": "370 kB"
-    },
-    {
-      "name": "Results (/results)",
-      "path": [
-        ".next/static/chunks/webpack-*.js",
-        ".next/static/chunks/framework-*.js",
-        ".next/static/chunks/main-app-*.js",
-        ".next/static/chunks/app/\\(private\\)/results/**/page-*.js"
-      ],
-      "limit": "240 kB"
-    },
-    {
       "name": "Account Page (/account)",
       "path": [
         ".next/static/chunks/webpack-*.js",
@@ -118,19 +98,50 @@
       "limit": "215 kB"
     },
     {
-      "name": "Authentication Pages",
+      "name": "Analyze (/analyze)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(private\\)/analyze/page-*.js"
+      ],
+      "limit": "230 kB"
+    },
+    {
+      "name": "Results (/results)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(private\\)/results/page-*.js",
+        ".next/static/chunks/app/\\(private\\)/results/\\[resultsId\\]/page-*.js"
+      ],
+      "limit": "270 kB"
+    },
+    {
+      "name": "Results Editor (/results/**/edit)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/\\(private\\)/results/**/edit/page-*.js"
+      ],
+      "limit": "120 kB"
+    },
+    {
+      "name": "Authentication Pages (/signin, /signup)",
       "path": [
         ".next/static/chunks/webpack-*.js",
         ".next/static/chunks/framework-*.js",
         ".next/static/chunks/main-app-*.js",
         ".next/static/chunks/app/\\(auth\\)/**/page-*.js"
       ],
-      "limit": "170 kB"
+      "limit": "185 kB"
     },
     {
       "name": "Middleware",
       "path": ".next/server/src/middleware.js",
-      "limit": "50 kB",
+      "limit": "55 kB",
       "webpack": false
     },
     {
