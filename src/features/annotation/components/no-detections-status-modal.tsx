@@ -47,7 +47,7 @@ export const NoDetectionsStatusModal = memo(
                   <span className="mt-1.5 mr-3 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
                   <p>
                     <strong className="font-medium text-slate-700">Empty Image:</strong> The
-                    analysis did not identify any objects or specimens.
+                    analysis did not identify any specimens.
                   </p>
                 </li>
                 <li className="flex items-start">

@@ -5,10 +5,12 @@ import { GoUnverified, GoVerified } from "react-icons/go";
 import { HiOutlinePencilSquare } from "react-icons/hi2";
 import { LuDownload, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { PiSealPercent, PiSealWarning } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { type ImageFile } from "@/features/images/components/results-images";
+import { STATUS_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /**
@@ -64,10 +66,17 @@ interface ImageCardProps {
  */
 export const ImageCard = memo(
   ({ imageFile, sortOption, onView, onEdit, onExport, onDelete }: ImageCardProps) => {
-    // Check if the image has detections and if all are verified
-    const hasDetections = imageFile.detections && imageFile.detections.length > 0;
-    const isFullyVerified =
-      hasDetections && imageFile.detections!.every((d) => d.status === "user_confirmed");
+    // Calculate the verification status of the image
+    const detections = imageFile.detections || [];
+    const verificationStatus: keyof typeof STATUS_CONFIG = (() => {
+      if (detections.length === 0) return "no_detections";
+
+      const verifiedCount = detections.filter((d) => d.status === "user_confirmed").length;
+
+      if (verifiedCount === detections.length) return "verified";
+      if (verifiedCount === 0) return "unverified";
+      return "in_progress";
+    })();
 
     return (
       <motion.div
@@ -85,16 +94,18 @@ export const ImageCard = memo(
           onClick={() => onView(imageFile.id)}
         >
           <Thumbnail imageFile={imageFile} className="h-full w-full" />
-          {/* Verification status icon which will only be shown if image has detections */}
-          {hasDetections && (
-            <div className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 shadow-md">
-              {isFullyVerified ? (
-                <GoVerified className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" />
-              ) : (
-                <GoUnverified className="h-4 w-4 text-amber-600 md:h-5 md:w-5" />
-              )}
-            </div>
-          )}
+          {/* Verification status icon */}
+          <div className="absolute top-2 right-2 rounded-full bg-white/90 p-1.5 shadow-md">
+            {verificationStatus === "verified" ? (
+              <GoVerified className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" />
+            ) : verificationStatus === "in_progress" ? (
+              <PiSealPercent className="h-4 w-4 text-sky-600 md:h-5 md:w-5" />
+            ) : verificationStatus === "unverified" ? (
+              <GoUnverified className="h-4 w-4 text-amber-600 md:h-5 md:w-5" />
+            ) : (
+              <PiSealWarning className="h-4 w-4 text-rose-600 md:h-5 md:w-5" />
+            )}
+          </div>
         </div>
         {/* A toolbar at the bottom of the card containing action buttons. */}
         <div className="flex w-full flex-col items-center justify-center p-1">
