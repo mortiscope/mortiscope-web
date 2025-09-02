@@ -14,7 +14,7 @@ type Props = {
  */
 export const NextAuthSessionProvider = ({ children }: Props) => {
   return (
-    <SessionProvider refetchInterval={30} refetchOnWindowFocus={true} refetchWhenOffline={false}>
+    <SessionProvider refetchInterval={300} refetchOnWindowFocus={true} refetchWhenOffline={false}>
       {children}
     </SessionProvider>
   );

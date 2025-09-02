@@ -7,7 +7,7 @@ import { getRecentExports } from "@/features/export/actions/get-recent-exports";
 /**
  * A custom hook that polls for the status of recent export jobs.
  *
- * It uses TanStack Query to fetch data periodically and shows toasts to 
+ * It uses TanStack Query to fetch data periodically and shows toasts to
  * the user when an export is completed or has failed. Once a job is handled,
  * it is marked as such to prevent duplicate notifications.
  */
@@ -22,8 +22,8 @@ export const useExportPoller = () => {
     queryFn: getRecentExports,
     // Poll every 5 seconds.
     refetchInterval: 5000,
-    // Keep polling even if the browser window is not in focus.
-    refetchIntervalInBackground: true,
+    // Disable background polling to reduce unnecessary database queries.
+    refetchIntervalInBackground: false,
     // Only run this query if the user is on the client-side.
     enabled: typeof window !== "undefined",
   });

@@ -11,5 +11,6 @@ export {
   deleteInactiveSession,
   handleSessionTracking,
   scheduleSessionDeletion,
+  syncRevokedSessionsJob,
   triggerSessionCleanup,
 } from "@/inngest/session";
