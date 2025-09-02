@@ -22,7 +22,7 @@ interface EmailUpdatedProps {
 }
 
 const domain = process.env.NEXT_PUBLIC_APP_URL;
-const contactEmail = process.env.CONTACT_EMAIL;
+const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 
 /**
  * Renders an email template to notify users that their account's email address has been updated.

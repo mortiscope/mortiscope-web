@@ -84,7 +84,7 @@ const serverConfig = {
       ? "MortiScope <onboarding@resend.dev>"
       : `MortiScope <noreply@${mailDomain}>`,
     resendApiKey: env.RESEND_API_KEY,
-    contactEmail: env.CONTACT_EMAIL,
+    contactEmail: env.NEXT_PUBLIC_CONTACT_EMAIL,
   },
   auth: {
     secret: env.AUTH_SECRET,

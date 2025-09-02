@@ -34,7 +34,7 @@ export const WelcomeEmail = ({ username }: WelcomeEmailProps) => {
   // Define link to the application's dashboard
   const buttonLink = `${domain}/dashboard`;
   // Render the contact email for correspondence
-  const contactEmail = process.env.CONTACT_EMAIL;
+  const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
   // Get the current year for the copyright notice
   const currentYear = new Date().getFullYear();
   // Create a personalized greeting with a fallback

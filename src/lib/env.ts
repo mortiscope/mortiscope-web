@@ -17,11 +17,11 @@ const envSchema = z.object({
 
   // Email service
   RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
-  CONTACT_EMAIL: z.string().pipe(z.email()),
 
   // Application URLs
   NEXT_PUBLIC_APP_URL: z.string().pipe(z.url()),
   NEXT_PUBLIC_FASTAPI_URL: z.string().pipe(z.url()),
+  NEXT_PUBLIC_CONTACT_EMAIL: z.string().pipe(z.email()),
 
   // Google OAuth Provider
   GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
@@ -56,9 +56,13 @@ const envSchema = z.object({
   FASTAPI_SECRET_KEY: z.string().min(1, "FASTAPI_SECRET_KEY is required"),
 
   // MaxMind GeoIP
-  MAXMIND_LICENSE_KEY: z
+  MAXMIND_LICENSE_KEY: z.string().min(1, "MAXMIND_LICENSE_KEY is required."),
+
+  // Encryption
+  ENCRYPTION_KEY: z
     .string()
-    .min(1, "MAXMIND_LICENSE_KEY is required."),
+    .length(64, "ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)")
+    .regex(/^[0-9a-f]{64}$/i, "ENCRYPTION_KEY must be a valid hex string"),
 });
 
 /**
@@ -68,6 +72,7 @@ const envSchema = z.object({
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().pipe(z.url()),
   NEXT_PUBLIC_FASTAPI_URL: z.string().pipe(z.url()),
+  NEXT_PUBLIC_CONTACT_EMAIL: z.string().pipe(z.email()),
 });
 
 /**
@@ -94,6 +99,7 @@ function validateClientEnv() {
     return clientEnvSchema.parse({
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
       NEXT_PUBLIC_FASTAPI_URL: process.env.NEXT_PUBLIC_FASTAPI_URL,
+      NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {

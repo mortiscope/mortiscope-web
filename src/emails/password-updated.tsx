@@ -17,7 +17,7 @@ import {
 import * as React from "react";
 
 const domain = process.env.NEXT_PUBLIC_APP_URL;
-const contactEmail = process.env.CONTACT_EMAIL;
+const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 
 /**
  * Renders an email template to confirm that a user's password has been changed.
