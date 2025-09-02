@@ -77,6 +77,15 @@ export async function revokeAllSessions(userId: string, currentSessionToken?: st
             }
           }
         }
+
+        // Add revoked sessions to Redis for immediate validation
+        try {
+          const { revokeSessionsInRedis } = await import("@/lib/redis-session");
+          const tokensToRevoke = blacklistEntries.map((entry) => entry.sessionToken);
+          await revokeSessionsInRedis(tokensToRevoke);
+        } catch (redisError) {
+          console.error("Failed to add revoked sessions to Redis:", redisError);
+        }
       } catch (error) {
         // Outer catch that handles broader, unexpected errors during the looping process.
         console.error("Failed to blacklist JWT tokens:", error);

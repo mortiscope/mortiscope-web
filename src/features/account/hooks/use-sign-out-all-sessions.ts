@@ -88,7 +88,7 @@ export const useSignOutAllSessions = (
           // A delay allows the user to see the success message before being redirected.
           setTimeout(async () => {
             await signOut({ redirect: false });
-            window.location.href = "/signin";
+            window.location.href = "/";
           }, 1500);
         } else {
           // If only signing out other devices, show a success message and call the `onSuccess` callback.

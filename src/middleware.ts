@@ -27,27 +27,39 @@ export default async function middleware(req: NextRequest) {
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
     if (token) {
-      // For JWT sessions, validate session via API endpoint
+      // For JWT sessions, validate session token
       const sessionToken = token.sessionId as string;
 
       if (sessionToken) {
         try {
-          // Use fetch to validate session without heavy DB imports
-          const response = await fetch(new URL("/api/session", req.url), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sessionToken, updateActivity: false }),
-          });
+          // Import Redis session utilities
+          const { isSessionRevoked } = await import("@/lib/redis-session");
 
-          if (response.ok) {
-            const { valid } = await response.json();
-            isLoggedIn = valid;
+          // Check Redis first (fast path)
+          const revokedStatus = await isSessionRevoked(sessionToken);
+
+          if (revokedStatus === true) {
+            // Session is revoked in Redis
+            isLoggedIn = false;
+          } else if (revokedStatus === false) {
+            // Session is valid in Redis
+            isLoggedIn = true;
           } else {
-            // API call failed, fall back to basic JWT validation
-            isLoggedIn = !!token;
+            // Redis is unavailable (null), fall back to database check
+            const { db } = await import("@/db");
+            const { sessions } = await import("@/db/schema");
+            const { eq } = await import("drizzle-orm");
+
+            const sessionExists = await db
+              .select()
+              .from(sessions)
+              .where(eq(sessions.sessionToken, sessionToken))
+              .limit(1);
+
+            isLoggedIn = sessionExists.length > 0;
           }
         } catch {
-          // If API call fails, fall back to basic JWT validation
+          // If validation fails, fall back to basic JWT validation
           isLoggedIn = !!token;
         }
       } else {
@@ -118,7 +130,7 @@ export default async function middleware(req: NextRequest) {
 
   // Protect all non-public routes
   if (!isLoggedIn && !isPublicRoute) {
-    return NextResponse.redirect(new URL("/signin", nextUrl));
+    return NextResponse.redirect(new URL("/", nextUrl));
   }
 
   // Update session activity for authenticated users on protected routes
@@ -134,7 +146,7 @@ export default async function middleware(req: NextRequest) {
         fetch(new URL("/api/session", req.url), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionToken, updateActivity: true }),
+          body: JSON.stringify({ sessionToken }),
         }).catch(() => {
           // Session activity update failed, but don't block the request
         });

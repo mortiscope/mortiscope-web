@@ -48,6 +48,14 @@ export async function revokeSession(sessionId: string, userId: string) {
           sessionToken,
           expiresAt: session.expires,
         });
+
+        // Add to Redis for immediate revocation
+        try {
+          const { revokeSessionsInRedis } = await import("@/lib/redis-session");
+          await revokeSessionsInRedis([sessionToken]);
+        } catch (redisError) {
+          console.error("Failed to add revoked session to Redis:", redisError);
+        }
       } catch (error) {
         // Gracefully handle cases where the token might already be in the blacklist.
         if (
