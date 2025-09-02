@@ -318,6 +318,9 @@ importers:
       '@types/node':
         specifier: ^24.3.1
         version: 24.3.1
+      '@types/prompts':
+        specifier: ^2.4.9
+        version: 2.4.9
       '@types/react':
         specifier: ^19.1.12
         version: 19.1.12
@@ -393,6 +396,9 @@ importers:
       prettier-plugin-tailwindcss:
         specifier: ^0.6.14
         version: 0.6.14(prettier@3.6.2)
+      prompts:
+        specifier: ^2.4.2
+        version: 2.4.2
       react-email:
         specifier: ^4.2.9
         version: 4.2.9
@@ -3812,6 +3818,9 @@ packages:
 
   '@types/prismjs@1.26.5':
     resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
+
+  '@types/prompts@2.4.9':
+    resolution: {integrity: sha512-qTxFi6Buiu8+50/+3DGIWLHM6QuWsEKugJnnP6iv2Mc4ncxE4A/OJkjuVOA+5X0X1S/nq5VJRa8Lu+nwcvbrKA==}
 
   '@types/react-dom@19.0.4':
     resolution: {integrity: sha512-4fSQ8vWFkg+TGhePfUzVmat3eC14TXYSsiiDSLI0dVLsrm9gZFABjPy/Qu6TKgl1tq1Bu1yDsuQgY3A3DOjCcg==}
@@ -7787,8 +7796,8 @@ packages:
   third-party-web@0.27.0:
     resolution: {integrity: sha512-h0JYX+dO2Zr3abCQpS6/uFjujaOjA1DyDzGQ41+oFn9VW/ARiq9g5ln7qEP9+BTzDpOMyIfsfj4OvfgXAsMUSA==}
 
-  third-party-web@0.28.0:
-    resolution: {integrity: sha512-4P798O67JmIKRJfJ1HSOkIsZrx2+FuaN2jTQX+imHXFPbGp17KSMDabYxrRT011B3gBzaoHFhUkBlEkNZN8vuQ==}
+  third-party-web@0.29.0:
+    resolution: {integrity: sha512-nBDSJw5B7Sl1YfsATG2XkW5qgUPODbJhXw++BKygi9w6O/NKS98/uY/nR/DxDq2axEjL6halHW1v+jhm/j1DBQ==}
 
   thirty-two@1.0.2:
     resolution: {integrity: sha512-OEI0IWCe+Dw46019YLl6V10Us5bi574EvlJEOcAkB29IzQ/mYD1A6RyNHLjZPiHCmuodxvgF6U+vZO1L15lxVA==}
@@ -10273,7 +10282,7 @@ snapshots:
   '@paulirish/trace_engine@0.0.59':
     dependencies:
       legacy-javascript: 0.0.1
-      third-party-web: 0.28.0
+      third-party-web: 0.29.0
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -12278,6 +12287,11 @@ snapshots:
       pg-types: 2.2.0
 
   '@types/prismjs@1.26.5': {}
+
+  '@types/prompts@2.4.9':
+    dependencies:
+      '@types/node': 24.3.1
+      kleur: 3.0.3
 
   '@types/react-dom@19.0.4(@types/react@19.0.10)':
     dependencies:
@@ -16888,7 +16902,7 @@ snapshots:
 
   third-party-web@0.27.0: {}
 
-  third-party-web@0.28.0: {}
+  third-party-web@0.29.0: {}
 
   thirty-two@1.0.2: {}
 
