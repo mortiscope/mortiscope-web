@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { hasValidAuthSession } from "@/lib/auth";
 import {
   apiAuthPrefix,
   authRoutes,
@@ -10,71 +9,60 @@ import {
 } from "@/routes";
 
 /**
- * The main middleware function, wrapped in the `auth` helper from NextAuth.js.
- * It intercepts requests to enforce authentication rules across the application.
- *
+ * Helper function to validate session by calling the validation API
+ */
+async function validateSession(req: NextRequest): Promise<boolean> {
+  try {
+    const response = await fetch(new URL("/api/validate", req.url), {
+      method: "POST",
+      headers: {
+        cookie: req.headers.get("cookie") || "",
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return data.isValid === true;
+  } catch {
+    // Fallback to cookie check if API call fails
+    const sessionCookie =
+      req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
+    return !!sessionCookie;
+  }
+}
+
+/**
+ * Helper function to validate auth session
+ */
+async function validateAuthSession(req: NextRequest): Promise<boolean> {
+  try {
+    const response = await fetch(new URL("/api/auth/check", req.url), {
+      method: "GET",
+      headers: {
+        cookie: req.headers.get("cookie") || "",
+      },
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+
+    const data = await response.json();
+    return data.isValid === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The main middleware function that enforces authentication rules across the application.
  * @param req The incoming Next.js request object.
  */
 export default async function middleware(req: NextRequest) {
   const { nextUrl } = req;
-
-  // Check for JWT token using NextAuth's getToken function
-  let isLoggedIn = false;
-
-  try {
-    // Import getToken function for JWT sessions
-    const { getToken } = await import("next-auth/jwt");
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-
-    if (token) {
-      // For JWT sessions, validate session token
-      const sessionToken = token.sessionId as string;
-
-      if (sessionToken) {
-        try {
-          // Import Redis session utilities
-          const { isSessionRevoked } = await import("@/lib/redis-session");
-
-          // Check Redis first (fast path)
-          const revokedStatus = await isSessionRevoked(sessionToken);
-
-          if (revokedStatus === true) {
-            // Session is revoked in Redis
-            isLoggedIn = false;
-          } else if (revokedStatus === false) {
-            // Session is valid in Redis
-            isLoggedIn = true;
-          } else {
-            // Redis is unavailable (null), fall back to database check
-            const { db } = await import("@/db");
-            const { sessions } = await import("@/db/schema");
-            const { eq } = await import("drizzle-orm");
-
-            const sessionExists = await db
-              .select()
-              .from(sessions)
-              .where(eq(sessions.sessionToken, sessionToken))
-              .limit(1);
-
-            isLoggedIn = sessionExists.length > 0;
-          }
-        } catch {
-          // If validation fails, fall back to basic JWT validation
-          isLoggedIn = !!token;
-        }
-      } else {
-        // No session token in JWT, use basic validation
-        isLoggedIn = !!token;
-      }
-    } else {
-      isLoggedIn = false;
-    }
-  } catch {
-    // Fallback to cookie check if token function fails
-    const sessionCookie =
-      req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
-    isLoggedIn = !!sessionCookie;
-  }
 
   // Categorize the current route to apply specific rules
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
@@ -82,36 +70,33 @@ export default async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
+  // Allow all public API routes to pass through without checks
+  if (isApiAuthRoute || isPublicApiRoute) {
+    return NextResponse.next();
+  }
+
+  // Validate session once for all protected routes
+  const isLoggedIn = await validateSession(req);
+
   // Handle NextAuth error redirects for OAuth 2FA
   if (
     nextUrl.pathname === "/api/auth/error" &&
     nextUrl.searchParams.get("error") === "AccessDenied"
   ) {
-    try {
-      const hasAuthSession = await hasValidAuthSession();
-      if (hasAuthSession) {
-        // Redirect to 2FA page if there's a valid auth session
-        return NextResponse.redirect(new URL("/signin/two-factor", nextUrl));
-      }
-    } catch {
-      // Failed to check auth session, continue with normal error flow
+    const hasAuthSession = await validateAuthSession(req);
+    if (hasAuthSession) {
+      return NextResponse.redirect(new URL("/signin/two-factor", nextUrl));
     }
-  }
-
-  // Allow all public API routes to pass through without checks
-  if (isApiAuthRoute || isPublicApiRoute) {
-    return NextResponse.next();
   }
 
   // Handle authentication-related routes
   if (isAuthRoute) {
     // Special handling for 2FA routes - require valid auth session
     if (nextUrl.pathname === "/signin/two-factor" || nextUrl.pathname === "/signin/recovery") {
-      const hasAuthSession = await hasValidAuthSession();
+      const hasAuthSession = await validateAuthSession(req);
       if (!hasAuthSession) {
         return NextResponse.redirect(new URL("/signin?error=no-session", nextUrl));
       }
-      // Allow access if there's a valid auth session
       return NextResponse.next();
     }
 
@@ -119,7 +104,6 @@ export default async function middleware(req: NextRequest) {
     if (isLoggedIn) {
       return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
     }
-    // If not logged in, allow them to access the auth page.
     return NextResponse.next();
   }
 
@@ -135,28 +119,19 @@ export default async function middleware(req: NextRequest) {
 
   // Update session activity for authenticated users on protected routes
   if (isLoggedIn && !isPublicRoute && !isApiAuthRoute && !isPublicApiRoute) {
-    try {
-      // Get session token from JWT for activity update
-      const { getToken } = await import("next-auth/jwt");
-      const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-      const sessionToken = token?.sessionId as string;
-
-      if (sessionToken) {
-        // Update session activity via API endpoint (fire and forget)
-        fetch(new URL("/api/session", req.url), {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionToken }),
-        }).catch(() => {
-          // Session activity update failed, but don't block the request
-        });
-      }
-    } catch {
+    // Fire and forget. This doesn't await to avoid blocking the request
+    fetch(new URL("/api/session", req.url), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: req.headers.get("cookie") || "",
+      },
+      body: JSON.stringify({}),
+    }).catch(() => {
       // Session activity update failed, but don't block the request
-    }
+    });
   }
 
-  // If none of the above conditions are met, allow the request to proceed
   return NextResponse.next();
 }
 

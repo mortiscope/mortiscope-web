@@ -1,6 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 import { db } from "@/db";
 import { userSessions } from "@/db/schema";
@@ -20,7 +21,14 @@ const ACTIVITY_UPDATE_THROTTLE_MS = 5 * 60 * 1000;
  */
 export async function POST(request: NextRequest) {
   try {
-    const { sessionToken } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    let sessionToken = body.sessionToken;
+
+    // If no sessionToken provided, extract it from cookies
+    if (!sessionToken) {
+      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+      sessionToken = token?.sessionId as string;
+    }
 
     if (!sessionToken || typeof sessionToken !== "string") {
       return NextResponse.json({ error: "Invalid session token" }, { status: 400 });

@@ -34,4 +34,9 @@ export const publicRoutes: string[] = ["/", "/verification"];
  * These routes are not protected by authentication.
  * @type {string[]}
  */
-export const publicApiRoutes: string[] = ["/api/inngest", "/api/session"];
+export const publicApiRoutes: string[] = [
+  "/api/inngest",
+  "/api/session",
+  "/api/validate",
+  "/api/auth/check",
+];
