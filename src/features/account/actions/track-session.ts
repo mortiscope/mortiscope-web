@@ -6,6 +6,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { userSessions } from "@/db/schema";
 import { parseSessionInfo } from "@/features/account/utils/parse-session";
+import { encrypt } from "@/lib/crypto";
 import { inngest } from "@/lib/inngest";
 
 /**
@@ -27,6 +28,9 @@ export async function trackSession(data: SessionData) {
   try {
     // Parse the user agent and IP to get detailed device and location info.
     const sessionInfo = await parseSessionInfo(data.userAgent, data.ipAddress);
+
+    // Encrypt the IP address for secure storage while allowing decryption for display.
+    const encryptedIpAddress = encrypt(data.ipAddress);
 
     // Dynamically import the `sessions` schema to avoid circular dependency issues.
     const { sessions } = await import("@/db/schema");
@@ -56,8 +60,7 @@ export async function trackSession(data: SessionData) {
         and(
           eq(userSessions.userId, data.userId),
           eq(userSessions.browserName, sessionInfo.browserName),
-          eq(userSessions.osName, sessionInfo.osName),
-          eq(userSessions.ipAddress, data.ipAddress)
+          eq(userSessions.osName, sessionInfo.osName)
         )
       )
       .orderBy(desc(userSessions.lastActiveAt))
@@ -83,7 +86,7 @@ export async function trackSession(data: SessionData) {
         .set({
           lastActiveAt: now,
           userAgent: data.userAgent,
-          ipAddress: data.ipAddress,
+          ipAddress: encryptedIpAddress,
           country: sessionInfo.country,
           region: sessionInfo.region,
           city: sessionInfo.city,
@@ -100,7 +103,7 @@ export async function trackSession(data: SessionData) {
           sessionToken: data.sessionToken,
           lastActiveAt: now,
           userAgent: data.userAgent,
-          ipAddress: data.ipAddress,
+          ipAddress: encryptedIpAddress,
           country: sessionInfo.country,
           region: sessionInfo.region,
           city: sessionInfo.city,
@@ -124,7 +127,7 @@ export async function trackSession(data: SessionData) {
         browserVersion: sessionInfo.browserVersion,
         osName: sessionInfo.osName,
         osVersion: sessionInfo.osVersion,
-        ipAddress: data.ipAddress,
+        ipAddress: encryptedIpAddress,
         country: sessionInfo.country,
         region: sessionInfo.region,
         city: sessionInfo.city,

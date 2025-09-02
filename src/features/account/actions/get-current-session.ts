@@ -11,6 +11,7 @@ import {
   formatOperatingSystem,
   isSessionActive,
 } from "@/features/account/utils/format-session";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * Defines the structured, formatted data shape for a user session
@@ -72,7 +73,7 @@ export async function getCurrentSession(userId: string): Promise<UserSessionInfo
         currentSession.userAgent
       ),
       location: formatLocation(currentSession.city, currentSession.region, currentSession.country),
-      ipAddress: currentSession.ipAddress,
+      ipAddress: decrypt(currentSession.ipAddress),
       dateAdded: currentSession.createdAt,
       lastActive: currentSession.lastActiveAt,
       isCurrentSession: currentSession.isCurrentSession,

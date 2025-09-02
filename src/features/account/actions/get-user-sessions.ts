@@ -12,6 +12,7 @@ import {
   formatOperatingSystem,
   isSessionActive,
 } from "@/features/account/utils/format-session";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * A server action to fetch all active sessions for a given user ID.
@@ -57,7 +58,7 @@ export async function getUserSessions(userId: string): Promise<UserSessionInfo[]
         operatingSystem,
         device,
         location,
-        ipAddress: session.ipAddress,
+        ipAddress: decrypt(session.ipAddress),
         dateAdded: session.createdAt,
         lastActive: session.lastActiveAt,
         isCurrentSession: session.isCurrentSession,
