@@ -145,7 +145,9 @@ export const ResultsAnalysis = ({
 
     // Count how many of those have all detections verified.
     const reviewedCount = imagesWithDetections.filter((upload) =>
-      upload.detections.every((d) => d.status === "user_confirmed")
+      upload.detections.every(
+        (d) => d.status === "user_confirmed" || d.status === "user_edited_confirmed"
+      )
     ).length;
 
     return {

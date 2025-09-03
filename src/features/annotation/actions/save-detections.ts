@@ -42,13 +42,14 @@ function findOldestStage(detections: Detection[]): string | null {
 export interface NewDetection {
   uploadId: string;
   label: string;
+  originalLabel: string;
   confidence: number | null;
   originalConfidence: number | null;
   xMin: number;
   yMin: number;
   xMax: number;
   yMax: number;
-  status: "user_created" | "user_confirmed" | "user_edited";
+  status: "user_created" | "user_confirmed" | "user_edited" | "user_edited_confirmed";
 }
 
 /**
@@ -62,7 +63,12 @@ export interface ModifiedDetection {
   yMin: number;
   xMax: number;
   yMax: number;
-  status: "user_created" | "user_confirmed" | "user_edited" | "model_generated";
+  status:
+    | "user_created"
+    | "user_confirmed"
+    | "user_edited"
+    | "user_edited_confirmed"
+    | "model_generated";
 }
 
 /**
@@ -147,7 +153,34 @@ export async function saveDetections(
 
     // Handle the modifications by iterating and updating each modified detection individually.
     if (changes.modified.length > 0) {
+      // Fetch original detections to compare and determine if they were actually edited
+      const originalDetections = await db.query.detections.findMany({
+        where: and(eq(detections.uploadId, imageId), isNull(detections.deletedAt)),
+      });
+      const originalMap = new Map(originalDetections.map((det) => [det.id, det]));
+
       for (const d of changes.modified) {
+        const original = originalMap.get(d.id);
+
+        // Determine if the detection was actually edited or just confirmed
+        const wasEdited =
+          original &&
+          (d.label !== original.label ||
+            d.xMin !== original.xMin ||
+            d.yMin !== original.yMin ||
+            d.xMax !== original.xMax ||
+            d.yMax !== original.yMax);
+
+        // Determine the correct status based on whether it was edited and/or confirmed
+        let finalStatus: "user_confirmed" | "user_edited" | "user_edited_confirmed";
+        if (wasEdited) {
+          // If edited and user clicked verify, mark as user edited confirmed
+          finalStatus = d.status === "user_confirmed" ? "user_edited_confirmed" : "user_edited";
+        } else {
+          // If not edited, use the status from frontend
+          finalStatus = d.status === "user_confirmed" ? "user_confirmed" : "user_edited";
+        }
+
         await db
           .update(detections)
           .set({
@@ -157,8 +190,7 @@ export async function saveDetections(
             yMin: d.yMin,
             xMax: d.xMax,
             yMax: d.yMax,
-            // Ensure the status reflects the user's action.
-            status: d.status === "user_confirmed" ? "user_confirmed" : "user_edited",
+            status: finalStatus,
             lastModifiedById: userId,
           })
           .where(

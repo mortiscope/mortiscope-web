@@ -58,7 +58,7 @@ export const DetailsAnnotationPanel = memo(() => {
         total[detection.label]++;
 
         // Increment verified or unverified count based on status
-        if (detection.status === "user_confirmed") {
+        if (detection.status === "user_confirmed" || detection.status === "user_edited_confirmed") {
           verified[detection.label]++;
         } else {
           unverified[detection.label]++;

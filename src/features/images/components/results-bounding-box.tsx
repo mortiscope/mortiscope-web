@@ -52,7 +52,9 @@ export const ResultsBoundingBox = memo(
             <TooltipContent>
               {/* The content of the tooltip, displaying the formatted class label and optionally the confidence score. */}
               <p className="font-inter">
-                {det.status === "user_confirmed" || det.confidence === null
+                {det.status === "user_confirmed" ||
+                det.status === "user_edited_confirmed" ||
+                det.confidence === null
                   ? formatLabel(det.label)
                   : `${formatLabel(det.label)}: ${formatConfidence(det.confidence)}`}
               </p>

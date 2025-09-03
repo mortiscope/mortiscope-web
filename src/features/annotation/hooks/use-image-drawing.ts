@@ -130,6 +130,7 @@ export const useImageDrawing = ({
       addDetection({
         uploadId: imageId,
         label: "adult",
+        originalLabel: "adult",
         confidence: null,
         xMin,
         yMin,

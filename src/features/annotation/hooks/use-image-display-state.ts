@@ -39,9 +39,13 @@ export const useImageDisplayState = ({ image, onTransformed }: UseImageDisplaySt
   const detections = useMemo(() => {
     if (displayFilter === "all") return allDetections;
     if (displayFilter === "verified")
-      return allDetections.filter((det) => det.status === "user_confirmed");
+      return allDetections.filter(
+        (det) => det.status === "user_confirmed" || det.status === "user_edited_confirmed"
+      );
     if (displayFilter === "unverified")
-      return allDetections.filter((det) => det.status !== "user_confirmed");
+      return allDetections.filter(
+        (det) => det.status !== "user_confirmed" && det.status !== "user_edited_confirmed"
+      );
     return allDetections;
   }, [allDetections, displayFilter]);
 

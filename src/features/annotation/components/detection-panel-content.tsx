@@ -17,7 +17,9 @@ export const DetectionPanelContent = memo(function DetectionPanelContent() {
   if (!displayedDetection) return null;
 
   const selectedDetection = displayedDetection;
-  const isVerified = selectedDetection.status === "user_confirmed";
+  const isVerified =
+    selectedDetection.status === "user_confirmed" ||
+    selectedDetection.status === "user_edited_confirmed";
 
   return (
     <div className="space-y-3">

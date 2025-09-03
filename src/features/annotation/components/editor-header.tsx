@@ -104,7 +104,8 @@ export const EditorHeader = memo(
       if (detections.length === 0) return "no_detections";
 
       const verifiedCount = detections.filter(
-        (detection) => detection.status === "user_confirmed"
+        (detection) =>
+          detection.status === "user_confirmed" || detection.status === "user_edited_confirmed"
       ).length;
 
       if (verifiedCount === detections.length) return "verified";

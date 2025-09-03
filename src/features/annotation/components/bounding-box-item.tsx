@@ -155,7 +155,9 @@ export const BoundingBoxItem = memo(function BoundingBoxItem({
       </TooltipTrigger>
       <TooltipContent>
         <p className="font-inter">
-          {detection.status === "user_confirmed" || detection.confidence === null
+          {detection.status === "user_confirmed" ||
+          detection.status === "user_edited_confirmed" ||
+          detection.confidence === null
             ? formatLabel(detection.label)
             : `${formatLabel(detection.label)}: ${formatConfidence(detection.confidence)}`}
         </p>

@@ -1,5 +1,5 @@
 {
-  "id": "c202451a-1a27-4257-9458-f85e6a1b737e",
+  "id": "ea578392-c504-40c7-be8c-74fdec664366",
   "prevId": "70065164-7fae-4a29-947e-f9200a0b5763",
   "version": "7",
   "dialect": "postgresql",
@@ -605,6 +605,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "original_label": {
+          "name": "original_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "confidence": {
           "name": "confidence",
           "type": "real",
@@ -703,6 +709,21 @@
           "columns": [
             {
               "expression": "deleted_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "detections_status_idx": {
+          "name": "detections_status_idx",
+          "columns": [
+            {
+              "expression": "status",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1909,7 +1930,8 @@
         "model_generated",
         "user_created",
         "user_confirmed",
-        "user_edited"
+        "user_edited",
+        "user_edited_confirmed"
       ]
     },
     "public.export_format": {

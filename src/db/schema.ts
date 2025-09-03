@@ -33,6 +33,7 @@ export const detectionStatusEnum = pgEnum("detection_status", [
   "user_created",
   "user_confirmed",
   "user_edited",
+  "user_edited_confirmed",
 ]);
 
 // Enum to define the possible statuses of an export job.
@@ -294,6 +295,7 @@ export const detections = pgTable(
       .notNull()
       .references(() => uploads.id, { onDelete: "cascade" }),
     label: text("label").notNull(),
+    originalLabel: text("original_label").notNull(),
     confidence: real("confidence"),
     originalConfidence: real("original_confidence"),
     xMin: real("x_min").notNull(),
@@ -317,6 +319,7 @@ export const detections = pgTable(
   (table) => [
     index("detections_upload_id_idx").on(table.uploadId),
     index("detections_deleted_at_idx").on(table.deletedAt),
+    index("detections_status_idx").on(table.status),
   ]
 );
 

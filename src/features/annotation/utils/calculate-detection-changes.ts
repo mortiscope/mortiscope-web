@@ -35,13 +35,18 @@ export const calculateDetectionChanges = (
     .map((d) => ({
       uploadId: imageId,
       label: d.label,
+      originalLabel: d.label,
       confidence: d.confidence,
       originalConfidence: d.originalConfidence,
       xMin: d.xMin,
       yMin: d.yMin,
       xMax: d.xMax,
       yMax: d.yMax,
-      status: d.status as "user_created" | "user_confirmed" | "user_edited",
+      status: d.status as
+        | "user_created"
+        | "user_confirmed"
+        | "user_edited"
+        | "user_edited_confirmed",
     }));
 
   /**

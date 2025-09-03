@@ -12,7 +12,7 @@ import type { cases } from "@/db/schema";
 import { ResultsDetailsSkeleton } from "@/features/results/components/results-skeleton";
 
 /**
- * The props for the ResultsDetails component.
+ * The props for the results details component.
  */
 interface ResultsDetailsProps {
   /**

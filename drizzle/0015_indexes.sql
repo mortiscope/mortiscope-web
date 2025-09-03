@@ -1,3 +1,5 @@
+ALTER TYPE "public"."detection_status" ADD VALUE 'user_edited_confirmed';--> statement-breakpoint
+ALTER TABLE "detections" ADD COLUMN "original_label" text NOT NULL;--> statement-breakpoint
 CREATE INDEX "accounts_user_id_idx" ON "accounts" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "case_audit_logs_case_id_idx" ON "case_audit_logs" USING btree ("case_id");--> statement-breakpoint
 CREATE INDEX "case_audit_logs_case_id_timestamp_idx" ON "case_audit_logs" USING btree ("case_id","timestamp");--> statement-breakpoint
@@ -6,6 +8,7 @@ CREATE INDEX "cases_status_idx" ON "cases" USING btree ("status");--> statement-
 CREATE INDEX "cases_created_at_idx" ON "cases" USING btree ("created_at");--> statement-breakpoint
 CREATE INDEX "detections_upload_id_idx" ON "detections" USING btree ("upload_id");--> statement-breakpoint
 CREATE INDEX "detections_deleted_at_idx" ON "detections" USING btree ("deleted_at");--> statement-breakpoint
+CREATE INDEX "detections_status_idx" ON "detections" USING btree ("status");--> statement-breakpoint
 CREATE INDEX "email_change_tokens_user_id_idx" ON "email_change_tokens" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "exports_user_id_idx" ON "exports" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "exports_case_id_idx" ON "exports" USING btree ("case_id");--> statement-breakpoint

@@ -57,7 +57,8 @@ export const DetailsSettingsPanel = () => {
 
   // Check if all detections are already verified
   const allDetectionsVerified =
-    hasDetections && detections.every((d) => d.status === "user_confirmed");
+    hasDetections &&
+    detections.every((d) => d.status === "user_confirmed" || d.status === "user_edited_confirmed");
 
   // Local state for modals
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

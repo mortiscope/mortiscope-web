@@ -71,7 +71,9 @@ export const ImageCard = memo(
     const verificationStatus: keyof typeof STATUS_CONFIG = (() => {
       if (detections.length === 0) return "no_detections";
 
-      const verifiedCount = detections.filter((d) => d.status === "user_confirmed").length;
+      const verifiedCount = detections.filter(
+        (d) => d.status === "user_confirmed" || d.status === "user_edited_confirmed"
+      ).length;
 
       if (verifiedCount === detections.length) return "verified";
       if (verifiedCount === 0) return "unverified";
