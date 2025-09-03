@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { DashboardContainer } from "@/features/dashboard/components/dashboard-container";
 
 export async function generateMetadata(): Promise<Metadata> {
   const session = await auth();
@@ -28,7 +29,9 @@ const DashboardPage = async () => {
     redirect("/signin");
   }
 
-  return <div></div>;
+  const firstName = session.user.name?.split(" ")[0] ?? "User";
+
+  return <DashboardContainer firstName={firstName} />;
 };
 
 export default DashboardPage;
