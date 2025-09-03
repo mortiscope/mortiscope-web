@@ -140,6 +140,53 @@ export const DETECTION_CLASS_COLORS: Record<string, string> = {
 export const DETECTION_CLASS_ORDER = ["instar_1", "instar_2", "instar_3", "pupa", "adult"];
 
 /**
+ * Defines the canonical order for PMI time intervals for consistent display in charts.
+ * @constant {string[]}
+ */
+export const PMI_INTERVAL_ORDER = [
+  "less_than_12h",
+  "12_to_24h",
+  "24_to_36h",
+  "36_to_48h",
+  "48_to_60h",
+  "60_to_72h",
+  "more_than_72h",
+];
+
+/**
+ * A mapping of PMI time interval keys to their display labels.
+ * @constant {Record<string, string>}
+ */
+export const PMI_INTERVAL_LABELS: Record<string, string> = {
+  less_than_12h: "< 12h",
+  "12_to_24h": "12-24h",
+  "24_to_36h": "24-36h",
+  "36_to_48h": "36-48h",
+  "48_to_60h": "48-60h",
+  "60_to_72h": "60-72h",
+  more_than_72h: "> 72h",
+  less_than_24h: "< 24h",
+};
+
+/**
+ * Defines the canonical order for sampling density ranges for consistent display in charts.
+ * @constant {string[]}
+ */
+export const SAMPLING_DENSITY_ORDER = ["1_to_4", "5_to_8", "9_to_12", "13_to_16", "17_to_20"];
+
+/**
+ * A mapping of sampling density range keys to their display labels.
+ * @constant {Record<string, string>}
+ */
+export const SAMPLING_DENSITY_LABELS: Record<string, string> = {
+  "1_to_4": "1-4",
+  "5_to_8": "5-8",
+  "9_to_12": "9-12",
+  "13_to_16": "13-16",
+  "17_to_20": "17-20",
+};
+
+/**
  * Local storage key for storing user preference to hide the annotation save confirmation modal.
  * @constant {string}
  */
@@ -213,20 +260,36 @@ export const STATUS_CONFIG = {
     label: "Verified",
     icon: GoVerified,
     color: "text-emerald-500",
+    hex: "#10b981",
   },
   in_progress: {
-    label: "Progress",
+    label: "In Progress",
     icon: PiSealPercent,
     color: "text-sky-500",
+    hex: "#0ea5e9",
   },
   unverified: {
     label: "Unverified",
     icon: GoUnverified,
     color: "text-amber-500",
+    hex: "#f59e0b",
   },
   no_detections: {
     label: "No Detections",
     icon: PiSealWarning,
     color: "text-rose-500",
+    hex: "#ef4444",
+  },
+  verified_prediction: {
+    label: "Verified Prediction",
+    icon: GoVerified,
+    color: "text-emerald-500",
+    hex: "#10b981",
+  },
+  corrected_prediction: {
+    label: "Corrected Prediction",
+    icon: PiSealPercent,
+    color: "text-amber-500",
+    hex: "#f59e0b",
   },
 } as const;
