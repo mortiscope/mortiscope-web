@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import {
   FaBrain,
   FaCamera,
@@ -17,6 +18,40 @@ import { formatConfidence } from "@/lib/utils";
 interface DashboardMetricsGridProps {
   initialData: Awaited<ReturnType<typeof getDashboardMetrics>>;
 }
+
+// Define the color themes for the cards outside the component to avoid recreation on every render.
+const colorThemes = [
+  {
+    bg: "bg-gradient-to-br from-teal-500 to-teal-700 transition duration-300 ease-in-out hover:from-teal-400 hover:to-teal-600",
+    text: "text-teal-50",
+    icon: "text-teal-200",
+  },
+  {
+    bg: "bg-gradient-to-br from-emerald-500 to-emerald-700 transition duration-300 ease-in-out hover:from-emerald-400 hover:to-emerald-600",
+    text: "text-emerald-50",
+    icon: "text-emerald-200",
+  },
+  {
+    bg: "bg-gradient-to-br from-indigo-500 to-indigo-700 transition duration-300 ease-in-out hover:from-indigo-400 hover:to-indigo-600",
+    text: "text-indigo-50",
+    icon: "text-indigo-200",
+  },
+  {
+    bg: "bg-gradient-to-br from-sky-500 to-sky-700 transition duration-300 ease-in-out hover:from-sky-400 hover:to-sky-600",
+    text: "text-sky-50",
+    icon: "text-sky-200",
+  },
+  {
+    bg: "bg-gradient-to-br from-rose-500 to-rose-700 transition duration-300 ease-in-out hover:from-rose-400 hover:to-rose-600",
+    text: "text-rose-50",
+    icon: "text-rose-200",
+  },
+  {
+    bg: "bg-gradient-to-br from-pink-500 to-pink-700 transition duration-300 ease-in-out hover:from-pink-400 hover:to-pink-600",
+    text: "text-pink-50",
+    icon: "text-pink-200",
+  },
+];
 
 /**
  * A client component that displays key dashboard metrics.
@@ -42,72 +77,52 @@ export const DashboardMetricsGrid = ({ initialData }: DashboardMetricsGridProps)
   const hasNoData = totalCases === 0;
 
   // Array of metric items to be mapped into cards.
-  const metrics = [
-    {
-      title: "Verified Cases",
-      icon: FaCheckCircle,
-      value: hasNoData ? "0 / 0" : `${verified} / ${totalCases}`,
-    },
-    {
-      title: "Verified Images",
-      icon: FaCamera,
-      value: hasNoData ? "0 / 0" : `${verifiedImages} / ${totalImages}`,
-    },
-    {
-      title: "Verified Detections",
-      icon: FaVectorSquare,
-      value: hasNoData ? "0 / 0" : `${verifiedDetectionsCount} / ${totalDetectionsCount}`,
-    },
-    {
-      title: "Average PMI Estimation",
-      icon: FaHourglassHalf,
-      value: hasNoData ? "—" : `${averagePMI.toFixed(2)} hours`,
-    },
-    {
-      title: "Average Confidence Score",
-      icon: FaBrain,
-      value: hasNoData ? "—" : formatConfidence(averageConfidence),
-    },
-    {
-      title: "Correction Rate",
-      icon: FaEdit,
-      value: hasNoData ? "—" : `${correctionRate.toFixed(1)}%`,
-    },
-  ];
-
-  // Define the color themes for the cards.
-  const colorThemes = [
-    {
-      bg: "bg-gradient-to-br from-teal-500 to-teal-700 transition duration-300 ease-in-out hover:from-teal-400 hover:to-teal-600",
-      text: "text-teal-50",
-      icon: "text-teal-200",
-    },
-    {
-      bg: "bg-gradient-to-br from-emerald-500 to-emerald-700 transition duration-300 ease-in-out hover:from-emerald-400 hover:to-emerald-600",
-      text: "text-emerald-50",
-      icon: "text-emerald-200",
-    },
-    {
-      bg: "bg-gradient-to-br from-indigo-500 to-indigo-700 transition duration-300 ease-in-out hover:from-indigo-400 hover:to-indigo-600",
-      text: "text-indigo-50",
-      icon: "text-indigo-200",
-    },
-    {
-      bg: "bg-gradient-to-br from-sky-500 to-sky-700 transition duration-300 ease-in-out hover:from-sky-400 hover:to-sky-600",
-      text: "text-sky-50",
-      icon: "text-sky-200",
-    },
-    {
-      bg: "bg-gradient-to-br from-rose-500 to-rose-700 transition duration-300 ease-in-out hover:from-rose-400 hover:to-rose-600",
-      text: "text-rose-50",
-      icon: "text-rose-200",
-    },
-    {
-      bg: "bg-gradient-to-br from-pink-500 to-pink-700 transition duration-300 ease-in-out hover:from-pink-400 hover:to-pink-600",
-      text: "text-pink-50",
-      icon: "text-pink-200",
-    },
-  ];
+  const metrics = useMemo(
+    () => [
+      {
+        title: "Verified Cases",
+        icon: FaCheckCircle,
+        value: hasNoData ? "0 / 0" : `${verified} / ${totalCases}`,
+      },
+      {
+        title: "Verified Images",
+        icon: FaCamera,
+        value: hasNoData ? "0 / 0" : `${verifiedImages} / ${totalImages}`,
+      },
+      {
+        title: "Verified Detections",
+        icon: FaVectorSquare,
+        value: hasNoData ? "0 / 0" : `${verifiedDetectionsCount} / ${totalDetectionsCount}`,
+      },
+      {
+        title: "Average PMI Estimation",
+        icon: FaHourglassHalf,
+        value: hasNoData ? "—" : `${averagePMI.toFixed(2)} hours`,
+      },
+      {
+        title: "Average Confidence Score",
+        icon: FaBrain,
+        value: hasNoData ? "—" : formatConfidence(averageConfidence),
+      },
+      {
+        title: "Correction Rate",
+        icon: FaEdit,
+        value: hasNoData ? "—" : `${correctionRate.toFixed(1)}%`,
+      },
+    ],
+    [
+      hasNoData,
+      verified,
+      totalCases,
+      verifiedImages,
+      totalImages,
+      verifiedDetectionsCount,
+      totalDetectionsCount,
+      averagePMI,
+      averageConfidence,
+      correctionRate,
+    ]
+  );
 
   return (
     // The main grid container.

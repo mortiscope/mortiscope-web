@@ -1,4 +1,5 @@
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
+import { DashboardAnalysis } from "@/features/dashboard/components/dashboard-analysis";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-metrics-grid";
 
@@ -25,6 +26,8 @@ export const DashboardContainer = async ({ firstName }: DashboardContainerProps)
       <DashboardHeader firstName={firstName} />
       {/* Rents the main metrics grid, passing the server-fetched data as an initial prop. */}
       <DashboardMetricsGrid initialData={initialData} />
+      {/* Renders the analytics widgets grid with charts and visualizations. */}
+      <DashboardAnalysis />
     </div>
   );
 };
