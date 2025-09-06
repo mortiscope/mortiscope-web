@@ -34,6 +34,46 @@ export interface CaseData {
 }
 
 /**
+ * Helper function to escape special regex characters
+ */
+const escapeRegExp = (str: string): string => {
+  const specialChars = ["\\", ".", "*", "+", "?", "^", "$", "{", "}", "(", ")", "|", "[", "]"];
+  let escaped = str;
+  for (const char of specialChars) {
+    escaped = escaped.split(char).join("\\" + char);
+  }
+  return escaped;
+};
+
+const HighlightedText = ({ text, highlight }: { text: string; highlight: string }) => {
+  if (!highlight || !text) return <>{text}</>;
+
+  try {
+    const escapedHighlight = escapeRegExp(highlight);
+    const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
+    return (
+      <span>
+        {parts.map((part, i) =>
+          part.toLowerCase() === highlight.toLowerCase() ? (
+            <span
+              key={i}
+              className="rounded-[2px] bg-emerald-200 box-decoration-clone px-0.5 text-slate-900"
+            >
+              {part}
+            </span>
+          ) : (
+            part
+          )
+        )}
+      </span>
+    );
+  } catch (error) {
+    // Fallback if regex fails
+    return <>{text}</>;
+  }
+};
+
+/**
  * A custom tooltip content component, created using `forwardRef` to ensure it
  * correctly receives the ref from the underlying Radix UI primitive.
  */
@@ -69,6 +109,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <PiEye className="h-4 w-4 text-slate-600" />
       </div>
     ),
+    enableGlobalFilter: false,
   },
   {
     // A non-data column used for row selection.
@@ -84,10 +125,13 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         />
       </div>
     ),
+    enableGlobalFilter: false,
   },
   {
     // Defines a column for the case date data field.
-    accessorKey: "caseDate",
+    id: "caseDate",
+    // Use accessor function to return the formatted date string for filtering.
+    accessorFn: (row) => new Date(row.caseDate).toISOString().split("T")[0],
     // Renders the header for the case name column, including a sort icon.
     header: () => (
       <div className="flex items-center justify-center gap-2">
@@ -95,8 +139,15 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    // Renders the cell content by retrieving the case name value from the row's data and formatting it.
-    cell: ({ row }) => <div>{new Date(row.getValue("caseDate")).toISOString().split("T")[0]}</div>,
+    // Renders the cell content using highlighted text.
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("caseDate")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the case name data field.
@@ -107,20 +158,33 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("caseName")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("caseName")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the verification status data field with custom cell rendering.
-    accessorKey: "verificationStatus",
+    id: "verificationStatus",
+    // Use accessorFn to return the label text for filtering
+    accessorFn: (row) => {
+      const status = row.verificationStatus as keyof typeof STATUS_CONFIG;
+      const config = STATUS_CONFIG[status] || STATUS_CONFIG.no_detections;
+      return config.label;
+    },
     header: () => (
       <div className="flex items-center justify-center gap-2">
         <span>Verification Status</span>
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       // Retrieves the status value and looks up its configuration.
-      const status = row.getValue("verificationStatus") as keyof typeof STATUS_CONFIG;
+      const status = row.original.verificationStatus as keyof typeof STATUS_CONFIG;
       const config = STATUS_CONFIG[status] || STATUS_CONFIG.no_detections;
 
       // A map to apply specific styling based on the status.
@@ -134,6 +198,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
       };
 
       const Icon = config.icon;
+      const globalFilter = table.getState().globalFilter as string;
 
       return (
         // Renders a styled Badge with an icon and label.
@@ -146,7 +211,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
             )}
           >
             <Icon className="h-4 w-4" />
-            {config.label}
+            <HighlightedText text={config.label} highlight={globalFilter} />
           </Badge>
         </div>
       );
@@ -161,7 +226,14 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("pmiEstimation")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("pmiEstimation")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the oldest stage data field.
@@ -172,7 +244,14 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("oldestStage")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("oldestStage")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the average confidence data field.
@@ -183,7 +262,14 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("averageConfidence")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("averageConfidence")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the image count.
@@ -194,7 +280,14 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("imageCount")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={String(row.getValue("imageCount"))}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the detection count.
@@ -205,27 +298,39 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("detectionCount")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={String(row.getValue("detectionCount"))}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
   {
     // Defines a column for the location with custom cell rendering for a tooltip.
-    accessorKey: "location",
+    id: "location",
+    accessorFn: (row) =>
+      `${row.location.region} ${row.location.province} ${row.location.city} ${row.location.barangay}`,
     header: () => (
       <div className="flex items-center justify-center gap-2">
         <span>Location</span>
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       // Retrieves the full location object from the row's data.
-      const loc = row.getValue("location") as CaseData["location"];
+      const loc = row.original.location;
+      const displayString = `${loc.city}, ${loc.province}`;
+      const globalFilter = table.getState().globalFilter as string;
+
       return (
         <div className="flex justify-start">
           <Tooltip>
             <TooltipTrigger asChild>
               {/* Renders a shortened version of the location in the cell. */}
               <span className="cursor-help decoration-slate-400 decoration-dashed underline-offset-4 hover:underline">
-                {loc.city}, {loc.province}
+                <HighlightedText text={displayString} highlight={globalFilter} />
               </span>
             </TooltipTrigger>
             {/* Renders the full, detailed location in a custom tooltip on hover. */}
@@ -260,6 +365,13 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
         <BsSortUp className="h-4 w-4" />
       </div>
     ),
-    cell: ({ row }) => <div>{row.getValue("temperature")}</div>,
+    cell: ({ row, table }) => (
+      <div>
+        <HighlightedText
+          text={row.getValue("temperature")}
+          highlight={table.getState().globalFilter as string}
+        />
+      </div>
+    ),
   },
 ];

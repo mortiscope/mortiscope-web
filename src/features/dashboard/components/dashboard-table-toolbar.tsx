@@ -41,8 +41,8 @@ export const DashboardTableToolbar = ({ table, selectedCount }: DashboardTableTo
         <Input
           type="text"
           placeholder="Search cases..."
-          value={(table.getColumn("caseName")?.getFilterValue() as string) ?? ""}
-          onChange={(event) => table.getColumn("caseName")?.setFilterValue(event.target.value)}
+          value={(table.getState().globalFilter as string) ?? ""}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
           className="h-9 rounded-lg border-2 border-slate-200 text-xs shadow-none placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10 md:text-sm"
         />
       </div>

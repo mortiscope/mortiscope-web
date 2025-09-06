@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  type FilterFn,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getPaginationRowModel,
   type RowSelectionState,
   useReactTable,
@@ -23,6 +25,28 @@ interface DashboardTableContainerProps {
 }
 
 /**
+ * Custom global filter function that searches across all visible columns
+ */
+const globalFilterFn: FilterFn<CaseData> = (row, _columnId, filterValue) => {
+  const search = String(filterValue).toLowerCase();
+
+  // Get all visible columns
+  const visibleColumns = row.getAllCells().filter((cell) => cell.column.getIsVisible());
+
+  // Search through all visible column values
+  return visibleColumns.some((cell) => {
+    const cellValue = cell.getValue();
+
+    // Handle different data types
+    if (cellValue === null || cellValue === undefined) return false;
+
+    // Convert to string and search
+    const stringValue = String(cellValue).toLowerCase();
+    return stringValue.includes(search);
+  });
+};
+
+/**
  * A smart container component that initializes and orchestrates a data table using TanStack Table.
  * It manages the table's state, composes the toolbar, table, and pagination components, and passes
  * the necessary state and handlers down to them.
@@ -30,6 +54,8 @@ interface DashboardTableContainerProps {
 export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) => {
   /** Local state to manage the selection state of the table rows. */
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  /** Local state to manage the global search filter. */
+  const [globalFilter, setGlobalFilter] = useState("");
   /** Local state to manage column visibility. */
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
     verificationStatus: true,
@@ -54,8 +80,13 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     getCoreRowModel: getCoreRowModel(),
     // Enables the pagination feature.
     getPaginationRowModel: getPaginationRowModel(),
+    // Enables filtering feature.
+    getFilteredRowModel: getFilteredRowModel(),
     // Enables the row selection feature.
     enableRowSelection: true,
+    // Use custom global filter function
+    globalFilterFn: globalFilterFn,
+    enableGlobalFilter: true,
     initialState: {
       pagination: {
         // Sets the number of rows per page.
@@ -66,10 +97,13 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     onRowSelectionChange: setRowSelection,
     // Connects local column visibility state to the table.
     onColumnVisibilityChange: setColumnVisibility,
+    // Connects local global filter state to the table.
+    onGlobalFilterChange: setGlobalFilter,
     state: {
       // Connects the local row selection state to the table instance.
       rowSelection,
       columnVisibility,
+      globalFilter,
     },
   });
 
