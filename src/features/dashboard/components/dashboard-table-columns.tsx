@@ -220,7 +220,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
       // Retrieves the full location object from the row's data.
       const loc = row.getValue("location") as CaseData["location"];
       return (
-        <div className="flex justify-center">
+        <div className="flex justify-start">
           <Tooltip>
             <TooltipTrigger asChild>
               {/* Renders a shortened version of the location in the cell. */}

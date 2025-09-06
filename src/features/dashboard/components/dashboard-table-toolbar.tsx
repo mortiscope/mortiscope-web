@@ -1,7 +1,7 @@
 "use client";
 
+import type { Table } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
 import { BsLayoutThreeColumns } from "react-icons/bs";
 import { IoTrashBinOutline } from "react-icons/io5";
 
@@ -14,12 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
 import { cn } from "@/lib/utils";
 
 /**
  * Defines the props for the dashboard table toolbar component.
  */
 interface DashboardTableToolbarProps {
+  /** The table instance to control visibility and filtering. */
+  table: Table<CaseData>;
   /** The number of rows currently selected in the table, used to conditionally show the delete button. */
   selectedCount: number;
 }
@@ -29,20 +32,7 @@ interface DashboardTableToolbarProps {
  * It includes a search filter, a column visibility toggle, and a contextual delete button
  * that appears when rows are selected.
  */
-export const DashboardTableToolbar = ({ selectedCount }: DashboardTableToolbarProps) => {
-  // Local state to manage the visibility of each table column.
-  const [columnVisibility, setColumnVisibility] = useState({
-    caseDate: false,
-    verificationStatus: false,
-    pmiEstimation: false,
-    oldestStage: false,
-    averageConfidence: false,
-    imageCount: false,
-    detectionCount: false,
-    location: false,
-    temperature: false,
-  });
-
+export const DashboardTableToolbar = ({ table, selectedCount }: DashboardTableToolbarProps) => {
   return (
     // The main container for the toolbar, using flexbox for alignment.
     <div className="flex w-full items-center justify-between gap-2">
@@ -51,6 +41,8 @@ export const DashboardTableToolbar = ({ selectedCount }: DashboardTableToolbarPr
         <Input
           type="text"
           placeholder="Search cases..."
+          value={(table.getColumn("caseName")?.getFilterValue() as string) ?? ""}
+          onChange={(event) => table.getColumn("caseName")?.setFilterValue(event.target.value)}
           className="h-9 rounded-lg border-2 border-slate-200 text-xs shadow-none placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10 md:text-sm"
         />
       </div>
@@ -91,127 +83,36 @@ export const DashboardTableToolbar = ({ selectedCount }: DashboardTableToolbarPr
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto border-2 border-slate-200">
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.caseDate}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, caseDate: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Case Date</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.verificationStatus}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, verificationStatus: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">
-                Verification Status
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.pmiEstimation}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, pmiEstimation: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">PMI Estimation</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.oldestStage}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, oldestStage: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Oldest Stage</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.averageConfidence}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, averageConfidence: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">
-                Average Confidence
-              </span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.imageCount}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, imageCount: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Image Count</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.detectionCount}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, detectionCount: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Detection Count</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.location}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, location: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Location</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
-              onSelect={(e) => e.preventDefault()}
-            >
-              <Checkbox
-                checked={columnVisibility.temperature}
-                onCheckedChange={(checked) =>
-                  setColumnVisibility((prev) => ({ ...prev, temperature: !!checked }))
-                }
-                className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
-              />
-              <span className="text-slate-800 group-hover:!text-emerald-600">Temperature</span>
-            </DropdownMenuItem>
+            {[
+              { id: "verificationStatus", label: "Verification Status" },
+              { id: "pmiEstimation", label: "PMI Estimation" },
+              { id: "oldestStage", label: "Oldest Stage" },
+              { id: "averageConfidence", label: "Average Confidence" },
+              { id: "imageCount", label: "Image Count" },
+              { id: "detectionCount", label: "Detection Count" },
+              { id: "location", label: "Location" },
+              { id: "temperature", label: "Temperature" },
+            ].map((column) => {
+              const tableColumn = table.getColumn(column.id);
+              if (!tableColumn) return null;
+
+              return (
+                <DropdownMenuItem
+                  key={column.id}
+                  className="group font-inter cursor-pointer text-sm transition-colors duration-300 ease-in-out hover:!bg-emerald-100"
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Checkbox
+                    checked={tableColumn.getIsVisible()}
+                    onCheckedChange={(value) => tableColumn.toggleVisibility(!!value)}
+                    className="mr-2 cursor-pointer group-hover:!border-emerald-600 data-[state=checked]:!border-emerald-600 data-[state=checked]:!bg-emerald-600 data-[state=checked]:text-white data-[state=checked]:[&_svg]:!text-white"
+                  />
+                  <span className="text-slate-800 group-hover:!text-emerald-600">
+                    {column.label}
+                  </span>
+                </DropdownMenuItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

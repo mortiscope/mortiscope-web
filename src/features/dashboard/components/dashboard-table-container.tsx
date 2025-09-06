@@ -6,6 +6,7 @@ import {
   getPaginationRowModel,
   type RowSelectionState,
   useReactTable,
+  type VisibilityState,
 } from "@tanstack/react-table";
 import { useState } from "react";
 
@@ -29,6 +30,17 @@ interface DashboardTableContainerProps {
 export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) => {
   /** Local state to manage the selection state of the table rows. */
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  /** Local state to manage column visibility. */
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    verificationStatus: true,
+    pmiEstimation: true,
+    oldestStage: true,
+    averageConfidence: true,
+    imageCount: false,
+    detectionCount: false,
+    location: false,
+    temperature: false,
+  });
 
   /**
    * The core hook from TanStack Table that creates and manages the table instance.
@@ -50,18 +62,21 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
         pageSize: 10,
       },
     },
+    // Provides the callback to update the local state when selection changes.
+    onRowSelectionChange: setRowSelection,
+    // Connects local column visibility state to the table.
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       // Connects the local row selection state to the table instance.
       rowSelection,
+      columnVisibility,
     },
-    // Provides the callback to update the local state when selection changes.
-    onRowSelectionChange: setRowSelection,
   });
 
   return (
     <Card className="font-inter w-full gap-4 overflow-hidden rounded-3xl border-none bg-white p-4 shadow-none md:p-8">
       {/* Renders the toolbar, passing down the count of selected rows for contextual actions. */}
-      <DashboardTableToolbar selectedCount={Object.keys(rowSelection).length} />
+      <DashboardTableToolbar table={table} selectedCount={Object.keys(rowSelection).length} />
 
       <div className="w-full">
         <div className="overflow-hidden rounded-2xl border border-slate-200">
