@@ -1,10 +1,15 @@
 "use client";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
 import { DashboardTableContainer } from "@/features/dashboard/components/dashboard-table-container";
 import { ForensicInsightsWidget } from "@/features/dashboard/components/forensic-insights-widget";
 import { QualityMetricsWidget } from "@/features/dashboard/components/quality-metrics-widget";
 import { VerificationStatusWidget } from "@/features/dashboard/components/verification-status-widget";
+
+interface DashboardAnalysisProps {
+  caseData: CaseData[];
+}
 
 /**
  * A container component that orchestrates and lays out the main widgets for the
@@ -12,7 +17,7 @@ import { VerificationStatusWidget } from "@/features/dashboard/components/verifi
  *
  * @returns A React component representing the dashboard analysis layout.
  */
-export const DashboardAnalysis = () => {
+export const DashboardAnalysis = ({ caseData }: DashboardAnalysisProps) => {
   return (
     // Wraps all widgets in a single tooltip provider to enable tooltips within them.
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
@@ -23,7 +28,7 @@ export const DashboardAnalysis = () => {
         <QualityMetricsWidget />
       </div>
       <div className="min-w-0">
-        <DashboardTableContainer />
+        <DashboardTableContainer data={caseData} />
       </div>
     </TooltipProvider>
   );

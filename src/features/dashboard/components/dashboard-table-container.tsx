@@ -7,26 +7,28 @@ import {
   type RowSelectionState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { Card } from "@/components/ui/card";
-import { dashboardTableColumns } from "@/features/dashboard/components/dashboard-table-columns";
+import {
+  type CaseData,
+  dashboardTableColumns,
+} from "@/features/dashboard/components/dashboard-table-columns";
 import { DashboardTablePagination } from "@/features/dashboard/components/dashboard-table-pagination";
 import { DashboardTableToolbar } from "@/features/dashboard/components/dashboard-table-toolbar";
+
+interface DashboardTableContainerProps {
+  data: CaseData[];
+}
 
 /**
  * A smart container component that initializes and orchestrates a data table using TanStack Table.
  * It manages the table's state, composes the toolbar, table, and pagination components, and passes
  * the necessary state and handlers down to them.
  */
-export const DashboardTableContainer = () => {
+export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) => {
   /** Local state to manage the selection state of the table rows. */
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-  /**
-   * Memoizes the table data.
-   */
-  const data = useMemo(() => [], []);
 
   /**
    * The core hook from TanStack Table that creates and manages the table instance.
@@ -73,7 +75,7 @@ export const DashboardTableContainer = () => {
                     {headerGroup.headers.map((header) => (
                       <th
                         key={header.id}
-                        className="border-b border-slate-200 bg-slate-100 px-4 py-3 text-left text-xs font-normal whitespace-nowrap text-slate-800 md:text-sm"
+                        className="border-b border-slate-200 bg-slate-100 px-4 py-3 text-center text-xs font-normal whitespace-nowrap text-slate-800 md:text-sm"
                       >
                         {header.isPlaceholder
                           ? null

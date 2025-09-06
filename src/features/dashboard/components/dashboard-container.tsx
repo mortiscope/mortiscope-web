@@ -2,6 +2,7 @@ import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-
 import { DashboardAnalysis } from "@/features/dashboard/components/dashboard-analysis";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-metrics-grid";
+import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
 
 /**
  * Defines the props for the dashboard container component.
@@ -9,6 +10,8 @@ import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-
 interface DashboardContainerProps {
   /** The first name of the user, used for a personalized greeting. */
   firstName: string;
+  /** The list of cases to display. */
+  caseData: CaseData[];
 }
 
 /**
@@ -16,7 +19,7 @@ interface DashboardContainerProps {
  * @param {DashboardContainerProps} props The props for the component.
  * @returns A JSX element representing the dashboard layout.
  */
-export const DashboardContainer = async ({ firstName }: DashboardContainerProps) => {
+export const DashboardContainer = async ({ firstName, caseData }: DashboardContainerProps) => {
   // Fetches the dashboard metrics directly on the server before the component is rendered.
   const initialData = await getDashboardMetrics();
 
@@ -27,7 +30,7 @@ export const DashboardContainer = async ({ firstName }: DashboardContainerProps)
       {/* Rents the main metrics grid, passing the server-fetched data as an initial prop. */}
       <DashboardMetricsGrid initialData={initialData} />
       {/* Renders the analytics widgets grid with charts and visualizations. */}
-      <DashboardAnalysis />
+      <DashboardAnalysis caseData={caseData} />
     </div>
   );
 };
