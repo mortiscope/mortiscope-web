@@ -1,12 +1,13 @@
 "use client";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { DashboardTableContainer } from "@/features/dashboard/components/dashboard-table-container";
 import { ForensicInsightsWidget } from "@/features/dashboard/components/forensic-insights-widget";
 import { QualityMetricsWidget } from "@/features/dashboard/components/quality-metrics-widget";
 import { VerificationStatusWidget } from "@/features/dashboard/components/verification-status-widget";
 
 /**
- * A container component that orchestrates and lays out the main widgets for the 
+ * A container component that orchestrates and lays out the main widgets for the
  * dashboard's analysis section. It is responsible for the overall grid structure.
  *
  * @returns A React component representing the dashboard analysis layout.
@@ -20,6 +21,9 @@ export const DashboardAnalysis = () => {
         <ForensicInsightsWidget />
         <VerificationStatusWidget />
         <QualityMetricsWidget />
+      </div>
+      <div className="min-w-0">
+        <DashboardTableContainer />
       </div>
     </TooltipProvider>
   );

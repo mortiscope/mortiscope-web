@@ -21,7 +21,7 @@ export const DashboardContainer = async ({ firstName }: DashboardContainerProps)
   const initialData = await getDashboardMetrics();
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
+    <div className="flex min-w-0 flex-1 flex-col gap-4">
       {/* Renders the static header component with a personalized greeting. */}
       <DashboardHeader firstName={firstName} />
       {/* Rents the main metrics grid, passing the server-fetched data as an initial prop. */}

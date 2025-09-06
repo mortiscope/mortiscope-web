@@ -95,9 +95,9 @@ const PrivateLayout = ({ children }: Props) => {
         <AppSidebar />
 
         {/* A simple flex container for the rest of the page. */}
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <AppHeader />
-          <main className="flex flex-1 flex-col bg-slate-200 p-6 md:p-8">
+          <main className="flex min-w-0 flex-1 flex-col bg-slate-200 p-6 md:p-8">
             {/* Conditionally render the breadcrumb. */}
             {isBreadcrumbVisible && (
               <div className="mb-4 flex items-center justify-between">
