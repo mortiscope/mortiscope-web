@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { LuClock3, LuClock6, LuClock9,LuClock12 } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
@@ -28,12 +27,21 @@ const TIME_PERIOD_OPTIONS = [
 type TimePeriodValue = (typeof TIME_PERIOD_OPTIONS)[number]["value"];
 
 /**
- * A dropdown component for filtering data by time period.
+ * Defines the props for the time period filter component.
  */
-export function TimePeriodFilter() {
-  // State to track the currently selected time period, defaulting to all-time.
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodValue>("all-time");
+interface TimePeriodFilterProps {
+  /** The currently selected time period value. */
+  selectedPeriod: TimePeriodValue;
+  /** A callback function to update the selected time period. */
+  onPeriodChange: (period: TimePeriodValue) => void;
+}
 
+/**
+ * A controlled dropdown component for filtering data by time period.
+ * @param {TimePeriodFilterProps} props The props for the component.
+ * @returns A React component representing the time period filter.
+ */
+export function TimePeriodFilter({ selectedPeriod, onPeriodChange }: TimePeriodFilterProps) {
   // Find the current selected option.
   const currentOption = TIME_PERIOD_OPTIONS.find((option) => option.value === selectedPeriod);
   const CurrentIcon = currentOption?.icon ?? LuClock12;
@@ -63,7 +71,7 @@ export function TimePeriodFilter() {
           return (
             <DropdownMenuItem
               key={option.value}
-              onSelect={() => setSelectedPeriod(option.value)}
+              onSelect={() => onPeriodChange(option.value)}
               className={cn(
                 "font-inter cursor-pointer border-2 border-transparent text-slate-800 transition-colors duration-300 ease-in-out hover:border-emerald-200 hover:!text-emerald-600 focus:bg-emerald-100 hover:[&_svg]:!text-emerald-600",
                 index > 0 && "mt-0.5",

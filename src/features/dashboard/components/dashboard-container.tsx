@@ -23,10 +23,19 @@ export const DashboardContainer = async ({ firstName, caseData }: DashboardConta
   // Fetches the dashboard metrics directly on the server before the component is rendered.
   const initialData = await getDashboardMetrics();
 
+  // Calculate the oldest case date from the case data for the "all-time" filter option.
+  const oldestCaseDate =
+    caseData.length > 0
+      ? caseData.reduce((oldest, current) => {
+          const currentDate = new Date(current.caseDate);
+          return currentDate < new Date(oldest) ? current.caseDate : oldest;
+        }, caseData[0].caseDate)
+      : undefined;
+
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
       {/* Renders the static header component with a personalized greeting. */}
-      <DashboardHeader firstName={firstName} />
+      <DashboardHeader firstName={firstName} oldestCaseDate={oldestCaseDate} />
       {/* Rents the main metrics grid, passing the server-fetched data as an initial prop. */}
       <DashboardMetricsGrid initialData={initialData} />
       {/* Renders the analytics widgets grid with charts and visualizations. */}

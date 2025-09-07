@@ -1,9 +1,7 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { subDays } from "date-fns";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
 import { DateRange } from "react-day-picker";
 import { BsCalendar4Week } from "react-icons/bs";
 
@@ -22,26 +20,28 @@ function PopoverClose({ ...props }: React.ComponentProps<typeof PopoverPrimitive
 }
 
 /**
- * A responsive and highly styled date range picker component. It uses a popover to display
- * a calendar for selecting a date range, with a different layout for mobile and desktop views.
+ * Defines the props for the date range picker component.
  */
-export const DateRangePicker = () => {
-  // Sets the default date range to the last 30 days.
-  const defaultTo = new Date();
-  const defaultFrom = subDays(defaultTo, 30);
+interface DateRangePickerProps {
+  /** The currently selected date range. */
+  date: DateRange | undefined;
+  /** A callback function to update the selected date range. */
+  onDateChange: (range: DateRange | undefined) => void;
+}
 
+/**
+ * A controlled, responsive date range picker component. It uses a popover to display
+ * a calendar for selecting a date range, with a different layout for mobile and desktop views.
+ * @param {DateRangePickerProps} props The props for the component.
+ * @returns A React component representing the date range picker.
+ */
+export const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
   // A custom hook to determine if the current view is mobile for responsive rendering.
   const isMobile = useIsMobile();
 
-  // The core state for the component, storing the selected date range.
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: defaultFrom,
-    to: defaultTo,
-  });
-
   /** Resets the selected date range to its undefined (empty) state. */
   const onReset = () => {
-    setDate(undefined);
+    onDateChange(undefined);
   };
 
   return (
@@ -69,7 +69,7 @@ export const DateRangePicker = () => {
           mode="range"
           defaultMonth={date?.from}
           selected={date}
-          onSelect={setDate}
+          onSelect={onDateChange}
           // Renders one month on mobile and two months on desktop for a better layout.
           numberOfMonths={isMobile ? 1 : 2}
           // Disables selection of future dates.
