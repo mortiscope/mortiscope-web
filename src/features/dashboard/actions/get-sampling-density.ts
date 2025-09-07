@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -9,22 +9,33 @@ import { SAMPLING_DENSITY_ORDER } from "@/lib/constants";
 
 /**
  * A server action to fetch and calculate sampling density metrics
- * for the currently authenticated user. It queries all cases and 
+ * for the currently authenticated user. It queries all cases and
  * buckets them by the number of images (uploads) they contain.
  *
+ * @param startDate - Optional start date to filter cases by caseDate.
+ * @param endDate - Optional end date to filter cases by caseDate.
  * @returns A promise that resolves to an array of sampling density counts ordered by image count ranges.
  * @throws An error if the user is not authenticated.
  */
-export const getSamplingDensity = async () => {
+export const getSamplingDensity = async (startDate?: Date, endDate?: Date) => {
   // Authenticate the user's session to ensure they are logged in.
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
+  // Build the where clause with optional date filtering.
+  const whereConditions = [eq(cases.userId, session.user.id), eq(cases.status, "active")];
+  if (startDate) {
+    whereConditions.push(gte(cases.caseDate, startDate));
+  }
+  if (endDate) {
+    whereConditions.push(lte(cases.caseDate, endDate));
+  }
+
   // Fetch all active cases for the user with their uploads.
   const userCases = await db.query.cases.findMany({
-    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
+    where: and(...whereConditions),
     with: {
       uploads: {
         columns: { id: true },

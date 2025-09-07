@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, gte, isNotNull, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -12,19 +12,30 @@ import { DETECTION_CLASS_ORDER } from "@/lib/constants";
  * for the currently authenticated user. It queries all detections with
  * original confidence scores and calculates the average confidence per life stage.
  *
+ * @param startDate - Optional start date to filter cases by caseDate.
+ * @param endDate - Optional end date to filter cases by caseDate.
  * @returns A promise that resolves to an array of model performance data ordered by life stage.
  * @throws An error if the user is not authenticated.
  */
-export const getModelPerformanceMetrics = async () => {
+export const getModelPerformanceMetrics = async (startDate?: Date, endDate?: Date) => {
   // Authenticate the user's session to ensure they are logged in.
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
+  // Build the where clause with optional date filtering.
+  const whereConditions = [eq(cases.userId, session.user.id), eq(cases.status, "active")];
+  if (startDate) {
+    whereConditions.push(gte(cases.caseDate, startDate));
+  }
+  if (endDate) {
+    whereConditions.push(lte(cases.caseDate, endDate));
+  }
+
   // Fetch all active cases for the user with their uploads and detections.
   const userCases = await db.query.cases.findMany({
-    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
+    where: and(...whereConditions),
     with: {
       uploads: {
         columns: {},

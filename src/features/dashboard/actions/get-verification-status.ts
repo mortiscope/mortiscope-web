@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -10,19 +10,30 @@ import { cases } from "@/db/schema";
  * A server action to fetch and calculate verification metrics for cases, images, and detections.
  * It queries all of the user's active cases and their related data, then aggregates verification status.
  *
+ * @param startDate - Optional start date to filter cases by caseDate.
+ * @param endDate - Optional end date to filter cases by caseDate.
  * @returns A promise that resolves to an object containing verification metrics.
  * @throws An error if the user is not authenticated.
  */
-export const getVerificationStatus = async () => {
+export const getVerificationStatus = async (startDate?: Date, endDate?: Date) => {
   // Authenticate the user's session to ensure they are logged in.
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
+  // Build the where clause with optional date filtering.
+  const whereConditions = [eq(cases.userId, session.user.id), eq(cases.status, "active")];
+  if (startDate) {
+    whereConditions.push(gte(cases.caseDate, startDate));
+  }
+  if (endDate) {
+    whereConditions.push(lte(cases.caseDate, endDate));
+  }
+
   // Fetch all active cases for the user with their nested detections.
   const userCases = await db.query.cases.findMany({
-    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
+    where: and(...whereConditions),
     with: {
       uploads: {
         columns: {},

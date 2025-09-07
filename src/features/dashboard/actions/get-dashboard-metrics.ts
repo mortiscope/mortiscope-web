@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -11,19 +11,30 @@ import { cases } from "@/db/schema";
  * for the currently authenticated user. It queries all of the user's active cases and
  * their related data, then aggregates this information into key performance indicators.
  *
+ * @param startDate - Optional start date to filter cases by caseDate.
+ * @param endDate - Optional end date to filter cases by caseDate.
  * @returns A promise that resolves to an object containing various dashboard metrics.
  * @throws An error if the user is not authenticated.
  */
-export const getDashboardMetrics = async () => {
+export const getDashboardMetrics = async (startDate?: Date, endDate?: Date) => {
   // Authenticate the user's session.
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
+  // Build the where clause with optional date filtering.
+  const whereConditions = [eq(cases.userId, session.user.id), eq(cases.status, "active")];
+  if (startDate) {
+    whereConditions.push(gte(cases.caseDate, startDate));
+  }
+  if (endDate) {
+    whereConditions.push(lte(cases.caseDate, endDate));
+  }
+
   // Fetch all active cases for the user, along with their nested uploads, detections, and analysis results.
   const userCases = await db.query.cases.findMany({
-    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
+    where: and(...whereConditions),
     with: {
       uploads: {
         columns: {},

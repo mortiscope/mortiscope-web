@@ -82,7 +82,7 @@ export const DashboardTableToolbar = ({
             <Button
               variant="outline"
               className={cn(
-                "h-9 cursor-pointer gap-2 rounded-lg border-2 border-slate-200 text-slate-400 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10"
+                "h-9 cursor-pointer gap-2 rounded-lg border-2 border-slate-200 text-slate-500 shadow-none transition-colors ease-in-out hover:border-green-600 hover:bg-green-100 hover:text-green-600 md:h-10"
               )}
             >
               <BsLayoutThreeColumns className="h-3.5 w-3.5" />
