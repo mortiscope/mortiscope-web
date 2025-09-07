@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { IoFolderOpenOutline, IoImagesOutline } from "react-icons/io5";
 import { PiBoundingBox } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
@@ -65,10 +66,14 @@ interface VerificationMetrics {
   detectionVerification: { verified: number; unverified: number };
 }
 
+interface VerificationStatusWidgetProps {
+  dateRange: DateRange | undefined;
+}
+
 /**
  * A smart widget component that displays various verification status metrics.
  */
-export const VerificationStatusWidget = () => {
+export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<VerificationView>("case");
   /** Local state to store the comprehensive verification metrics fetched from the server. */
@@ -82,15 +87,15 @@ export const VerificationStatusWidget = () => {
   const CurrentIcon = currentOption?.icon ?? IoFolderOpenOutline;
 
   /**
-   * A side effect that fetches the verification metrics from the server when the component first mounts.
+   * A side effect that fetches the verification metrics from the server when the date range changes.
    */
   useEffect(() => {
     const fetchMetrics = async () => {
-      const data = await getVerificationStatus();
+      const data = await getVerificationStatus(dateRange?.from, dateRange?.to);
       setMetrics(data);
     };
     void fetchMetrics();
-  }, []);
+  }, [dateRange]);
 
   /**
    * Memoizes the transformation of the raw metrics into the specific format required by the pie chart.

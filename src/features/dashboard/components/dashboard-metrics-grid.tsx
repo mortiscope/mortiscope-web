@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { DateRange } from "react-day-picker";
 import {
   FaBrain,
   FaCamera,
@@ -17,6 +18,7 @@ import { formatConfidence } from "@/lib/utils";
 
 interface DashboardMetricsGridProps {
   initialData: Awaited<ReturnType<typeof getDashboardMetrics>>;
+  dateRange: DateRange | undefined;
 }
 
 // Define the color themes for the cards outside the component to avoid recreation on every render.
@@ -57,8 +59,8 @@ const colorThemes = [
  * A client component that displays key dashboard metrics.
  * It accepts initial data from the server and polls for updates.
  */
-export const DashboardMetricsGrid = ({ initialData }: DashboardMetricsGridProps) => {
-  const { data } = useMetricsPoller(initialData);
+export const DashboardMetricsGrid = ({ initialData, dateRange }: DashboardMetricsGridProps) => {
+  const { data } = useMetricsPoller(initialData, dateRange);
 
   // Use the data from the hook (which starts with initialData and updates via polling)
   const {

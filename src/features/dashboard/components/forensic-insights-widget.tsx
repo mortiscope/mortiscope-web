@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { IoHourglassOutline } from "react-icons/io5";
 import { PiCirclesThree, PiRecycle } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
@@ -74,10 +75,14 @@ interface LifeStageData {
   quantity: number;
 }
 
+interface ForensicInsightsWidgetProps {
+  dateRange: DateRange | undefined;
+}
+
 /**
  * A 'smart' widget component that displays various forensic insights using a bar chart.
  */
-export const ForensicInsightsWidget = () => {
+export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<ForensicView>("life-stage");
   /** Local state to store the fetched data for the 'life-stage' view. */
@@ -95,27 +100,27 @@ export const ForensicInsightsWidget = () => {
   const CurrentIcon = currentOption?.icon ?? PiRecycle;
 
   /**
-   * A side effect that fetches all necessary data for all views when the component first mounts.
+   * A side effect that fetches all necessary data for all views when the date range changes.
    */
   useEffect(() => {
     const fetchLifeStageData = async () => {
-      const data = await getLifeStageDistribution();
+      const data = await getLifeStageDistribution(dateRange?.from, dateRange?.to);
       setLifeStageData(data);
     };
     void fetchLifeStageData();
 
     const fetchPmiData = async () => {
-      const data = await getPmiDistribution();
+      const data = await getPmiDistribution(dateRange?.from, dateRange?.to);
       setPmiData(data);
     };
     void fetchPmiData();
 
     const fetchSamplingData = async () => {
-      const data = await getSamplingDensity();
+      const data = await getSamplingDensity(dateRange?.from, dateRange?.to);
       setSamplingData(data);
     };
     void fetchSamplingData();
-  }, []);
+  }, [dateRange]);
 
   /**
    * Memoizes the selection of the correct dataset for the chart.

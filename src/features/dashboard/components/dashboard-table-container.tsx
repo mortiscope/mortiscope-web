@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { HiOutlineSearch } from "react-icons/hi";
 
 import { Card } from "@/components/ui/card";
@@ -41,6 +42,7 @@ const DeleteSelectedCaseModal = dynamic(() =>
 
 interface DashboardTableContainerProps {
   data: CaseData[];
+  dateRange: DateRange | undefined;
 }
 
 /**
@@ -68,9 +70,27 @@ const globalFilterFn: FilterFn<CaseData> = (row, _columnId, filterValue) => {
 /**
  * A smart container component that initializes and orchestrates a data table using TanStack Table.
  * It manages the table's state, composes the toolbar, table, and pagination components, and passes
- * the necessary state and handlers down to them.
+ * the necessary state and handlers down to them. Filters data based on the selected date range.
  */
-export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) => {
+export const DashboardTableContainer = ({ data, dateRange }: DashboardTableContainerProps) => {
+  // Filter data based on date range
+  const filteredData = useMemo(() => {
+    if (!dateRange?.from || !dateRange?.to) {
+      return data;
+    }
+
+    return data.filter((caseItem) => {
+      const caseDate = new Date(caseItem.caseDate);
+      const fromDate = new Date(dateRange.from!);
+      const toDate = new Date(dateRange.to!);
+
+      // Set time to start of day for from date and end of day for to date
+      fromDate.setHours(0, 0, 0, 0);
+      toDate.setHours(23, 59, 59, 999);
+
+      return caseDate >= fromDate && caseDate <= toDate;
+    });
+  }, [data, dateRange]);
   /** Ref for the table scroll container to enable auto-scrolling. */
   const tableScrollRef = useRef<HTMLDivElement>(null);
   /** Local state to manage the selection state of the table rows. */
@@ -167,18 +187,18 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
   const selectedCases = useMemo(() => {
     return Object.keys(rowSelection)
       .map((index) => {
-        const row = data[parseInt(index)];
+        const row = filteredData[parseInt(index)];
         return row ? { id: row.caseId, name: row.caseName } : null;
       })
       .filter((item): item is { id: string; name: string } => item !== null);
-  }, [rowSelection, data]);
+  }, [rowSelection, filteredData]);
 
   /**
    * The core hook from TanStack Table that creates and manages the table instance.
    */
   const table = useReactTable({
-    // The data to be displayed in the table.
-    data,
+    // The data to be displayed in the table (filtered by date range).
+    data: filteredData,
     // The column definitions imported from another file.
     columns: dashboardTableColumns,
     // Enables the basic table functionality.
@@ -305,9 +325,6 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
                         <h3 className="font-plus-jakarta-sans mt-2 text-lg font-semibold text-slate-800 md:text-xl">
                           No Cases Found
                         </h3>
-                        <p className="font-inter mt-1 max-w-sm text-xs text-slate-500 md:text-sm">
-                          Your search did not match any cases.
-                        </p>
                       </div>
                     </td>
                   </tr>

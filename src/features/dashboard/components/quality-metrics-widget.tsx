@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useState } from "react";
+import { DateRange } from "react-day-picker";
 import { GoGitCompare } from "react-icons/go";
 import { IoIosCellular } from "react-icons/io";
 import { LuTrendingUp } from "react-icons/lu";
@@ -105,10 +106,14 @@ interface ConfidenceMetric {
   count: number;
 }
 
+interface QualityMetricsWidgetProps {
+  dateRange: DateRange | undefined;
+}
+
 /**
  * A smart widget component that displays various data quality metrics.
  */
-export const QualityMetricsWidget = () => {
+export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<QualityView>("performance");
   /** Local state to store the fetched data for the 'performance' view. */
@@ -128,22 +133,22 @@ export const QualityMetricsWidget = () => {
   const CurrentIcon = currentOption?.icon ?? LuTrendingUp;
 
   /**
-   * A side effect that fetches all necessary data for all views when the component first mounts.
+   * A side effect that fetches all necessary data for all views when the date range changes.
    */
   useEffect(() => {
     const fetchAllData = async () => {
       // Fetches all data points concurrently for better performance.
       const [performanceData, correctionMetrics, confidenceMetrics] = await Promise.all([
-        getModelPerformanceMetrics(),
-        getUserCorrectionRatio(),
-        getConfidenceScoreDistribution(),
+        getModelPerformanceMetrics(dateRange?.from, dateRange?.to),
+        getUserCorrectionRatio(dateRange?.from, dateRange?.to),
+        getConfidenceScoreDistribution(dateRange?.from, dateRange?.to),
       ]);
       setModelPerformanceData(performanceData);
       setCorrectionData(correctionMetrics);
       setConfidenceData(confidenceMetrics);
     };
     void fetchAllData();
-  }, []);
+  }, [dateRange]);
 
   /**
    * Memoized callback to handle opening the information modal.
