@@ -1,8 +1,6 @@
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
-import { DashboardAnalysis } from "@/features/dashboard/components/dashboard-analysis";
-import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
-import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-metrics-grid";
 import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 
 /**
  * Defines the props for the dashboard container component.
@@ -33,14 +31,12 @@ export const DashboardContainer = async ({ firstName, caseData }: DashboardConta
       : undefined;
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-4">
-      {/* Renders the static header component with a personalized greeting. */}
-      <DashboardHeader firstName={firstName} oldestCaseDate={oldestCaseDate} />
-      {/* Rents the main metrics grid, passing the server-fetched data as an initial prop. */}
-      <DashboardMetricsGrid initialData={initialData} />
-      {/* Renders the analytics widgets grid with charts and visualizations. */}
-      <DashboardAnalysis caseData={caseData} />
-    </div>
+    <DashboardView
+      firstName={firstName}
+      oldestCaseDate={oldestCaseDate}
+      caseData={caseData}
+      initialData={initialData}
+    />
   );
 };
 
