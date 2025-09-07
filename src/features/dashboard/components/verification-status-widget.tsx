@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { IoFolderOpenOutline, IoImagesOutline } from "react-icons/io5";
 import { PiBoundingBox } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
@@ -35,6 +35,19 @@ const DashboardPieChart = dynamic(
 );
 
 /**
+ * Dynamically loads the verification status modal component on the client-side.
+ */
+const VerificationStatusModal = dynamic(
+  () =>
+    import("@/features/dashboard/components/verification-status-modal").then(
+      (module) => module.VerificationStatusModal
+    ),
+  {
+    ssr: false,
+  }
+);
+
+/**
  * A configuration array that defines the available views for the widget.
  */
 const viewOptions = [
@@ -60,6 +73,8 @@ export const VerificationStatusWidget = () => {
   const [selectedView, setSelectedView] = useState<VerificationView>("case");
   /** Local state to store the comprehensive verification metrics fetched from the server. */
   const [metrics, setMetrics] = useState<VerificationMetrics | null>(null);
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
@@ -106,6 +121,13 @@ export const VerificationStatusWidget = () => {
     }
   }, [metrics, selectedView]);
 
+  /**
+   * Memoized callback to handle opening the information modal.
+   */
+  const handleInfoClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
   return (
     <Card className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2">
       {/* Header section containing the widget title and toolbar. */}
@@ -128,13 +150,19 @@ export const VerificationStatusWidget = () => {
             </motion.div>
           </AnimatePresence>
         </div>
-        <VerificationStatusToolbar selectedView={selectedView} onViewSelect={setSelectedView} />
+        <VerificationStatusToolbar
+          selectedView={selectedView}
+          onViewSelect={setSelectedView}
+          onInfoClick={handleInfoClick}
+        />
       </div>
       {/* The main content area where the chart is rendered. */}
       <div className="min-h-0 flex-1">
         {/* Shows a loader if the chart data has not yet been fetched and processed. */}
         {chartData.length === 0 ? <ChartLoader /> : <DashboardPieChart data={chartData} />}
       </div>
+      {/* Lazy-loaded modal for verification status information */}
+      <VerificationStatusModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </Card>
   );
 };
