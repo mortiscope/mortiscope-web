@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { IoHourglassOutline } from "react-icons/io5";
 import { PiCirclesThree, PiRecycle } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
@@ -45,6 +45,19 @@ const DashboardBarChart = dynamic(
 );
 
 /**
+ * Dynamically loads the forensic insights modal component on the client-side.
+ */
+const ForensicInsightsModal = dynamic(
+  () =>
+    import("@/features/dashboard/components/forensic-insights-modal").then(
+      (module) => module.ForensicInsightsModal
+    ),
+  {
+    ssr: false,
+  }
+);
+
+/**
  * A configuration array that defines the available views for the widget.
  */
 const viewOptions = [
@@ -73,6 +86,8 @@ export const ForensicInsightsWidget = () => {
   const [pmiData, setPmiData] = useState<LifeStageData[] | null>(null);
   /** Local state to store the fetched data for the 'sampling' view. */
   const [samplingData, setSamplingData] = useState<LifeStageData[] | null>(null);
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
@@ -154,6 +169,13 @@ export const ForensicInsightsWidget = () => {
     }
   }, [selectedView]);
 
+  /**
+   * Memoized callback to handle opening the information modal.
+   */
+  const handleInfoClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
   return (
     <Card className="font-inter col-span-1 flex h-64 flex-col gap-2 rounded-3xl border-none bg-white px-4 pt-4 pb-2 shadow-none md:col-span-2 md:h-96 md:px-8 md:pt-8 md:pb-4 lg:col-span-4 lg:row-span-2 lg:h-auto">
       {/* Header section containing the widget title and toolbar. */}
@@ -176,7 +198,11 @@ export const ForensicInsightsWidget = () => {
             </motion.div>
           </AnimatePresence>
         </div>
-        <ForensicInsightsToolbar selectedView={selectedView} onViewSelect={setSelectedView} />
+        <ForensicInsightsToolbar
+          selectedView={selectedView}
+          onViewSelect={setSelectedView}
+          onInfoClick={handleInfoClick}
+        />
       </div>
       {/* The main content area where the chart is rendered. */}
       <div className="min-h-0 flex-1">
@@ -193,6 +219,8 @@ export const ForensicInsightsWidget = () => {
           />
         )}
       </div>
+      {/* Lazy-loaded modal for forensic insights information */}
+      <ForensicInsightsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </Card>
   );
 };
