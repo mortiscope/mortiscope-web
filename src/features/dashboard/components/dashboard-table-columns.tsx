@@ -1,9 +1,9 @@
 "use client";
 
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Header } from "@tanstack/react-table";
 import React from "react";
-import { BsSortUp } from "react-icons/bs";
+import { BsSortDown, BsSortUp } from "react-icons/bs";
 import { PiEye } from "react-icons/pi";
 
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
  * Defines the TypeScript interface for a single row of data in the dashboard table.
  */
 export interface CaseData {
+  caseId: string;
   caseName: string;
   caseDate: string;
   verificationStatus: string;
@@ -67,10 +68,49 @@ const HighlightedText = ({ text, highlight }: { text: string; highlight: string 
         )}
       </span>
     );
-  } catch (error) {
+  } catch {
     // Fallback if regex fails
     return <>{text}</>;
   }
+};
+
+/**
+ * A reusable sortable header component for table columns
+ */
+const SortableHeader = ({
+  header,
+  children,
+}: {
+  header: Header<CaseData, unknown>;
+  children: React.ReactNode;
+}) => {
+  const isSorted = header.column.getIsSorted();
+  const canSort = header.column.getCanSort();
+
+  if (!canSort) {
+    return <div className="flex items-center justify-center gap-2">{children}</div>;
+  }
+
+  return (
+    <button
+      onClick={header.column.getToggleSortingHandler()}
+      className="flex w-full cursor-pointer items-center justify-center gap-2 transition-colors duration-200 select-none"
+    >
+      <span>{children}</span>
+      {isSorted === "desc" ? (
+        <BsSortDown className="h-4 w-4 text-emerald-500 hover:text-emerald-400 active:text-emerald-500 md:h-5 md:w-5" />
+      ) : (
+        <BsSortUp
+          className={cn(
+            "h-4 w-4 transition-colors duration-200 md:h-5 md:w-5",
+            isSorted === "asc"
+              ? "text-emerald-500"
+              : "text-slate-600 hover:text-emerald-400 active:text-emerald-500"
+          )}
+        />
+      )}
+    </button>
+  );
 };
 
 /**
@@ -104,11 +144,27 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
     // Renders an empty header for this column.
     header: () => <div />,
     // Renders a simple eye icon in each cell of this column.
-    cell: () => (
-      <div className="flex items-center justify-center">
-        <PiEye className="h-4 w-4 text-slate-600" />
-      </div>
-    ),
+    cell: ({ row, table }) => {
+      const handleClick = () => {
+        // Access the meta property to call the onViewCase function
+        const meta = table.options.meta as { onViewCase?: (caseId: string) => void };
+        if (meta?.onViewCase) {
+          meta.onViewCase(row.original.caseId);
+        }
+      };
+
+      return (
+        <div className="flex items-center justify-center">
+          <button
+            onClick={handleClick}
+            className="cursor-pointer transition-colors duration-200 hover:text-emerald-600"
+            aria-label="View case details"
+          >
+            <PiEye className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    },
     enableGlobalFilter: false,
   },
   {
@@ -132,13 +188,8 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
     id: "caseDate",
     // Use accessor function to return the formatted date string for filtering.
     accessorFn: (row) => new Date(row.caseDate).toISOString().split("T")[0],
-    // Renders the header for the case name column, including a sort icon.
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Case Date</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    // Renders the header for the case date column with sorting.
+    header: ({ header }) => <SortableHeader header={header}>Case Date</SortableHeader>,
     // Renders the cell content using highlighted text.
     cell: ({ row, table }) => (
       <div>
@@ -152,12 +203,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the case name data field.
     accessorKey: "caseName",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Case Name</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Case Name</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -176,12 +222,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
       const config = STATUS_CONFIG[status] || STATUS_CONFIG.no_detections;
       return config.label;
     },
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Verification Status</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Verification Status</SortableHeader>,
     cell: ({ row, table }) => {
       // Retrieves the status value and looks up its configuration.
       const status = row.original.verificationStatus as keyof typeof STATUS_CONFIG;
@@ -220,12 +261,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the PMI estimation data field.
     accessorKey: "pmiEstimation",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>PMI Estimation</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>PMI Estimation</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -238,12 +274,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the oldest stage data field.
     accessorKey: "oldestStage",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Oldest Stage</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Oldest Stage</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -256,12 +287,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the average confidence data field.
     accessorKey: "averageConfidence",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Average Confidence</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Average Confidence</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -274,12 +300,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the image count.
     accessorKey: "imageCount",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Image Count</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Image Count</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -292,12 +313,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the detection count.
     accessorKey: "detectionCount",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Detection Count</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Detection Count</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText
@@ -312,12 +328,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
     id: "location",
     accessorFn: (row) =>
       `${row.location.region} ${row.location.province} ${row.location.city} ${row.location.barangay}`,
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Location</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Location</SortableHeader>,
     cell: ({ row, table }) => {
       // Retrieves the full location object from the row's data.
       const loc = row.original.location;
@@ -359,12 +370,7 @@ export const dashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // Defines a column for the temperature.
     accessorKey: "temperature",
-    header: () => (
-      <div className="flex items-center justify-center gap-2">
-        <span>Temperature</span>
-        <BsSortUp className="h-4 w-4" />
-      </div>
-    ),
+    header: ({ header }) => <SortableHeader header={header}>Temperature</SortableHeader>,
     cell: ({ row, table }) => (
       <div>
         <HighlightedText

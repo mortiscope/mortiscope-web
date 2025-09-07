@@ -44,6 +44,7 @@ export const getCaseData = async (): Promise<CaseData[]> => {
     },
     // Optimize by selecting only the necessary columns from the cases table.
     columns: {
+      id: true,
       caseName: true,
       caseDate: true,
       temperatureCelsius: true,
@@ -117,6 +118,7 @@ export const getCaseData = async (): Promise<CaseData[]> => {
 
         // Final object that matches the case data interface for the table.
         return {
+          caseId: c.id,
           caseName: c.caseName,
           caseDate: c.caseDate.toISOString(),
           verificationStatus,

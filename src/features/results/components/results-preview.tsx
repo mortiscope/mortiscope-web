@@ -1,22 +1,32 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { CaseInformationModal } from "@/features/cases/components/case-information-modal";
 import { type getCases } from "@/features/results/actions/get-cases";
 import { renameCase } from "@/features/results/actions/rename-case";
 import { CaseList } from "@/features/results/components/case-list";
-import { DeleteCaseModal } from "@/features/results/components/delete-case-modal";
 import { ResultsEmptyState } from "@/features/results/components/results-empty-state";
 import { ResultsNoSearchResults } from "@/features/results/components/results-no-search-results";
 import { ResultsToolbar } from "@/features/results/components/results-toolbar";
 import { useCases } from "@/features/results/hooks/use-cases";
 import { useResultsStore } from "@/features/results/store/results-store";
 import { type SortOptionValue } from "@/lib/constants";
+
+// Dynamically import modal components
+const CaseInformationModal = dynamic(() =>
+  import("@/features/cases/components/case-information-modal").then(
+    (module) => module.CaseInformationModal
+  )
+);
+
+const DeleteCaseModal = dynamic(() =>
+  import("@/features/results/components/delete-case-modal").then((module) => module.DeleteCaseModal)
+);
 
 /**
  * Defines the TypeScript type for a single case, inferred from the `getCases` server action's return type.
@@ -207,17 +217,25 @@ export const ResultsPreview = () => {
 
   return (
     <TooltipProvider>
-      <DeleteCaseModal
-        isOpen={deleteModal.isOpen}
-        onOpenChange={(isOpen) => setDeleteModal({ ...deleteModal, isOpen })}
-        caseId={deleteModal.caseId}
-        caseName={deleteModal.caseName}
-      />
-      <CaseInformationModal
-        isOpen={infoModal.isOpen}
-        onOpenChange={(isOpen) => setInfoModal({ ...infoModal, isOpen })}
-        caseItem={infoModal.caseItem}
-      />
+      <Suspense fallback={null}>
+        {deleteModal.isOpen && (
+          <DeleteCaseModal
+            isOpen={deleteModal.isOpen}
+            onOpenChange={(isOpen) => setDeleteModal({ ...deleteModal, isOpen })}
+            caseId={deleteModal.caseId}
+            caseName={deleteModal.caseName}
+          />
+        )}
+      </Suspense>
+      <Suspense fallback={null}>
+        {infoModal.isOpen && (
+          <CaseInformationModal
+            isOpen={infoModal.isOpen}
+            onOpenChange={(isOpen) => setInfoModal({ ...infoModal, isOpen })}
+            caseItem={infoModal.caseItem}
+          />
+        )}
+      </Suspense>
       <div className="flex w-full flex-1 flex-col">
         <ResultsToolbar
           searchTerm={searchTerm}

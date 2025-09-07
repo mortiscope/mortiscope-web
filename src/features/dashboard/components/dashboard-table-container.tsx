@@ -6,11 +6,14 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   type RowSelectionState,
+  type SortingState,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import {
@@ -19,6 +22,15 @@ import {
 } from "@/features/dashboard/components/dashboard-table-columns";
 import { DashboardTablePagination } from "@/features/dashboard/components/dashboard-table-pagination";
 import { DashboardTableToolbar } from "@/features/dashboard/components/dashboard-table-toolbar";
+import { getCaseById } from "@/features/results/actions/get-case-by-id";
+import { type Case } from "@/features/results/components/results-preview";
+
+// Dynamically import modal components
+const CaseInformationModal = dynamic(() =>
+  import("@/features/cases/components/case-information-modal").then(
+    (module) => module.CaseInformationModal
+  )
+);
 
 interface DashboardTableContainerProps {
   data: CaseData[];
@@ -67,6 +79,59 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     location: false,
     temperature: false,
   });
+  /** Local state to control the case information modal. */
+  const [infoModal, setInfoModal] = useState({
+    isOpen: false,
+    caseItem: null as Case | null,
+  });
+
+  /**
+   * Handler to open the case information modal and fetch case data.
+   */
+  const handleViewCase = async (caseId: string) => {
+    try {
+      const caseData = await getCaseById(caseId);
+      if (caseData) {
+        // Compute the verification status and detection counts
+        const allDetections = caseData.uploads.flatMap((u) => u.detections);
+        const hasDetections = allDetections.length > 0;
+        const unverifiedCount = allDetections.filter((d) => d.status === "model_generated").length;
+        const totalCount = allDetections.length;
+        const verifiedCount = totalCount - unverifiedCount;
+
+        let verificationStatus: "verified" | "in_progress" | "unverified" | "no_detections" =
+          "no_detections";
+
+        if (!hasDetections) {
+          verificationStatus = "no_detections";
+        } else if (unverifiedCount === 0) {
+          verificationStatus = "verified";
+        } else if (unverifiedCount === totalCount) {
+          verificationStatus = "unverified";
+        } else {
+          verificationStatus = "in_progress";
+        }
+
+        // Create the enriched case object with computed properties
+        const enrichedCase = {
+          ...caseData,
+          verificationStatus,
+          hasDetections,
+          totalDetections: totalCount,
+          verifiedDetections: verifiedCount,
+        };
+
+        setInfoModal({
+          isOpen: true,
+          caseItem: enrichedCase as unknown as Case,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch case data:", error);
+    }
+  };
+  /** Local state to manage sorting. */
+  const [sorting, setSorting] = useState<SortingState>([{ id: "caseDate", desc: true }]);
 
   /**
    * The core hook from TanStack Table that creates and manages the table instance.
@@ -87,6 +152,10 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     // Use custom global filter function
     globalFilterFn: globalFilterFn,
     enableGlobalFilter: true,
+    // Add meta property for custom handlers
+    meta: {
+      onViewCase: handleViewCase,
+    },
     initialState: {
       pagination: {
         // Sets the number of rows per page.
@@ -99,11 +168,16 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     onColumnVisibilityChange: setColumnVisibility,
     // Connects local global filter state to the table.
     onGlobalFilterChange: setGlobalFilter,
+    // Enables sorting functionality.
+    getSortedRowModel: getSortedRowModel(),
+    // Connects local sorting state to the table.
+    onSortingChange: setSorting,
     state: {
       // Connects the local row selection state to the table instance.
       rowSelection,
       columnVisibility,
       globalFilter,
+      sorting,
     },
   });
 
@@ -178,6 +252,17 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
         onNextPage={() => table.nextPage()}
         onLastPage={() => table.setPageIndex(table.getPageCount() - 1)}
       />
+
+      {/* Lazy-loaded case information modal */}
+      <Suspense fallback={null}>
+        {infoModal.isOpen && (
+          <CaseInformationModal
+            isOpen={infoModal.isOpen}
+            onOpenChange={(isOpen) => setInfoModal((prev) => ({ ...prev, isOpen }))}
+            caseItem={infoModal.caseItem}
+          />
+        )}
+      </Suspense>
     </Card>
   );
 };
