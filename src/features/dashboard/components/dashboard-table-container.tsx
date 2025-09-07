@@ -13,7 +13,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import {
@@ -29,6 +29,12 @@ import { type Case } from "@/features/results/components/results-preview";
 const CaseInformationModal = dynamic(() =>
   import("@/features/cases/components/case-information-modal").then(
     (module) => module.CaseInformationModal
+  )
+);
+
+const DeleteSelectedCaseModal = dynamic(() =>
+  import("@/features/dashboard/components/delete-selected-case-modal").then(
+    (module) => module.DeleteSelectedCaseModal
   )
 );
 
@@ -84,6 +90,10 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     isOpen: false,
     caseItem: null as Case | null,
   });
+  /** Local state to control the delete selected cases modal. */
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+  });
 
   /**
    * Handler to open the case information modal and fetch case data.
@@ -130,8 +140,35 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
       console.error("Failed to fetch case data:", error);
     }
   };
+
+  /**
+   * Handler to open the delete selected cases modal.
+   */
+  const handleDeleteSelected = () => {
+    setDeleteModal({ isOpen: true });
+  };
+
+  /**
+   * Handler when cases are successfully deleted.
+   */
+  const handleDeleteSuccess = () => {
+    setRowSelection({});
+  };
+
   /** Local state to manage sorting. */
   const [sorting, setSorting] = useState<SortingState>([{ id: "caseDate", desc: true }]);
+
+  /**
+   * Memoized array of selected cases with id and name.
+   */
+  const selectedCases = useMemo(() => {
+    return Object.keys(rowSelection)
+      .map((index) => {
+        const row = data[parseInt(index)];
+        return row ? { id: row.caseId, name: row.caseName } : null;
+      })
+      .filter((item): item is { id: string; name: string } => item !== null);
+  }, [rowSelection, data]);
 
   /**
    * The core hook from TanStack Table that creates and manages the table instance.
@@ -184,7 +221,11 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
   return (
     <Card className="font-inter w-full gap-4 overflow-hidden rounded-3xl border-none bg-white p-4 shadow-none md:p-8">
       {/* Renders the toolbar, passing down the count of selected rows for contextual actions. */}
-      <DashboardTableToolbar table={table} selectedCount={Object.keys(rowSelection).length} />
+      <DashboardTableToolbar
+        table={table}
+        selectedCount={Object.keys(rowSelection).length}
+        onDeleteSelected={handleDeleteSelected}
+      />
 
       <div className="w-full">
         <div className="overflow-hidden rounded-2xl border border-slate-200">
@@ -260,6 +301,18 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
             isOpen={infoModal.isOpen}
             onOpenChange={(isOpen) => setInfoModal((prev) => ({ ...prev, isOpen }))}
             caseItem={infoModal.caseItem}
+          />
+        )}
+      </Suspense>
+
+      {/* Lazy-loaded delete selected cases modal */}
+      <Suspense fallback={null}>
+        {deleteModal.isOpen && (
+          <DeleteSelectedCaseModal
+            isOpen={deleteModal.isOpen}
+            onOpenChange={(isOpen) => setDeleteModal({ isOpen })}
+            selectedCases={selectedCases}
+            onSuccess={handleDeleteSuccess}
           />
         )}
       </Suspense>

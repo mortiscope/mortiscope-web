@@ -25,6 +25,8 @@ interface DashboardTableToolbarProps {
   table: Table<CaseData>;
   /** The number of rows currently selected in the table, used to conditionally show the delete button. */
   selectedCount: number;
+  /** Callback function to handle delete selected action. */
+  onDeleteSelected: () => void;
 }
 
 /**
@@ -32,7 +34,11 @@ interface DashboardTableToolbarProps {
  * It includes a search filter, a column visibility toggle, and a contextual delete button
  * that appears when rows are selected.
  */
-export const DashboardTableToolbar = ({ table, selectedCount }: DashboardTableToolbarProps) => {
+export const DashboardTableToolbar = ({
+  table,
+  selectedCount,
+  onDeleteSelected,
+}: DashboardTableToolbarProps) => {
   return (
     // The main container for the toolbar, using flexbox for alignment.
     <div className="flex w-full items-center justify-between gap-2">
@@ -59,6 +65,7 @@ export const DashboardTableToolbar = ({ table, selectedCount }: DashboardTableTo
             >
               <Button
                 variant="destructive"
+                onClick={onDeleteSelected}
                 className="h-9 cursor-pointer gap-2 rounded-lg bg-rose-600 text-white shadow-none transition-all duration-300 ease-in-out hover:bg-rose-500 hover:shadow-lg hover:shadow-rose-500/20 md:h-10"
               >
                 <IoTrashBinOutline className="h-4 w-4 shrink-0" />
