@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GoGitCompare } from "react-icons/go";
 import { IoIosCellular } from "react-icons/io";
 import { LuTrendingUp } from "react-icons/lu";
@@ -60,6 +60,19 @@ const DashboardDistributionChart = dynamic(
 );
 
 /**
+ * Dynamically loads the quality metrics modal component on the client-side.
+ */
+const QualityMetricsModal = dynamic(
+  () =>
+    import("@/features/dashboard/components/quality-metrics-modal").then(
+      (module) => module.QualityMetricsModal
+    ),
+  {
+    ssr: false,
+  }
+);
+
+/**
  * A configuration array that defines the available views for the widget.
  */
 const viewOptions = [
@@ -106,6 +119,8 @@ export const QualityMetricsWidget = () => {
   const [correctionData, setCorrectionData] = useState<CorrectionMetric[] | null>(null);
   /** Local state to store the fetched data for the 'confidence' view. */
   const [confidenceData, setConfidenceData] = useState<ConfidenceMetric[] | null>(null);
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
@@ -130,6 +145,13 @@ export const QualityMetricsWidget = () => {
     void fetchAllData();
   }, []);
 
+  /**
+   * Memoized callback to handle opening the information modal.
+   */
+  const handleInfoClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
   return (
     <Card className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2">
       {/* Header section containing the widget title and toolbar. */}
@@ -152,7 +174,11 @@ export const QualityMetricsWidget = () => {
             </motion.div>
           </AnimatePresence>
         </div>
-        <QualityMetricsToolbar selectedView={selectedView} onViewSelect={setSelectedView} />
+        <QualityMetricsToolbar
+          selectedView={selectedView}
+          onViewSelect={setSelectedView}
+          onInfoClick={handleInfoClick}
+        />
       </div>
       {/* Conditionally renders the appropriate chart based on the selected view state. */}
       {selectedView === "performance" && (
@@ -183,6 +209,8 @@ export const QualityMetricsWidget = () => {
           )}
         </div>
       )}
+      {/* Lazy-loaded modal for quality metrics information */}
+      <QualityMetricsModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
     </Card>
   );
 };

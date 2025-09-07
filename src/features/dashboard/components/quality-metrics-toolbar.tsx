@@ -1,6 +1,7 @@
 import React, { memo, useEffect, useState } from "react";
 import { GoGitCompare } from "react-icons/go";
 import { IoIosCellular } from "react-icons/io";
+import { IoInformation } from "react-icons/io5";
 import { LuTrendingUp } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
@@ -41,13 +42,15 @@ interface QualityMetricsToolbarProps {
   selectedView: QualityView;
   /** A callback function to handle the selection of a new view. */
   onViewSelect: (view: QualityView) => void;
+  /** A callback function to handle the information button click. */
+  onInfoClick: () => void;
 }
 
 /**
  * A memoized component that renders the toolbar for the quality metrics widget.
  */
 export const QualityMetricsToolbar = memo(
-  ({ selectedView, onViewSelect }: QualityMetricsToolbarProps) => {
+  ({ selectedView, onViewSelect, onInfoClick }: QualityMetricsToolbarProps) => {
     // State to ensure the component is only rendered on the client, preventing hydration mismatches.
     const [isMounted, setIsMounted] = useState(false);
 
@@ -64,7 +67,8 @@ export const QualityMetricsToolbar = memo(
     if (!isMounted) {
       return (
         <div className="flex items-center">
-          <div className="size-8 rounded-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+          <div className="size-8 rounded-none rounded-l-md border-2 border-slate-200 bg-slate-100 md:size-9" />
+          <div className="-ml-[2px] size-8 rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 md:size-9" />
         </div>
       );
     }
@@ -79,7 +83,7 @@ export const QualityMetricsToolbar = memo(
                   variant="ghost"
                   aria-label="Change view"
                   className={cn(
-                    "relative size-8 rounded-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9",
+                    "relative size-8 rounded-none rounded-l-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9",
                     "cursor-pointer hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500"
                   )}
                 >
@@ -121,6 +125,22 @@ export const QualityMetricsToolbar = memo(
               })}
             </DropdownMenuContent>
           </DropdownMenu>
+        </Tooltip>
+        {/* The information button. */}
+        <Tooltip key="info-tooltip">
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              aria-label="Information"
+              onClick={onInfoClick}
+              className="relative -ml-[2px] size-8 cursor-pointer rounded-none rounded-r-md border-2 border-slate-200 bg-slate-100 text-slate-500 transition-all duration-300 ease-in-out hover:z-10 hover:border-emerald-500 hover:bg-emerald-100 hover:text-emerald-500 focus-visible:border-slate-200 focus-visible:ring-0 focus-visible:ring-offset-0 md:size-9"
+            >
+              <IoInformation className="size-4 md:size-5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p className="font-inter">Information</p>
+          </TooltipContent>
         </Tooltip>
       </div>
     );
