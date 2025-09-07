@@ -27,9 +27,12 @@ export const DashboardAnalysis = ({ caseData }: DashboardAnalysisProps) => {
         <VerificationStatusWidget />
         <QualityMetricsWidget />
       </div>
-      <div className="min-w-0">
-        <DashboardTableContainer data={caseData} />
-      </div>
+      {/* Only render the table container if there is case data available. */}
+      {caseData.length > 0 && (
+        <div className="min-w-0">
+          <DashboardTableContainer data={caseData} />
+        </div>
+      )}
     </TooltipProvider>
   );
 };

@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 /**
@@ -42,6 +43,9 @@ interface TimePeriodFilterProps {
  * @returns A React component representing the time period filter.
  */
 export function TimePeriodFilter({ selectedPeriod, onPeriodChange }: TimePeriodFilterProps) {
+  // A custom hook to determine if the current view is mobile for responsive dropdown alignment.
+  const isMobile = useIsMobile();
+
   // Find the current selected option.
   const currentOption = TIME_PERIOD_OPTIONS.find((option) => option.value === selectedPeriod);
   const CurrentIcon = currentOption?.icon ?? LuClock12;
@@ -61,7 +65,10 @@ export function TimePeriodFilter({ selectedPeriod, onPeriodChange }: TimePeriodF
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-36 border-2 border-slate-200" align="end">
+      <DropdownMenuContent
+        className="w-36 border-2 border-slate-200"
+        align={isMobile ? "start" : "end"}
+      >
         {TIME_PERIOD_OPTIONS.map((option, index) => {
           const isActive = option.value === selectedPeriod;
           const prevOption = TIME_PERIOD_OPTIONS[index - 1];

@@ -347,13 +347,13 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
         selectedRowCount={Object.keys(rowSelection).length}
         totalRows={data.length}
         currentPage={table.getState().pagination.pageIndex + 1}
-        totalPages={table.getPageCount()}
+        totalPages={Math.max(1, table.getPageCount())}
         canPreviousPage={table.getCanPreviousPage()}
         canNextPage={table.getCanNextPage()}
         onFirstPage={() => table.setPageIndex(0)}
         onPreviousPage={() => table.previousPage()}
         onNextPage={() => table.nextPage()}
-        onLastPage={() => table.setPageIndex(table.getPageCount() - 1)}
+        onLastPage={() => table.setPageIndex(Math.max(0, table.getPageCount() - 1))}
       />
 
       {/* Lazy-loaded case information modal */}
