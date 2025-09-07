@@ -222,16 +222,47 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
   });
 
   /**
-   * Auto-scroll to the center when no results are found to ensure the no results message is visible.
+   * Auto-scroll behavior based on search state and results
    */
   const rowCount = table.getRowModel().rows.length;
   useEffect(() => {
-    if (rowCount === 0 && tableScrollRef.current) {
-      const container = tableScrollRef.current;
-      const centerPosition = (container.scrollWidth - container.clientWidth) / 2;
-      container.scrollTo({ left: centerPosition, behavior: "smooth" });
+    if (!tableScrollRef.current) return;
+
+    const container = tableScrollRef.current;
+    const hasSearchValue = globalFilter && globalFilter.trim().length > 0;
+
+    if (!hasSearchValue) {
+      // Search is blank, scroll to start
+      container.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      // Search has value, find and scroll to the highlighted text
+      setTimeout(() => {
+        const highlightedElement = container.querySelector(".bg-emerald-200");
+
+        if (highlightedElement) {
+          // Get positions of both the highlighted element and container
+          const elementRect = highlightedElement.getBoundingClientRect();
+          const containerRect = container.getBoundingClientRect();
+
+          // Calculate how far the element is from the left edge of the container
+          const elementLeftRelativeToContainer = elementRect.left - containerRect.left;
+
+          // Calculate scroll position to center the highlighted element in view
+          const scrollLeft =
+            container.scrollLeft +
+            elementLeftRelativeToContainer -
+            container.clientWidth / 2 +
+            elementRect.width / 2;
+
+          container.scrollTo({ left: scrollLeft, behavior: "smooth" });
+        } else if (rowCount === 0) {
+          // No highlights found and no results, scroll to center for "no results" message
+          const centerPosition = (container.scrollWidth - container.clientWidth) / 2;
+          container.scrollTo({ left: centerPosition, behavior: "smooth" });
+        }
+      }, 0);
     }
-  }, [rowCount]);
+  }, [rowCount, globalFilter]);
 
   return (
     <Card className="font-inter w-full gap-4 overflow-hidden rounded-3xl border-none bg-white p-4 shadow-none md:p-8">

@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { DateRangePicker } from "@/features/dashboard/components/date-range-picker";
+import { TimePeriodFilter } from "@/features/dashboard/components/time-period-filter";
 
 /**
  * Defines the props for the dashboard header component.
@@ -26,9 +27,14 @@ export function DashboardHeader({ firstName }: DashboardHeaderProps) {
           <span className="truncate">{firstName}!</span>
         </h1>
       </div>
-      {/* The container for the date range picker, with responsive width. */}
-      <div className="flex w-full flex-shrink-0 justify-center md:w-auto">
-        <DateRangePicker />
+      {/* The container for the time period filter and date range picker. */}
+      <div className="flex w-full flex-shrink-0 items-center gap-2 md:w-auto">
+        <div className="w-auto">
+          <TimePeriodFilter />
+        </div>
+        <div className="flex-1 md:w-auto md:flex-none">
+          <DateRangePicker />
+        </div>
       </div>
     </div>
   );
