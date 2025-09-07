@@ -13,7 +13,8 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { HiOutlineSearch } from "react-icons/hi";
 
 import { Card } from "@/components/ui/card";
 import {
@@ -70,6 +71,8 @@ const globalFilterFn: FilterFn<CaseData> = (row, _columnId, filterValue) => {
  * the necessary state and handlers down to them.
  */
 export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) => {
+  /** Ref for the table scroll container to enable auto-scrolling. */
+  const tableScrollRef = useRef<HTMLDivElement>(null);
   /** Local state to manage the selection state of the table rows. */
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   /** Local state to manage the global search filter. */
@@ -218,6 +221,18 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
     },
   });
 
+  /**
+   * Auto-scroll to the center when no results are found to ensure the no results message is visible.
+   */
+  const rowCount = table.getRowModel().rows.length;
+  useEffect(() => {
+    if (rowCount === 0 && tableScrollRef.current) {
+      const container = tableScrollRef.current;
+      const centerPosition = (container.scrollWidth - container.clientWidth) / 2;
+      container.scrollTo({ left: centerPosition, behavior: "smooth" });
+    }
+  }, [rowCount]);
+
   return (
     <Card className="font-inter w-full gap-4 overflow-hidden rounded-3xl border-none bg-white p-4 shadow-none md:p-8">
       {/* Renders the toolbar, passing down the count of selected rows for contextual actions. */}
@@ -230,7 +245,7 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
       <div className="w-full">
         <div className="overflow-hidden rounded-2xl border border-slate-200">
           {/* A wrapper to allow horizontal scrolling of the table on smaller screens. */}
-          <div className="w-full overflow-x-auto">
+          <div ref={tableScrollRef} className="w-full overflow-x-auto">
             <table className="w-full table-auto">
               {/* Renders the table header. */}
               <thead>
@@ -251,30 +266,46 @@ export const DashboardTableContainer = ({ data }: DashboardTableContainerProps) 
               </thead>
               {/* Renders the table body. */}
               <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className={row.getIsSelected() ? "bg-emerald-50" : "hover:bg-slate-50"}
-                  >
-                    {row.getVisibleCells().map((cell) => {
-                      const isSelectColumn = cell.column.id === "select";
-                      const isCaseNameColumn = cell.column.id === "caseName";
-                      const paddingClass = isSelectColumn
-                        ? "pr-1"
-                        : isCaseNameColumn
-                          ? "pl-1"
-                          : "px-2 md:px-4";
-                      return (
-                        <td
-                          key={cell.id}
-                          className={`border-b border-slate-200 ${paddingClass} py-3 text-xs text-slate-600 md:text-sm`}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      );
-                    })}
+                {table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={table.getAllColumns().length} className="py-8">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <HiOutlineSearch className="h-8 w-8 text-slate-300 md:h-12 md:w-12" />
+                        <h3 className="font-plus-jakarta-sans mt-2 text-lg font-semibold text-slate-800 md:text-xl">
+                          No Cases Found
+                        </h3>
+                        <p className="font-inter mt-1 max-w-sm text-xs text-slate-500 md:text-sm">
+                          Your search did not match any cases.
+                        </p>
+                      </div>
+                    </td>
                   </tr>
-                ))}
+                ) : (
+                  table.getRowModel().rows.map((row) => (
+                    <tr
+                      key={row.id}
+                      className={row.getIsSelected() ? "bg-emerald-50" : "hover:bg-slate-50"}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const isSelectColumn = cell.column.id === "select";
+                        const isCaseNameColumn = cell.column.id === "caseName";
+                        const paddingClass = isSelectColumn
+                          ? "pr-1"
+                          : isCaseNameColumn
+                            ? "pl-1"
+                            : "px-2 md:px-4";
+                        return (
+                          <td
+                            key={cell.id}
+                            className={`border-b border-slate-200 ${paddingClass} py-3 text-xs text-slate-600 md:text-sm`}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
