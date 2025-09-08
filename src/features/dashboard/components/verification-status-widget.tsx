@@ -9,6 +9,7 @@ import { PiBoundingBox } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
 
 import { Card, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getVerificationStatus } from "@/features/dashboard/actions/get-verification-status";
 import {
   VerificationStatusToolbar,
@@ -144,6 +145,11 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
     setIsModalOpen(true);
   }, []);
 
+  // Show skeleton while loading data
+  if (isLoading) {
+    return <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />;
+  }
+
   return (
     <Card className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2">
       {/* Header section containing the widget title and toolbar. */}
@@ -174,12 +180,8 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
       </div>
       {/* The main content area where the chart is rendered. */}
       <div className="min-h-0 flex-1">
-        {/* Shows a loader if data is being fetched or if there's no data. */}
-        {isLoading || chartData.length === 0 ? (
-          <ChartLoader />
-        ) : (
-          <DashboardPieChart data={chartData} />
-        )}
+        {/* Shows a loader if there's no data. */}
+        {chartData.length === 0 ? <ChartLoader /> : <DashboardPieChart data={chartData} />}
       </div>
       {/* Lazy-loaded modal for verification status information */}
       <VerificationStatusModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />

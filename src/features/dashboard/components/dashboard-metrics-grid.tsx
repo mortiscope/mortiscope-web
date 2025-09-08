@@ -13,6 +13,7 @@ import {
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
+import { DashboardMetricsGridSkeleton } from "@/features/dashboard/components/dashboard-skeleton";
 import { useMetricsPoller } from "@/features/dashboard/hooks/use-metrics-poller";
 import { formatConfidence } from "@/lib/utils";
 
@@ -135,6 +136,11 @@ export const DashboardMetricsGrid = ({
       correctionRate,
     ]
   );
+
+  // Show skeleton only on initial load
+  if (isFetching && !data) {
+    return <DashboardMetricsGridSkeleton />;
+  }
 
   return (
     // The main grid container.

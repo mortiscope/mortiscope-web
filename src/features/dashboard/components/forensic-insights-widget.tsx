@@ -9,6 +9,7 @@ import { PiCirclesThree, PiRecycle } from "react-icons/pi";
 import { BeatLoader } from "react-spinners";
 
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getLifeStageDistribution } from "@/features/dashboard/actions/get-life-stage-distribution";
 import { getPmiDistribution } from "@/features/dashboard/actions/get-pmi-distribution";
 import { getSamplingDensity } from "@/features/dashboard/actions/get-sampling-density";
@@ -85,6 +86,8 @@ interface ForensicInsightsWidgetProps {
 export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<ForensicView>("life-stage");
+  /** Local state to track initial data loading. */
+  const [isLoading, setIsLoading] = useState(true);
 
   /**
    * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
@@ -110,23 +113,22 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
    * A side effect that fetches all necessary data for all views when the date range changes.
    */
   useEffect(() => {
-    const fetchLifeStageData = async () => {
-      const data = await getLifeStageDistribution(dateRange?.from, dateRange?.to);
-      setLifeStageData(data);
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      try {
+        const [lifeStage, pmi, sampling] = await Promise.all([
+          getLifeStageDistribution(dateRange?.from, dateRange?.to),
+          getPmiDistribution(dateRange?.from, dateRange?.to),
+          getSamplingDensity(dateRange?.from, dateRange?.to),
+        ]);
+        setLifeStageData(lifeStage);
+        setPmiData(pmi);
+        setSamplingData(sampling);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    void fetchLifeStageData();
-
-    const fetchPmiData = async () => {
-      const data = await getPmiDistribution(dateRange?.from, dateRange?.to);
-      setPmiData(data);
-    };
-    void fetchPmiData();
-
-    const fetchSamplingData = async () => {
-      const data = await getSamplingDensity(dateRange?.from, dateRange?.to);
-      setSamplingData(data);
-    };
-    void fetchSamplingData();
+    void fetchAllData();
   }, [dateRange]);
 
   /**
@@ -188,6 +190,13 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
     setIsModalOpen(true);
   }, []);
 
+  // Show skeleton during initial data loading
+  if (isLoading) {
+    return (
+      <Skeleton className="col-span-1 h-64 rounded-3xl bg-white md:col-span-2 md:h-96 lg:col-span-4 lg:row-span-2 lg:h-auto" />
+    );
+  }
+
   return (
     <Card className="font-inter col-span-1 flex h-64 flex-col gap-2 rounded-3xl border-none bg-white px-4 pt-4 pb-2 shadow-none md:col-span-2 md:h-96 md:px-8 md:pt-8 md:pb-4 lg:col-span-4 lg:row-span-2 lg:h-auto">
       {/* Header section containing the widget title and toolbar. */}
@@ -218,7 +227,7 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
       </div>
       {/* The main content area where the chart is rendered. */}
       <div className="min-h-0 flex-1">
-        {/* Shows a loader if the data for the current view has not yet been fetched. */}
+        {/* Shows fallback loader if data is empty, otherwise shows chart */}
         {chartData.length === 0 ? (
           <ChartLoader />
         ) : (

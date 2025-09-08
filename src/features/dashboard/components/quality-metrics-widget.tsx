@@ -10,6 +10,7 @@ import { LuTrendingUp } from "react-icons/lu";
 import { BeatLoader } from "react-spinners";
 
 import { Card, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getConfidenceScoreDistribution } from "@/features/dashboard/actions/get-confidence-score-distribution";
 import { getModelPerformanceMetrics } from "@/features/dashboard/actions/get-model-performance-metrics";
 import { getUserCorrectionRatio } from "@/features/dashboard/actions/get-user-correction-ratio";
@@ -168,6 +169,11 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
     setIsModalOpen(true);
   }, []);
 
+  // Show skeleton while loading data
+  if (isLoading) {
+    return <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />;
+  }
+
   return (
     <Card className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2">
       {/* Header section containing the widget title and toolbar. */}
@@ -199,8 +205,8 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
       {/* Conditionally renders the appropriate chart based on the selected view state. */}
       {selectedView === "performance" && (
         <div className="min-h-0 flex-1">
-          {/* Shows a loader if data is being fetched or if there's no data. */}
-          {isLoading || !modelPerformanceData || modelPerformanceData.length === 0 ? (
+          {/* Shows a loader if there's no data. */}
+          {!modelPerformanceData || modelPerformanceData.length === 0 ? (
             <ChartLoader />
           ) : (
             <DashboardLineChart data={modelPerformanceData} />
@@ -209,7 +215,7 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
       )}
       {selectedView === "correction" && (
         <div className="min-h-0 flex-1">
-          {isLoading || !correctionData || correctionData.length === 0 ? (
+          {!correctionData || correctionData.length === 0 ? (
             <ChartLoader />
           ) : (
             <DashboardPieChart data={correctionData} />
@@ -218,7 +224,7 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
       )}
       {selectedView === "confidence" && (
         <div className="min-h-0 flex-1 [&_.recharts-y-axis]:hidden">
-          {isLoading || !confidenceData || confidenceData.length === 0 ? (
+          {!confidenceData || confidenceData.length === 0 ? (
             <ChartLoader />
           ) : (
             <DashboardDistributionChart data={confidenceData} />
