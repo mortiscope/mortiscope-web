@@ -2,7 +2,7 @@ import { flexRender, type Table } from "@tanstack/react-table";
 import { type RefObject } from "react";
 import { HiOutlineSearch } from "react-icons/hi";
 
-import { type CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import { type CaseData } from "@/features/dashboard/schemas/dashboard";
 
 interface DashboardTableProps {
   table: Table<CaseData>;

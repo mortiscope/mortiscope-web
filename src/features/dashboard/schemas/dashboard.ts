@@ -1,6 +1,28 @@
 import { z } from "zod";
 
 /**
+ * Defines the TypeScript interface for a single row of data in the dashboard table.
+ */
+export interface CaseData {
+  caseId: string;
+  caseName: string;
+  caseDate: string;
+  verificationStatus: string;
+  pmiEstimation: string;
+  oldestStage: string;
+  averageConfidence: string;
+  imageCount: number;
+  detectionCount: number;
+  location: {
+    region: string;
+    province: string;
+    city: string;
+    barangay: string;
+  };
+  temperature: string;
+}
+
+/**
  * A reusable schema for validating a user's current password input.
  */
 const currentPasswordValidationSchema = z

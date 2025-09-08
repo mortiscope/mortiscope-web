@@ -1,117 +1,18 @@
 "use client";
 
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
-import type { ColumnDef, Header } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import React from "react";
-import { BsSortDown, BsSortUp } from "react-icons/bs";
 import { PiEye } from "react-icons/pi";
 
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { HighlightedText } from "@/features/dashboard/components/table-highlighted-text";
+import { SortableHeader } from "@/features/dashboard/components/table-sortable-header";
+import { type CaseData } from "@/features/dashboard/schemas/dashboard";
 import { STATUS_CONFIG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-
-/**
- * Defines the TypeScript interface for a single row of data in the dashboard table.
- */
-export interface CaseData {
-  caseId: string;
-  caseName: string;
-  caseDate: string;
-  verificationStatus: string;
-  pmiEstimation: string;
-  oldestStage: string;
-  averageConfidence: string;
-  imageCount: number;
-  detectionCount: number;
-  location: {
-    region: string;
-    province: string;
-    city: string;
-    barangay: string;
-  };
-  temperature: string;
-}
-
-/**
- * Helper function to escape special regex characters
- */
-const escapeRegExp = (str: string): string => {
-  const specialChars = ["\\", ".", "*", "+", "?", "^", "$", "{", "}", "(", ")", "|", "[", "]"];
-  let escaped = str;
-  for (const char of specialChars) {
-    escaped = escaped.split(char).join("\\" + char);
-  }
-  return escaped;
-};
-
-const HighlightedText = ({ text, highlight }: { text: string; highlight: string }) => {
-  if (!highlight || !text) return <>{text}</>;
-
-  try {
-    const escapedHighlight = escapeRegExp(highlight);
-    const parts = text.split(new RegExp(`(${escapedHighlight})`, "gi"));
-    return (
-      <span>
-        {parts.map((part, i) =>
-          part.toLowerCase() === highlight.toLowerCase() ? (
-            <span
-              key={i}
-              className="rounded-[2px] bg-emerald-200 box-decoration-clone px-0.5 text-slate-900"
-            >
-              {part}
-            </span>
-          ) : (
-            part
-          )
-        )}
-      </span>
-    );
-  } catch {
-    // Fallback if regex fails
-    return <>{text}</>;
-  }
-};
-
-/**
- * A reusable sortable header component for table columns
- */
-const SortableHeader = ({
-  header,
-  children,
-}: {
-  header: Header<CaseData, unknown>;
-  children: React.ReactNode;
-}) => {
-  const isSorted = header.column.getIsSorted();
-  const canSort = header.column.getCanSort();
-
-  if (!canSort) {
-    return <div className="flex items-center justify-center gap-2">{children}</div>;
-  }
-
-  return (
-    <button
-      onClick={header.column.getToggleSortingHandler()}
-      className="flex w-full cursor-pointer items-center justify-center gap-2 transition-colors duration-200 select-none"
-    >
-      <span>{children}</span>
-      {isSorted === "desc" ? (
-        <BsSortDown className="h-4 w-4 text-emerald-500 hover:text-emerald-400 active:text-emerald-500 md:h-5 md:w-5" />
-      ) : (
-        <BsSortUp
-          className={cn(
-            "h-4 w-4 transition-colors duration-200 md:h-5 md:w-5",
-            isSorted === "asc"
-              ? "text-emerald-500"
-              : "text-slate-600 hover:text-emerald-400 active:text-emerald-500"
-          )}
-        />
-      )}
-    </button>
-  );
-};
 
 /**
  * A custom tooltip content component, created using `forwardRef` to ensure it
@@ -137,7 +38,7 @@ CustomTooltipContent.displayName = TooltipPrimitive.Content.displayName;
  * An array of column definitions for the dashboard data table, configured for use with Tanstack Table.
  * Each object in this array defines a single column, specifying its ID, header, and how its cells are rendered.
  */
-export const dashboardTableColumns: ColumnDef<CaseData>[] = [
+export const DashboardTableColumns: ColumnDef<CaseData>[] = [
   {
     // A non-data column used to display a decorative view icon.
     id: "view",

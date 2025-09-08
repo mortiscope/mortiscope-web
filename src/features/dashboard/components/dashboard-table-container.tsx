@@ -6,10 +6,10 @@ import { DateRange } from "react-day-picker";
 
 import { Card } from "@/components/ui/card";
 import { DashboardTable } from "@/features/dashboard/components/dashboard-table";
-import { type CaseData } from "@/features/dashboard/components/dashboard-table-columns";
 import { DashboardTablePagination } from "@/features/dashboard/components/dashboard-table-pagination";
 import { DashboardTableToolbar } from "@/features/dashboard/components/dashboard-table-toolbar";
 import { useDashboardTable } from "@/features/dashboard/hooks/use-dashboard-table";
+import { type CaseData } from "@/features/dashboard/schemas/dashboard";
 
 // Dynamically import modal components
 const CaseInformationModal = dynamic(() =>

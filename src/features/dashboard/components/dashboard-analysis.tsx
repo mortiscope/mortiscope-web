@@ -5,7 +5,7 @@ import { DateRange } from "react-day-picker";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 
 /**
  * Loading component for the forensic insights widget.

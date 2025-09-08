@@ -5,7 +5,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { cases } from "@/db/schema";
-import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 import { formatConfidence, formatPmiToInterpretableString } from "@/lib/utils";
 
 /**

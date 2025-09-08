@@ -12,10 +12,8 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 
-import {
-  type CaseData,
-  dashboardTableColumns,
-} from "@/features/dashboard/components/dashboard-table-columns";
+import { DashboardTableColumns } from "@/features/dashboard/components/dashboard-table-columns";
+import { type CaseData } from "@/features/dashboard/schemas/dashboard";
 import { getCaseById } from "@/features/results/actions/get-case-by-id";
 import { type Case } from "@/features/results/components/results-preview";
 
@@ -185,7 +183,7 @@ export const useDashboardTable = ({ data, dateRange }: UseDashboardTableProps) =
     // The data to be displayed in the table (filtered by date range).
     data: filteredData,
     // The column definitions imported from another file.
-    columns: dashboardTableColumns,
+    columns: DashboardTableColumns,
     // Enables the basic table functionality.
     getCoreRowModel: getCoreRowModel(),
     // Enables the pagination feature.

@@ -1,6 +1,6 @@
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
-import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
+import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 
 /**
  * Defines the props for the dashboard container component.

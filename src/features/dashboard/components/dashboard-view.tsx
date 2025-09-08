@@ -8,7 +8,7 @@ import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-
 import { DashboardAnalysis } from "@/features/dashboard/components/dashboard-analysis";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-metrics-grid";
-import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 
 /**
  * Type definition for time period values.

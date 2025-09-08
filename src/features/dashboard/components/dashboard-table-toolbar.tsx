@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
+import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 import { cn } from "@/lib/utils";
 
 /**
