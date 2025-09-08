@@ -1,13 +1,95 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { DateRange } from "react-day-picker";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { CaseData } from "@/features/dashboard/components/dashboard-table-columns";
-import { DashboardTableContainer } from "@/features/dashboard/components/dashboard-table-container";
-import { ForensicInsightsWidget } from "@/features/dashboard/components/forensic-insights-widget";
-import { QualityMetricsWidget } from "@/features/dashboard/components/quality-metrics-widget";
-import { VerificationStatusWidget } from "@/features/dashboard/components/verification-status-widget";
+
+/**
+ * Loading component for the forensic insights widget.
+ */
+const ForensicInsightsLoader = () => (
+  <Skeleton className="col-span-1 h-64 rounded-3xl bg-white md:col-span-2 md:h-96 lg:col-span-4 lg:row-span-2 lg:h-auto" />
+);
+
+/**
+ * Loading component for the verification status widget.
+ */
+const VerificationStatusLoader = () => (
+  <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />
+);
+
+/**
+ * Loading component for the quality metrics widget.
+ */
+const QualityMetricsLoader = () => (
+  <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />
+);
+
+/**
+ * Loading component for the dashboard table container.
+ */
+const DashboardTableLoader = () => (
+  <Skeleton className="h-96 w-full rounded-3xl bg-white p-4 md:p-8" />
+);
+
+/**
+ * Dynamically loads the forensic insights widget component on the client-side.
+ */
+const ForensicInsightsWidget = dynamic(
+  () =>
+    import("@/features/dashboard/components/forensic-insights-widget").then(
+      (module) => module.ForensicInsightsWidget
+    ),
+  {
+    loading: () => <ForensicInsightsLoader />,
+    ssr: false,
+  }
+);
+
+/**
+ * Dynamically loads the verification status widget component on the client-side.
+ */
+const VerificationStatusWidget = dynamic(
+  () =>
+    import("@/features/dashboard/components/verification-status-widget").then(
+      (module) => module.VerificationStatusWidget
+    ),
+  {
+    loading: () => <VerificationStatusLoader />,
+    ssr: false,
+  }
+);
+
+/**
+ * Dynamically loads the quality metrics widget component on the client-side.
+ */
+const QualityMetricsWidget = dynamic(
+  () =>
+    import("@/features/dashboard/components/quality-metrics-widget").then(
+      (module) => module.QualityMetricsWidget
+    ),
+  {
+    loading: () => <QualityMetricsLoader />,
+    ssr: false,
+  }
+);
+
+/**
+ * Dynamically loads the dashboard table container component on the client-side.
+ */
+const DashboardTableContainer = dynamic(
+  () =>
+    import("@/features/dashboard/components/dashboard-table-container").then(
+      (module) => module.DashboardTableContainer
+    ),
+  {
+    loading: () => <DashboardTableLoader />,
+    ssr: false,
+  }
+);
 
 interface DashboardAnalysisProps {
   caseData: CaseData[];
