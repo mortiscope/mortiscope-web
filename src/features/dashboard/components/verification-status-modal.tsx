@@ -6,6 +6,7 @@ import { IoFolderOpenOutline, IoImagesOutline } from "react-icons/io5";
 import { PiBoundingBox } from "react-icons/pi";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DashboardInformationItem } from "@/features/dashboard/components/dashboard-information-item";
 import { DashboardModalFooter } from "@/features/dashboard/components/dashboard-modal-footer";
 import { DashboardModalHeader } from "@/features/dashboard/components/dashboard-modal-header";
 
@@ -37,51 +38,6 @@ const itemVariants: Variants = {
       stiffness: 150,
     },
   },
-};
-
-/**
- * A reusable component for list items in the information modal.
- * Handles both plain text strings and JSX content with formatting.
- */
-const InformationItem = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-}) => {
-  // Split the text content by periods to create bullet points
-  const sentences =
-    typeof children === "string"
-      ? children
-          .split(".")
-          .filter((s) => s.trim().length > 0)
-          .map((s) => s.trim() + ".")
-      : [];
-
-  return (
-    <li className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 p-4 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
-      {/* First row for the icon and title */}
-      <div className="flex items-center">
-        <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
-        <h4 className="font-inter font-medium text-slate-800">{title}</h4>
-      </div>
-      {/* Bullet list for content */}
-      {typeof children === "string" ? (
-        <ul className="font-inter mt-2 space-y-1 text-sm leading-relaxed text-slate-600 marker:text-emerald-500">
-          {sentences.map((sentence, index) => (
-            <li key={index} className="ml-6 list-disc pl-2">
-              {sentence}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="font-inter mt-2 text-sm leading-relaxed text-slate-600">{children}</div>
-      )}
-    </li>
-  );
 };
 
 interface VerificationStatusModalProps {
@@ -121,7 +77,10 @@ export function VerificationStatusModal({ isOpen, onOpenChange }: VerificationSt
           <div className="space-y-4">
             <div>
               <ul className="space-y-4">
-                <InformationItem icon={IoFolderOpenOutline} title="Case Verification Status">
+                <DashboardInformationItem
+                  icon={IoFolderOpenOutline}
+                  title="Case Verification Status"
+                >
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Shows the verification status of entire cases based on all detections within
@@ -143,8 +102,8 @@ export function VerificationStatusModal({ isOpen, onOpenChange }: VerificationSt
                       This provides an overview of case completion and helps prioritize workflow.
                     </li>
                   </ul>
-                </InformationItem>
-                <InformationItem icon={IoImagesOutline} title="Image Verification Status">
+                </DashboardInformationItem>
+                <DashboardInformationItem icon={IoImagesOutline} title="Image Verification Status">
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Displays the verification status of individual images based on the detections
@@ -166,8 +125,11 @@ export function VerificationStatusModal({ isOpen, onOpenChange }: VerificationSt
                       remaining workload at the image level.
                     </li>
                   </ul>
-                </InformationItem>
-                <InformationItem icon={PiBoundingBox} title="Detection Verification Status">
+                </DashboardInformationItem>
+                <DashboardInformationItem
+                  icon={PiBoundingBox}
+                  title="Detection Verification Status"
+                >
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Shows the verification status of individual bounding box detections across all
@@ -183,7 +145,7 @@ export function VerificationStatusModal({ isOpen, onOpenChange }: VerificationSt
                       accurate detection counts.
                     </li>
                   </ul>
-                </InformationItem>
+                </DashboardInformationItem>
               </ul>
             </div>
           </div>

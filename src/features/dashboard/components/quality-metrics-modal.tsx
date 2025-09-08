@@ -7,6 +7,7 @@ import { IoIosCellular } from "react-icons/io";
 import { LuTrendingUp } from "react-icons/lu";
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DashboardInformationItem } from "@/features/dashboard/components/dashboard-information-item";
 import { DashboardModalFooter } from "@/features/dashboard/components/dashboard-modal-footer";
 import { DashboardModalHeader } from "@/features/dashboard/components/dashboard-modal-header";
 
@@ -38,51 +39,6 @@ const itemVariants: Variants = {
       stiffness: 150,
     },
   },
-};
-
-/**
- * A reusable component for list items in the information modal.
- * Handles both plain text strings and JSX content with formatting.
- */
-const InformationItem = ({
-  icon: Icon,
-  title,
-  children,
-}: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-}) => {
-  // Split the text content by periods to create bullet points
-  const sentences =
-    typeof children === "string"
-      ? children
-          .split(".")
-          .filter((s) => s.trim().length > 0)
-          .map((s) => s.trim() + ".")
-      : [];
-
-  return (
-    <li className="cursor-pointer rounded-xl border border-slate-200 bg-slate-50/50 p-4 transition-all duration-200 ease-in-out hover:border-emerald-200 hover:bg-emerald-50">
-      {/* First row for the icon and title */}
-      <div className="flex items-center">
-        <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-emerald-500" />
-        <h4 className="font-inter font-medium text-slate-800">{title}</h4>
-      </div>
-      {/* Bullet list for content */}
-      {typeof children === "string" ? (
-        <ul className="font-inter mt-2 space-y-1 text-sm leading-relaxed text-slate-600 marker:text-emerald-500">
-          {sentences.map((sentence, index) => (
-            <li key={index} className="ml-6 list-disc pl-2">
-              {sentence}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="font-inter mt-2 text-sm leading-relaxed text-slate-600">{children}</div>
-      )}
-    </li>
-  );
 };
 
 interface QualityMetricsModalProps {
@@ -122,7 +78,7 @@ export function QualityMetricsModal({ isOpen, onOpenChange }: QualityMetricsModa
           <div className="space-y-4">
             <div>
               <ul className="space-y-4">
-                <InformationItem icon={LuTrendingUp} title="Model Percentage by Stage">
+                <DashboardInformationItem icon={LuTrendingUp} title="Model Performance by Stage">
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Displays the average confidence score of the model&apos;s predictions for each
@@ -142,8 +98,8 @@ export function QualityMetricsModal({ isOpen, onOpenChange }: QualityMetricsModa
                       improvement.
                     </li>
                   </ul>
-                </InformationItem>
-                <InformationItem icon={GoGitCompare} title="User Correction Ratio">
+                </DashboardInformationItem>
+                <DashboardInformationItem icon={GoGitCompare} title="User Correction Ratio">
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Compares model predictions that were <strong>verified</strong> as correct
@@ -164,8 +120,11 @@ export function QualityMetricsModal({ isOpen, onOpenChange }: QualityMetricsModa
                       user intervention.
                     </li>
                   </ul>
-                </InformationItem>
-                <InformationItem icon={IoIosCellular} title="Confidence Score Distribution">
+                </DashboardInformationItem>
+                <DashboardInformationItem
+                  icon={IoIosCellular}
+                  title="Confidence Score Distribution"
+                >
                   <ul className="space-y-1 marker:text-emerald-500">
                     <li className="ml-6 list-disc pl-2">
                       Shows how detections are spread across different confidence score ranges.
@@ -183,7 +142,7 @@ export function QualityMetricsModal({ isOpen, onOpenChange }: QualityMetricsModa
                       requires thorough manual review.
                     </li>
                   </ul>
-                </InformationItem>
+                </DashboardInformationItem>
               </ul>
             </div>
           </div>
