@@ -2,6 +2,7 @@
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { ChevronDown } from "lucide-react";
+import { memo, useCallback } from "react";
 import { DateRange } from "react-day-picker";
 import { BsCalendar4Week } from "react-icons/bs";
 
@@ -35,14 +36,19 @@ interface DateRangePickerProps {
  * @param {DateRangePickerProps} props The props for the component.
  * @returns A React component representing the date range picker.
  */
-export const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) => {
+export const DateRangePicker = memo(function DateRangePicker({
+  date,
+  onDateChange,
+}: DateRangePickerProps) {
   // A custom hook to determine if the current view is mobile for responsive rendering.
   const isMobile = useIsMobile();
 
-  /** Resets the selected date range to its undefined (empty) state. */
-  const onReset = () => {
+  /**
+   * Resets the selected date range to its undefined state.
+   */
+  const onReset = useCallback(() => {
     onDateChange(undefined);
-  };
+  }, [onDateChange]);
 
   return (
     <Popover>
@@ -107,6 +113,6 @@ export const DateRangePicker = ({ date, onDateChange }: DateRangePickerProps) =>
       </PopoverContent>
     </Popover>
   );
-};
+});
 
 DateRangePicker.displayName = "DateRangePicker";

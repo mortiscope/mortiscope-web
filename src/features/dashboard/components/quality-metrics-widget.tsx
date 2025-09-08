@@ -116,6 +116,13 @@ interface QualityMetricsWidgetProps {
 export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<QualityView>("performance");
+
+  /**
+   * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
+   */
+  const handleViewSelect = useCallback((view: QualityView) => {
+    setSelectedView(view);
+  }, []);
   /** Local state to store the fetched data for the 'performance' view. */
   const [modelPerformanceData, setModelPerformanceData] = useState<ModelPerformanceData[] | null>(
     null
@@ -181,7 +188,7 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
         </div>
         <QualityMetricsToolbar
           selectedView={selectedView}
-          onViewSelect={setSelectedView}
+          onViewSelect={handleViewSelect}
           onInfoClick={handleInfoClick}
         />
       </div>

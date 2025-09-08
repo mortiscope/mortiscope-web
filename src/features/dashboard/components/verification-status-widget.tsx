@@ -76,6 +76,13 @@ interface VerificationStatusWidgetProps {
 export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<VerificationView>("case");
+
+  /**
+   * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
+   */
+  const handleViewSelect = useCallback((view: VerificationView) => {
+    setSelectedView(view);
+  }, []);
   /** Local state to store the comprehensive verification metrics fetched from the server. */
   const [metrics, setMetrics] = useState<VerificationMetrics | null>(null);
   /** Local state to manage the modal open/close state. */
@@ -157,7 +164,7 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
         </div>
         <VerificationStatusToolbar
           selectedView={selectedView}
-          onViewSelect={setSelectedView}
+          onViewSelect={handleViewSelect}
           onInfoClick={handleInfoClick}
         />
       </div>

@@ -85,6 +85,13 @@ interface ForensicInsightsWidgetProps {
 export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<ForensicView>("life-stage");
+
+  /**
+   * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
+   */
+  const handleViewSelect = useCallback((view: ForensicView) => {
+    setSelectedView(view);
+  }, []);
   /** Local state to store the fetched data for the 'life-stage' view. */
   const [lifeStageData, setLifeStageData] = useState<LifeStageData[] | null>(null);
   /** Local state to store the fetched data for the 'pmi' view. */
@@ -205,7 +212,7 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
         </div>
         <ForensicInsightsToolbar
           selectedView={selectedView}
-          onViewSelect={setSelectedView}
+          onViewSelect={handleViewSelect}
           onInfoClick={handleInfoClick}
         />
       </div>

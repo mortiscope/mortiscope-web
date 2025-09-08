@@ -13,7 +13,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { HiOutlineSearch } from "react-icons/hi";
 
@@ -121,7 +121,7 @@ export const DashboardTableContainer = ({ data, dateRange }: DashboardTableConta
   /**
    * Handler to open the case information modal and fetch case data.
    */
-  const handleViewCase = async (caseId: string) => {
+  const handleViewCase = useCallback(async (caseId: string) => {
     try {
       const caseData = await getCaseById(caseId);
       if (caseData) {
@@ -162,21 +162,21 @@ export const DashboardTableContainer = ({ data, dateRange }: DashboardTableConta
     } catch (error) {
       console.error("Failed to fetch case data:", error);
     }
-  };
+  }, []);
 
   /**
    * Handler to open the delete selected cases modal.
    */
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = useCallback(() => {
     setDeleteModal({ isOpen: true });
-  };
+  }, []);
 
   /**
    * Handler when cases are successfully deleted.
    */
-  const handleDeleteSuccess = () => {
+  const handleDeleteSuccess = useCallback(() => {
     setRowSelection({});
-  };
+  }, []);
 
   /** Local state to manage sorting. */
   const [sorting, setSorting] = useState<SortingState>([{ id: "caseDate", desc: true }]);

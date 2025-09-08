@@ -1,6 +1,7 @@
 "use client";
 
-import { LuClock3, LuClock6, LuClock9,LuClock12 } from "react-icons/lu";
+import { memo } from "react";
+import { LuClock3, LuClock6, LuClock9, LuClock12 } from "react-icons/lu";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +43,10 @@ interface TimePeriodFilterProps {
  * @param {TimePeriodFilterProps} props The props for the component.
  * @returns A React component representing the time period filter.
  */
-export function TimePeriodFilter({ selectedPeriod, onPeriodChange }: TimePeriodFilterProps) {
+export const TimePeriodFilter = memo(function TimePeriodFilter({
+  selectedPeriod,
+  onPeriodChange,
+}: TimePeriodFilterProps) {
   // A custom hook to determine if the current view is mobile for responsive dropdown alignment.
   const isMobile = useIsMobile();
 
@@ -96,6 +100,6 @@ export function TimePeriodFilter({ selectedPeriod, onPeriodChange }: TimePeriodF
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
 
 TimePeriodFilter.displayName = "TimePeriodFilter";

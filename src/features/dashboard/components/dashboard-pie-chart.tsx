@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Cell, Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from "recharts";
 import { type TooltipProps } from "recharts";
 
@@ -151,7 +151,7 @@ const CustomLegend = ({ payload, isMobile }: CustomLegendProps) => {
 /**
  * A reusable, interactive pie chart component for displaying data distribution.
  */
-export const DashboardPieChart = ({ data }: DashboardPieChartProps) => {
+export const DashboardPieChart = memo(function DashboardPieChart({ data }: DashboardPieChartProps) {
   const isMobile = useIsMobile();
   // State to track the index of the currently hovered pie segment.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -274,6 +274,6 @@ export const DashboardPieChart = ({ data }: DashboardPieChartProps) => {
       <CustomLegend payload={legendPayload} isMobile={isMobile} />
     </div>
   );
-};
+});
 
 DashboardPieChart.displayName = "DashboardPieChart";

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { DateRange } from "react-day-picker";
 
 import { DateRangePicker } from "@/features/dashboard/components/date-range-picker";
@@ -34,7 +35,7 @@ interface DashboardHeaderProps {
  * @param {DashboardHeaderProps} props The props for the component.
  * @returns A React component representing the dashboard header.
  */
-export function DashboardHeader({
+export const DashboardHeader = memo(function DashboardHeader({
   firstName,
   selectedPeriod,
   dateRange,
@@ -62,6 +63,6 @@ export function DashboardHeader({
       </div>
     </div>
   );
-}
+});
 
 DashboardHeader.displayName = "DashboardHeader";

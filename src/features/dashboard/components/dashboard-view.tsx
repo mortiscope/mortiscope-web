@@ -1,7 +1,7 @@
 "use client";
 
 import { subMonths, subWeeks, subYears } from "date-fns";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
@@ -41,11 +41,20 @@ export function DashboardView({
   caseData,
   initialData,
 }: DashboardViewProps) {
-  // Calculate the initial date range based on the "all-time" period.
-  const today = new Date();
-  const oldestDate = oldestCaseDate ? new Date(oldestCaseDate) : subYears(today, 1);
+  /**
+   * Memoized today's date to prevent unnecessary recalculations.
+   */
+  const today = useMemo(() => new Date(), []);
 
-  // State for the selected time period, defaulting to "all-time".
+  /**
+   * Memoized oldest date to prevent unnecessary recalculations.
+   */
+  const oldestDate = useMemo(
+    () => (oldestCaseDate ? new Date(oldestCaseDate) : subYears(today, 1)),
+    [oldestCaseDate, today]
+  );
+
+  // State for the selected time period, defaulting to all-time.
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodValue>("all-time");
 
   // State for the selected date range, defaulting to all-time range.
@@ -59,40 +68,46 @@ export function DashboardView({
    * @param period The selected time period value.
    * @returns The calculated date range.
    */
-  const calculateDateRange = (period: TimePeriodValue): DateRange => {
-    const currentDate = new Date();
+  const calculateDateRange = useCallback(
+    (period: TimePeriodValue): DateRange => {
+      const currentDate = new Date();
 
-    switch (period) {
-      case "all-time":
-        return { from: oldestDate, to: currentDate };
-      case "past-year":
-        return { from: subYears(currentDate, 1), to: currentDate };
-      case "past-month":
-        return { from: subMonths(currentDate, 1), to: currentDate };
-      case "past-week":
-        return { from: subWeeks(currentDate, 1), to: currentDate };
-      default:
-        return { from: subMonths(currentDate, 1), to: currentDate };
-    }
-  };
+      switch (period) {
+        case "all-time":
+          return { from: oldestDate, to: currentDate };
+        case "past-year":
+          return { from: subYears(currentDate, 1), to: currentDate };
+        case "past-month":
+          return { from: subMonths(currentDate, 1), to: currentDate };
+        case "past-week":
+          return { from: subWeeks(currentDate, 1), to: currentDate };
+        default:
+          return { from: subMonths(currentDate, 1), to: currentDate };
+      }
+    },
+    [oldestDate]
+  );
 
   /**
    * Handles changes to the selected time period and updates the date range accordingly.
    * @param period The newly selected time period value.
    */
-  const handlePeriodChange = (period: TimePeriodValue) => {
-    setSelectedPeriod(period);
-    const newDateRange = calculateDateRange(period);
-    setDateRange(newDateRange);
-  };
+  const handlePeriodChange = useCallback(
+    (period: TimePeriodValue) => {
+      setSelectedPeriod(period);
+      const newDateRange = calculateDateRange(period);
+      setDateRange(newDateRange);
+    },
+    [calculateDateRange]
+  );
 
   /**
    * Handles manual changes to the date range from the date range picker.
    * @param range The newly selected date range.
    */
-  const handleDateChange = (range: DateRange | undefined) => {
+  const handleDateChange = useCallback((range: DateRange | undefined) => {
     setDateRange(range);
-  };
+  }, []);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">

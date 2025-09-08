@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { PiWarning } from "react-icons/pi";
 import { toast } from "sonner";
@@ -61,12 +61,12 @@ interface DeleteSelectedCaseModalProps {
  * A modal component for deleting multiple selected cases.
  * Requires password verification before deletion.
  */
-export const DeleteSelectedCaseModal = ({
+export const DeleteSelectedCaseModal = memo(function DeleteSelectedCaseModal({
   isOpen,
   onOpenChange,
   selectedCases,
   onSuccess,
-}: DeleteSelectedCaseModalProps) => {
+}: DeleteSelectedCaseModalProps) {
   const queryClient = useQueryClient();
 
   // Memoize the case IDs array
@@ -245,6 +245,6 @@ export const DeleteSelectedCaseModal = ({
       </DialogContent>
     </Dialog>
   );
-};
+});
 
 DeleteSelectedCaseModal.displayName = "DeleteSelectedCaseModal";
