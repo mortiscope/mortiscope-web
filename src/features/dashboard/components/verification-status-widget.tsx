@@ -85,6 +85,8 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
   }, []);
   /** Local state to store the comprehensive verification metrics fetched from the server. */
   const [metrics, setMetrics] = useState<VerificationMetrics | null>(null);
+  /** Local state to track loading state. */
+  const [isLoading, setIsLoading] = useState(true);
   /** Local state to manage the modal open/close state. */
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -98,8 +100,10 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
    */
   useEffect(() => {
     const fetchMetrics = async () => {
+      setIsLoading(true);
       const data = await getVerificationStatus(dateRange?.from, dateRange?.to);
       setMetrics(data);
+      setIsLoading(false);
     };
     void fetchMetrics();
   }, [dateRange]);
@@ -170,8 +174,12 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
       </div>
       {/* The main content area where the chart is rendered. */}
       <div className="min-h-0 flex-1">
-        {/* Shows a loader if the chart data has not yet been fetched and processed. */}
-        {chartData.length === 0 ? <ChartLoader /> : <DashboardPieChart data={chartData} />}
+        {/* Shows a loader if data is being fetched or if there's no data. */}
+        {isLoading || chartData.length === 0 ? (
+          <ChartLoader />
+        ) : (
+          <DashboardPieChart data={chartData} />
+        )}
       </div>
       {/* Lazy-loaded modal for verification status information */}
       <VerificationStatusModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />

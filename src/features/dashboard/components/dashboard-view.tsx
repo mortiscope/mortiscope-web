@@ -13,7 +13,7 @@ import type { CaseData } from "@/features/dashboard/components/dashboard-table-c
 /**
  * Type definition for time period values.
  */
-type TimePeriodValue = "all-time" | "past-year" | "past-month" | "past-week";
+type TimePeriodValue = "all-time" | "past-year" | "past-month" | "past-week" | "custom";
 
 /**
  * Defines the props for the dashboard view component.
@@ -63,6 +63,9 @@ export function DashboardView({
     to: today,
   });
 
+  // State to track if data is being loaded.
+  const [isLoading, setIsLoading] = useState(false);
+
   /**
    * Calculates the date range based on the selected time period.
    * @param period The selected time period value.
@@ -107,6 +110,7 @@ export function DashboardView({
    */
   const handleDateChange = useCallback((range: DateRange | undefined) => {
     setDateRange(range);
+    setSelectedPeriod("custom");
   }, []);
 
   return (
@@ -119,9 +123,14 @@ export function DashboardView({
         dateRange={dateRange}
         onPeriodChange={handlePeriodChange}
         onDateChange={handleDateChange}
+        isLoading={isLoading}
       />
       {/* Renders the main metrics grid with date filtering. */}
-      <DashboardMetricsGrid initialData={initialData} dateRange={dateRange} />
+      <DashboardMetricsGrid
+        initialData={initialData}
+        dateRange={dateRange}
+        onLoadingChange={setIsLoading}
+      />
       {/* Renders the analytics widgets grid and table with date filtering. */}
       <DashboardAnalysis caseData={caseData} dateRange={dateRange} />
     </div>

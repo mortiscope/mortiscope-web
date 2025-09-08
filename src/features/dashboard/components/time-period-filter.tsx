@@ -26,7 +26,7 @@ const TIME_PERIOD_OPTIONS = [
 /**
  * Type definition for time period values.
  */
-type TimePeriodValue = (typeof TIME_PERIOD_OPTIONS)[number]["value"];
+type TimePeriodValue = (typeof TIME_PERIOD_OPTIONS)[number]["value"] | "custom";
 
 /**
  * Defines the props for the time period filter component.
@@ -53,7 +53,7 @@ export const TimePeriodFilter = memo(function TimePeriodFilter({
   // Find the current selected option.
   const currentOption = TIME_PERIOD_OPTIONS.find((option) => option.value === selectedPeriod);
   const CurrentIcon = currentOption?.icon ?? LuClock12;
-  const currentLabel = currentOption?.label ?? "All-time";
+  const currentLabel = currentOption?.label ?? "Custom Date";
 
   return (
     <DropdownMenu>

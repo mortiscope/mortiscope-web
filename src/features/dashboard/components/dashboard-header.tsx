@@ -9,7 +9,7 @@ import { TimePeriodFilter } from "@/features/dashboard/components/time-period-fi
 /**
  * Type definition for time period values.
  */
-type TimePeriodValue = "all-time" | "past-year" | "past-month" | "past-week";
+type TimePeriodValue = "all-time" | "past-year" | "past-month" | "past-week" | "custom";
 
 /**
  * Defines the props for the dashboard header component.
@@ -27,11 +27,12 @@ interface DashboardHeaderProps {
   onPeriodChange: (period: TimePeriodValue) => void;
   /** A callback function to update the selected date range. */
   onDateChange: (range: DateRange | undefined) => void;
+  /** Indicates if data is currently being loaded. */
+  isLoading?: boolean;
 }
 
 /**
  * A controlled client component that renders the main header for the dashboard.
- * Receives state and handlers from the parent DashboardView component.
  * @param {DashboardHeaderProps} props The props for the component.
  * @returns A React component representing the dashboard header.
  */
@@ -41,6 +42,7 @@ export const DashboardHeader = memo(function DashboardHeader({
   dateRange,
   onPeriodChange,
   onDateChange,
+  isLoading = false,
 }: DashboardHeaderProps) {
   return (
     // The main container uses a responsive flexbox layout.
@@ -58,7 +60,12 @@ export const DashboardHeader = memo(function DashboardHeader({
           <TimePeriodFilter selectedPeriod={selectedPeriod} onPeriodChange={onPeriodChange} />
         </div>
         <div className="flex-1 md:w-auto md:flex-none">
-          <DateRangePicker date={dateRange} onDateChange={onDateChange} />
+          <DateRangePicker
+            date={dateRange}
+            onDateChange={onDateChange}
+            onReset={() => onPeriodChange("all-time")}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </div>

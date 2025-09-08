@@ -7,12 +7,13 @@ import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-
  * A custom hook that polls for dashboard metrics.
  * @param initialData - The initial data to hydrate the query with (from SSR).
  * @param dateRange - The date range to filter metrics by.
+ * @returns An object containing the data and `isFetching` state.
  */
 export const useMetricsPoller = (
   initialData: Awaited<ReturnType<typeof getDashboardMetrics>>,
   dateRange: DateRange | undefined
 ) => {
-  return useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ["dashboard-metrics", dateRange?.from, dateRange?.to],
     queryFn: () => getDashboardMetrics(dateRange?.from, dateRange?.to),
     // Poll every 10 seconds.
@@ -22,4 +23,6 @@ export const useMetricsPoller = (
     // Use initial data from the server to avoid a loading state on first render.
     initialData,
   });
+
+  return { data, isFetching };
 };

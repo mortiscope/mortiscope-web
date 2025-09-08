@@ -131,6 +131,8 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
   const [correctionData, setCorrectionData] = useState<CorrectionMetric[] | null>(null);
   /** Local state to store the fetched data for the 'confidence' view. */
   const [confidenceData, setConfidenceData] = useState<ConfidenceMetric[] | null>(null);
+  /** Local state to track loading state. */
+  const [isLoading, setIsLoading] = useState(true);
   /** Local state to manage the modal open/close state. */
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -144,6 +146,7 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
    */
   useEffect(() => {
     const fetchAllData = async () => {
+      setIsLoading(true);
       // Fetches all data points concurrently for better performance.
       const [performanceData, correctionMetrics, confidenceMetrics] = await Promise.all([
         getModelPerformanceMetrics(dateRange?.from, dateRange?.to),
@@ -153,6 +156,7 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
       setModelPerformanceData(performanceData);
       setCorrectionData(correctionMetrics);
       setConfidenceData(confidenceMetrics);
+      setIsLoading(false);
     };
     void fetchAllData();
   }, [dateRange]);
@@ -195,29 +199,29 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
       {/* Conditionally renders the appropriate chart based on the selected view state. */}
       {selectedView === "performance" && (
         <div className="min-h-0 flex-1">
-          {/* Shows a loader if the data for this view has not yet been fetched. */}
-          {modelPerformanceData && modelPerformanceData.length > 0 ? (
-            <DashboardLineChart data={modelPerformanceData} />
-          ) : (
+          {/* Shows a loader if data is being fetched or if there's no data. */}
+          {isLoading || !modelPerformanceData || modelPerformanceData.length === 0 ? (
             <ChartLoader />
+          ) : (
+            <DashboardLineChart data={modelPerformanceData} />
           )}
         </div>
       )}
       {selectedView === "correction" && (
         <div className="min-h-0 flex-1">
-          {correctionData && correctionData.length > 0 ? (
-            <DashboardPieChart data={correctionData} />
-          ) : (
+          {isLoading || !correctionData || correctionData.length === 0 ? (
             <ChartLoader />
+          ) : (
+            <DashboardPieChart data={correctionData} />
           )}
         </div>
       )}
       {selectedView === "confidence" && (
         <div className="min-h-0 flex-1 [&_.recharts-y-axis]:hidden">
-          {confidenceData && confidenceData.length > 0 ? (
-            <DashboardDistributionChart data={confidenceData} />
-          ) : (
+          {isLoading || !confidenceData || confidenceData.length === 0 ? (
             <ChartLoader />
+          ) : (
+            <DashboardDistributionChart data={confidenceData} />
           )}
         </div>
       )}

@@ -251,11 +251,17 @@ export const DashboardTableContainer = ({ data, dateRange }: DashboardTableConta
     const container = tableScrollRef.current;
     const hasSearchValue = globalFilter && globalFilter.trim().length > 0;
 
-    if (!hasSearchValue) {
-      // Search is blank, scroll to start
+    if (rowCount === 0) {
+      // No results found from search or date filtering
+      setTimeout(() => {
+        const centerPosition = (container.scrollWidth - container.clientWidth) / 2;
+        container.scrollTo({ left: centerPosition, behavior: "smooth" });
+      }, 0);
+    } else if (!hasSearchValue) {
+      // Has results but no search, scroll to start
       container.scrollTo({ left: 0, behavior: "smooth" });
     } else {
-      // Search has value, find and scroll to the highlighted text
+      // Has results and search value, find and scroll to the highlighted text
       setTimeout(() => {
         const highlightedElement = container.querySelector(".bg-emerald-200");
 
@@ -275,10 +281,6 @@ export const DashboardTableContainer = ({ data, dateRange }: DashboardTableConta
             elementRect.width / 2;
 
           container.scrollTo({ left: scrollLeft, behavior: "smooth" });
-        } else if (rowCount === 0) {
-          // No highlights found and no results, scroll to center for "no results" message
-          const centerPosition = (container.scrollWidth - container.clientWidth) / 2;
-          container.scrollTo({ left: centerPosition, behavior: "smooth" });
         }
       }, 0);
     }
@@ -362,7 +364,7 @@ export const DashboardTableContainer = ({ data, dateRange }: DashboardTableConta
       {/* Renders the pagination component, passing down all necessary state and handlers from the `table` instance. */}
       <DashboardTablePagination
         selectedRowCount={Object.keys(rowSelection).length}
-        totalRows={data.length}
+        totalRows={table.getFilteredRowModel().rows.length}
         currentPage={table.getState().pagination.pageIndex + 1}
         totalPages={Math.max(1, table.getPageCount())}
         canPreviousPage={table.getCanPreviousPage()}

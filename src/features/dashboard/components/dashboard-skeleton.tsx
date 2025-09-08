@@ -42,7 +42,7 @@ DashboardAnalysisSkeleton.displayName = "DashboardAnalysisSkeleton";
  * A skeleton loader for the dashboard table container.
  */
 export const DashboardTableSkeleton = () => (
-  <div className="mt-4">
+  <div>
     <Skeleton className="h-96 w-full rounded-3xl bg-white p-4 md:p-8" />
   </div>
 );
