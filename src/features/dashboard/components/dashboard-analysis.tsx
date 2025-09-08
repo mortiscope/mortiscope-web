@@ -5,6 +5,7 @@ import { DateRange } from "react-day-picker";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useCaseDataPoller } from "@/features/dashboard/hooks/use-case-data-poller";
 import type { CaseData } from "@/features/dashboard/schemas/dashboard";
 
 /**
@@ -92,17 +93,21 @@ const DashboardTableContainer = dynamic(
 );
 
 interface DashboardAnalysisProps {
-  caseData: CaseData[];
+  initialCaseData: CaseData[];
   dateRange: DateRange | undefined;
 }
 
 /**
  * A container component that orchestrates and lays out the main widgets for the
- * dashboard's analysis section. Passes the date range to all child components for filtering.
+ * dashboard's analysis section. Uses React Query to poll for case data updates
+ * and passes the date range to all child components for filtering.
  *
  * @returns A React component representing the dashboard analysis layout.
  */
-export const DashboardAnalysis = ({ caseData, dateRange }: DashboardAnalysisProps) => {
+export const DashboardAnalysis = ({ initialCaseData, dateRange }: DashboardAnalysisProps) => {
+  // Use React Query to poll for case data updates every 10 seconds
+  const { data: caseData } = useCaseDataPoller(initialCaseData, dateRange);
+
   return (
     // Wraps all widgets in a single tooltip provider to enable tooltips within them.
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
