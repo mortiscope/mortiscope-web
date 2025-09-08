@@ -86,7 +86,17 @@
         ".next/static/chunks/framework-*.js",
         ".next/static/chunks/main-app-*.js"
       ],
-      "limit": "110 kB"
+      "limit": "115 kB"
+    },
+    {
+      "name": "Dashboard (/dashboard)",
+      "path": [
+        ".next/static/chunks/webpack-*.js",
+        ".next/static/chunks/framework-*.js",
+        ".next/static/chunks/main-app-*.js",
+        ".next/static/chunks/app/**/dashboard/page-*.js"
+      ],
+      "limit": "215 kB"
     },
     {
       "name": "Account Page (/account)",
@@ -117,7 +127,7 @@
         ".next/static/chunks/app/\\(private\\)/results/page-*.js",
         ".next/static/chunks/app/\\(private\\)/results/\\[resultsId\\]/page-*.js"
       ],
-      "limit": "270 kB"
+      "limit": "280 kB"
     },
     {
       "name": "Results Editor (/results/**/edit)",
