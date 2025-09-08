@@ -5,15 +5,9 @@ import { useMemo } from "react";
 import { IoHourglassOutline } from "react-icons/io5";
 import { PiCirclesThree, PiRecycle } from "react-icons/pi";
 
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DashboardModalFooter } from "@/features/dashboard/components/dashboard-modal-footer";
+import { DashboardModalHeader } from "@/features/dashboard/components/dashboard-modal-header";
 
 /**
  * Framer Motion variants for the main modal content container.
@@ -112,16 +106,11 @@ export function ForensicInsightsModal({ isOpen, onOpenChange }: ForensicInsights
         animate="show"
       >
         {/* Animated wrapper for the dialog header. */}
-        <motion.div variants={itemVariants} className="shrink-0 px-6 pt-6">
-          <DialogHeader className="text-center">
-            <DialogTitle className="font-plus-jakarta-sans text-center text-xl font-bold text-emerald-600 md:text-2xl">
-              Forensic Insights Information
-            </DialogTitle>
-            <DialogDescription className="font-inter text-center text-sm text-slate-600">
-              A guide to understanding forensic analysis visualizations and metrics.
-            </DialogDescription>
-          </DialogHeader>
-        </motion.div>
+        <DashboardModalHeader
+          title="Forensic Insights Information"
+          description="A guide to understanding forensic analysis visualizations and metrics."
+          variants={itemVariants}
+        />
 
         {/* Main content area */}
         <motion.div
@@ -201,16 +190,7 @@ export function ForensicInsightsModal({ isOpen, onOpenChange }: ForensicInsights
         </motion.div>
 
         {/* Dialog footer */}
-        <motion.div variants={itemVariants} className="shrink-0 px-6 pt-2 pb-6">
-          <DialogFooter>
-            <Button
-              onClick={() => onOpenChange(false)}
-              className="font-inter relative mt-2 h-9 w-full cursor-pointer overflow-hidden rounded-lg border-none bg-emerald-600 px-6 text-sm font-normal text-white uppercase transition-all duration-300 ease-in-out before:absolute before:top-0 before:-left-full before:z-[-1] before:h-full before:w-full before:rounded-lg before:bg-gradient-to-r before:from-yellow-400 before:to-yellow-500 before:transition-all before:duration-600 before:ease-in-out hover:scale-100 hover:border-transparent hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-yellow-500/20 hover:before:left-0 md:mt-0 md:h-10 md:w-auto md:text-base"
-            >
-              Got It
-            </Button>
-          </DialogFooter>
-        </motion.div>
+        <DashboardModalFooter onClose={() => onOpenChange(false)} variants={itemVariants} />
       </motion.div>
     ),
     [onOpenChange]
