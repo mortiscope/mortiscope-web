@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { IoFolderOpenOutline, IoImagesOutline } from "react-icons/io5";
 import { PiBoundingBox } from "react-icons/pi";
@@ -10,11 +10,11 @@ import { BeatLoader } from "react-spinners";
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getVerificationStatus } from "@/features/dashboard/actions/get-verification-status";
 import {
   VerificationStatusToolbar,
   type VerificationView,
 } from "@/features/dashboard/components/verification-status-toolbar";
+import { useVerificationStatusPoller } from "@/features/dashboard/hooks/use-verification-status-poller";
 
 /**
  * A reusable loading component displayed while the chart's data is loading.
@@ -58,15 +58,6 @@ const viewOptions = [
   { value: "detection", icon: PiBoundingBox, label: "Detection Verification Status" },
 ] as const;
 
-/**
- * Defines the shape of the verification metrics data fetched from the server.
- */
-interface VerificationMetrics {
-  caseVerification: { verified: number; unverified: number; inProgress: number };
-  imageVerification: { verified: number; unverified: number; inProgress: number };
-  detectionVerification: { verified: number; unverified: number };
-}
-
 interface VerificationStatusWidgetProps {
   dateRange: DateRange | undefined;
 }
@@ -77,6 +68,13 @@ interface VerificationStatusWidgetProps {
 export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<VerificationView>("case");
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  /**
+   * Smart polling hook that fetches and polls verification status data
+   */
+  const { metrics, isFetching } = useVerificationStatusPoller({ dateRange });
 
   /**
    * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
@@ -84,30 +82,11 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
   const handleViewSelect = useCallback((view: VerificationView) => {
     setSelectedView(view);
   }, []);
-  /** Local state to store the comprehensive verification metrics fetched from the server. */
-  const [metrics, setMetrics] = useState<VerificationMetrics | null>(null);
-  /** Local state to track loading state. */
-  const [isLoading, setIsLoading] = useState(true);
-  /** Local state to manage the modal open/close state. */
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
   /** Dynamically selects the icon for the currently selected view's title. */
   const CurrentIcon = currentOption?.icon ?? IoFolderOpenOutline;
-
-  /**
-   * A side effect that fetches the verification metrics from the server when the date range changes.
-   */
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      setIsLoading(true);
-      const data = await getVerificationStatus(dateRange?.from, dateRange?.to);
-      setMetrics(data);
-      setIsLoading(false);
-    };
-    void fetchMetrics();
-  }, [dateRange]);
 
   /**
    * Memoizes the transformation of the raw metrics into the specific format required by the pie chart.
@@ -145,8 +124,9 @@ export const VerificationStatusWidget = ({ dateRange }: VerificationStatusWidget
     setIsModalOpen(true);
   }, []);
 
-  // Show skeleton while loading data
-  if (isLoading) {
+  // Show skeleton during initial data loading
+  const isInitialLoading = !metrics && isFetching;
+  if (isInitialLoading) {
     return <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />;
   }
 
