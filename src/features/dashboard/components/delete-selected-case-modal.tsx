@@ -83,8 +83,11 @@ export const DeleteSelectedCaseModal = memo(function DeleteSelectedCaseModal({
         toast.success(result.success, {
           className: "font-inter",
         });
-        // Invalidate queries to refresh the data
+        // Invalidate all dashboard queries to update table and widgets
         queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] });
+        queryClient.invalidateQueries({ queryKey: ["forensic-insights"] });
+        queryClient.invalidateQueries({ queryKey: ["verification-status"] });
+        queryClient.invalidateQueries({ queryKey: ["quality-metrics"] });
         onSuccess();
         handleClose();
       } else if (result.error) {

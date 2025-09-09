@@ -213,6 +213,10 @@ export const useEditCaseForm = ({ caseData, onSheetClose }: UseEditCaseFormProps
         queryClient.invalidateQueries({ queryKey: ["caseName", caseData.id] });
         queryClient.invalidateQueries({ queryKey: ["cases"] });
         queryClient.invalidateQueries({ queryKey: ["caseHistory", caseData.id] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] });
+        queryClient.invalidateQueries({ queryKey: ["forensic-insights"] });
+        queryClient.invalidateQueries({ queryKey: ["verification-status"] });
+        queryClient.invalidateQueries({ queryKey: ["quality-metrics"] });
 
         // Triggers the parent component's callback to close the form sheet.
         onSheetClose();

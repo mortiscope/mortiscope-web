@@ -132,7 +132,7 @@ export function DashboardView({
         onLoadingChange={setIsLoading}
       />
       {/* Renders the analytics widgets grid and table with date filtering. */}
-      <DashboardAnalysis caseData={caseData} dateRange={dateRange} />
+      <DashboardAnalysis initialCaseData={caseData} dateRange={dateRange} />
     </div>
   );
 }

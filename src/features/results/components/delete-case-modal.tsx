@@ -118,6 +118,10 @@ export const DeleteCaseModal = ({
     onSettled: () => {
       // Always refetch after the mutation is settled to ensure data consistency.
       queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["forensic-insights"] });
+      queryClient.invalidateQueries({ queryKey: ["verification-status"] });
+      queryClient.invalidateQueries({ queryKey: ["quality-metrics"] });
     },
   });
 

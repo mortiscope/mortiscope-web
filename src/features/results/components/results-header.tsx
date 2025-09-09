@@ -73,6 +73,10 @@ export const ResultsHeader = ({ caseData, onEditClick }: ResultsHeaderProps) => 
         await queryClient.invalidateQueries({ queryKey: ["recalculationStatus", caseId] });
         await queryClient.invalidateQueries({ queryKey: ["cases"] });
         await queryClient.invalidateQueries({ queryKey: ["caseHistory", caseId] });
+        await queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] });
+        await queryClient.invalidateQueries({ queryKey: ["forensic-insights"] });
+        await queryClient.invalidateQueries({ queryKey: ["verification-status"] });
+        await queryClient.invalidateQueries({ queryKey: ["quality-metrics"] });
 
         // Check if the database flag has been cleared
         setTimeout(async () => {

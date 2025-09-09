@@ -112,6 +112,10 @@ export const ResultsPreview = () => {
       else if (data?.success) toast.success(data.success);
       // Always invalidate the query to refetch the latest data from the server.
       queryClient.invalidateQueries({ queryKey: ["cases"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-cases"] });
+      queryClient.invalidateQueries({ queryKey: ["forensic-insights"] });
+      queryClient.invalidateQueries({ queryKey: ["verification-status"] });
+      queryClient.invalidateQueries({ queryKey: ["quality-metrics"] });
     },
   });
 
