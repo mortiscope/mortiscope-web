@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -13,19 +13,30 @@ import { formatConfidence, formatPmiToInterpretableString } from "@/lib/utils";
  * case data format required for the main dashboard table. It performs several
  * calculations and aggregations on the raw data.
  *
+ * @param startDate - Optional start date to filter cases by caseDate.
+ * @param endDate - Optional end date to filter cases by caseDate.
  * @returns A promise that resolves to an array of `CaseData` objects.
  * @throws An error if the user is not authenticated.
  */
-export const getCaseData = async (): Promise<CaseData[]> => {
+export const getCaseData = async (startDate?: Date, endDate?: Date): Promise<CaseData[]> => {
   // Authenticate the user's session. This action is only for authenticated users.
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("User not authenticated");
   }
 
+  // Build the where clause with optional date filtering.
+  const whereConditions = [eq(cases.userId, session.user.id), eq(cases.status, "active")];
+  if (startDate) {
+    whereConditions.push(gte(cases.caseDate, startDate));
+  }
+  if (endDate) {
+    whereConditions.push(lte(cases.caseDate, endDate));
+  }
+
   // Fetch all active cases for the user from the database.
   const userCases = await db.query.cases.findMany({
-    where: and(eq(cases.userId, session.user.id), eq(cases.status, "active")),
+    where: and(...whereConditions),
     orderBy: [desc(cases.caseDate)],
     with: {
       analysisResult: true,

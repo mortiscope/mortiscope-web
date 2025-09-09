@@ -1,7 +1,8 @@
 "use client";
 
 import { subMonths, subWeeks, subYears } from "date-fns";
-import { useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DateRange } from "react-day-picker";
 
 import { getDashboardMetrics } from "@/features/dashboard/actions/get-dashboard-metrics";
@@ -9,6 +10,7 @@ import { DashboardAnalysis } from "@/features/dashboard/components/dashboard-ana
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DashboardMetricsGrid } from "@/features/dashboard/components/dashboard-metrics-grid";
 import type { CaseData } from "@/features/dashboard/schemas/dashboard";
+import { buildDateRangeParams, validateDateRange } from "@/features/dashboard/utils/date-url-sync";
 
 /**
  * Type definition for time period values.
@@ -41,6 +43,11 @@ export function DashboardView({
   caseData,
   initialData,
 }: DashboardViewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const hasCheckedInvalidDates = useRef(false);
+
   /**
    * Memoized today's date to prevent unnecessary recalculations.
    */
@@ -54,14 +61,45 @@ export function DashboardView({
     [oldestCaseDate, today]
   );
 
-  // State for the selected time period, defaulting to all-time.
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodValue>("all-time");
+  /**
+   * Read and validate date range from URL parameters on initial render.
+   */
+  const urlDateRange = useMemo(() => {
+    const startParam = searchParams.get("start");
+    const endParam = searchParams.get("end");
+    return validateDateRange(startParam, endParam);
+  }, [searchParams]);
 
-  // State for the selected date range, defaulting to all-time range.
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: oldestDate,
-    to: today,
-  });
+  /**
+   * Clear invalid date parameters from URL on mount.
+   */
+  useEffect(() => {
+    // Only check once on mount to avoid infinite loops
+    if (hasCheckedInvalidDates.current) return;
+
+    const startParam = searchParams.get("start");
+    const endParam = searchParams.get("end");
+
+    // If params exist but validation fails, clear the URL
+    if ((startParam || endParam) && !urlDateRange) {
+      router.replace(pathname as never);
+    }
+
+    hasCheckedInvalidDates.current = true;
+  }, [pathname, router, searchParams, urlDateRange]);
+
+  // State for the selected time period, defaulting based on URL params.
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodValue>(
+    urlDateRange ? "custom" : "all-time"
+  );
+
+  // State for the selected date range, defaulting based on URL params or all-time.
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    urlDateRange || {
+      from: oldestDate,
+      to: today,
+    }
+  );
 
   // State to track if data is being loaded.
   const [isLoading, setIsLoading] = useState(false);
@@ -100,18 +138,32 @@ export function DashboardView({
       setSelectedPeriod(period);
       const newDateRange = calculateDateRange(period);
       setDateRange(newDateRange);
+
+      // Clear URL parameters for preset periods.
+      if (period !== "custom") {
+        router.replace(pathname as never);
+      }
     },
-    [calculateDateRange]
+    [calculateDateRange, pathname, router]
   );
 
   /**
    * Handles manual changes to the date range from the date range picker.
    * @param range The newly selected date range.
    */
-  const handleDateChange = useCallback((range: DateRange | undefined) => {
-    setDateRange(range);
-    setSelectedPeriod("custom");
-  }, []);
+  const handleDateChange = useCallback(
+    (range: DateRange | undefined) => {
+      setDateRange(range);
+      setSelectedPeriod("custom");
+
+      // Update URL with custom date range
+      if (range?.from && range?.to) {
+        const params = buildDateRangeParams(range.from, range.to);
+        router.replace(`${pathname}?${params.toString()}` as never);
+      }
+    },
+    [pathname, router]
+  );
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-4">
