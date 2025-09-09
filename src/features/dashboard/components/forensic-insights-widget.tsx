@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { IoHourglassOutline } from "react-icons/io5";
 import { PiCirclesThree, PiRecycle } from "react-icons/pi";
@@ -10,13 +10,11 @@ import { BeatLoader } from "react-spinners";
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getLifeStageDistribution } from "@/features/dashboard/actions/get-life-stage-distribution";
-import { getPmiDistribution } from "@/features/dashboard/actions/get-pmi-distribution";
-import { getSamplingDensity } from "@/features/dashboard/actions/get-sampling-density";
 import {
   ForensicInsightsToolbar,
   type ForensicView,
 } from "@/features/dashboard/components/forensic-insights-toolbar";
+import { useForensicInsightsPoller } from "@/features/dashboard/hooks/use-forensic-insights-poller";
 import {
   DETECTION_CLASS_COLORS,
   PMI_INTERVAL_LABELS,
@@ -68,26 +66,25 @@ const viewOptions = [
   { value: "sampling", icon: PiCirclesThree, label: "Sampling Density" },
 ] as const;
 
-/**
- * Defines the shape of the data points used by the charts in this widget.
- */
-interface LifeStageData {
-  name: string;
-  quantity: number;
-}
-
 interface ForensicInsightsWidgetProps {
   dateRange: DateRange | undefined;
 }
 
 /**
- * A 'smart' widget component that displays various forensic insights using a bar chart.
+ * A smart widget component that displays various forensic insights using a bar chart.
  */
 export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<ForensicView>("life-stage");
-  /** Local state to track initial data loading. */
-  const [isLoading, setIsLoading] = useState(true);
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  /**
+   * Smart polling hook that fetches and polls forensic insights data
+   */
+  const { lifeStageData, pmiData, samplingData, isFetching } = useForensicInsightsPoller({
+    dateRange,
+  });
 
   /**
    * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
@@ -95,41 +92,11 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
   const handleViewSelect = useCallback((view: ForensicView) => {
     setSelectedView(view);
   }, []);
-  /** Local state to store the fetched data for the 'life-stage' view. */
-  const [lifeStageData, setLifeStageData] = useState<LifeStageData[] | null>(null);
-  /** Local state to store the fetched data for the 'pmi' view. */
-  const [pmiData, setPmiData] = useState<LifeStageData[] | null>(null);
-  /** Local state to store the fetched data for the 'sampling' view. */
-  const [samplingData, setSamplingData] = useState<LifeStageData[] | null>(null);
-  /** Local state to manage the modal open/close state. */
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
   /** Dynamically selects the icon for the currently selected view. */
   const CurrentIcon = currentOption?.icon ?? PiRecycle;
-
-  /**
-   * A side effect that fetches all necessary data for all views when the date range changes.
-   */
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      try {
-        const [lifeStage, pmi, sampling] = await Promise.all([
-          getLifeStageDistribution(dateRange?.from, dateRange?.to),
-          getPmiDistribution(dateRange?.from, dateRange?.to),
-          getSamplingDensity(dateRange?.from, dateRange?.to),
-        ]);
-        setLifeStageData(lifeStage);
-        setPmiData(pmi);
-        setSamplingData(sampling);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void fetchAllData();
-  }, [dateRange]);
 
   /**
    * Memoizes the selection of the correct dataset for the chart.
@@ -191,7 +158,8 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
   }, []);
 
   // Show skeleton during initial data loading
-  if (isLoading) {
+  const isInitialLoading = !lifeStageData && !pmiData && !samplingData && isFetching;
+  if (isInitialLoading) {
     return (
       <Skeleton className="col-span-1 h-64 rounded-3xl bg-white md:col-span-2 md:h-96 lg:col-span-4 lg:row-span-2 lg:h-auto" />
     );
