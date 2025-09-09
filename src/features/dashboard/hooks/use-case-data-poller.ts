@@ -41,8 +41,8 @@ export const useCaseDataPoller = (initialData: CaseData[], dateRange: DateRange 
   const { data, isFetching, dataUpdatedAt, error } = useQuery({
     // The query key includes the date range so that the query automatically refetches when the range changes.
     queryKey: ["dashboard-cases", dateRange?.from, dateRange?.to],
-    // The query function calls the `getCaseData` server action.
-    queryFn: () => getCaseData(),
+    // The query function calls the `getCaseData` server action with the date range.
+    queryFn: () => getCaseData(dateRange?.from, dateRange?.to),
     /**
      * A function that defines the dynamic polling interval.
      */

@@ -117,12 +117,10 @@ export const DashboardAnalysis = ({ initialCaseData, dateRange }: DashboardAnaly
         <VerificationStatusWidget dateRange={dateRange} />
         <QualityMetricsWidget dateRange={dateRange} />
       </div>
-      {/* Only render the table container if there is case data available. */}
-      {caseData.length > 0 && (
-        <div className="min-w-0">
-          <DashboardTableContainer data={caseData} dateRange={dateRange} />
-        </div>
-      )}
+      {/* Render the table container, which handles empty state internally. */}
+      <div className="min-w-0">
+        <DashboardTableContainer data={caseData} dateRange={dateRange} />
+      </div>
     </TooltipProvider>
   );
 };
