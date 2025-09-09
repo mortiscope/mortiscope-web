@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { GoGitCompare } from "react-icons/go";
 import { IoIosCellular } from "react-icons/io";
@@ -11,13 +11,11 @@ import { BeatLoader } from "react-spinners";
 
 import { Card, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getConfidenceScoreDistribution } from "@/features/dashboard/actions/get-confidence-score-distribution";
-import { getModelPerformanceMetrics } from "@/features/dashboard/actions/get-model-performance-metrics";
-import { getUserCorrectionRatio } from "@/features/dashboard/actions/get-user-correction-ratio";
 import {
   QualityMetricsToolbar,
   type QualityView,
 } from "@/features/dashboard/components/quality-metrics-toolbar";
+import { useQualityMetricsPoller } from "@/features/dashboard/hooks/use-quality-metrics-poller";
 
 /**
  * A reusable loading component displayed while a dynamic chart component is being fetched or its data is loading.
@@ -83,30 +81,6 @@ const viewOptions = [
   { value: "confidence", icon: IoIosCellular, label: "Confidence Score Distribution" },
 ] as const;
 
-/**
- * Defines the data shape for the model performance chart.
- */
-interface ModelPerformanceData {
-  name: string;
-  confidence: number;
-}
-
-/**
- * Defines the data shape for the user correction ratio chart.
- */
-interface CorrectionMetric {
-  name: string;
-  quantity: number;
-}
-
-/**
- * Defines the data shape for the confidence score distribution chart.
- */
-interface ConfidenceMetric {
-  name: string;
-  count: number;
-}
-
 interface QualityMetricsWidgetProps {
   dateRange: DateRange | undefined;
 }
@@ -117,6 +91,14 @@ interface QualityMetricsWidgetProps {
 export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) => {
   /** Local state to manage the currently selected view. */
   const [selectedView, setSelectedView] = useState<QualityView>("performance");
+  /** Local state to manage the modal open/close state. */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  /**
+   * Smart polling hook that fetches and polls quality metrics data
+   */
+  const { modelPerformanceData, correctionData, confidenceData, isFetching } =
+    useQualityMetricsPoller({ dateRange });
 
   /**
    * Memoized callback for view selection to prevent unnecessary toolbar re-renders.
@@ -124,43 +106,11 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
   const handleViewSelect = useCallback((view: QualityView) => {
     setSelectedView(view);
   }, []);
-  /** Local state to store the fetched data for the 'performance' view. */
-  const [modelPerformanceData, setModelPerformanceData] = useState<ModelPerformanceData[] | null>(
-    null
-  );
-  /** Local state to store the fetched data for the 'correction' view. */
-  const [correctionData, setCorrectionData] = useState<CorrectionMetric[] | null>(null);
-  /** Local state to store the fetched data for the 'confidence' view. */
-  const [confidenceData, setConfidenceData] = useState<ConfidenceMetric[] | null>(null);
-  /** Local state to track loading state. */
-  const [isLoading, setIsLoading] = useState(true);
-  /** Local state to manage the modal open/close state. */
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   /** Finds the configuration object for the currently selected view. */
   const currentOption = viewOptions.find((o) => o.value === selectedView);
   /** Dynamically selects the icon for the currently selected view's title. */
   const CurrentIcon = currentOption?.icon ?? LuTrendingUp;
-
-  /**
-   * A side effect that fetches all necessary data for all views when the date range changes.
-   */
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      // Fetches all data points concurrently for better performance.
-      const [performanceData, correctionMetrics, confidenceMetrics] = await Promise.all([
-        getModelPerformanceMetrics(dateRange?.from, dateRange?.to),
-        getUserCorrectionRatio(dateRange?.from, dateRange?.to),
-        getConfidenceScoreDistribution(dateRange?.from, dateRange?.to),
-      ]);
-      setModelPerformanceData(performanceData);
-      setCorrectionData(correctionMetrics);
-      setConfidenceData(confidenceMetrics);
-      setIsLoading(false);
-    };
-    void fetchAllData();
-  }, [dateRange]);
 
   /**
    * Memoized callback to handle opening the information modal.
@@ -169,8 +119,10 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
     setIsModalOpen(true);
   }, []);
 
-  // Show skeleton while loading data
-  if (isLoading) {
+  // Show skeleton during initial data loading
+  const isInitialLoading =
+    !modelPerformanceData && !correctionData && !confidenceData && isFetching;
+  if (isInitialLoading) {
     return <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />;
   }
 
