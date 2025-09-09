@@ -44,6 +44,9 @@ function RecoveryProcess() {
     mode: "onChange",
   });
 
+  // State to track if the user is in the process of redirecting
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
+
   // Recovery code verification mutation
   const {
     mutate: verifyRecoveryCode,
@@ -55,6 +58,8 @@ function RecoveryProcess() {
     },
     onSuccess: async (result) => {
       if (result.success && result.verified) {
+        // Set redirecting state to keep button disabled
+        setIsRedirecting(true);
         // Complete the signin process on the client side
         try {
           const signinResult = await signIn("credentials", {
@@ -70,9 +75,11 @@ function RecoveryProcess() {
             router.push("/dashboard");
           } else {
             console.error("Client-side signin failed:", signinResult?.error);
+            setIsRedirecting(false);
           }
         } catch (error) {
           console.error("Client-side signin failed:", error);
+          setIsRedirecting(false);
         }
       }
     },
@@ -84,7 +91,7 @@ function RecoveryProcess() {
   };
 
   // Determine if the submit button should be disabled
-  const isSubmitDisabled = !form.formState.isValid || isPending;
+  const isSubmitDisabled = !form.formState.isValid || isPending || isRedirecting;
 
   // Show error message if user accessed this page without proper session
   if (error === "no-session") {
@@ -140,7 +147,7 @@ function RecoveryProcess() {
                     placeholder="Enter your recovery code"
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                     {...field}
-                    disabled={isPending}
+                    disabled={isPending || isRedirecting}
                     autoComplete="off"
                   />
                 </FormControl>
@@ -166,8 +173,8 @@ function RecoveryProcess() {
             {/* Verify Button */}
             <AuthSubmitButton
               isDisabled={isSubmitDisabled}
-              isPending={isPending}
-              pendingText="Verifying..."
+              isPending={isPending || isRedirecting}
+              pendingText={isRedirecting ? "Redirecting..." : "Verifying..."}
             >
               Verify Code
             </AuthSubmitButton>

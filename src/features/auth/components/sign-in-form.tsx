@@ -27,6 +27,9 @@ import { type SignInFormValues, SignInSchema } from "@/features/auth/schemas/aut
 export default function SignInForm() {
   const router = useRouter();
 
+  // State to track if the user is in the process of redirecting
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
+
   // Manages the server state for the credentials sign-in action using TanStack Query
   const {
     mutate: credentialsSignIn,
@@ -37,6 +40,7 @@ export default function SignInForm() {
     onSuccess: (result) => {
       // Handle 2FA redirect
       if (result?.requiresTwoFactor) {
+        setIsRedirecting(true);
         router.push("/signin/two-factor");
       }
     },
@@ -59,9 +63,9 @@ export default function SignInForm() {
   };
 
   // Determine if the main submit button should be disabled
-  const isSubmitDisabled = !form.formState.isValid || isCredentialsPending;
+  const isSubmitDisabled = !form.formState.isValid || isCredentialsPending || isRedirecting;
   // Determine if social login buttons should be disabled
-  const areSocialsDisabled = isCredentialsPending;
+  const areSocialsDisabled = isCredentialsPending || isRedirecting;
 
   return (
     <AuthFormContainer
@@ -93,7 +97,7 @@ export default function SignInForm() {
                     placeholder="Enter your email"
                     className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
                     {...field}
-                    disabled={isCredentialsPending}
+                    disabled={isCredentialsPending || isRedirecting}
                   />
                 </FormControl>
                 <FormMessage className="text-xs" />
@@ -110,7 +114,7 @@ export default function SignInForm() {
                 field={field}
                 label="Password"
                 placeholder="Enter your password"
-                disabled={isCredentialsPending}
+                disabled={isCredentialsPending || isRedirecting}
                 id="password"
               />
             )}
@@ -129,8 +133,8 @@ export default function SignInForm() {
           {/* Sign In Button */}
           <AuthSubmitButton
             isDisabled={isSubmitDisabled}
-            isPending={isCredentialsPending}
-            pendingText="Signing In..."
+            isPending={isCredentialsPending || isRedirecting}
+            pendingText={isRedirecting ? "Redirecting..." : "Signing In..."}
           >
             Sign In
           </AuthSubmitButton>

@@ -24,6 +24,9 @@ function TwoFactorProcess() {
   // State for OTP input
   const [otpValue, setOtpValue] = useState("");
 
+  // State to track if the user is in the process of redirecting
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   // Two-factor verification mutation
   const {
     mutate: verifyTwoFactor,
@@ -33,6 +36,8 @@ function TwoFactorProcess() {
     mutationFn: verifySigninTwoFactor,
     onSuccess: async (result) => {
       if (result.success && result.verified) {
+        // Set redirecting state to keep button disabled
+        setIsRedirecting(true);
         // Complete the signin process on the client side
         try {
           const signinResult = await signIn("credentials", {
@@ -48,9 +53,11 @@ function TwoFactorProcess() {
             router.push("/dashboard");
           } else {
             console.error("Client-side signin failed:", signinResult?.error);
+            setIsRedirecting(false);
           }
         } catch (error) {
           console.error("Client-side signin failed:", error);
+          setIsRedirecting(false);
         }
       }
     },
@@ -71,7 +78,7 @@ function TwoFactorProcess() {
   };
 
   // Check if verify button should be enabled
-  const isVerifyEnabled = otpValue.length === 6 && !isPending;
+  const isVerifyEnabled = otpValue.length === 6 && !isPending && !isRedirecting;
 
   // Show error message if user accessed this page without proper session
   if (error === "no-session") {
@@ -115,7 +122,7 @@ function TwoFactorProcess() {
             onChange={handleOtpChange}
             containerClassName="gap-2 has-disabled:opacity-50"
             className="font-mono disabled:cursor-not-allowed"
-            disabled={isPending}
+            disabled={isPending || isRedirecting}
           >
             <InputOTPGroup className="gap-2">
               {Array.from({ length: 6 }).map((_, index) => {
@@ -155,8 +162,8 @@ function TwoFactorProcess() {
             type="button"
             onClick={handleSubmit}
             isDisabled={!isVerifyEnabled}
-            isPending={isPending}
-            pendingText="Verifying..."
+            isPending={isPending || isRedirecting}
+            pendingText={isRedirecting ? "Redirecting..." : "Verifying..."}
           >
             Verify Code
           </AuthSubmitButton>
