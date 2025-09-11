@@ -27,7 +27,7 @@ export const DEFAULT_LOGIN_REDIRECT: string = "/dashboard";
  * An array of routes that are accessible to the public, regardless of authentication status
  * @type {string[]}
  */
-export const publicRoutes: string[] = ["/", "/verification"];
+export const publicRoutes: string[] = ["/", "/verification", "/terms-of-use", "/privacy-policy"];
 
 /**
  * An array of API routes that are accessible to the public
