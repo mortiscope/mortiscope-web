@@ -89,6 +89,8 @@ export default defineConfig({
         "**/types/**",
         "**/*.d.ts",
         "src/auth.ts",
+        "src/instrumentation-client.ts",
+        "src/instrumentation.ts",
         "src/middleware.ts",
         "src/routes.ts",
         "src/app/**",
