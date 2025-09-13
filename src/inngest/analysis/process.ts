@@ -77,19 +77,110 @@ export const analysisEvent = inngest.createFunction(
     // Executes the primary analysis by calling the FastAPI endpoint.
     const fullAnalysisResult = await step.run("run-full-fastapi-analysis", async () => {
       const endpoint = `${fastApiUrl}/v1/detect`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Api-Key": fastApiSecret,
-        },
-        body: JSON.stringify({ case_id: caseId }),
-      });
+      const maxRetries = 3;
+      let lastError: Error | null = null;
 
-      if (!response.ok) {
-        throw new Error(`FastAPI analysis endpoint failed: ${await response.text()}`);
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        // Create `AbortController` for timeout handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30 * 60 * 1000);
+
+        try {
+          // Import undici dynamically to configure custom agent with extended timeouts
+          const { Agent, setGlobalDispatcher, getGlobalDispatcher } = await import("undici");
+
+          // Store the original dispatcher to restore later
+          const originalDispatcher = getGlobalDispatcher();
+
+          // Create a custom agent with extended timeouts for long-running requests
+          const customAgent = new Agent({
+            headersTimeout: 30 * 60 * 1000,
+            bodyTimeout: 30 * 60 * 1000,
+            keepAliveTimeout: 30 * 60 * 1000,
+            keepAliveMaxTimeout: 30 * 60 * 1000,
+          });
+
+          // Set the custom dispatcher for this request
+          setGlobalDispatcher(customAgent);
+
+          try {
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Api-Key": fastApiSecret,
+              },
+              body: JSON.stringify({ case_id: caseId }),
+              signal: controller.signal,
+            });
+
+            // Restore the original dispatcher
+            setGlobalDispatcher(originalDispatcher);
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              const errorText = await response.text();
+              const error = new Error(`FastAPI analysis endpoint failed: ${errorText}`);
+
+              // Check if this is a database connection error
+              if (
+                errorText.includes("Database connection error") ||
+                errorText.includes("SSL connection has been closed") ||
+                errorText.includes("psycopg.OperationalError")
+              ) {
+                analysisLogger.warn(
+                  { caseId, attempt, maxRetries },
+                  `Database connection error on attempt ${attempt}/${maxRetries}, will retry`
+                );
+
+                lastError = error;
+
+                // Wait before retrying (exponential backoff)
+                if (attempt < maxRetries) {
+                  await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+                  continue;
+                }
+              }
+
+              throw error;
+            }
+
+            // Success - return the result
+            const result = await response.json();
+
+            if (attempt > 1) {
+              analysisLogger.info(
+                { caseId, attempt },
+                `Analysis succeeded on attempt ${attempt} after database connection issues`
+              );
+            }
+
+            return result;
+          } catch (fetchError) {
+            // Ensure to restore the original dispatcher even if fetch fails
+            setGlobalDispatcher(originalDispatcher);
+            clearTimeout(timeoutId);
+            throw fetchError;
+          }
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") {
+            throw new Error("Analysis request timed out after 20 minutes");
+          }
+
+          lastError = error as Error;
+
+          // If this is the last attempt, throw the error
+          if (attempt === maxRetries) {
+            break;
+          }
+
+          // For other errors, wait before retrying
+          await new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        }
       }
-      return await response.json();
+
+      // All retries failed if this point was reached
+      throw lastError || new Error("Analysis failed after all retry attempts");
     });
 
     // Check if the analysis yielded any detectable results.
