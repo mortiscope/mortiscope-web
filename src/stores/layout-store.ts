@@ -1,7 +1,7 @@
 import { type ReactNode } from "react";
 import { create } from "zustand";
 
-interface LayoutState {
+export interface LayoutState {
   headerAdditionalContent: ReactNode | null;
   setHeaderAdditionalContent: (content: ReactNode | null) => void;
   clearHeaderAdditionalContent: () => void;
@@ -18,7 +18,8 @@ export const useLayoutStore = create<LayoutState>((set) => ({
    * Sets the content for the additional header slot.
    * @param {ReactNode | null} content - The React node to display. Pass null to clear.
    */
-  setHeaderAdditionalContent: (content: ReactNode | null) => set({ headerAdditionalContent: content }),
+  setHeaderAdditionalContent: (content: ReactNode | null) =>
+    set({ headerAdditionalContent: content }),
 
   /**
    * A convenience method to clear the additional header content.
