@@ -196,9 +196,7 @@ export const UploadPreviewModal = (props: UploadPreviewModalProps) => {
                 {/* Provides an accessible title for screen readers without being visually displayed. */}
                 <DialogHeader>
                   <VisuallyHidden.Root>
-                    <DialogTitle>
-                      {activeFile ? `Preview: ${activeFile.name}` : "Image Preview"}
-                    </DialogTitle>
+                    <DialogTitle>{`Preview: ${activeFile.name}`}</DialogTitle>
                   </VisuallyHidden.Root>
                 </DialogHeader>
                 {/* Provides tooltips for all child components. */}
