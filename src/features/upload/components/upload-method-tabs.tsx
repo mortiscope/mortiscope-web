@@ -18,7 +18,7 @@ export const UploadMethodTabs = memo(
   ({ activeTab, onTabChange, isMaxFilesReached }: UploadMethodTabsProps) => {
     return (
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <TabsList className="font-inter grid h-12 w-full grid-cols-2 bg-emerald-600 p-1.5 md:h-14 md:p-2">
+        <TabsList className="font-inter grid h-12 w-full grid-cols-2 bg-emerald-600 p-1.5 md:h-14 rounded-xl md:p-2">
           {/* Trigger for the 'Upload Image' tab. */}
           <TabsTrigger
             value="upload"
@@ -32,7 +32,7 @@ export const UploadMethodTabs = memo(
               <motion.div
                 layoutId="active-tab-pill"
                 transition={{ type: "tween", ease: "easeInOut", duration: 0.6 }}
-                className="absolute inset-0 rounded-md bg-emerald-500"
+                className="absolute inset-0 rounded-md bg-emerald-500 md:rounded-lg"
               />
             )}
             <span className="relative z-10 flex items-center">
