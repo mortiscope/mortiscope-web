@@ -76,13 +76,15 @@ export async function createUpload(
 
     const { fileName, fileType, fileSize, key: existingKey, caseId } = parseResult.data;
 
-    // Add server-side validation for file size.
+    // Add server-side validation for file size (defensive check; schema validates this too).
+    /* v8 ignore start */
     if (fileSize > MAX_FILE_SIZE) {
       return {
         success: false,
         error: `File size cannot exceed ${formatBytes(MAX_FILE_SIZE)}.`,
       };
     }
+    /* v8 ignore stop */
 
     // Add server-side validation for file type and extension mismatch.
     const fileExtension = path.extname(fileName).toLowerCase();
