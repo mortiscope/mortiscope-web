@@ -208,10 +208,9 @@ export const UploadPreview = () => {
                 onRetry={retryUpload}
                 deletingFileId={deletingFileId}
               />
-            ) : searchTerm ? (
-              // Only show "No Results" if a search term is active.
+            ) : (
               <UploadNoResults />
-            ) : null}
+            )}
           </AnimatePresence>
         </motion.div>
       </TooltipProvider>
