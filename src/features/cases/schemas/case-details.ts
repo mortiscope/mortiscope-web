@@ -33,11 +33,6 @@ const rawCaseDetailsSchema = z.object({
     // Validates the temperature value against realistic ranges based on the selected unit.
     .refine(
       (data) => {
-        // Skips validation if the value is not a valid number to avoid redundant errors.
-        if (typeof data.value !== "number" || isNaN(data.value)) {
-          return true;
-        }
-
         const ranges = {
           C: { min: -50, max: 60 },
           F: { min: -58, max: 140 },
