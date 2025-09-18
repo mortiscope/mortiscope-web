@@ -45,7 +45,7 @@ export const useAnalyzeReview = () => {
   /** Controls the state and navigation logic for the image preview modal. */
   const modalController = useSelectionNavigator({ items: sortedFiles });
   /** Polls the backend for the analysis status, but only when `isProcessing` is true. */
-  const analysisStatus = useAnalysisStatus({ caseId, isEnabled: isProcessing });
+  const { status: analysisStatus } = useAnalysisStatus({ caseId, isEnabled: isProcessing });
 
   // State to store local blob URLs for newly uploaded files, enabling instant previews.
   const [objectUrls, setObjectUrls] = useState<Map<string, string>>(new Map());
