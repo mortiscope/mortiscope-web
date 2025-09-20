@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -22,7 +22,7 @@ export const getDraftCase = async () => {
   try {
     const draftCase = await db.query.cases.findFirst({
       where: and(eq(cases.userId, session.user.id), eq(cases.status, "draft")),
-      orderBy: (cases, { desc }) => [desc(cases.createdAt)],
+      orderBy: [desc(cases.createdAt)],
     });
 
     return draftCase ?? null;
