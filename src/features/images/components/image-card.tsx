@@ -17,19 +17,15 @@ import { cn } from "@/lib/utils";
  * A sub-component responsible for rendering the actual image thumbnail. It handles
  * the loading skeleton state and applies a cache-busting version query to the image URL.
  */
-const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className?: string }) => {
+const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className: string }) => {
   // Renders a skeleton loader while the image URL is being processed or is unavailable.
   if (!imageFile.url) {
-    return (
-      <div className={cn("flex-shrink-0 rounded-md bg-slate-200", className || "h-10 w-10")} />
-    );
+    return <div className={cn("flex-shrink-0 rounded-md bg-slate-200", className)} />;
   }
   // Appends a version query to the URL to bypass the browser cache and ensure the latest image is shown.
   const cacheBustedUrl = `${imageFile.url}?v=${imageFile.version}`;
   return (
-    <div
-      className={cn("relative flex-shrink-0 overflow-hidden", className || "h-10 w-10 rounded-md")}
-    >
+    <div className={cn("relative flex-shrink-0 overflow-hidden", className)}>
       <Image
         src={cacheBustedUrl}
         alt={`Preview of ${imageFile.name}`}
