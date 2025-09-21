@@ -81,7 +81,7 @@ export const ResultsImageViewer = memo(
               alt={`Preview of ${activeImage.name}`}
               fill
               className="object-contain"
-              sizes="(max-width: 768px) 100vw, 560px"
+              sizes="100vw"
               priority
             />
             {renderedImageStyle && isImageLoaded && imageDimensions && (
@@ -89,6 +89,7 @@ export const ResultsImageViewer = memo(
                 imageFile={activeImage}
                 imageDimensions={imageDimensions}
                 renderedImageStyle={renderedImageStyle}
+                transformScale={transformState.scale}
               />
             )}
           </div>
