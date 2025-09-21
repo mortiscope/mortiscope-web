@@ -14,6 +14,8 @@ interface ResultsBoundingBoxProps {
   imageDimensions: { width: number; height: number };
   /** The actual, on-screen dimensions and position of the displayed image. */
   renderedImageStyle: { width: number; height: number; top: number; left: number };
+  /** The current zoom scale of the viewer. */
+  transformScale: number;
 }
 
 /**
@@ -22,7 +24,7 @@ interface ResultsBoundingBoxProps {
  * and applies them to the rendered image container, ensuring the boxes align correctly.
  */
 export const ResultsBoundingBox = memo(
-  ({ imageFile, imageDimensions, renderedImageStyle }: ResultsBoundingBoxProps) => {
+  ({ imageFile, imageDimensions, renderedImageStyle, transformScale }: ResultsBoundingBoxProps) => {
     return (
       <div
         className="absolute"
@@ -44,8 +46,7 @@ export const ResultsBoundingBox = memo(
                   left: `${(det.xMin / imageDimensions.width) * 100}%`,
                   width: `${((det.xMax - det.xMin) / imageDimensions.width) * 100}%`,
                   height: `${((det.yMax - det.yMin) / imageDimensions.height) * 100}%`,
-                  borderColor: getColorForClass(det.label),
-                  borderWidth: "2px",
+                  boxShadow: `inset 0 0 0 ${Math.max(0.05, 2 / (transformScale * 1.2))}px ${getColorForClass(det.label)}`,
                 }}
               />
             </TooltipTrigger>
