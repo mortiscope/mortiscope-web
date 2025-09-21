@@ -27,7 +27,7 @@ interface ResultsThumbnailProps {
 export const ResultsThumbnail = memo(
   ({ imageFile, onClick, isActive, isMobile }: ResultsThumbnailProps) => {
     // Appends a version query to the URL to bypass browser cache and ensure the latest image is shown.
-    const previewUrl = `${imageFile.url}?v=${imageFile.version}`;
+    const previewUrl = imageFile.url ? `${imageFile.url}?v=${imageFile.version}` : "";
 
     // Renders a skeleton loader if the preview URL is not yet available.
     if (!previewUrl)
