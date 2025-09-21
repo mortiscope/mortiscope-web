@@ -42,7 +42,7 @@ export const usePreviewFileState = ({ file, isOpen }: UsePreviewFileStateProps) 
     if (activeFile) {
       const name = activeFile.name;
       const parts = name.split(".");
-      const extension = parts.pop() ?? "";
+      const extension = parts.pop() as string;
       const nameBase = parts.join(".");
 
       setFileNameBase(nameBase);
