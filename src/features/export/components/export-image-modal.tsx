@@ -166,8 +166,14 @@ export const ExportImageModal = ({ image, isOpen, onOpenChange }: ExportImageMod
               description={
                 step === "format" ? (
                   <>
-                    Choose a download option for{" "}
-                    <strong className="font-semibold text-slate-800">{image?.name}</strong>.
+                    Choose a download option for:
+                    <br />
+                    <strong
+                      className="mx-auto block truncate text-center font-semibold text-slate-800 sm:max-w-xs"
+                      title={image?.name}
+                    >
+                      {image?.name}
+                    </strong>
                   </>
                 ) : (
                   "Select a resolution for the labelled image."
