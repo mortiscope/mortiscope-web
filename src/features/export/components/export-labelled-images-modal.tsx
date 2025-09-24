@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription } from "@/components/ui/dialog";
 import { requestResultsExport } from "@/features/export/actions/request-results-export";
 import { ExportLabelledImagesBody } from "@/features/export/components/export-labelled-images-body";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
@@ -143,6 +143,9 @@ export const ExportLabelledImagesModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
+        <DialogDescription className="sr-only">
+          Configure options for exporting labelled images.
+        </DialogDescription>
         {/* The main animated container for the modal's content. */}
         <motion.div
           className="contents"
