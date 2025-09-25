@@ -24,7 +24,11 @@ type UseAnalysisStatusProps = {
 export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps) => {
   const router = useRouter();
 
-  const { data: status, error } = useQuery({
+  const {
+    data: status,
+    error,
+    refetch,
+  } = useQuery({
     // A unique query key for this specific case.
     queryKey: ["analysisStatus", caseId],
     // The function that will be called to fetch the data.
@@ -78,5 +82,5 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
     }
   }, [error]);
 
-  return status;
+  return { status, refetch };
 };
