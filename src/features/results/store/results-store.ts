@@ -10,7 +10,7 @@ export type ViewMode = "list" | "grid";
 /**
  * Defines the shape of the results store, including its state and actions.
  */
-interface ResultsState {
+export interface ResultsState {
   /** The current display mode for the results (e.g., 'grid' or 'list'). */
   viewMode: ViewMode;
   /** The currently selected sorting option for the results. */
