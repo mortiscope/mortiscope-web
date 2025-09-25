@@ -5,7 +5,7 @@ import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { requestResultsExport } from "@/features/export/actions/request-results-export";
 import { ExportModalFooter } from "@/features/export/components/export-modal-footer";
 import { ExportModalHeader } from "@/features/export/components/export-modal-header";
@@ -253,6 +253,10 @@ export const ExportPdfModal = ({ caseId, isOpen, onOpenChange }: ExportPdfModalP
             animate="show"
             exit="hidden"
           >
+            <DialogTitle className="sr-only">Export as PDF</DialogTitle>
+            <DialogDescription className="sr-only">
+              Configure PDF export settings including security and permissions.
+            </DialogDescription>
             <ExportModalHeader title="Export as PDF" />
             {/* Mobile version */}
             <motion.div
