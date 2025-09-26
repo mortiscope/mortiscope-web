@@ -1,10 +1,10 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { cases } from "@/db/schema";
+import { cases, detections } from "@/db/schema";
 
 /**
  * Fetches all active cases associated with the currently authenticated user.
@@ -29,6 +29,7 @@ export const getCases = async () => {
         columns: { id: true },
         with: {
           detections: {
+            where: isNull(detections.deletedAt),
             columns: { status: true },
           },
         },

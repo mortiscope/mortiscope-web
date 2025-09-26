@@ -34,7 +34,16 @@ export const getCaseById = async (caseId: string) => {
 
   if (!caseData) {
     notFound();
+    // Ensure execution stops here (though notFound throws in Next.js, this helps in tests/flow analysis)
+    throw new Error("Case not found");
   }
 
-  return caseData;
+  // Filter out soft-deleted detections from each upload
+  return {
+    ...caseData,
+    uploads: caseData.uploads.map((upload) => ({
+      ...upload,
+      detections: upload.detections.filter((d) => d.deletedAt === null),
+    })),
+  };
 };
