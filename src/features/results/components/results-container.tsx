@@ -18,7 +18,7 @@ const ResultsSkeleton = () => {
   const skeletonCount = 20;
 
   return (
-    <div className="flex w-full flex-1 flex-col">
+    <div role="status" className="flex w-full flex-1 flex-col">
       {/* Skeleton for Controls */}
       <div className="mb-4 flex items-center justify-between gap-2">
         <Skeleton className="h-10 w-full max-w-sm bg-white" />
