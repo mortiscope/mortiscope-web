@@ -35,7 +35,7 @@ interface ResultsComposedChartProps {
 /**
  * A custom tooltip component to have full control over styling.
  */
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+export const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     const quantity = payload[0].value;
     return (
