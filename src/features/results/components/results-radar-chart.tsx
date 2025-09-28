@@ -27,7 +27,7 @@ interface ResultsRadarChartProps {
 /**
  * A custom tooltip component to have full control over styling.
  */
-const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
+export const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     return (
       <div className="font-inter rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-normal shadow-lg">
