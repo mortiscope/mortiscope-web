@@ -71,7 +71,7 @@ interface CustomizedLabelProps {
 /**
  * A custom tooltip component for the Recharts chart, providing full control over styling.
  */
-const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
+export const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
   if (active && payload && payload.length) {
     const { name, value } = payload[0];
     return (
