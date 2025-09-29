@@ -29,7 +29,7 @@ import { cn } from "@/lib/utils";
  * This keeps the rendering logic separate and clean.
  */
 const SortIcon = ({ value }: { value: SortOptionValue }) => {
-  const commonProps = { className: "mr-2 h-4 w-4 text-slate-600" };
+  const commonProps = { className: "h-4 w-4 text-slate-600" };
   switch (value) {
     case "date-uploaded-desc":
     case "date-uploaded-asc":
@@ -146,7 +146,9 @@ export const ResultsToolbar = memo(
                       isActive &&
                         "border-emerald-200 bg-emerald-50 text-emerald-700 [&_svg]:text-emerald-600",
                       isActive && index > 0 && !isPrevActive && "mt-1",
-                      !isActive && isPrevActive && "mt-1"
+                      isActive && index > 0 && !isPrevActive && "mt-1",
+                      !isActive && isPrevActive && "mt-1",
+                      "flex items-center gap-2"
                     )}
                   >
                     <SortIcon value={option.value} />
