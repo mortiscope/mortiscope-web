@@ -255,6 +255,7 @@ describe("requestResultsExport", () => {
       ReturnType<typeof auth>
     >);
     vi.mocked(db.query.cases.findFirst).mockRejectedValue(new Error("DB Error"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const payload = {
       caseId: mockCaseId,
@@ -269,5 +270,7 @@ describe("requestResultsExport", () => {
       success: false,
       error: "An unexpected error occurred. Please try again later.",
     });
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 });

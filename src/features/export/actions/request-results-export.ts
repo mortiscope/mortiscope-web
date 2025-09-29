@@ -24,8 +24,7 @@ export const requestResultsExport = async (
 
   const parseResult = requestResultsExportSchema.safeParse(values);
   if (!parseResult.success) {
-    const errorMessage = parseResult.error.issues[0]?.message ?? "Invalid input provided.";
-    return { success: false, error: errorMessage };
+    return { success: false, error: parseResult.error.issues[0]!.message };
   }
   const { caseId, format } = parseResult.data;
 
@@ -38,9 +37,7 @@ export const requestResultsExport = async (
           parseResult.data.securityLevel === "permissions_protected")
       );
     }
-    return "passwordProtection" in parseResult.data
-      ? (parseResult.data.passwordProtection?.enabled ?? false)
-      : false;
+    return parseResult.data.passwordProtection?.enabled ?? false;
   })();
 
   try {
