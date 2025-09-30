@@ -1,24 +1,24 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: "https://80960418a6688f9ea2c72f5526676172@o4510634468376576.ingest.us.sentry.io/4510634469163008",
+  dsn:
+    process.env.NEXT_PUBLIC_SENTRY_DSN ||
+    "https://80960418a6688f9ea2c72f5526676172@o4510634468376576.ingest.us.sentry.io/4510634469163008",
 
-  // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+  tracesSampleRate: 0.1,
 
-  // Define how likely traces are sampled.
-  tracesSampleRate: 1,
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
+  debug: false,
 
-  // Define how likely Replay events are sampled.
-  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 0.1,
+  replaysSessionSampleRate: 0.0,
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+  ],
 
-  // Define how likely Replay events are sampled when an error occurs.
-  replaysOnErrorSampleRate: 1.0,
-
-  // Enable sending user PII (Personally Identifiable Information)
-  sendDefaultPii: true,
+  ignoreErrors: ["ResizeObserver loop limit exceeded", "ChunkLoadError", "Loading chunk"],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
