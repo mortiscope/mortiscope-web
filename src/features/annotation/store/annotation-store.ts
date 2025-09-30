@@ -7,7 +7,7 @@ import { MAX_HISTORY } from "@/lib/constants";
 /**
  * Defines the complete state structure and the action interfaces for the annotation store.
  */
-interface AnnotationState {
+export interface AnnotationState {
   /** The unique ID of the currently selected detection, or `null` if no detection is selected. */
   selectedDetectionId: string | null;
   /** Whether the detection panel should be visible. */
@@ -68,6 +68,16 @@ interface AnnotationState {
   displayFilter: "all" | "verified" | "unverified";
   /** Sets the display filter for detections. */
   setDisplayFilter: (filter: "all" | "verified" | "unverified") => void;
+  /** Filter for detection classes (e.g., instar_1, pupa). */
+  classFilter: string[];
+  /** Sets the class filter for detections. */
+  setClassFilter: (filter: string[]) => void;
+  /** Toggles a specific class in the class filter. */
+  toggleClassFilter: (className: string) => void;
+  /** Controls which layers are visible (image, annotations, or both). */
+  viewMode: "all" | "image_only" | "annotations_only" | "none";
+  /** Sets the layer visibility mode. */
+  setViewMode: (mode: "all" | "image_only" | "annotations_only" | "none") => void;
   /** Whether the editor is locked (read-only mode). */
   isLocked: boolean;
   /** Toggles the locked state of the editor. */
@@ -105,8 +115,36 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
   transformScale: 1,
   // Display filter defaults to showing all detections.
   displayFilter: "all",
+  // Class filter defaults to showing all classes.
+  classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
   // Editor is unlocked by default.
   isLocked: false,
+
+  /**
+   * Sets the class filter for detections.
+   */
+  setClassFilter: (filter) => set({ classFilter: filter }),
+
+  /**
+   * Toggles a specific class in the class filter.
+   */
+  toggleClassFilter: (className) =>
+    set((state) => {
+      const currentFilter = state.classFilter;
+      const isIncluded = currentFilter.includes(className);
+      const newFilter = isIncluded
+        ? currentFilter.filter((c) => c !== className)
+        : [...currentFilter, className];
+      return { classFilter: newFilter };
+    }),
+
+  // View mode defaults to showing everything.
+  viewMode: "all",
+
+  /**
+   * Sets the layer visibility mode.
+   */
+  setViewMode: (mode) => set({ viewMode: mode }),
 
   /**
    * Updates the state to set the provided ID as the currently selected one.
