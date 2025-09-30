@@ -56,7 +56,7 @@ export async function getEditorImage(imageId: string, resultsId: string) {
       url: imageData.url,
       size: imageData.size,
       dateUploaded: imageData.createdAt,
-      detections: imageData.detections,
+      detections: imageData.detections.filter((d) => d.deletedAt === null),
     };
   } catch (error) {
     console.error("Error fetching editor image:", error);
