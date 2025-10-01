@@ -145,8 +145,8 @@ export const useBoundingBox = ({
         newYMax = Math.min(imageDimensions.height, newYMax);
 
         // Enforce a minimum size to prevent the box from collapsing.
-        if (newXMax - newXMin < 20) return;
-        if (newYMax - newYMin < 20) return;
+        if (newXMax - newXMin < 0.01) return;
+        if (newYMax - newYMin < 0.01) return;
 
         updateDetectionNoHistory(selectedDetectionId!, {
           xMin: newXMin,
