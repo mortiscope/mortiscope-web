@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { type ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 import { type EditorImage } from "@/features/annotation/hooks/use-editor-image";
@@ -35,19 +35,36 @@ export const useImageDisplayState = ({ image, onTransformed }: UseImageDisplaySt
   const selectMode = useAnnotationStore((state) => state.selectMode);
   const transformScale = useAnnotationStore((state) => state.transformScale);
 
-  // Filter detections based on display filter
+  // Filter detections based on display filter, class filter, and view mode
+  const classFilter = useAnnotationStore((state) => state.classFilter);
+  const viewMode = useAnnotationStore((state) => state.viewMode);
+
   const detections = useMemo(() => {
-    if (displayFilter === "all") return allDetections;
-    if (displayFilter === "verified")
-      return allDetections.filter(
+    // If view mode is image only or none, don't show any detections
+    if (viewMode === "image_only" || viewMode === "none") return [];
+
+    let filtered = allDetections;
+
+    // Apply verification filter
+    if (displayFilter === "verified") {
+      filtered = filtered.filter(
         (det) => det.status === "user_confirmed" || det.status === "user_edited_confirmed"
       );
-    if (displayFilter === "unverified")
-      return allDetections.filter(
+    } else if (displayFilter === "unverified") {
+      filtered = filtered.filter(
         (det) => det.status !== "user_confirmed" && det.status !== "user_edited_confirmed"
       );
-    return allDetections;
-  }, [allDetections, displayFilter]);
+    }
+
+    // Apply class filter if not all classes are selected.
+    if (classFilter.length < 5) {
+      filtered = filtered.filter((det) => classFilter.includes(det.label));
+    } else if (classFilter.length === 0) {
+      return [];
+    }
+
+    return filtered;
+  }, [allDetections, displayFilter, classFilter, viewMode]);
 
   // Handle transform changes to track zoom scale
   const handleTransformed = useCallback(
@@ -58,9 +75,14 @@ export const useImageDisplayState = ({ image, onTransformed }: UseImageDisplaySt
     [setTransformScale, onTransformed]
   );
 
+  // Track which image has been initialized to prevent re-initialization
+  const initializedImageIdRef = useRef<string | null>(null);
+
   // Initialize detections in store when image loads
   useEffect(() => {
-    if (image.detections) {
+    // Only initialize when switching to a different image
+    if (image.detections && initializedImageIdRef.current !== image.id) {
+      initializedImageIdRef.current = image.id;
       setDetections(image.detections);
     }
   }, [image.id, image.detections, setDetections]);
@@ -72,6 +94,7 @@ export const useImageDisplayState = ({ image, onTransformed }: UseImageDisplaySt
     drawMode,
     selectMode,
     transformScale,
+    viewMode,
     // Handlers
     handleTransformed,
   };
