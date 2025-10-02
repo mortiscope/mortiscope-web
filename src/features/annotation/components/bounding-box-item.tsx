@@ -23,6 +23,8 @@ interface BoundingBoxItemProps {
   borderWidth: number;
   /** The natural, original dimensions of the image file, used for coordinate calculations. */
   imageDimensions: { width: number; height: number };
+  /** The current transform scale for compensating scale inheritance. */
+  transformScale: number;
   /** A boolean indicating if the tooltip should be shown for this detection. */
   showTooltip: boolean;
   /** Callback to select this detection. */
@@ -49,6 +51,7 @@ export const BoundingBoxItem = memo(function BoundingBoxItem({
   isResizing,
   borderWidth,
   imageDimensions,
+  transformScale,
   showTooltip,
   onSelect,
   onOpenPanel,
@@ -123,10 +126,10 @@ export const BoundingBoxItem = memo(function BoundingBoxItem({
   };
 
   return (
-    <Tooltip open={showTooltip || undefined}>
+    <Tooltip open={!!showTooltip}>
       <TooltipTrigger asChild>
         <div
-          className="absolute box-border transition-all duration-150"
+          className="absolute"
           style={{
             cursor: isLocked ? "pointer" : isSelected && !isResizing ? "move" : "pointer",
             // The core rendering logic
@@ -134,8 +137,7 @@ export const BoundingBoxItem = memo(function BoundingBoxItem({
             left: `${(detection.xMin / imageDimensions.width) * 100}%`,
             width: `${((detection.xMax - detection.xMin) / imageDimensions.width) * 100}%`,
             height: `${((detection.yMax - detection.yMin) / imageDimensions.height) * 100}%`,
-            borderColor: getColorForClass(detection.label),
-            borderWidth: `${borderWidth}px`,
+            boxShadow: `inset 0 0 0 calc(2px / var(--zoom-scale, 1)) ${getColorForClass(detection.label)}`,
             zIndex: isSelected ? 10 : 1,
           }}
           onClick={handleClick}
@@ -148,6 +150,7 @@ export const BoundingBoxItem = memo(function BoundingBoxItem({
             <BoundingBoxHandles
               detection={detection}
               borderWidth={borderWidth}
+              zoomScale={transformScale}
               onStartResize={onStartResize}
             />
           )}
