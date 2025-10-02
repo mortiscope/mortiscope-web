@@ -95,8 +95,14 @@ export const EditImageModal = memo(
                 title="Edit and Review Annotations"
                 description={
                   <>
-                    Choose where to edit and review the annotations of{" "}
-                    <strong className="font-semibold text-slate-800">{image?.name}</strong>.
+                    Choose where to edit and review the annotations of:
+                    <br />
+                    <strong
+                      className="mx-auto block truncate text-center font-semibold text-slate-800 sm:max-w-xs"
+                      title={image?.name}
+                    >
+                      {image?.name}
+                    </strong>
                   </>
                 }
               />
