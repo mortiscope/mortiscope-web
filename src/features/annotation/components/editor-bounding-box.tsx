@@ -1,8 +1,9 @@
-import { memo, useMemo } from "react";
+import { memo } from "react";
 
 import { BoundingBoxItem } from "@/features/annotation/components/bounding-box-item";
 import { useBoundingBox } from "@/features/annotation/hooks/use-bounding-box";
 import { type Detection } from "@/features/annotation/hooks/use-editor-image";
+import { useAnnotationStore } from "@/features/annotation/store/annotation-store";
 
 /**
  * Defines the props for the editor bounding box component.
@@ -22,6 +23,9 @@ interface EditorBoundingBoxProps {
  */
 export const EditorBoundingBox = memo(
   ({ detections, imageDimensions, renderedImageStyle }: EditorBoundingBoxProps) => {
+    // Get current transform scale to compensate for scale inheritance
+    const transformScale = useAnnotationStore((state) => state.transformScale);
+
     // Use the bounding box hook to manage interactions
     const {
       selectedDetectionId,
@@ -34,11 +38,7 @@ export const EditorBoundingBox = memo(
       startResize,
     } = useBoundingBox({ detections, imageDimensions, renderedImageStyle });
 
-    // Calculates a dynamic border width based on the rendered image size to maintain a consistent visual thickness.
-    const baseBorderWidth = useMemo(
-      () => Math.max(2, renderedImageStyle.width * 0.0025),
-      [renderedImageStyle.width]
-    );
+    const baseBorderWidth = 2;
 
     return (
       <div
@@ -63,6 +63,7 @@ export const EditorBoundingBox = memo(
               isResizing={isResizing}
               borderWidth={borderWidth}
               imageDimensions={imageDimensions}
+              transformScale={transformScale}
               showTooltip={showTooltipFor === det.id}
               onSelect={selectDetection}
               onOpenPanel={openPanel}
