@@ -33,7 +33,7 @@ export const DetailsAttributesPanel = memo(() => {
   // Fetches the full case data using Tanstack Query.
   const { data: caseData, isLoading: isCaseLoading } = useQuery({
     queryKey: ["case", resultsId],
-    queryFn: () => getCaseById(resultsId || ""),
+    queryFn: () => getCaseById(resultsId!),
     enabled: !!resultsId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
