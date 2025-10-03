@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 /**
  * Defines the available color variants for the panel section header.
  */
-type ColorVariant = "emerald" | "amber" | "teal" | "sky";
+type ColorVariant = "emerald" | "amber" | "teal" | "sky" | "violet";
 
 /**
  * Defines the props for the panel section header component.
@@ -34,6 +34,7 @@ export const PanelSectionHeader = memo(
       amber: "text-amber-300",
       teal: "text-teal-300",
       sky: "text-sky-300",
+      violet: "text-violet-300",
     };
 
     const titleColorClasses: Record<ColorVariant, string> = {
@@ -41,6 +42,7 @@ export const PanelSectionHeader = memo(
       amber: "text-amber-200",
       teal: "text-teal-200",
       sky: "text-sky-200",
+      violet: "text-violet-200",
     };
 
     return (
