@@ -38,8 +38,15 @@ export const EditorImageDisplay = memo(
     const imageContainerRef = useRef<HTMLDivElement>(null);
 
     // Use the image display state hook for state management
-    const { clearSelection, detections, drawMode, selectMode, transformScale, handleTransformed } =
-      useImageDisplayState({ image, onTransformed });
+    const {
+      clearSelection,
+      detections,
+      drawMode,
+      selectMode,
+      transformScale,
+      viewMode,
+      handleTransformed,
+    } = useImageDisplayState({ image, onTransformed });
 
     // Append a cache-busting query parameter to ensure the latest image is shown.
     const imageUrl = `${image.url}?t=${image.dateUploaded.getTime()}`;
@@ -81,13 +88,18 @@ export const EditorImageDisplay = memo(
           ref={ref}
           initialScale={1}
           minScale={0.1}
-          maxScale={10}
+          maxScale={100}
           centerOnInit
           limitToBounds={false}
           panning={{ disabled: drawMode || selectMode, velocityDisabled: false }}
-          wheel={{ step: 0.1 }}
+          wheel={{ step: 0.08 }}
           doubleClick={{ mode: "reset" }}
-          onTransformed={handleTransformed}
+          onTransformed={(ref, state) => {
+            handleTransformed(ref, state);
+            if (imageContainerRef.current) {
+              imageContainerRef.current.style.setProperty("--zoom-scale", state.scale.toString());
+            }
+          }}
         >
           <TransformComponent
             wrapperClass="!w-full !h-full"
@@ -99,6 +111,8 @@ export const EditorImageDisplay = memo(
               className={isMobile ? "relative h-full w-full" : "relative h-3/4 w-3/4"}
               style={{
                 cursor: drawMode ? "crosshair" : selectMode ? "default" : "grab",
+                // Initialize custom property to avoid calculation errors before first transform
+                ["--zoom-scale" as string]: transformScale,
               }}
               onClick={(e) => {
                 // Prevent click from bubbling to parent and clearing selection when in draw mode or just finished drawing
@@ -114,20 +128,22 @@ export const EditorImageDisplay = memo(
               onTouchEnd={handleDrawEnd}
             >
               {/* Renders a loading spinner overlay while the image is being fetched. */}
-              {!isImageLoaded && (
+              {!isImageLoaded && viewMode !== "annotations_only" && viewMode !== "none" && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <BeatLoader color="#059669" loading={true} size={12} aria-label="Loading image" />
                 </div>
               )}
-              <Image
-                key={imageUrl}
-                src={imageUrl}
-                alt={`Annotation view of ${image.name}`}
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                priority
-              />
+              {viewMode !== "annotations_only" && viewMode !== "none" && (
+                <Image
+                  key={imageUrl}
+                  src={imageUrl}
+                  alt={`Annotation view of ${image.name}`}
+                  fill
+                  className="object-contain"
+                  sizes="100vw"
+                  priority
+                />
+              )}
               {renderedImageStyle && isImageLoaded && (
                 <div
                   className="pointer-events-none absolute"
@@ -137,7 +153,9 @@ export const EditorImageDisplay = memo(
                     top: `${renderedImageStyle.top}px`,
                     left: `${renderedImageStyle.left}px`,
                     boxShadow:
-                      "0 25px 50px -12px rgba(148, 163, 184, 0.15), 0 12px 24px -8px rgba(148, 163, 184, 0.1)",
+                      viewMode === "none" || viewMode === "annotations_only"
+                        ? "inset 0 0 0 calc(2px / var(--zoom-scale)) #6ee7b7" // emerald-300
+                        : "0 25px 50px -12px rgba(148, 163, 184, 0.15), 0 12px 24px -8px rgba(148, 163, 184, 0.1)",
                   }}
                 />
               )}
@@ -153,12 +171,16 @@ export const EditorImageDisplay = memo(
               {/* Render drawing preview box */}
               {isDrawing && drawStart && drawCurrent && (
                 <div
-                  className="pointer-events-none absolute border-2 border-dashed border-emerald-400 bg-emerald-400/10"
+                  className="pointer-events-none absolute border-emerald-400 bg-emerald-400/10"
                   style={{
                     left: Math.min(drawStart.x, drawCurrent.x) / transformScale,
                     top: Math.min(drawStart.y, drawCurrent.y) / transformScale,
-                    width: Math.abs(drawCurrent.x - drawStart.x) / transformScale,
-                    height: Math.abs(drawCurrent.y - drawStart.y) / transformScale,
+                    width: Math.abs(drawCurrent.x - drawStart.x),
+                    height: Math.abs(drawCurrent.y - drawStart.y),
+                    transform: `scale(${1 / transformScale})`,
+                    transformOrigin: "top left",
+                    borderWidth: "2px",
+                    borderStyle: "dashed",
                   }}
                 />
               )}
