@@ -21,6 +21,21 @@ interface UseVerificationStatusPollerProps {
  * @param {UseVerificationStatusPollerProps} props The props for the hook.
  * @returns An object containing the fetched `metrics` data, `isFetching` state, and other relevant polling info.
  */
+export const calculateRefetchInterval = (
+  isError: boolean,
+  isUserActive: boolean,
+  pollInterval: number
+) => {
+  if (isError || !isUserActive) {
+    return false;
+  }
+  return pollInterval;
+};
+
+export const calculateRetryDelay = (attemptIndex: number) => {
+  return Math.min(1000 * 2 ** attemptIndex, 30000);
+};
+
 export const useVerificationStatusPoller = ({ dateRange }: UseVerificationStatusPollerProps) => {
   // Retrieves state and actions from the shared `useDashboardStore` to control polling behavior.
   const pollInterval = useDashboardStore((state) => state.pollInterval);
@@ -42,19 +57,15 @@ export const useVerificationStatusPoller = ({ dateRange }: UseVerificationStatus
     /**
      * A function that defines the dynamic polling interval.
      */
-    refetchInterval: (query) => {
-      if (query.state.error || !isUserActive) {
-        return false;
-      }
-      return pollInterval;
-    },
+    refetchInterval: (query) =>
+      calculateRefetchInterval(!!query.state.error, isUserActive, pollInterval),
     // Disables polling when the browser tab is not in focus, saving resources.
     refetchIntervalInBackground: false,
     // Ensures that every poll triggers a hard refetch, ignoring any cached data.
     staleTime: 0,
     // Configures an exponential back-off retry strategy for failed fetches.
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: calculateRetryDelay,
   });
 
   /**
