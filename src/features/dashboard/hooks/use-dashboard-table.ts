@@ -202,7 +202,7 @@ export const useDashboardTable = ({ data, dateRange }: UseDashboardTableProps) =
     initialState: {
       pagination: {
         // Sets the number of rows per page.
-        pageSize: 10,
+        pageSize: 5,
       },
     },
     // Provides the callback to update the local state when selection changes.
