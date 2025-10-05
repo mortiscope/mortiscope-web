@@ -116,15 +116,11 @@ export const getCaseData = async (startDate?: Date, endDate?: Date): Promise<Cas
         const unverifiedCount = allDetections.filter((d) => d.status === "model_generated").length;
         const totalCount = allDetections.length;
 
-        let verificationStatus = "no_detections";
-        if (totalCount === 0) {
-          verificationStatus = "no_detections";
-        } else if (unverifiedCount === 0) {
+        let verificationStatus = "in_progress";
+        if (unverifiedCount === 0) {
           verificationStatus = "verified";
         } else if (unverifiedCount === totalCount) {
           verificationStatus = "unverified";
-        } else {
-          verificationStatus = "in_progress";
         }
 
         // Final object that matches the case data interface for the table.
