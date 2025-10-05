@@ -15,6 +15,21 @@ import { useDashboardStore } from "@/features/dashboard/store/dashboard-store";
  * @param dateRange An optional date range to filter the cases. The query will refetch when this changes.
  * @returns An object containing the fetched `data`, `isFetching` state, and other relevant polling info.
  */
+export const calculateRefetchInterval = (
+  isError: boolean,
+  isUserActive: boolean,
+  pollInterval: number
+) => {
+  if (isError || !isUserActive) {
+    return false;
+  }
+  return pollInterval;
+};
+
+export const calculateRetryDelay = (attemptIndex: number) => {
+  return Math.min(1000 * 2 ** attemptIndex, 30000);
+};
+
 export const useCaseDataPoller = (initialData: CaseData[], dateRange: DateRange | undefined) => {
   // Retrieves state and actions from the shared `useDashboardStore` to control polling behavior.
   const pollInterval = useDashboardStore((state) => state.pollInterval);
@@ -46,12 +61,8 @@ export const useCaseDataPoller = (initialData: CaseData[], dateRange: DateRange 
     /**
      * A function that defines the dynamic polling interval.
      */
-    refetchInterval: (query) => {
-      if (query.state.error || !isUserActive) {
-        return false;
-      }
-      return pollInterval;
-    },
+    refetchInterval: (query) =>
+      calculateRefetchInterval(!!query.state.error, isUserActive, pollInterval),
     // Disables polling when the browser tab is not in focus, saving resources.
     refetchIntervalInBackground: false,
     // Ensures that every poll triggers a "hard" refetch, ignoring any cached data.
@@ -60,7 +71,7 @@ export const useCaseDataPoller = (initialData: CaseData[], dateRange: DateRange 
     initialData,
     // Configures an exponential back-off retry strategy for failed fetches.
     retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: calculateRetryDelay,
   });
 
   /**
@@ -90,7 +101,7 @@ export const useCaseDataPoller = (initialData: CaseData[], dateRange: DateRange 
   // Exposes the public API of the hook for the consuming component.
   return {
     // Falls back to `initialData` to ensure there's always an array to render, even during the very first client-side fetch.
-    data: data || initialData,
+    data: data,
     isFetching,
     pollInterval,
     isUserActive,
