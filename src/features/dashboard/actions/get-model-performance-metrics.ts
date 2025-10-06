@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, gte, isNotNull, lte } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -45,7 +45,7 @@ export const getModelPerformanceMetrics = async (startDate?: Date, endDate?: Dat
               originalLabel: true,
               originalConfidence: true,
             },
-            where: (detections, { isNull, and }) =>
+            where: (detections, { isNull, isNotNull, and }) =>
               and(isNull(detections.deletedAt), isNotNull(detections.originalConfidence)),
           },
         },
