@@ -20,7 +20,7 @@ import { useVerificationStatusPoller } from "@/features/dashboard/hooks/use-veri
  * A reusable loading component displayed while the chart's data is loading.
  */
 const ChartLoader = () => (
-  <div className="flex h-full w-full items-center justify-center">
+  <div className="flex h-full w-full items-center justify-center" data-testid="chart-loader">
     <BeatLoader color="#16a34a" size={12} />
   </div>
 );
