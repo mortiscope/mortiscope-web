@@ -136,7 +136,6 @@ export const DeleteSelectedCaseModal = memo(function DeleteSelectedCaseModal({
    * Form submission handler
    */
   const onSubmit = (data: DeleteSelectedCasesFormValues) => {
-    if (!isFormValid) return;
     deleteMutation.mutate(data);
   };
 
