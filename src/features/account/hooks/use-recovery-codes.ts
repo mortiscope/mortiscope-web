@@ -21,6 +21,7 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
 
   // Initializes a custom hook that provides the server action mutations.
   const { getRecoveryCodes, regenerateRecoveryCodes } = useTwoFactorAuth();
+  const { mutate: getRecoveryCodesMutate } = getRecoveryCodes;
 
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +42,7 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
         setIsLoading(true);
         hasFetchedRef.current = true;
 
-        getRecoveryCodes.mutate(undefined, {
+        getRecoveryCodesMutate(undefined, {
           onSuccess: (
             data:
               | { error: string; success?: undefined; data?: undefined }
@@ -78,7 +79,7 @@ export const useRecoveryCodes = (isOpen: boolean, initialCodes?: string[]) => {
       // Reset the fetch flag when modal closes
       hasFetchedRef.current = false;
     }
-  }, [isOpen, initialCodes, getRecoveryCodes]);
+  }, [isOpen, initialCodes, getRecoveryCodesMutate]);
 
   // Reset state when modal is fully closed to prevent any visual changes during closing
   useEffect(() => {
