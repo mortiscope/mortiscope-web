@@ -32,45 +32,51 @@ export const changePassword = async (values: ChangePasswordFormValues | UpdatePa
     return { error: "Unauthorized." };
   }
 
-  // Apply a rate limit based on the user's ID to prevent rapid password change attempts from a single account
-  const { success } = await privateActionLimiter.limit(session.user.id);
-  if (!success) {
-    return {
-      error: "You are attempting to change your password too frequently. Please try again shortly.",
-    };
-  }
-
-  let currentPassword: string;
-  let newPassword: string;
-
-  // Handle both old and new form value types
-  if ("repeatPassword" in values) {
-    // New format from account security form
-    const validationResult = AccountSecuritySchema.pick({
-      currentPassword: true,
-      newPassword: true,
-      repeatPassword: true,
-    }).safeParse(values);
-
-    if (!validationResult.success) {
-      return { error: "Invalid fields provided." };
-    }
-
-    currentPassword = validationResult.data.currentPassword;
-    newPassword = validationResult.data.newPassword;
-  } else {
-    // Legacy format from auth forms
-    const validatedFields = ChangePasswordSchema.safeParse(values);
-    if (!validatedFields.success) {
-      return { error: "Invalid fields provided." };
-    }
-
-    currentPassword = validatedFields.data.currentPassword;
-    newPassword = validatedFields.data.newPassword;
-  }
-  const userId = session.user.id;
-
   try {
+    // Apply a rate limit based on the user's ID to prevent rapid password change attempts from a single account
+    const { success } = await privateActionLimiter.limit(session.user.id);
+    if (!success) {
+      return {
+        error:
+          "You are attempting to change your password too frequently. Please try again shortly.",
+      };
+    }
+
+    let currentPassword: string;
+    let newPassword: string;
+
+    // Handle both old and new form value types
+    if ("repeatPassword" in values) {
+      // New format from account security form
+      const validationResult = AccountSecuritySchema.pick({
+        currentPassword: true,
+        newPassword: true,
+        repeatPassword: true,
+      })
+        .refine((data) => data.newPassword === data.repeatPassword, {
+          message: "New passwords do not match.",
+          path: ["repeatPassword"],
+        })
+        .safeParse(values);
+
+      if (!validationResult.success) {
+        return { error: "Invalid fields provided." };
+      }
+
+      currentPassword = validationResult.data.currentPassword;
+      newPassword = validationResult.data.newPassword;
+    } else {
+      // Legacy format from auth forms
+      const validatedFields = ChangePasswordSchema.safeParse(values);
+      if (!validatedFields.success) {
+        return { error: "Invalid fields provided." };
+      }
+
+      currentPassword = validatedFields.data.currentPassword;
+      newPassword = validatedFields.data.newPassword;
+    }
+    const userId = session.user.id;
+
     // Retrieve the current user from the database
     const user = await getUserById(userId);
 
