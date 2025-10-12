@@ -26,7 +26,7 @@ type UpdateEmailValues = {
 /**
  * A server action to handle email change requests.
  * Supports both verification flow and immediate update flow.
- * 
+ *
  * @param values The form values containing the new email and current password.
  * @param options Optional configuration for the email change behavior.
  * @returns A promise resolving to an object with either a `success` or `error` message.
@@ -80,32 +80,32 @@ export const requestEmailChange = async (
     return { error: "A verification link for this email was requested recently. Please wait." };
   }
 
-  // Fetch the full user record to perform password re-authentication
-  const user = await getUserById(session.user.id);
-
-  // Ensure this flow is only for users with a password
-  if (!user || !user.password) {
-    return { error: "Email cannot be changed for accounts without a password." };
-  }
-
-  // Re-authenticate the user by verifying their current password
-  const passwordsMatch = await bcrypt.compare(currentPassword, user.password);
-  if (!passwordsMatch) {
-    return { error: "Incorrect password. Please try again." };
-  }
-
-  // Perform business logic checks
-  if (newEmail === user.email) {
-    return { error: "New email must be different from the current one." };
-  }
-
-  // Check if the new email is already taken by another account
-  const existingUserWithNewEmail = await getUserByEmail(newEmail);
-  if (existingUserWithNewEmail) {
-    return { error: "This email address is already in use." };
-  }
-
   try {
+    // Fetch the full user record to perform password re-authentication
+    const user = await getUserById(session.user.id);
+
+    // Ensure this flow is only for users with a password
+    if (!user || !user.password) {
+      return { error: "Email cannot be changed for accounts without a password." };
+    }
+
+    // Re-authenticate the user by verifying their current password
+    const passwordsMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!passwordsMatch) {
+      return { error: "Incorrect password. Please try again." };
+    }
+
+    // Perform business logic checks
+    if (newEmail === user.email) {
+      return { error: "New email must be different from the current one." };
+    }
+
+    // Check if the new email is already taken by another account
+    const existingUserWithNewEmail = await getUserByEmail(newEmail);
+    if (existingUserWithNewEmail) {
+      return { error: "This email address is already in use." };
+    }
+
     if (options.immediate) {
       // Immediate update flow (from account security form)
       await db
