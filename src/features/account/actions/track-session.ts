@@ -94,6 +94,7 @@ export async function trackSession(data: SessionData) {
           browserVersion: sessionInfo.browserVersion,
         })
         .where(eq(userSessions.id, existingSessionData.id));
+      return { success: true, sessionId: existingSessionData.id };
     } else if (existingDeviceSession.length > 0) {
       // Case B: No exact match for the token, but a session from the same device exists.
       const deviceSessionData = existingDeviceSession[0]!;
