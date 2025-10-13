@@ -152,7 +152,7 @@ export const AccountSessions = () => {
       <AccountAllSessionsModal
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
-        userId={session?.user?.id || ""}
+        userId={session!.user!.id!}
         currentSessionToken={currentSessionToken || undefined}
         onSuccess={handleModalSuccess}
       />
@@ -161,7 +161,7 @@ export const AccountSessions = () => {
         isOpen={isSessionModalOpen}
         onOpenChange={setIsSessionModalOpen}
         session={selectedSession}
-        userId={session?.user?.id || ""}
+        userId={session!.user!.id!}
         currentSessionToken={currentSessionToken || undefined}
         onSuccess={handleSessionModalSuccess}
       />
