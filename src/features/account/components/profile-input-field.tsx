@@ -120,7 +120,7 @@ export const ProfileInputField = memo(
                           ? "cursor-pointer border-slate-200 hover:border-green-600 hover:bg-green-100 hover:text-green-600"
                           : "cursor-not-allowed border-slate-200"
                       )}
-                      disabled={!isSaveEnabled}
+                      disabled={!isSaveEnabled || isPending}
                       onClick={onSave}
                       aria-label="Save"
                     >
