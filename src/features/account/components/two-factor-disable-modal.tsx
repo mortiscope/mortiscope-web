@@ -83,8 +83,6 @@ export const TwoFactorDisableModal = ({
    * and handles both success and specific error responses from the server.
    */
   const onSubmit = (data: DisableTwoFactorFormValues) => {
-    if (!isFormValid) return;
-
     disableTwoFactor.mutate(data, {
       onSuccess: (result) => {
         if (result.success) {
