@@ -6,55 +6,59 @@ export default defineConfig({
   // Vite plugins to use during testing.
   plugins: [react(), tsconfigPaths()],
   test: {
-    // Test File Configuration
-
     /**
      * Specifies the glob patterns for files that Vitest should treat as test files.
      */
-    include: ["**/*.{test,spec}.{js,ts,jsx,tsx}"],
-    /**
-     * Specifies glob patterns for files and directories that Vitest should ignore.
-     */
-    exclude: [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.next/**",
-      "**/e2e/**",
-      "**/*.integration.test.{js,ts,jsx,tsx}",
+    projects: [
+      // Unit Tests Project
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          environment: "jsdom",
+          globals: true,
+          include: ["**/*.{test,spec}.{js,ts,jsx,tsx}"],
+          exclude: [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/.next/**",
+            "**/e2e/**",
+            "**/*.integration.test.{js,ts,jsx,tsx}",
+          ],
+          setupFiles: ["src/__tests__/setup/setup.ts"],
+          testTimeout: 15000,
+          pool: "forks",
+          fileParallelism: true,
+          clearMocks: true,
+          restoreMocks: true,
+          mockReset: true,
+        },
+      },
+      // Integration Tests Project
+      {
+        extends: true,
+        test: {
+          name: "integration",
+          environment: "jsdom",
+          globals: true,
+          include: ["**/*.integration.test.{js,ts,jsx,tsx}"],
+          exclude: [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/.next/**",
+            "**/__tests__/integration/api/**",
+          ],
+          setupFiles: ["src/__tests__/setup/setup.ts"],
+          testTimeout: 30000,
+          pool: "forks",
+          fileParallelism: true,
+          clearMocks: true,
+          restoreMocks: true,
+          mockReset: true,
+        },
+      },
     ],
-
-    // Test Environment
-
-    /**
-     * Sets the test environment.
-     */
-    environment: "jsdom",
-    /**
-     * Enables Vitest's global APIs to be available in all test files without needing explicit imports.
-     */
-    globals: true,
-    /**
-     * Sets the default timeout for each test in milliseconds.
-     */
-    testTimeout: 15000,
-
-    /**
-     * Specifies setup files to be run before each test file is executed.
-     */
-    setupFiles: ["./src/__tests__/setup/setup.ts"],
-
-    // Performance and Concurrency
-
-    /**
-     * Sets the test runner pool. 'forks' runs test files in isolated child processes.
-     */
-    pool: "forks",
-    /**
-     * Allows Vitest to run multiple test files in parallel.
-     */
-    fileParallelism: true,
-
-    // Test Coverage Configuration
+    // Coverage Configuration
     coverage: {
       /**
        * Specifies the coverage provider.
@@ -71,7 +75,7 @@ export default defineConfig({
       /**
        * Defines the directory where the coverage reports will be generated.
        */
-      reportsDirectory: "./coverage",
+      reportsDirectory: "coverage",
       /**
        * Specifies which files should be included in the coverage report.
        */
@@ -93,7 +97,6 @@ export default defineConfig({
         "src/instrumentation.ts",
         "src/middleware.ts",
         "src/routes.ts",
-        "src/app/**",
         "src/components/**",
         "src/data/**",
         "src/db/**",
@@ -106,6 +109,40 @@ export default defineConfig({
         "src/**/constants.ts",
         "src/**/styles.ts",
         "src/**/types.ts",
+        ...(process.argv.includes("integration") || process.env.TEST_TYPE === "integration"
+          ? [
+              "**/features/**/components/**",
+              "**/features/**/hooks/**",
+              "**/features/**/schemas/**",
+              "src/**/page.tsx",
+              "src/**/layout.tsx",
+              "src/app/global-error.tsx",
+              "src/**/not-found.tsx",
+              "**/store/**",
+              "src/stores/**",
+              "src/app/api/**",
+              "src/features/account/utils/display-session.ts",
+              "src/features/account/utils/format-date.ts",
+              "src/features/account/utils/format-session.ts",
+              "src/features/account/utils/parse-session.ts",
+              "src/features/annotation/utils/calculate-detection-changes.ts",
+              "src/features/annotation/utils/event-coordinates.ts",
+              "src/features/annotation/utils/lightened-color.ts",
+              "src/features/dashboard/utils/date-url-sync.ts",
+              "src/features/dashboard/utils/format-date-range.ts",
+              "src/features/dashboard/utils/highlight-text.ts",
+              "src/features/export/constants/pdf-options.ts",
+            ]
+          : []),
+        ...(process.argv.includes("unit") || process.env.TEST_TYPE === "unit"
+          ? ["src/app/**"]
+          : []),
+        ...(process.argv.includes("integration") ||
+        process.env.TEST_TYPE === "integration" ||
+        process.argv.includes("unit") ||
+        process.env.TEST_TYPE === "unit"
+          ? []
+          : ["src/app/**"]),
       ],
       /**
        * Sets the minimum coverage thresholds required for the test suite to pass.
@@ -117,20 +154,5 @@ export default defineConfig({
         statements: 80,
       },
     },
-
-    // Mocking and Lifecycle Hooks
-
-    /**
-     * If true, automatically clears mock history before each test.
-     */
-    clearMocks: true,
-    /**
-     * If true, automatically restores the original implementations of mocked functions before each test.
-     */
-    restoreMocks: true,
-    /**
-     * If true, automatically resets mocks to their initial implementation before each test.
-     */
-    mockReset: true,
   },
 });
