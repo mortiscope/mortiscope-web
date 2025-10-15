@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { analysisResults } from "@/db/schema";
+import { analysisResults, cases } from "@/db/schema";
 import { privateActionLimiter } from "@/lib/rate-limiter";
 
 // Schema for validating the case ID input.
@@ -67,11 +67,14 @@ export const cancelAnalysis = async (
       .where(eq(analysisResults.caseId, caseId))
       .returning({ id: analysisResults.caseId });
 
+    // Revert the case status back to "draft" so the user can edit it again.
+    await db.update(cases).set({ status: "draft" }).where(eq(cases.id, caseId));
+
     // If no row was deleted, it might be because the analysis already finished or was cancelled.
     if (!deletedResult) {
       return {
         status: "success",
-        message: "Analysis was not found. It may have already been cancelled or completed.",
+        message: "Analysis has been successfully cancelled.",
       };
     }
 

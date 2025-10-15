@@ -46,6 +46,8 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
 
   // This effect runs whenever the 'status' data changes.
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     // Once the analysis is complete, redirect the user to the results page.
     if (status === "completed") {
       // Fetch case name and show toast
@@ -65,7 +67,7 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
       fetchCaseNameAndShowToast();
 
       // A small delay can make the UX feel smoother.
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         router.push(`/results/${caseId}`);
       }, 1000);
     }
@@ -73,6 +75,11 @@ export const useAnalysisStatus = ({ caseId, isEnabled }: UseAnalysisStatusProps)
     else if (status === "failed") {
       toast.error("Analysis failed. Please contact support or try again.");
     }
+
+    // Cleanup: Clear the timeout if status changes or component unmounts.
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [status, caseId, router]);
 
   // This effect runs if the query itself throws an error.

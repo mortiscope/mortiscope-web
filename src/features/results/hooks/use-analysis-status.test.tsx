@@ -294,4 +294,37 @@ describe("useAnalysisStatus", () => {
     await new Promise((resolve) => setTimeout(resolve, 1100));
     expect(mockRouter.push).toHaveBeenCalledWith("/results/case-123");
   });
+
+  /**
+   * Test case to verify that the redirect timeout is cleared when the hook unmounts.
+   */
+  it("clears redirect timeout on unmount to prevent stale redirects", async () => {
+    // Arrange: Mock completed status and case name.
+    vi.mocked(getAnalysisStatus).mockResolvedValue("completed");
+    vi.mocked(getCaseName).mockResolvedValue("Test Case");
+
+    // Act: Render the hook and get the unmount function.
+    const { result, unmount } = renderHook(
+      () => useAnalysisStatus({ caseId: "case-123", isEnabled: true }),
+      { wrapper: createWrapper() }
+    );
+
+    // Wait for the status to be fetched and the toast to be shown.
+    await waitFor(() => {
+      expect(result.current.status).toBe("completed");
+    });
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith("Test Case analysis complete!");
+    });
+
+    // Act: Unmount the hook immediately before the 1-second redirect timer fires.
+    unmount();
+
+    // Assert: Wait slightly longer than the redirect delay to confirm it was cancelled.
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    // Assert: The redirect should NOT have been called because the timeout was cleared on unmount.
+    expect(mockRouter.push).not.toHaveBeenCalled();
+  });
 });

@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 // Define hoisted mock functions to be used within module mocks.
-const { mockDelete, mockWhere, mockReturning, mockLimit } = vi.hoisted(() => {
+const { mockDelete, mockWhere, mockReturning, mockLimit, mockUpdate, mockSet } = vi.hoisted(() => {
   const returning = vi.fn();
   const where = vi.fn(() => ({ returning }));
   const del = vi.fn(() => ({ where }));
   const limit = vi.fn();
+  const updateWhere = vi.fn();
+  const set = vi.fn(() => ({ where: updateWhere }));
+  const update = vi.fn(() => ({ set }));
 
   return {
     mockDelete: del,
     mockWhere: where,
     mockReturning: returning,
     mockLimit: limit,
+    mockUpdate: update,
+    mockSet: set,
   };
 });
 
@@ -20,10 +25,11 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
 
-// Mock the database client to intercept delete operations.
+// Mock the database client to intercept delete and update operations.
 vi.mock("@/db", () => ({
   db: {
     delete: mockDelete,
+    update: mockUpdate,
   },
 }));
 
@@ -170,8 +176,11 @@ describe("cancelAnalysis", () => {
     // Assert: Verify the success response structure.
     expect(result).toEqual({
       status: "success",
-      message: "Analysis has been successfully cancelled.",
+      message: "Analysis cancelled. Your case is now editable again.",
     });
+    // Assert: Verify the case status was reverted to "draft".
+    expect(mockUpdate).toHaveBeenCalled();
+    expect(mockSet).toHaveBeenCalledWith({ status: "draft" });
   });
 
   /**
@@ -196,12 +205,14 @@ describe("cancelAnalysis", () => {
     // Act: Call the server action.
     const result = await cancelAnalysis({ caseId: validCaseId });
 
-    // Assert: Verify that the delete operation was attempted.
+    // Assert: Verify the delete operation was attempted.
     expect(db.delete).toHaveBeenCalled();
-    // Assert: Verify the specific message indicating the analysis was not found.
+    // Assert: Verify the case status was still reverted to "draft".
+    expect(mockUpdate).toHaveBeenCalled();
+    // Assert: Verify the specific message indicating the analysis is now editable.
     expect(result).toEqual({
       status: "success",
-      message: "Analysis was not found. It may have already been cancelled or completed.",
+      message: "Analysis cancelled. Your case is now editable again.",
     });
   });
 
@@ -224,6 +235,9 @@ describe("cancelAnalysis", () => {
     // Arrange: Force the database operation to throw an error.
     mockReturning.mockRejectedValue(new Error("DB Connection Failed"));
 
+    // Arrange: Suppress the expected console.error output from the action.
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     // Act: Call the server action.
     const result = await cancelAnalysis({ caseId: validCaseId });
 
@@ -232,5 +246,8 @@ describe("cancelAnalysis", () => {
       status: "error",
       message: "A database error occurred. Please try again.",
     });
+
+    // Cleanup: Restore console.error.
+    consoleSpy.mockRestore();
   });
 });

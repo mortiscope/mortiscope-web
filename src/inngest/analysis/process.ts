@@ -205,6 +205,20 @@ export const analysisEvent = inngest.createFunction(
       return { message: "Workflow ended early: No objects detected." };
     }
 
+    // Check if the user cancelled the analysis while FastAPI was processing.
+    const isCancelled = await step.run("check-if-cancelled", async () => {
+      const record = await db.query.analysisResults.findFirst({
+        where: eq(analysisResults.caseId, caseId),
+        columns: { caseId: true },
+      });
+      return !record;
+    });
+
+    if (isCancelled) {
+      analysisLogger.info({ caseId }, "Analysis was cancelled by user, skipping save");
+      return { message: `Analysis cancelled for case: ${caseId}` };
+    }
+
     // Saves the final results from the single API call to the primary database.
     await step.run("save-analysis-results", async () => {
       const { aggregated_results, pmi_estimation, explanation } = fullAnalysisResult;
