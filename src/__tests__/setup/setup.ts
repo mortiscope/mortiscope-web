@@ -2,7 +2,12 @@ import "@testing-library/jest-dom/vitest";
 
 import { cleanup } from "@testing-library/react";
 import React from "react";
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
+
+import { createMockDb, resetMockDb } from "@/__tests__/mocks/database";
+import { server } from "@/__tests__/mocks/server";
+
+export { resetMockDb } from "@/__tests__/mocks/database";
 
 beforeEach(() => {
   global.ResizeObserver = class ResizeObserver {
@@ -11,19 +16,21 @@ beforeEach(() => {
     disconnect() {}
   };
 
-  Object.defineProperty(window, "matchMedia", {
-    writable: true,
-    value: vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  });
+  if (typeof window !== "undefined") {
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query) => ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    });
+  }
 });
 
 /**
@@ -31,6 +38,16 @@ beforeEach(() => {
  */
 afterEach(() => {
   cleanup();
+  server.resetHandlers();
+  resetMockDb();
+});
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "warn" });
+});
+
+afterAll(() => {
+  server.close();
 });
 
 /**
@@ -106,6 +123,28 @@ vi.mock("next-auth/react", async (importOriginal) => {
       React.createElement(React.Fragment, null, children),
   };
 });
+
+/**
+ * Mock Drizzle ORM to intercept operators
+ */
+vi.mock("drizzle-orm", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("drizzle-orm")>();
+  return {
+    ...actual,
+    eq: vi.fn((col, val) => ({ operator: "eq", col, val })),
+    and: vi.fn((...conditions) => ({ operator: "and", conditions })),
+    desc: vi.fn((col) => ({ operator: "desc", col })),
+    inArray: vi.fn((col, vals) => ({ operator: "inArray", col, vals })),
+    isNull: vi.fn((col) => ({ operator: "isNull", col })),
+    gte: vi.fn((col, val) => ({ operator: "gte", col, val })),
+    lte: vi.fn((col, val) => ({ operator: "lte", col, val })),
+  };
+});
+
+/**
+ * Mock Database implementation using the modular database mock
+ */
+vi.mock("@/db", () => createMockDb());
 
 // Environment Variables
 process.env.DATABASE_URL = "postgresql://mock:mock@localhost:5432/mock_db";
