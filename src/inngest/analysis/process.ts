@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { analysisResults } from "@/db/schema";
+import { analysisResults, cases } from "@/db/schema";
 import { env } from "@/lib/env";
 import { inngest } from "@/lib/inngest";
 import { analysisLogger, inngestLogger, logError } from "@/lib/logger";
@@ -64,6 +64,18 @@ export const analysisEvent = inngest.createFunction(
 
     // Update status to 'processing' before calling the external API.
     await step.run("update-status-to-processing", async () => {
+      // Verify the case hasn't been cancelled during the sleep period.
+      const caseRecord = await db.query.cases.findFirst({
+        where: eq(cases.id, caseId),
+        columns: { status: true },
+      });
+
+      // If the case was reverted to "draft", it means the user cancelled.
+      if (caseRecord?.status === "draft") {
+        throw new Error("Analysis was cancelled before processing started");
+      }
+
+      // Proceed to update the analysis status.
       await db
         .update(analysisResults)
         .set({ status: "processing" })
@@ -207,11 +219,28 @@ export const analysisEvent = inngest.createFunction(
 
     // Check if the user cancelled the analysis while FastAPI was processing.
     const isCancelled = await step.run("check-if-cancelled", async () => {
-      const record = await db.query.analysisResults.findFirst({
-        where: eq(analysisResults.caseId, caseId),
-        columns: { caseId: true },
-      });
-      return !record;
+      // Fetch the current state of both the analysis record and the case.
+      const [analysisRecord, caseRecord] = await Promise.all([
+        db.query.analysisResults.findFirst({
+          where: eq(analysisResults.caseId, caseId),
+          columns: { caseId: true, status: true },
+        }),
+        db.query.cases.findFirst({
+          where: eq(cases.id, caseId),
+          columns: { status: true },
+        }),
+      ]);
+
+      // Determine cancellation based on multiple conditions:
+      
+      // No analysis record exists (user deleted it via cancel).
+      const noRecord = !analysisRecord;
+      // Case status reverted to "draft".
+      const caseReverted = caseRecord?.status === "draft";
+      // Analysis status reset to "pending".
+      const wasResubmitted = analysisRecord?.status === "pending";
+
+      return noRecord || caseReverted || wasResubmitted;
     });
 
     if (isCancelled) {

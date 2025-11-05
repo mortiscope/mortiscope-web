@@ -1,11 +1,11 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { analysisResults, cases } from "@/db/schema";
+import { analysisResults, cases, detections, uploads } from "@/db/schema";
 import { privateActionLimiter } from "@/lib/rate-limiter";
 
 // Schema for validating the case ID input.
@@ -61,22 +61,27 @@ export const cancelAnalysis = async (
   const { caseId } = validatedFields.data;
 
   try {
-    // Delete the analysis results entry for the given case ID.
-    const [deletedResult] = await db
-      .delete(analysisResults)
-      .where(eq(analysisResults.caseId, caseId))
-      .returning({ id: analysisResults.caseId });
+    // Execute all cleanup operations atomically within a transaction.
+    await db.transaction(async (tx) => {
+      // Retrieve all upload IDs associated with the case.
+      const caseUploads = await tx
+        .select({ id: uploads.id })
+        .from(uploads)
+        .where(eq(uploads.caseId, caseId));
 
-    // Revert the case status back to "draft" so the user can edit it again.
-    await db.update(cases).set({ status: "draft" }).where(eq(cases.id, caseId));
+      const uploadIds = caseUploads.map((u) => u.id);
 
-    // If no row was deleted, it might be because the analysis already finished or was cancelled.
-    if (!deletedResult) {
-      return {
-        status: "success",
-        message: "Analysis has been successfully cancelled.",
-      };
-    }
+      // Delete all detections linked to the case's uploads to prevent duplicates on resubmission.
+      if (uploadIds.length > 0) {
+        await tx.delete(detections).where(inArray(detections.uploadId, uploadIds));
+      }
+
+      // Delete the analysis results record.
+      await tx.delete(analysisResults).where(eq(analysisResults.caseId, caseId));
+
+      // Revert the case status back to "draft" so the user can edit it again.
+      await tx.update(cases).set({ status: "draft" }).where(eq(cases.id, caseId));
+    });
 
     return {
       status: "success",
