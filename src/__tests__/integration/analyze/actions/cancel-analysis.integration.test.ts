@@ -4,11 +4,11 @@ import { eq } from "drizzle-orm";
 import { type Session } from "next-auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { mockCases, mockUsers } from "@/__tests__/mocks/fixtures";
+import { mockCases, mockUploads, mockUsers } from "@/__tests__/mocks/fixtures";
 import { resetMockDb } from "@/__tests__/setup/setup";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { analysisResults, cases, users } from "@/db/schema";
+import { analysisResults, cases, detections, uploads, users } from "@/db/schema";
 import { cancelAnalysis } from "@/features/analyze/actions/cancel-analysis";
 
 // Mock the authentication module to control user sessions.
@@ -222,7 +222,7 @@ describe("cancelAnalysis (integration)", () => {
       // Assert: Verify the success response message.
       expect(result).toEqual({
         status: "success",
-        message: "Analysis cancelled. Your case is now editable again.",
+        message: "Analysis has been successfully cancelled.",
       });
 
       // Assert: Verify the `analysisResults` record was deleted from the database.
@@ -261,10 +261,253 @@ describe("cancelAnalysis (integration)", () => {
       // Assert: Verify success response (idempotency).
       expect(result).toEqual({
         status: "success",
-        message: "Analysis cancelled. Your case is now editable again.",
+        message: "Analysis has been successfully cancelled.",
       });
 
       // Assert: Verify the case status was still set to draft.
+      const updatedCase = await db.query.cases.findFirst({
+        where: eq(cases.id, mockCases.firstCase.id),
+      });
+      expect(updatedCase?.status).toBe("draft");
+    });
+
+    /**
+     * Test case to verify that detections are deleted when cancelling an analysis.
+     * This prevents duplicate detections when a user cancels and resubmits.
+     */
+    it("deletes all detections for the case's uploads", async () => {
+      // Arrange: Seed a case with uploads and detections.
+      await db.insert(cases).values({
+        id: mockCases.firstCase.id,
+        userId: mockUsers.primaryUser.id,
+        caseName: "Test Case With Detections",
+        temperatureCelsius: 20,
+        locationRegion: "Region",
+        locationProvince: "Province",
+        locationCity: "City",
+        locationBarangay: "Barangay",
+        caseDate: new Date(),
+        status: "active",
+      });
+
+      // Arrange: Insert uploads for the case.
+      await db.insert(uploads).values(mockUploads.firstUpload);
+
+      // Arrange: Insert multiple detections linked to the upload.
+      await db.insert(detections).values([
+        {
+          id: "det-1",
+          uploadId: mockUploads.firstUpload.id,
+          label: "adult",
+          originalLabel: "adult",
+          confidence: 0.9,
+          originalConfidence: 0.9,
+          xMin: 10,
+          yMin: 10,
+          xMax: 100,
+          yMax: 100,
+          status: "model_generated",
+          createdById: mockUsers.primaryUser.id,
+        },
+        {
+          id: "det-2",
+          uploadId: mockUploads.firstUpload.id,
+          label: "instar_1",
+          originalLabel: "instar_1",
+          confidence: 0.85,
+          originalConfidence: 0.85,
+          xMin: 200,
+          yMin: 200,
+          xMax: 300,
+          yMax: 300,
+          status: "model_generated",
+          createdById: mockUsers.primaryUser.id,
+        },
+        {
+          id: "det-3",
+          uploadId: mockUploads.firstUpload.id,
+          label: "instar_2",
+          originalLabel: "instar_2",
+          confidence: 0.8,
+          originalConfidence: 0.8,
+          xMin: 400,
+          yMin: 400,
+          xMax: 500,
+          yMax: 500,
+          status: "model_generated",
+          createdById: mockUsers.primaryUser.id,
+        },
+      ]);
+
+      // Arrange: Insert an analysis results record.
+      await db.insert(analysisResults).values({
+        caseId: mockCases.firstCase.id,
+        status: "processing",
+      });
+
+      // Sanity check: Verify detections exist before cancellation.
+      const detectionsBeforeCancel = await db.query.detections.findMany({
+        where: eq(detections.uploadId, mockUploads.firstUpload.id),
+      });
+      expect(detectionsBeforeCancel).toHaveLength(3);
+
+      // Act: Cancel the analysis.
+      const result = await cancelAnalysis(validInput);
+
+      // Assert: Verify the cancellation was successful.
+      expect(result).toEqual({
+        status: "success",
+        message: "Analysis has been successfully cancelled.",
+      });
+
+      // Assert: Verify all detections were deleted.
+      const detectionsAfterCancel = await db.query.detections.findMany({
+        where: eq(detections.uploadId, mockUploads.firstUpload.id),
+      });
+      expect(detectionsAfterCancel).toHaveLength(0);
+
+      // Assert: Verify the analysis results record was deleted.
+      const deletedResult = await db.query.analysisResults.findFirst({
+        where: eq(analysisResults.caseId, mockCases.firstCase.id),
+      });
+      expect(deletedResult).toBeNull();
+
+      // Assert: Verify the case status was reverted to draft.
+      const updatedCase = await db.query.cases.findFirst({
+        where: eq(cases.id, mockCases.firstCase.id),
+      });
+      expect(updatedCase?.status).toBe("draft");
+    });
+
+    /**
+     * Test case to verify that cancellation works correctly for cases with multiple uploads.
+     */
+    it("deletes detections across multiple uploads", async () => {
+      // Arrange: Seed a case with multiple uploads.
+      await db.insert(cases).values({
+        id: mockCases.firstCase.id,
+        userId: mockUsers.primaryUser.id,
+        caseName: "Test Case With Multiple Uploads",
+        temperatureCelsius: 20,
+        locationRegion: "Region",
+        locationProvince: "Province",
+        locationCity: "City",
+        locationBarangay: "Barangay",
+        caseDate: new Date(),
+        status: "active",
+      });
+
+      // Arrange: Insert two uploads for the case.
+      await db.insert(uploads).values([mockUploads.firstUpload, mockUploads.secondUpload]);
+
+      // Arrange: Insert detections linked to the first upload.
+      await db.insert(detections).values([
+        {
+          id: "det-1",
+          uploadId: mockUploads.firstUpload.id,
+          label: "adult",
+          originalLabel: "adult",
+          confidence: 0.9,
+          originalConfidence: 0.9,
+          xMin: 10,
+          yMin: 10,
+          xMax: 100,
+          yMax: 100,
+          status: "model_generated",
+          createdById: mockUsers.primaryUser.id,
+        },
+        {
+          id: "det-2",
+          uploadId: mockUploads.firstUpload.id,
+          label: "instar_1",
+          originalLabel: "instar_1",
+          confidence: 0.85,
+          originalConfidence: 0.85,
+          xMin: 200,
+          yMin: 200,
+          xMax: 300,
+          yMax: 300,
+          status: "model_generated",
+          createdById: mockUsers.primaryUser.id,
+        },
+      ]);
+
+      // Arrange: Insert a detection linked to the second upload.
+      await db.insert(detections).values({
+        id: "det-3",
+        uploadId: mockUploads.secondUpload.id,
+        label: "pupa",
+        originalLabel: "pupa",
+        confidence: 0.95,
+        originalConfidence: 0.95,
+        xMin: 50,
+        yMin: 50,
+        xMax: 150,
+        yMax: 150,
+        status: "model_generated",
+        createdById: mockUsers.primaryUser.id,
+      });
+
+      // Arrange: Insert an analysis results record.
+      await db.insert(analysisResults).values({
+        caseId: mockCases.firstCase.id,
+        status: "processing",
+      });
+
+      // Sanity check: Verify detections exist across both uploads.
+      const firstUploadDetections = await db.query.detections.findMany({
+        where: eq(detections.uploadId, mockUploads.firstUpload.id),
+      });
+      const secondUploadDetections = await db.query.detections.findMany({
+        where: eq(detections.uploadId, mockUploads.secondUpload.id),
+      });
+      expect(firstUploadDetections).toHaveLength(2);
+      expect(secondUploadDetections).toHaveLength(1);
+
+      // Act: Cancel the analysis.
+      const result = await cancelAnalysis(validInput);
+
+      // Assert: Verify the cancellation was successful.
+      expect(result.status).toBe("success");
+
+      // Assert: Verify all detections from both uploads were deleted.
+      const allDetectionsAfterCancel = await db.query.detections.findMany({});
+      expect(allDetectionsAfterCancel).toHaveLength(0);
+    });
+
+    /**
+     * Test case to verify that cancellation works correctly for cases with no uploads.
+     */
+    it("handles cases with no uploads gracefully", async () => {
+      // Arrange: Seed only a case with no uploads.
+      await db.insert(cases).values({
+        id: mockCases.firstCase.id,
+        userId: mockUsers.primaryUser.id,
+        caseName: "Test Case Without Uploads",
+        temperatureCelsius: 20,
+        locationRegion: "Region",
+        locationProvince: "Province",
+        locationCity: "City",
+        locationBarangay: "Barangay",
+        caseDate: new Date(),
+        status: "active",
+      });
+
+      await db.insert(analysisResults).values({
+        caseId: mockCases.firstCase.id,
+        status: "processing",
+      });
+
+      // Act: Cancel the analysis.
+      const result = await cancelAnalysis(validInput);
+
+      // Assert: Verify the cancellation was successful.
+      expect(result).toEqual({
+        status: "success",
+        message: "Analysis has been successfully cancelled.",
+      });
+
+      // Assert: Verify the case status was reverted to draft.
       const updatedCase = await db.query.cases.findFirst({
         where: eq(cases.id, mockCases.firstCase.id),
       });
@@ -294,15 +537,11 @@ describe("cancelAnalysis (integration)", () => {
      * Test case to verify that database exceptions are caught and reported as errors.
      */
     it("handles database errors gracefully", async () => {
-      // Arrange: Spy on `console.error` and force a database deletion to fail.
+      // Arrange: Spy on `console.error` and force a database transaction to fail.
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
       const dbModule = await import("@/db");
-      vi.spyOn(dbModule.db, "delete").mockReturnValue({
-        where: vi.fn().mockReturnValue({
-          returning: vi.fn().mockRejectedValue(new Error("Database error")),
-        }),
-      } as never);
+      vi.spyOn(dbModule.db, "transaction").mockRejectedValue(new Error("Database error"));
 
       // Act: Attempt to cancel analysis during a database outage.
       const result = await cancelAnalysis(validInput);
@@ -313,6 +552,9 @@ describe("cancelAnalysis (integration)", () => {
         message: "A database error occurred. Please try again.",
       });
       expect(consoleErrorSpy).toHaveBeenCalled();
+
+      // Cleanup: Restore console.error.
+      consoleErrorSpy.mockRestore();
     });
   });
 });

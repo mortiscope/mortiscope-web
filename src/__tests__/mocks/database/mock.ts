@@ -12,18 +12,41 @@ import { mockDbStore } from "@/__tests__/mocks/database/store";
  * @returns An object containing the fully mocked `db` instance for use in tests.
  */
 export const createMockDb = () => {
+  // Create the core database operations.
+  const insertOp = createInsertOperation(mockDbStore);
+  const selectOp = createSelectOperation(mockDbStore);
+  const updateOp = createUpdateOperation(mockDbStore);
+  const deleteOp = createDeleteOperation(mockDbStore);
+  const queryOp = createQueries(mockDbStore);
+
+  // Create a transaction context that provides the same operations.
+  const createTxContext = () => ({
+    insert: insertOp,
+    select: selectOp,
+    update: updateOp,
+    delete: deleteOp,
+    query: queryOp,
+  });
+
   return {
     db: {
       // Creates the mock `db.insert()` method.
-      insert: createInsertOperation(mockDbStore),
+      insert: insertOp,
       // Creates the mock `db.select()` method.
-      select: createSelectOperation(mockDbStore),
+      select: selectOp,
       // Creates the mock `db.update()` method.
-      update: createUpdateOperation(mockDbStore),
+      update: updateOp,
       // Creates the mock `db.delete()` method.
-      delete: createDeleteOperation(mockDbStore),
+      delete: deleteOp,
       // Creates the mock `db.query` interface for relational queries.
-      query: createQueries(mockDbStore),
+      query: queryOp,
+      // Creates the mock `db.transaction()` method to simulate transactional operations.
+      transaction: async <T>(
+        callback: (tx: ReturnType<typeof createTxContext>) => Promise<T>
+      ): Promise<T> => {
+        const tx = createTxContext();
+        return callback(tx);
+      },
     },
   };
 };
