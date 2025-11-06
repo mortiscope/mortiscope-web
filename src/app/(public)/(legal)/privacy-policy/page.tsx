@@ -7,6 +7,11 @@ import { PrivacyPolicy } from "@/features/legal/components/privacy-policy";
  */
 export const metadata: Metadata = {
   title: "Privacy Policy • MortiScope",
+  description:
+    "Learn how Mortiscope collects, uses, and protects your personal information. Our privacy policy explains data handling practices for our PMI estimation system.",
+  alternates: {
+    canonical: "https://mortiscope.com/privacy-policy",
+  },
 };
 
 /**
