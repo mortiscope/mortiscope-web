@@ -58,6 +58,12 @@ const envSchema = z.object({
   // MaxMind GeoIP
   MAXMIND_LICENSE_KEY: z.string().min(1, "MAXMIND_LICENSE_KEY is required."),
 
+  // Logging
+  LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
+
+  // Cron Jobs
+  CRON_SECRET: z.string().min(1, "CRON_SECRET is required"),
+
   // Encryption
   ENCRYPTION_KEY: z
     .string()

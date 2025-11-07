@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { authenticator } from "otplib";
+import { verify as verifyTotp } from "otplib";
 
 import { getUserByEmail } from "@/data/user";
 import { db } from "@/db";
@@ -61,12 +61,12 @@ export const verifySigninTwoFactor = async (token: string) => {
     }
 
     // Verify the TOTP token
-    const isValid = authenticator.verify({
+    const result = await verifyTotp({
       token,
       secret: twoFactorData.secret,
     });
 
-    if (!isValid) {
+    if (!result.valid) {
       authLogger.warn({ userId, email }, "Invalid 2FA token provided during signin");
       return { error: "Invalid verification code. Please try again." };
     }

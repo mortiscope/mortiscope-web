@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { authenticator } from "otplib";
+import { verify as verifyTotp } from "otplib";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -43,12 +43,12 @@ export const verifyTwoFactor = async (values: VerifyTwoFactorFormValues) => {
 
   try {
     // Verify the token against the secret
-    const isValid = authenticator.verify({
+    const result = await verifyTotp({
       token,
       secret,
     });
 
-    if (!isValid) {
+    if (!result.valid) {
       return {
         error: "Invalid verification code.",
       };

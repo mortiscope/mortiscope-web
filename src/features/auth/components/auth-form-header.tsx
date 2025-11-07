@@ -31,6 +31,7 @@ export function AuthFormHeader({ title, description }: AuthFormHeaderProps) {
               width={60}
               height={60}
               className="md:h-[80px] md:w-[80px]"
+              style={{ width: "auto", height: "auto" }}
             />
           </div>
         </Link>

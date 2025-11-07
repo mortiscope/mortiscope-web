@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { authenticator } from "otplib";
+import { generateSecret, generateURI } from "otplib";
 
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -31,8 +31,7 @@ export const setupTwoFactor = async (values: unknown = {}) => {
   const { success } = await privateActionLimiter.limit(userId);
   if (!success) {
     return {
-      error:
-        "You are attempting to setup two-factor authentication too frequently.",
+      error: "You are attempting to setup two-factor authentication too frequently.",
     };
   }
 
@@ -49,14 +48,14 @@ export const setupTwoFactor = async (values: unknown = {}) => {
     }
 
     // Generate a new secret for the user
-    const secret = authenticator.generateSecret();
+    const secret = generateSecret();
 
     // Use the user's email from session
     const userEmail = session.user.email || "user@example.com";
     const serviceName = "MortiScope";
 
     // Generate the otpauth URL for QR code
-    const otpauthUrl = authenticator.keyuri(userEmail, serviceName, secret);
+    const otpauthUrl = generateURI({ issuer: serviceName, label: userEmail, secret });
 
     return {
       success: true,
