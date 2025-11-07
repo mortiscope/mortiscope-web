@@ -13,7 +13,19 @@ const compat = new FlatCompat({
 /** @type {import('eslint').Linter.Config[]} */
 const eslintConfig = [
   {
-    ignores: [".next/", "node_modules/", "dist/", "out/", "build/", "next-env.d.ts", ".cache/"],
+    ignores: [
+      ".auth/",
+      ".next/",
+      ".cache/",
+      "build/",
+      "coverage/",
+      "dist/",
+      "e2e/playwright-report/",
+      "e2e/test-results/",
+      "next-env.d.ts",
+      "node_modules/",
+      "out/",
+    ],
   },
 
   ...compat.extends("next/core-web-vitals", "next/typescript"),
@@ -26,6 +38,14 @@ const eslintConfig = [
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
       "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
+
+  {
+    files: ["e2e/**/*.ts"],
+    rules: {
+      "react-hooks/rules-of-hooks": "off",
+      "react-hooks/exhaustive-deps": "off",
     },
   },
 
