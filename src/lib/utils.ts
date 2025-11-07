@@ -178,3 +178,19 @@ export function formatPmiToInterpretableString(totalMinutes: number | null | und
 
   return parts.slice(0, -1).join(", ") + ", and " + parts.slice(-1);
 }
+
+/**
+ * Formats large numbers in compact notation to prevent overflow in charts and tables.
+ *
+ * @param value - The numeric value to format.
+ * @returns A formatted string (e.g., 6990 -> "7.0K", 1500000 -> "1.5M").
+ */
+export function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000) {
+    return `${(value / 1_000_000).toFixed(1)}M`;
+  }
+  if (value >= 1_000) {
+    return `${(value / 1_000).toFixed(1)}K`;
+  }
+  return value.toString();
+}

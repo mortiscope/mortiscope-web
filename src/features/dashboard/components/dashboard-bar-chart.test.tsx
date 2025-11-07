@@ -44,9 +44,22 @@ vi.mock("recharts", () => ({
       />
     );
   },
-  YAxis: (props: Record<string, unknown>) => (
-    <g data-testid="y-axis" data-props={JSON.stringify(props)} />
-  ),
+  YAxis: (props: Record<string, unknown>) => {
+    // Capture formatted samples at different magnitudes to test the tickFormatter
+    const tickFormatter = props.tickFormatter as ((value: number) => string) | undefined;
+    const formattedSmall = tickFormatter ? tickFormatter(500) : "";
+    const formattedThousands = tickFormatter ? tickFormatter(6990) : "";
+    const formattedMillions = tickFormatter ? tickFormatter(1500000) : "";
+    return (
+      <g
+        data-testid="y-axis"
+        data-props={JSON.stringify(props)}
+        data-formatted-small={formattedSmall}
+        data-formatted-thousands={formattedThousands}
+        data-formatted-millions={formattedMillions}
+      />
+    );
+  },
   CartesianGrid: () => <g data-testid="cartesian-grid" />,
   Tooltip: ({
     content,
@@ -102,9 +115,13 @@ vi.mock("recharts", () => ({
 }));
 
 // Mock utility functions used for label formatting.
-vi.mock("@/lib/utils", () => ({
-  formatLabel: (str: string) => `Formatted-${str}`,
-}));
+vi.mock("@/lib/utils", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/utils")>();
+  return {
+    ...actual,
+    formatLabel: (str: string) => `Formatted-${str}`,
+  };
+});
 
 /**
  * Test suite for the `DashboardBarChart` component.
@@ -299,5 +316,46 @@ describe("DashboardBarChart", () => {
 
     // Assert: Verify that the component remains rendered during interactions.
     expect(bar).toBeInTheDocument();
+  });
+
+  /**
+   * Test suite for Y-axis tick formatting to prevent label overflow with 4+ digit numbers.
+   */
+  describe("Y-axis compact number formatting", () => {
+    /**
+     * Test case to verify that numbers less than 1000 display as-is.
+     */
+    it("displays numbers under 1000 without formatting", () => {
+      // Act: Render the chart.
+      render(<DashboardBarChart data={mockData} />);
+
+      // Assert: Verify small numbers are not formatted.
+      const yAxis = screen.getByTestId("y-axis");
+      expect(yAxis.getAttribute("data-formatted-small")).toBe("500");
+    });
+
+    /**
+     * Test case to verify that numbers >= 1000 display with "K" suffix.
+     */
+    it("formats numbers >= 1000 with K suffix", () => {
+      // Act: Render the chart.
+      render(<DashboardBarChart data={mockData} />);
+
+      // Assert: Verify thousands are formatted with K suffix.
+      const yAxis = screen.getByTestId("y-axis");
+      expect(yAxis.getAttribute("data-formatted-thousands")).toBe("7.0K");
+    });
+
+    /**
+     * Test case to verify that numbers >= 1,000,000 display with "M" suffix.
+     */
+    it("formats numbers >= 1,000,000 with M suffix", () => {
+      // Act: Render the chart.
+      render(<DashboardBarChart data={mockData} />);
+
+      // Assert: Verify millions are formatted with M suffix.
+      const yAxis = screen.getByTestId("y-axis");
+      expect(yAxis.getAttribute("data-formatted-millions")).toBe("1.5M");
+    });
   });
 });

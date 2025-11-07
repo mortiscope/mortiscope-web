@@ -14,7 +14,7 @@ import {
 import { type TooltipProps } from "recharts";
 
 import { DETECTION_CLASS_COLORS } from "@/lib/constants";
-import { formatLabel } from "@/lib/utils";
+import { formatCompactNumber, formatLabel } from "@/lib/utils";
 
 /**
  * Defines the shape of a single data point that this chart component expects.
@@ -94,7 +94,7 @@ export const DashboardBarChart = memo(
 
     // New state variables for Y-axis spacing
     const [yAxisWidth, setYAxisWidth] = useState(70);
-    const [yAxisDx, setYAxisDx] = useState(-18);
+    const [yAxisDx, setYAxisDx] = useState(-24);
 
     /**
      * A side effect that listens for window resize events to update responsive chart values.
@@ -110,9 +110,9 @@ export const DashboardBarChart = memo(
         setMaxBarSize(isSmallScreen ? 24 : 48);
         setBarRadius(isSmallScreen ? [4, 4, 0, 0] : [8, 8, 0, 0]);
 
-        // Decrease width and spacing (dx) on small screens to bring title closer to labels
+        // Adjust Y-axis label spacing to provide breathing room from tick values
         setYAxisWidth(isSmallScreen ? 50 : 70);
-        setYAxisDx(isSmallScreen ? -10 : -18);
+        setYAxisDx(isSmallScreen ? -20 : -24);
       };
 
       // Set initial values on component mount.
@@ -140,7 +140,7 @@ export const DashboardBarChart = memo(
     }, [data, colorMap]);
 
     return (
-      <div className="h-full w-full overflow-hidden">
+      <div className="h-full w-full overflow-visible">
         <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <BarChart
             data={data}
@@ -148,7 +148,7 @@ export const DashboardBarChart = memo(
               top: 20,
               right: 0,
               bottom: 20,
-              left: 0,
+              left: 10,
             }}
             // Resets the hover state when the mouse leaves the chart area.
             onMouseLeave={() => setActiveIndex(null)}
@@ -206,6 +206,7 @@ export const DashboardBarChart = memo(
               }}
               axisLine={false}
               tickLine={false}
+              tickFormatter={formatCompactNumber}
               fontSize={fontSize}
               className="fill-slate-500"
               domain={[0, "dataMax"]}
