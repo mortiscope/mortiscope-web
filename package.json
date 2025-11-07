@@ -79,7 +79,13 @@
     "test:integration": "vitest run --project integration",
     "test:integration:coverage": "cross-env TEST_TYPE=integration vitest run --coverage --project integration",
     "test:integration:watch": "vitest --project integration",
-    "test:integration:ui": "vitest --ui --project integration"
+    "test:integration:ui": "vitest --ui --project integration",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report e2e/playwright-report",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:seed": "tsx e2e/scripts/seed-users.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
@@ -238,7 +244,7 @@
     "next": "15.5.7",
     "next-auth": "5.0.0-beta.28",
     "next-themes": "^0.4.6",
-    "otplib": "^12.0.1",
+    "otplib": "^13.2.1",
     "pino": "^9.10.0",
     "react": "^19.2.0",
     "react-day-picker": "^9.9.0",
@@ -272,7 +278,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@next/bundle-analyzer": "15.5.7",
-    "@react-email/preview-server": "4.2.9",
+    "@playwright/test": "^1.58.1",
+    "@react-email/preview-server": "5.2.5",
     "@size-limit/file": "^11.2.0",
     "@size-limit/preset-big-lib": "^11.2.0",
     "@tailwindcss/postcss": "^4.1.13",
@@ -317,7 +324,7 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "prompts": "^2.4.2",
-    "react-email": "^4.2.9",
+    "react-email": "^5.2.5",
     "rimraf": "^6.0.1",
     "size-limit": "^11.2.0",
     "tailwindcss": "^4.1.13",
