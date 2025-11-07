@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { authenticator } from "otplib";
+import { verify as verifyTotp } from "otplib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getUserByEmail } from "@/data/user";
@@ -12,9 +12,7 @@ const dbQueryMock = vi.hoisted(() => vi.fn());
 
 // Mock the otplib library to control OTP verification logic.
 vi.mock("otplib", () => ({
-  authenticator: {
-    verify: vi.fn(),
-  },
+  verify: vi.fn(),
 }));
 
 // Mock Next.js headers to simulate request metadata like IP addresses.
@@ -110,7 +108,7 @@ describe("verifySigninTwoFactor Server Action", () => {
     });
 
     // Arrange: Simulate successful OTP verification.
-    vi.mocked(authenticator.verify).mockReturnValue(true);
+    vi.mocked(verifyTotp).mockResolvedValue({ valid: true } as never);
   });
 
   // Clear all mocks after each test to ensure isolation.
@@ -217,7 +215,7 @@ describe("verifySigninTwoFactor Server Action", () => {
    */
   it("returns error if OTP token is invalid", async () => {
     // Arrange: Mock the authenticator to return false.
-    vi.mocked(authenticator.verify).mockReturnValue(false);
+    vi.mocked(verifyTotp).mockResolvedValue({ valid: false } as never);
 
     // Act: Call the action.
     const result = await verifySigninTwoFactor(validToken);
@@ -236,7 +234,7 @@ describe("verifySigninTwoFactor Server Action", () => {
     const result = await verifySigninTwoFactor(validToken);
 
     // Assert: Ensure authenticator was called with correct parameters.
-    expect(authenticator.verify).toHaveBeenCalledWith({
+    expect(verifyTotp).toHaveBeenCalledWith({
       token: validToken,
       secret: "mock-secret",
     });

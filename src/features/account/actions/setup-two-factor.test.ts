@@ -1,4 +1,4 @@
-import { authenticator } from "otplib";
+import { generateSecret, generateURI } from "otplib";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import { auth } from "@/auth";
@@ -9,10 +9,8 @@ import { privateActionLimiter } from "@/lib/rate-limiter";
 
 // Mock the TOTP library to control secret generation and URI formatting.
 vi.mock("otplib", () => ({
-  authenticator: {
-    generateSecret: vi.fn(),
-    keyuri: vi.fn(),
-  },
+  generateSecret: vi.fn(),
+  generateURI: vi.fn(),
 }));
 
 // Mock the authentication utility to simulate various session states.
@@ -79,8 +77,8 @@ describe("setupTwoFactor", () => {
     });
 
     // Arrange: Setup standard secret and URL generation results.
-    vi.mocked(authenticator.generateSecret).mockReturnValue(mockSecret);
-    vi.mocked(authenticator.keyuri).mockReturnValue(mockOtpUrl);
+    vi.mocked(generateSecret).mockReturnValue(mockSecret);
+    vi.mocked(generateURI).mockReturnValue(mockOtpUrl);
 
     // Arrange: Default to no existing 2FA setup found in the database.
     vi.mocked(db.query.userTwoFactor.findFirst).mockResolvedValue(undefined);
@@ -165,8 +163,12 @@ describe("setupTwoFactor", () => {
     const result = await setupTwoFactor();
 
     // Assert: Check that the secret generator and URI formatter were called with correct parameters.
-    expect(authenticator.generateSecret).toHaveBeenCalled();
-    expect(authenticator.keyuri).toHaveBeenCalledWith(mockUserEmail, "MortiScope", mockSecret);
+    expect(generateSecret).toHaveBeenCalled();
+    expect(generateURI).toHaveBeenCalledWith({
+      issuer: "MortiScope",
+      label: mockUserEmail,
+      secret: mockSecret,
+    });
     expect(result).toEqual({
       success: true,
       data: {
@@ -189,7 +191,11 @@ describe("setupTwoFactor", () => {
     await setupTwoFactor();
 
     // Assert: Verify that the placeholder email is used in the QR code URI.
-    expect(authenticator.keyuri).toHaveBeenCalledWith("user@example.com", "MortiScope", mockSecret);
+    expect(generateURI).toHaveBeenCalledWith({
+      issuer: "MortiScope",
+      label: "user@example.com",
+      secret: mockSecret,
+    });
   });
 
   /**

@@ -1,4 +1,4 @@
-import { authenticator } from "otplib";
+import { verify as verifyTotp } from "otplib";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import { auth } from "@/auth";
@@ -10,9 +10,7 @@ import { generateRecoveryCodes, hashRecoveryCode } from "@/lib/two-factor";
 
 // Mock the TOTP library to simulate verification of time-based one-time passwords.
 vi.mock("otplib", () => ({
-  authenticator: {
-    verify: vi.fn(),
-  },
+  verify: vi.fn(),
 }));
 
 // Mock the authentication utility to control user session state during test execution.
@@ -93,7 +91,7 @@ describe("verifyTwoFactor", () => {
     });
 
     // Arrange: Default the TOTP verification to success and mock code generation logic.
-    vi.mocked(authenticator.verify).mockReturnValue(true);
+    vi.mocked(verifyTotp).mockResolvedValue({ valid: true } as never);
     vi.mocked(db.query.userTwoFactor.findFirst).mockResolvedValue(undefined);
     vi.mocked(generateRecoveryCodes).mockReturnValue(mockRecoveryCodes);
     vi.mocked(hashRecoveryCode).mockImplementation(async (code) => `hashed_${code}`);
@@ -157,7 +155,7 @@ describe("verifyTwoFactor", () => {
    */
   it("returns error if TOTP token is invalid", async () => {
     // Arrange: Force the TOTP verification utility to return false.
-    vi.mocked(authenticator.verify).mockReturnValue(false);
+    vi.mocked(verifyTotp).mockResolvedValue({ valid: false } as never);
 
     // Act: Attempt to verify with an incorrect token.
     const result = await verifyTwoFactor({ secret: mockSecret, token: mockToken });
@@ -195,7 +193,7 @@ describe("verifyTwoFactor", () => {
     const result = await verifyTwoFactor({ secret: mockSecret, token: mockToken });
 
     // Assert: Confirm code verification, recovery code generation, and database insertions occurred.
-    expect(authenticator.verify).toHaveBeenCalledWith({ token: mockToken, secret: mockSecret });
+    expect(verifyTotp).toHaveBeenCalledWith({ token: mockToken, secret: mockSecret });
     expect(generateRecoveryCodes).toHaveBeenCalledWith(16);
     expect(hashRecoveryCode).toHaveBeenCalledTimes(16);
 
