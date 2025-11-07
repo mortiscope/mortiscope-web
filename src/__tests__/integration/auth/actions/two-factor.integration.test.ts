@@ -40,9 +40,7 @@ vi.mock("@/lib/rate-limiter", () => ({
 
 // Mock the otplib library to control the outcome of TOTP code verification.
 vi.mock("otplib", () => ({
-  authenticator: {
-    verify: vi.fn().mockReturnValue(true),
-  },
+  verify: vi.fn().mockResolvedValue({ valid: true }),
 }));
 
 /**
@@ -332,8 +330,8 @@ describe("verifySigninTwoFactor (integration)", () => {
      */
     it("returns error when token is invalid", async () => {
       // Arrange: Configure the authenticator to return a verification failure.
-      const { authenticator } = await import("otplib");
-      vi.mocked(authenticator.verify).mockReturnValue(false);
+      const { verify: verifyTotp } = await import("otplib");
+      vi.mocked(verifyTotp).mockResolvedValue({ valid: false } as never);
 
       // Act: Attempt verification with an incorrect code.
       const result = await verifySigninTwoFactor(validToken);
@@ -349,10 +347,10 @@ describe("verifySigninTwoFactor (integration)", () => {
      */
     it("successfully verifies valid token", async () => {
       // Arrange: Configure the authenticator to succeed and mock the session update utility.
-      const { authenticator } = await import("otplib");
+      const { verify: verifyTotp } = await import("otplib");
       const { updateAuthSessionVerification } = await import("@/lib/auth");
 
-      vi.mocked(authenticator.verify).mockReturnValue(true);
+      vi.mocked(verifyTotp).mockResolvedValue({ valid: true } as never);
 
       // Act: Submit a valid token for verification.
       const result = await verifySigninTwoFactor(validToken);
@@ -375,7 +373,7 @@ describe("verifySigninTwoFactor (integration)", () => {
       // Arrange: Simulate a session where the provider field is missing.
       const { getAuthSession } = await import("@/lib/auth");
       const { logUserAction } = await import("@/lib/logger");
-      const { authenticator } = await import("otplib");
+      const { verify: verifyTotp } = await import("otplib");
 
       vi.mocked(getAuthSession).mockResolvedValue({
         userId: mockUsers.primaryUser.id,
@@ -383,7 +381,7 @@ describe("verifySigninTwoFactor (integration)", () => {
         provider: undefined,
         verified: false,
       } as never);
-      vi.mocked(authenticator.verify).mockReturnValue(true);
+      vi.mocked(verifyTotp).mockResolvedValue({ valid: true } as never);
 
       // Act: Perform verification.
       await verifySigninTwoFactor(validToken);
@@ -435,8 +433,8 @@ describe("verifySigninTwoFactor (integration)", () => {
      */
     it("handles unexpected errors gracefully", async () => {
       // Arrange: Force the TOTP library to throw an exception.
-      const { authenticator } = await import("otplib");
-      vi.mocked(authenticator.verify).mockImplementation(() => {
+      const { verify: verifyTotp } = await import("otplib");
+      vi.mocked(verifyTotp).mockImplementation(() => {
         throw new Error("TOTP error");
       });
 

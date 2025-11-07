@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { authenticator } from "otplib";
+import { generateSecret, generateSync as generate } from "otplib";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import { resetMockDb } from "@/__tests__/setup/setup";
@@ -29,8 +29,8 @@ vi.mock("@/lib/rate-limiter", () => ({
  */
 describe("verifyTwoFactor (integration)", () => {
   const mockUserId = "test-user-id";
-  const mockSecret = authenticator.generateSecret();
-  const mockToken = authenticator.generate(mockSecret);
+  const mockSecret = generateSecret();
+  const mockToken = generate({ secret: mockSecret });
 
   /**
    * Sets up a fresh test user and default mock configurations before each test.
@@ -158,7 +158,7 @@ describe("verifyTwoFactor (integration)", () => {
      */
     it("verifies token with correct secret and token", async () => {
       // Arrange: Generate a fresh token using the shared secret.
-      const freshToken = authenticator.generate(mockSecret);
+      const freshToken = generate({ secret: mockSecret });
 
       // Act: Attempt verification with the correct token and secret.
       const result = await verifyTwoFactor({ secret: mockSecret, token: freshToken });
@@ -184,7 +184,7 @@ describe("verifyTwoFactor (integration)", () => {
       });
 
       // Act: Attempt to verify 2FA again.
-      const freshToken = authenticator.generate(mockSecret);
+      const freshToken = generate({ secret: mockSecret });
       const result = await verifyTwoFactor({ secret: mockSecret, token: freshToken });
 
       // Assert: Verify the error regarding duplicate enablement.
@@ -201,7 +201,7 @@ describe("verifyTwoFactor (integration)", () => {
      */
     it("enables 2FA and updates db record", async () => {
       // Act: Successfully verify a fresh token.
-      const freshToken = authenticator.generate(mockSecret);
+      const freshToken = generate({ secret: mockSecret });
       const result = await verifyTwoFactor({ secret: mockSecret, token: freshToken });
 
       // Assert: Verify success status and that 16 recovery codes were returned.
@@ -237,7 +237,7 @@ describe("verifyTwoFactor (integration)", () => {
       });
 
       // Act: Verify 2FA with a new secret and token.
-      const freshToken = authenticator.generate(mockSecret);
+      const freshToken = generate({ secret: mockSecret });
       const result = await verifyTwoFactor({ secret: mockSecret, token: freshToken });
 
       // Assert: Verify success response.
@@ -270,7 +270,7 @@ describe("verifyTwoFactor (integration)", () => {
       );
 
       // Act: Attempt 2FA verification.
-      const freshToken = authenticator.generate(mockSecret);
+      const freshToken = generate({ secret: mockSecret });
       const result = await verifyTwoFactor({ secret: mockSecret, token: freshToken });
 
       // Assert: Verify the fallback error message for failed verification.

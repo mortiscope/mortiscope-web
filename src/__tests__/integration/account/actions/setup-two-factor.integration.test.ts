@@ -21,10 +21,8 @@ vi.mock("@/lib/rate-limiter", () => ({
 
 // Mock the otplib library to provide predictable secret generation and QR code URLs.
 vi.mock("otplib", () => ({
-  authenticator: {
-    generateSecret: vi.fn(() => "mock-secret"),
-    keyuri: vi.fn(() => "otpauth://totp/MortiScope:user@example.com?secret=mock-secret"),
-  },
+  generateSecret: vi.fn(() => "mock-secret"),
+  generateURI: vi.fn(() => "otpauth://totp/MortiScope:user@example.com?secret=mock-secret"),
 }));
 
 /**
