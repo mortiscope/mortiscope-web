@@ -16,7 +16,7 @@ export class SidebarComponent {
   // Initialize the component by defining locators scoped to the sidebar's landmark role.
   constructor(readonly page: Page) {
     // Locate the main container for the sidebar using the `complementary` accessible role.
-    this.sidebar = page.getByRole("complementary");
+    this.sidebar = page.locator('[data-slot="sidebar"]');
     // Find the "Dashboard" link within the sidebar container.
     this.dashboardLink = this.sidebar.getByRole("link", { name: "Dashboard" });
     // Find the "Analyze" link within the sidebar container.

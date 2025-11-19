@@ -69,6 +69,7 @@ export default defineConfig({
     {
       // A special project dedicated to running the authentication setup file.
       name: "setup",
+      testDir: "./e2e/utils",
       testMatch: /.*\.setup\.ts/,
     },
     {
