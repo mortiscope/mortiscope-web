@@ -1,16 +1,17 @@
-import { testUserPool } from "@e2e/fixtures/test-users";
+import { nonTwoFactorUserPool, testUserPool } from "@e2e/fixtures/test-users";
 import type { AuthFixtures, TestUser } from "@e2e/fixtures/types";
 import { test as base } from "@playwright/test";
 
 type WorkerFixtures = {
   workerUser: TestUser;
+  workerNonTwoFactorUser: TestUser;
 };
 
 /**
  * Extension of the base Playwright test object to include custom authentication and worker fixtures.
  */
 export const test = base.extend<AuthFixtures, WorkerFixtures>({
-  // Defines a worker-scoped fixture to assign a unique test user from the pool based on the parallel worker index.
+  // Defines a worker-scoped fixture to assign a unique 2FA-enabled test user from the pool based on the parallel worker index.
   workerUser: [
     async ({}, use, workerInfo) => {
       // Validate that the current worker index does not exceed the number of available test users.
@@ -25,6 +26,29 @@ export const test = base.extend<AuthFixtures, WorkerFixtures>({
       // Ensure the retrieved `user` object contains both a valid email and password.
       if (!user?.email || !user?.password) {
         throw new Error(`E2E user ${workerInfo.parallelIndex + 1} not configured`);
+      }
+      // Provide the `user` object to the test worker.
+      await use(user);
+    },
+    // Set the scope to worker to ensure user assignment persists across tests within the same worker.
+    { scope: "worker" },
+  ],
+
+  // Defines a worker-scoped fixture to assign a unique non-2FA test user from the pool based on the parallel worker index.
+  workerNonTwoFactorUser: [
+    async ({}, use, workerInfo) => {
+      // Validate that the current worker index does not exceed the number of available non-2FA test users.
+      if (workerInfo.parallelIndex >= nonTwoFactorUserPool.length) {
+        throw new Error(
+          `Worker index ${workerInfo.parallelIndex} exceeds available non-2FA E2E user pool size (${nonTwoFactorUserPool.length}).`
+        );
+      }
+
+      // Retrieve the specific user credentials corresponding to the worker index.
+      const user = nonTwoFactorUserPool[workerInfo.parallelIndex];
+      // Ensure the retrieved `user` object contains both a valid email and password.
+      if (!user?.email || !user?.password) {
+        throw new Error(`Non-2FA E2E user ${workerInfo.parallelIndex + 6} not configured`);
       }
       // Provide the `user` object to the test worker.
       await use(user);
