@@ -4,8 +4,8 @@ import { chromium, FullConfig } from "@playwright/test";
  * Performs global setup operations before the test suite begins, specifically handling pre-authentication.
  */
 async function globalSetup(config: FullConfig) {
-  // Verify that the required environment variables for the test user are present.
-  if (!process.env.E2E_USER_EMAIL || !process.env.E2E_USER_PASSWORD) {
+  // Verify that the required environment variables for the non-2FA credential user are present.
+  if (!process.env.E2E_USER_EMAIL_6 || !process.env.E2E_USER_PASSWORD_6) {
     // Log a notification and exit the setup if credentials are missing.
     console.log("[setup] Skipping auth setup - E2E credentials not configured");
     return;
@@ -26,8 +26,8 @@ async function globalSetup(config: FullConfig) {
     await credentialPage.goto(`${baseURL}/signin`);
 
     // Populate the email and password input fields using the values from environment variables.
-    await credentialPage.fill('[name="email"]', process.env.E2E_USER_EMAIL);
-    await credentialPage.fill('[name="password"]', process.env.E2E_USER_PASSWORD);
+    await credentialPage.fill('[name="email"]', process.env.E2E_USER_EMAIL_6);
+    await credentialPage.fill('[name="password"]', process.env.E2E_USER_PASSWORD_6);
 
     // Execute the form submission by clicking the submit button.
     await credentialPage.click('[type="submit"]');
