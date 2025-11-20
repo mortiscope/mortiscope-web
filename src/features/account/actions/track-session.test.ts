@@ -87,6 +87,7 @@ describe("trackSession", () => {
     limit: Mock;
     values: Mock;
     set: Mock;
+    onConflictDoNothing: Mock;
   };
 
   let mockDbChain: MockDbChain;
@@ -104,12 +105,15 @@ describe("trackSession", () => {
       limit: vi.fn(),
       values: vi.fn(),
       set: vi.fn(),
+      onConflictDoNothing: vi.fn(),
     };
 
     mockDbChain.from.mockReturnValue(mockDbChain);
     mockDbChain.where.mockReturnValue(mockDbChain);
     mockDbChain.orderBy.mockReturnValue(mockDbChain);
     mockDbChain.set.mockReturnValue(mockDbChain);
+    mockDbChain.values.mockReturnValue(mockDbChain);
+    mockDbChain.onConflictDoNothing.mockReturnValue(mockDbChain);
 
     vi.mocked(parseSessionInfo).mockResolvedValue(mockParsedSession);
     vi.mocked(encrypt).mockReturnValue(mockEncryptedIp);

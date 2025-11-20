@@ -45,11 +45,14 @@ export async function trackSession(data: SessionData) {
     if (existingSessionRecord.length === 0) {
       // If the core session is missing, re-create it.
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      await db.insert(sessions).values({
-        sessionToken: data.sessionToken,
-        userId: data.userId,
-        expires: expiresAt,
-      });
+      await db
+        .insert(sessions)
+        .values({
+          sessionToken: data.sessionToken,
+          userId: data.userId,
+          expires: expiresAt,
+        })
+        .onConflictDoNothing();
     }
 
     // Attempt to find an existing session based on device fingerprint.
