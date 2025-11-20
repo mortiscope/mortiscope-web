@@ -181,5 +181,7 @@ process.env.INNGEST_SIGNING_KEY = "mock-inngest-signing-key";
 process.env.FASTAPI_SECRET_KEY = "mock-fastapi-secret-key";
 // MaxMind GeoIP
 process.env.MAXMIND_LICENSE_KEY = "mock-maxmind-license-key";
+// Cron Jobs
+process.env.CRON_SECRET = "mock-cron-secret";
 // Encryption
 process.env.ENCRYPTION_KEY = "a1b2c3d4e5f600112233445566778899aabbccddeeff00112233445566778899";

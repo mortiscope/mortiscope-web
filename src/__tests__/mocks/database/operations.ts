@@ -70,6 +70,14 @@ export const createInsertOperation = (store: MockStore) => {
             ],
           };
         },
+        /** Simulates Drizzle's `onConflictDoNothing` functionality. */
+        onConflictDoNothing: () => {
+          return {
+            returning: async () => [],
+            then: (resolve: (value: void) => void, reject?: (reason: unknown) => void) =>
+              Promise.resolve().then(resolve, reject),
+          };
+        },
       };
     },
   });
