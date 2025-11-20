@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { GoGitCompare } from "react-icons/go";
 import { IoIosCellular } from "react-icons/io";
@@ -95,6 +95,15 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   /**
+   * Forces the widget out of the skeleton state after 15 seconds.
+   */
+  const [skeletonTimedOut, setSkeletonTimedOut] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSkeletonTimedOut(true), 15000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  /**
    * Smart polling hook that fetches and polls quality metrics data
    */
   const { modelPerformanceData, correctionData, confidenceData, isFetching } =
@@ -119,15 +128,18 @@ export const QualityMetricsWidget = ({ dateRange }: QualityMetricsWidgetProps) =
     setIsModalOpen(true);
   }, []);
 
-  // Show skeleton during initial data loading
+  // Show skeleton during initial data loading, but force exit after 15 seconds.
   const isInitialLoading =
-    !modelPerformanceData && !correctionData && !confidenceData && isFetching;
+    !modelPerformanceData && !correctionData && !confidenceData && isFetching && !skeletonTimedOut;
   if (isInitialLoading) {
     return <Skeleton className="col-span-1 h-64 rounded-3xl bg-white lg:col-span-2" />;
   }
 
   return (
-    <Card className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2">
+    <Card
+      data-testid="quality-metrics-card"
+      className="font-inter relative col-span-1 flex h-64 flex-col gap-0 overflow-hidden rounded-3xl border-none bg-white px-6 py-4 shadow-none transition-all duration-300 lg:col-span-2"
+    >
       {/* Header section containing the widget title and toolbar. */}
       <div className="flex items-center justify-between">
         <div>

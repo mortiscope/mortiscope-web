@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { IoHourglassOutline } from "react-icons/io5";
 import { PiCirclesThree, PiRecycle } from "react-icons/pi";
@@ -78,6 +78,15 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
   const [selectedView, setSelectedView] = useState<ForensicView>("life-stage");
   /** Local state to manage the modal open/close state. */
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  /**
+   * Forces the widget out of the skeleton state after 15 seconds.
+   */
+  const [skeletonTimedOut, setSkeletonTimedOut] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSkeletonTimedOut(true), 15000);
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Smart polling hook that fetches and polls forensic insights data
@@ -157,8 +166,9 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
     setIsModalOpen(true);
   }, []);
 
-  // Show skeleton during initial data loading
-  const isInitialLoading = !lifeStageData && !pmiData && !samplingData && isFetching;
+  // Show skeleton during initial data loading, but force exit after 15 seconds.
+  const isInitialLoading =
+    !lifeStageData && !pmiData && !samplingData && isFetching && !skeletonTimedOut;
   if (isInitialLoading) {
     return (
       <Skeleton className="col-span-1 h-64 rounded-3xl bg-white md:col-span-2 md:h-96 lg:col-span-4 lg:row-span-2 lg:h-auto" />
@@ -166,7 +176,10 @@ export const ForensicInsightsWidget = ({ dateRange }: ForensicInsightsWidgetProp
   }
 
   return (
-    <Card className="font-inter col-span-1 flex h-64 flex-col gap-2 rounded-3xl border-none bg-white px-4 pt-4 pb-2 shadow-none md:col-span-2 md:h-96 md:px-8 md:pt-8 md:pb-4 lg:col-span-4 lg:row-span-2 lg:h-auto">
+    <Card
+      data-testid="forensic-insights-card"
+      className="font-inter col-span-1 flex h-64 flex-col gap-2 rounded-3xl border-none bg-white px-4 pt-4 pb-2 shadow-none md:col-span-2 md:h-96 md:px-8 md:pt-8 md:pb-4 lg:col-span-4 lg:row-span-2 lg:h-auto"
+    >
       {/* Header section containing the widget title and toolbar. */}
       <div className="flex flex-shrink-0 items-center justify-between">
         <div>
