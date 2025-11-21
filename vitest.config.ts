@@ -136,7 +136,9 @@ export default defineConfig({
           : []),
         ...(process.argv.includes("unit") || process.env.TEST_TYPE === "unit"
           ? ["src/app/**"]
-          : []),
+          : process.argv.includes("integration") || process.env.TEST_TYPE === "integration"
+            ? ["src/app/robots.ts", "src/app/sitemap.ts"]
+            : []),
         ...(process.argv.includes("integration") ||
         process.env.TEST_TYPE === "integration" ||
         process.argv.includes("unit") ||

@@ -19,7 +19,10 @@ interface ReviewProcessingOverlayProps {
  */
 export const ReviewProcessingOverlay = memo(({ message }: ReviewProcessingOverlayProps) => {
   return (
-    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-2 rounded-lg bg-white/80 backdrop-blur-sm">
+    <div
+      data-testid="processing-overlay"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center space-y-2 rounded-lg bg-white/80 backdrop-blur-sm"
+    >
       <BeatLoader color="#16a34a" size={12} />
       <p className="font-plus-jakarta-sans p-2 text-center text-lg font-medium text-slate-700 md:text-xl">
         {message}
