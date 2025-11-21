@@ -15,12 +15,14 @@ import { sendEmailChangeNotification } from "@/lib/mail";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Specifies the Drizzle ORM adapter, linking NextAuth to the application's database schema
-  adapter: DrizzleAdapter(db, {
-    usersTable: schema.users,
-    accountsTable: schema.accounts,
-    sessionsTable: schema.sessions,
-    verificationTokensTable: schema.verificationTokens,
-  }),
+  adapter: db
+    ? DrizzleAdapter(db, {
+        usersTable: schema.users,
+        accountsTable: schema.accounts,
+        sessionsTable: schema.sessions,
+        verificationTokensTable: schema.verificationTokens,
+      })
+    : undefined,
   // Use JWT sessions for credentials and database for OAuth
   session: {
     strategy: "jwt",
