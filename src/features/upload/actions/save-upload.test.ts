@@ -210,7 +210,7 @@ describe("saveUpload", () => {
 
       // Act & Assert: Attempt to import the module and expect it to reject with a specific error.
       await expect(import("@/features/upload/actions/save-upload")).rejects.toThrow(
-        "Missing required AWS environment variable: AWS_BUCKET_NAME"
+        "Environment validation failed:"
       );
     });
 
@@ -224,7 +224,7 @@ describe("saveUpload", () => {
 
       // Act & Assert: Attempt to import the module and expect it to reject with a specific error.
       await expect(import("@/features/upload/actions/save-upload")).rejects.toThrow(
-        "Missing required AWS environment variable: AWS_BUCKET_REGION"
+        "Environment validation failed:"
       );
     });
   });

@@ -9,16 +9,8 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
+import { env } from "@/lib/env";
 import { logCritical, logError, uploadLogger } from "@/lib/logger";
-
-// Runtime check for AWS environment variables
-if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
-  throw new Error(
-    "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
-  );
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
 
 const renameUploadSchema = z.object({
   oldKey: z.string().min(1, "Old key is required."),
@@ -49,6 +41,8 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
     return { success: false, error: "Unauthorized" };
   }
   const userId = session.user.id;
+  const BUCKET_NAME = env.AWS_BUCKET_NAME;
+  const BUCKET_REGION = env.AWS_BUCKET_REGION;
 
   try {
     // Validate the input parameters

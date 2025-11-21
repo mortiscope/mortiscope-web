@@ -5,6 +5,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
+import { env } from "@/lib/env";
 import { logError, uploadLogger } from "@/lib/logger";
 
 // Define the schema for the data required to save an upload record.
@@ -29,17 +30,6 @@ type ActionResponse = {
   error?: string;
 };
 
-// Runtime checks for environment variables
-if (!process.env.AWS_BUCKET_NAME) {
-  throw new Error("Missing required AWS environment variable: AWS_BUCKET_NAME");
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-
-if (!process.env.AWS_BUCKET_REGION) {
-  throw new Error("Missing required AWS environment variable: AWS_BUCKET_REGION");
-}
-const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
-
 /**
  * Saves the metadata of a successfully uploaded file to the database.
  * This action creates a permanent record in the `uploads` table, linking the file to a user and a case.
@@ -54,6 +44,8 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
     return { success: false, error: "Unauthorized" };
   }
   const userId = session.user.id;
+  const BUCKET_NAME = env.AWS_BUCKET_NAME;
+  const BUCKET_REGION = env.AWS_BUCKET_REGION;
 
   // Validate the input on the server.
   const parseResult = saveUploadSchema.safeParse(values);

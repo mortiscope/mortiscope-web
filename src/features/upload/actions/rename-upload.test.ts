@@ -310,7 +310,7 @@ describe("renameUpload", () => {
     it("throws error if AWS_BUCKET_NAME is missing", async () => {
       vi.stubEnv("AWS_BUCKET_NAME", "");
       await expect(import("@/features/upload/actions/rename-upload")).rejects.toThrow(
-        "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
+        "Environment validation failed:"
       );
     });
 
@@ -318,7 +318,7 @@ describe("renameUpload", () => {
       vi.stubEnv("AWS_BUCKET_NAME", "test-bucket");
       vi.stubEnv("AWS_BUCKET_REGION", "");
       await expect(import("@/features/upload/actions/rename-upload")).rejects.toThrow(
-        "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
+        "Environment validation failed:"
       );
     });
   });
