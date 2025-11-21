@@ -262,7 +262,7 @@ describe("deleteUpload", () => {
     it("throws error if AWS_BUCKET_NAME is missing", async () => {
       vi.stubEnv("AWS_BUCKET_NAME", "");
       await expect(import("@/features/upload/actions/delete-upload")).rejects.toThrow(
-        "Missing required AWS environment variable: AWS_BUCKET_NAME"
+        "Environment validation failed:"
       );
     });
   });

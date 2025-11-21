@@ -17,14 +17,9 @@ import {
   MAX_FILE_SIZE,
   PRESIGNED_URL_EXPIRATION_SECONDS,
 } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { logError, uploadLogger } from "@/lib/logger";
 import { formatBytes } from "@/lib/utils";
-
-// Runtime check for AWS Bucket Name
-if (!process.env.AWS_BUCKET_NAME) {
-  throw new Error("Missing required AWS environment variable: AWS_BUCKET_NAME");
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 
 /**
  * Defines the structured return type for the server action for clarity and type safety.
@@ -60,6 +55,7 @@ export async function createUpload(
     return { success: false, error: "Unauthorized" };
   }
   const userId = session.user.id;
+  const BUCKET_NAME = env.AWS_BUCKET_NAME;
 
   try {
     // Validate the input parameters using the extended schema

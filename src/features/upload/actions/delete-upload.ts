@@ -9,6 +9,7 @@ import { db } from "@/db";
 import { uploads } from "@/db/schema";
 import { type ServerActionResponse } from "@/features/cases/constants/types";
 import { s3 } from "@/lib/aws";
+import { env } from "@/lib/env";
 import { logCritical, logError, s3Logger, uploadLogger } from "@/lib/logger";
 
 // Schema is now defined directly in the file that uses it.
@@ -17,12 +18,6 @@ const deleteUploadSchema = z.object({
 });
 
 type DeleteUploadInput = z.infer<typeof deleteUploadSchema>;
-
-// Runtime check for AWS Bucket Name
-if (!process.env.AWS_BUCKET_NAME) {
-  throw new Error("Missing required AWS environment variable: AWS_BUCKET_NAME");
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
 
 /**
  * Deletes a file from the S3 bucket after verifying user ownership via object metadata.
@@ -37,6 +32,7 @@ export async function deleteUpload(values: DeleteUploadInput): Promise<ServerAct
     return { success: false, error: "Unauthorized" };
   }
   const userId = session.user.id;
+  const BUCKET_NAME = env.AWS_BUCKET_NAME;
 
   try {
     // Validate the input parameters
