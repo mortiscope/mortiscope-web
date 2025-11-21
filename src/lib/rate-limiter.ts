@@ -3,11 +3,26 @@ import { Redis } from "@upstash/redis";
 
 import { env } from "@/lib/env";
 
-// Initializes the Redis client using type-safe environment variables
-const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL,
-  token: env.UPSTASH_REDIS_REST_TOKEN,
-});
+/**
+ * A private, module-level variable to cache the singleton Redis client instance.
+ */
+let _redis: Redis | undefined;
+
+/**
+ * A lazy initializer function for the Redis client.
+ * @returns The singleton `Redis` client instance.
+ */
+function getRedis(): Redis {
+  // Perform the check and assignment in a single, atomic-like operation.
+  return (_redis ??= new Redis({
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN,
+  }));
+}
+
+let _publicActionLimiter: Ratelimit | undefined;
+let _emailActionLimiter: Ratelimit | undefined;
+let _privateActionLimiter: Ratelimit | undefined;
 
 /**
  * A rate limiter for general, public-facing actions like sign-in and sign-up.
@@ -15,11 +30,19 @@ const redis = new Redis({
  *
  * @config Allows 5 requests per 10 seconds from a single IP.
  */
-export const publicActionLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "10 s"),
-  analytics: true,
-  prefix: "ratelimit:public",
+export const publicActionLimiter: Ratelimit = new Proxy({} as Ratelimit, {
+  get(_, prop) {
+    const target = (_publicActionLimiter ??= new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(5, "10 s"),
+      analytics: true,
+      prefix: "ratelimit:public",
+    }));
+    const value = (target as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(target)
+      : value;
+  },
 });
 
 /**
@@ -28,11 +51,19 @@ export const publicActionLimiter = new Ratelimit({
  *
  * @config Allows 1 request per 60 seconds for a given identifier.
  */
-export const emailActionLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(1, "60 s"),
-  analytics: true,
-  prefix: "ratelimit:email",
+export const emailActionLimiter: Ratelimit = new Proxy({} as Ratelimit, {
+  get(_, prop) {
+    const target = (_emailActionLimiter ??= new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(1, "60 s"),
+      analytics: true,
+      prefix: "ratelimit:email",
+    }));
+    const value = (target as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(target)
+      : value;
+  },
 });
 
 /**
@@ -41,9 +72,17 @@ export const emailActionLimiter = new Ratelimit({
  *
  * @config Allows 10 requests per 10 seconds for a given user ID.
  */
-export const privateActionLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "10 s"),
-  analytics: true,
-  prefix: "ratelimit:private",
+export const privateActionLimiter: Ratelimit = new Proxy({} as Ratelimit, {
+  get(_, prop) {
+    const target = (_privateActionLimiter ??= new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(10, "10 s"),
+      analytics: true,
+      prefix: "ratelimit:private",
+    }));
+    const value = (target as unknown as Record<string | symbol, unknown>)[prop];
+    return typeof value === "function"
+      ? (value as (...args: unknown[]) => unknown).bind(target)
+      : value;
+  },
 });
