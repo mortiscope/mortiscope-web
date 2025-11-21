@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { inngest } from "@/lib/inngest";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-if (!appUrl) {
-  throw new Error("FATAL: NEXT_PUBLIC_APP_URL is not set in environment variables.");
+/**
+ * Returns the application's base URL for redirect purposes.
+ * Deferred to avoid errors during build when env vars are unavailable.
+ */
+function getRedirectUrl(): URL {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) {
+    throw new Error("FATAL: NEXT_PUBLIC_APP_URL is not set in environment variables.");
+  }
+  return new URL("/", appUrl);
 }
-
-const genericRedirectUrl = new URL("/", appUrl);
 
 /**
  * Handles a GET request to confirm an account deletion via a unique token.
@@ -18,6 +23,7 @@ const genericRedirectUrl = new URL("/", appUrl);
  * @returns A NextResponse that redirects the user to a generic page.
  */
 export async function GET(request: NextRequest) {
+  const genericRedirectUrl = getRedirectUrl();
   const { searchParams } = new URL(request.url);
   const token = searchParams.get("token");
 

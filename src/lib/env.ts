@@ -116,10 +116,16 @@ function validateClientEnv() {
   }
 }
 
-// Only validate server environment variables on the server-side
+// Only validate server environment variables on the server-side.
 export const env =
-  typeof window === "undefined" || process.env.NODE_ENV === "test" ? validateEnv() : ({} as Env);
-export const clientEnv = validateClientEnv();
+  (typeof window === "undefined" || process.env.NODE_ENV === "test") &&
+  process.env.SKIP_ENV_VALIDATION !== "1"
+    ? validateEnv()
+    : (process.env as unknown as Env);
+export const clientEnv =
+  process.env.SKIP_ENV_VALIDATION !== "1"
+    ? validateClientEnv()
+    : (process.env as unknown as ClientEnv);
 
 // Type exports for better TypeScript integration
 export type Env = z.infer<typeof envSchema>;
