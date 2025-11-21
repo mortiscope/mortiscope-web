@@ -584,10 +584,12 @@ describe("useAnalyzeStore", () => {
       const mockState = { ...state, isHydrated: false };
 
       // Act: Simulate rehydration completion.
-      onRehydrate?.(mockState, undefined);
+      act(() => {
+        onRehydrate?.(mockState, undefined);
+      });
 
-      // Assert: Verify `isHydrated` is true.
-      expect(mockState.isHydrated).toBe(true);
+      // Assert: Verify `isHydrated` is true in the store (setHasHydrated updates the Zustand store).
+      expect(useAnalyzeStore.getState().isHydrated).toBe(true);
     });
 
     /**

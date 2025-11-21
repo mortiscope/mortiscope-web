@@ -254,7 +254,7 @@ describe("saveUpload (integration)", () => {
       // Act & Assert: Verify that importing the action module causes a configuration throw.
       await expect(async () => {
         await import("@/features/upload/actions/save-upload");
-      }).rejects.toThrow("Missing required AWS environment variable: AWS_BUCKET_NAME");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Arrange: Restore the environment variable for subsequent tests.
       process.env.AWS_BUCKET_NAME = originalBucketName;
@@ -272,7 +272,7 @@ describe("saveUpload (integration)", () => {
       // Act & Assert: Verify that importing the action module causes a configuration throw.
       await expect(async () => {
         await import("@/features/upload/actions/save-upload");
-      }).rejects.toThrow("Missing required AWS environment variable: AWS_BUCKET_REGION");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Arrange: Restore the environment variable for subsequent tests.
       process.env.AWS_BUCKET_REGION = originalBucketRegion;

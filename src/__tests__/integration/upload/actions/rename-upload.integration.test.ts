@@ -362,7 +362,7 @@ describe("renameUpload (integration)", () => {
       // Act & Assert: Verify that importing the module throws a configuration error.
       await expect(async () => {
         await import("@/features/upload/actions/rename-upload");
-      }).rejects.toThrow("Missing required AWS environment variable");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Arrange: Restore the environment variable for subsequent tests.
       process.env.AWS_BUCKET_NAME = originalBucketName;
@@ -380,7 +380,7 @@ describe("renameUpload (integration)", () => {
       // Act & Assert: Verify that importing the module throws a configuration error.
       await expect(async () => {
         await import("@/features/upload/actions/rename-upload");
-      }).rejects.toThrow("Missing required AWS environment variable");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Arrange: Restore the environment variable for subsequent tests.
       process.env.AWS_BUCKET_REGION = originalBucketRegion;

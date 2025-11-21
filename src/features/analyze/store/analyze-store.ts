@@ -163,6 +163,8 @@ type AnalyzeState = {
   setSubmissionSuccess: () => void;
   // Action to clear the submission flag after the toast is shown.
   clearSubmissionStatus: () => void;
+  // Action to update hydration state.
+  setHasHydrated: (state: boolean) => void;
 };
 
 /**
@@ -355,6 +357,8 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       setSubmissionSuccess: () => set({ submissionStatus: "success" }),
       // Action to clear the submission flag after the toast is shown.
       clearSubmissionStatus: () => set({ submissionStatus: "idle" }),
+      // Action to update hydration state.
+      setHasHydrated: (state) => set({ isHydrated: state }),
     }),
     {
       name: "analyze-storage",
@@ -378,7 +382,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
       }),
       // Set the isHydrated flag to true once rehydration is complete.
       onRehydrateStorage: () => (state) => {
-        if (state) state.isHydrated = true;
+        if (state) state.setHasHydrated(true);
       },
     }
   )
