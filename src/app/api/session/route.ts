@@ -7,11 +7,21 @@ import { db } from "@/db";
 import { userSessions } from "@/db/schema";
 import { env } from "@/lib/env";
 
-// Initialize Redis client for throttling
-const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL,
-  token: env.UPSTASH_REDIS_REST_TOKEN,
-});
+/**
+ * A private, module-level variable to cache the singleton Redis client instance.
+ */
+let _redis: Redis | undefined;
+
+/**
+ * A lazy initializer function for the Redis client.
+ * @returns The singleton `Redis` client instance.
+ */
+function getRedis(): Redis {
+  return (_redis ??= new Redis({
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN,
+  }));
+}
 
 // Throttle activity updates to once every 5 minutes
 const ACTIVITY_UPDATE_THROTTLE_MS = 5 * 60 * 1000;
@@ -39,6 +49,7 @@ export async function POST(request: NextRequest) {
     try {
       // Check Redis to see if it recently updated this session
       const throttleKey = `session:activity:${sessionToken}`;
+      const redis = getRedis();
       const lastUpdate = await redis.get<number>(throttleKey);
       const now = Date.now();
 
