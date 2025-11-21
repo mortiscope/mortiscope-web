@@ -9,15 +9,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { uploads } from "@/db/schema";
 import { s3 } from "@/lib/aws";
-
-// Runtime check for AWS environment variables
-if (!process.env.AWS_BUCKET_NAME || !process.env.AWS_BUCKET_REGION) {
-  throw new Error(
-    "Missing required AWS environment variables: AWS_BUCKET_NAME or AWS_BUCKET_REGION"
-  );
-}
-const BUCKET_NAME = process.env.AWS_BUCKET_NAME;
-const BUCKET_REGION = process.env.AWS_BUCKET_REGION;
+import { env } from "@/lib/env";
 
 const renameImageSchema = z.object({
   imageId: z.string().min(1, "Image ID is required."),
@@ -48,6 +40,9 @@ export async function renameImage(values: RenameImageInput): Promise<ActionRespo
     return { success: false, error: "Unauthorized. Please sign in." };
   }
   const userId = session.user.id;
+
+  const BUCKET_NAME = env.AWS_BUCKET_NAME;
+  const BUCKET_REGION = env.AWS_BUCKET_REGION;
 
   try {
     // Validate the input parameters

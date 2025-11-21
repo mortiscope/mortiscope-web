@@ -372,7 +372,7 @@ describe("deleteUpload (integration)", () => {
       // Act & Assert: Verify that importing the action triggers a configuration error.
       await expect(async () => {
         await import("@/features/upload/actions/delete-upload");
-      }).rejects.toThrow("Missing required AWS environment variable: AWS_BUCKET_NAME");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Cleanup: Restore the environment variable for subsequent tests.
       process.env.AWS_BUCKET_NAME = originalBucketName;

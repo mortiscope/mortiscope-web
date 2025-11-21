@@ -500,7 +500,7 @@ describe("renameImage (integration)", () => {
       // Assert: Verify that importing the action fails during variable checks.
       await expect(async () => {
         await import("@/features/images/actions/rename-image");
-      }).rejects.toThrow("Missing required AWS environment variable");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Cleanup: Restore environment variable.
       process.env.AWS_BUCKET_NAME = originalBucketName;
@@ -519,7 +519,7 @@ describe("renameImage (integration)", () => {
       // Assert: Verify that importing the action fails during variable checks.
       await expect(async () => {
         await import("@/features/images/actions/rename-image");
-      }).rejects.toThrow("Missing required AWS environment variable");
+      }).rejects.toThrow("Environment validation failed:");
 
       // Cleanup: Restore environment variable.
       process.env.AWS_BUCKET_REGION = originalBucketRegion;
