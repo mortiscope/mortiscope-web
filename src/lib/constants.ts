@@ -76,6 +76,12 @@ export const CAMERA_ASPECT_RATIOS = [
 export const PRESIGNED_URL_EXPIRATION_SECONDS = 60 * 10;
 
 /**
+ * The duration in seconds for which a presigned GET URL for profile images is valid (24 hours).
+ * @constant {number}
+ */
+export const PRESIGNED_GET_EXPIRY_PROFILE = 60 * 60 * 24;
+
+/**
  * Defines the available sort options for the upload preview.
  * @constant {object[]}
  */
