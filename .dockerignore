@@ -1,0 +1,54 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next.js
+.next
+out
+
+# testing
+e2e
+e2e/playwright-report
+e2e/test-results
+coverage
+vitest.config.ts
+playwright.config.ts
+**/*.test.ts
+**/*.spec.ts
+
+# env files
+.env
+.env.*
+!.env.example
+
+# git
+.git
+.gitignore
+.github
+
+# docker and build config
+Dockerfile
+docker-compose.yml
+Makefile
+
+# ide / editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# typescript
+tsconfig.tsbuildinfo
+
+# documentation
+*.md
+LICENSE
+
+# os / misc
+Thumbs.db
+.DS_Store
+
+# tools and debug
+.husky
+.eslintcache
+*.log

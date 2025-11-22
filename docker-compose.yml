@@ -1,0 +1,128 @@
+services:
+  # The main Next.js web application server.
+  web:
+    container_name: mortiscope-web
+    image: mortiscope-web:latest
+    # Build configuration, passing necessary public environment variables.
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+        - NEXT_PUBLIC_FASTAPI_URL=${NEXT_PUBLIC_FASTAPI_URL}
+        - NEXT_PUBLIC_CONTACT_EMAIL=${NEXT_PUBLIC_CONTACT_EMAIL}
+        - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN:-}
+    # Exposes port 3000 to the host for web traffic.
+    ports:
+      - "3000:3000"
+    # Loads runtime secrets and configuration from the .env file.
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=0.0.0.0
+    # Startup dependencies: ensures Inngest and the DB are ready before the web app initializes.
+    depends_on:
+      inngest:
+        condition: service_started
+      db:
+        condition: service_healthy
+    # Health check to ensure the Next.js server is responsive.
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    networks:
+      - mortiscope-net
+    # Resource limits to prevent the container from exhausting host resources.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+    # Log rotation settings to prevent disk space issues.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  # Inngest dev server for handling background jobs and event-driven workflows.
+  inngest:
+    container_name: mortiscope-inngest
+    image: inngest/inngest:v1.14.0
+    ports:
+      - "8288:8288"
+    environment:
+      - INNGEST_DEV=1
+    # Configures Inngest to connect to the Next.js API route for event handling.
+    command: >
+      inngest dev
+      -u http://mortiscope-web:3000/api/inngest
+      --no-discovery
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8288/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    networks:
+      - mortiscope-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    restart: unless-stopped
+
+  # Primary PostgreSQL database for the web application.
+  db:
+    container_name: mortiscope-web-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mortiscope}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mortiscope}
+      POSTGRES_DB: ${POSTGRES_DB:-mortiscope}
+    ports:
+      - "5432:5432"
+    # Persists database data to a named volume.
+    volumes:
+      - mortiscope-web-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mortiscope}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - mortiscope-net
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+# Defines a custom bridge network for internal communication between containers.
+networks:
+  mortiscope-net:
+    driver: bridge
+
+# Defines a persistent volume for the PostgreSQL database.
+volumes:
+  mortiscope-web-pgdata:
