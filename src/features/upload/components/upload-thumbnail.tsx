@@ -28,9 +28,8 @@ export const UploadThumbnail = memo(({ uploadableFile, className }: ThumbnailPro
   useEffect(() => {
     // The file is already uploaded and has a persistent URL.
     if (uploadableFile.url) {
-      // Append a version query parameter to bypass browser cache if the image is updated.
-      const cacheBustedUrl = `${uploadableFile.url}?v=${uploadableFile.version}`;
-      setPreviewUrl(cacheBustedUrl);
+      // Presigned URLs include unique query parameters that serve as natural cache-busters.
+      setPreviewUrl(uploadableFile.url);
       return;
     }
 
@@ -59,6 +58,7 @@ export const UploadThumbnail = memo(({ uploadableFile, className }: ThumbnailPro
         src={previewUrl}
         alt={`Preview of ${uploadableFile.name}`}
         fill
+        unoptimized
         className="object-cover"
         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
       />

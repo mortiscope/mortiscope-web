@@ -48,8 +48,8 @@ export const EditorImageDisplay = memo(
       handleTransformed,
     } = useImageDisplayState({ image, onTransformed });
 
-    // Append a cache-busting query parameter to ensure the latest image is shown.
-    const imageUrl = `${image.url}?t=${image.dateUploaded.getTime()}`;
+    // Presigned URLs include unique query parameters that serve as natural cache-busters.
+    const imageUrl = image.url;
 
     // Use the rendered image hook to calculate dimensions and loading state.
     const { isImageLoaded, imageDimensions, renderedImageStyle } = useRenderedImage({
@@ -141,6 +141,7 @@ export const EditorImageDisplay = memo(
                   fill
                   className="object-contain"
                   sizes="100vw"
+                  unoptimized
                   priority
                 />
               )}

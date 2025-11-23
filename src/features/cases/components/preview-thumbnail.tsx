@@ -37,8 +37,8 @@ export const PreviewThumbnail = memo(
     useEffect(() => {
       let objectUrl: string | undefined;
       if (uploadableFile.url) {
-        const cacheBustedUrl = `${uploadableFile.url}?v=${uploadableFile.version}`;
-        setPreviewUrl(cacheBustedUrl);
+        // Presigned URLs include unique query parameters that serve as natural cache-busters.
+        setPreviewUrl(uploadableFile.url);
       } else if (uploadableFile.file) {
         objectUrl = URL.createObjectURL(uploadableFile.file);
         setPreviewUrl(objectUrl);
@@ -98,6 +98,7 @@ export const PreviewThumbnail = memo(
             src={previewUrl}
             alt={`Thumbnail of ${uploadableFile.name}`}
             fill
+            unoptimized
             className="rounded-lg object-cover"
             sizes="64px"
           />

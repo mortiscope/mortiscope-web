@@ -50,8 +50,7 @@ export const ResultsImageViewer = memo(
     viewingBox,
     variants,
   }: ResultsImageViewerProps) => {
-    // Appends a version query to the URL to bypass browser cache and ensure the latest image is shown.
-    const imageUrl = `${activeImage.url}?v=${activeImage.version}`;
+    const imageUrl = activeImage.url;
 
     return (
       // The main animated container for the image viewer.
@@ -82,6 +81,7 @@ export const ResultsImageViewer = memo(
               fill
               className="object-contain"
               sizes="100vw"
+              unoptimized
               priority
             />
             {renderedImageStyle && isImageLoaded && imageDimensions && (

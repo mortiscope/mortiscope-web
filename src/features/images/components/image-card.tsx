@@ -22,14 +22,15 @@ const Thumbnail = ({ imageFile, className }: { imageFile: ImageFile; className: 
   if (!imageFile.url) {
     return <div className={cn("flex-shrink-0 rounded-md bg-slate-200", className)} />;
   }
-  // Appends a version query to the URL to bypass the browser cache and ensure the latest image is shown.
-  const cacheBustedUrl = `${imageFile.url}?v=${imageFile.version}`;
+  // Presigned URLs include unique query parameters that serve as natural cache-busters.
+  const cacheBustedUrl = imageFile.url;
   return (
     <div className={cn("relative flex-shrink-0 overflow-hidden", className)}>
       <Image
         src={cacheBustedUrl}
         alt={`Preview of ${imageFile.name}`}
         fill
+        unoptimized
         className="object-cover"
         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
       />

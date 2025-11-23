@@ -181,6 +181,7 @@ export const PreviewImageViewer = memo(
             src={previewUrl}
             alt={`Preview of ${activeFile.name}`}
             fill
+            unoptimized
             className="object-contain"
             style={{
               transform: `rotate(${rotation}deg)`,

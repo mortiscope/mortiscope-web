@@ -100,6 +100,7 @@ export const UploadPreviewMinimap = ({
         src={previewUrl}
         alt={alt}
         fill
+        unoptimized
         className="object-contain"
         style={{ transform: `rotate(${rotation}deg)` }}
         sizes="128px"

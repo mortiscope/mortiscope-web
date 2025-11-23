@@ -95,6 +95,7 @@ export const ResultsImagesMinimap = ({
         src={previewUrl}
         alt={alt}
         fill
+        unoptimized
         className="object-contain"
         sizes="128px"
       />

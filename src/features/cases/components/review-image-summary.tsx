@@ -52,6 +52,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(file)}
                         alt={`Uploaded image ${file.name}`}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
@@ -67,6 +68,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(sortedFiles[4])}
                         alt={sortedFiles.length > 5 ? "More images" : `Uploaded image 5`}
                         fill
+                        unoptimized
                         className={cn("object-cover", sortedFiles.length > 5 && "blur-sm")}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
@@ -93,6 +95,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(file)}
                         alt={`Uploaded image ${file.name}`}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
@@ -107,6 +110,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(sortedFiles[2])}
                         alt={sortedFiles.length > 3 ? "More images" : `Uploaded image 3`}
                         fill
+                        unoptimized
                         className={cn("object-cover", sortedFiles.length > 3 && "blur-sm")}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
@@ -132,6 +136,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(file)}
                         alt={`Uploaded image ${file.name}`}
                         fill
+                        unoptimized
                         className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
@@ -146,6 +151,7 @@ export const ReviewImageSummary = memo(
                         src={getPreviewUrl(sortedFiles[1])}
                         alt={sortedFiles.length > 2 ? "More images" : `Uploaded image 2`}
                         fill
+                        unoptimized
                         className={cn("object-cover", sortedFiles.length > 2 && "blur-sm")}
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />

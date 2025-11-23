@@ -100,6 +100,7 @@ export const EditorImageMinimap = memo(
           src={imageUrl}
           alt={alt}
           fill
+          unoptimized
           className="pointer-events-none object-contain"
           sizes="(max-width: 768px) 96px, 128px"
         />
