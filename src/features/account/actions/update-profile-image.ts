@@ -22,7 +22,6 @@ type ActionResponse = {
   data?: {
     url: string;
     key: string;
-    publicUrl?: string;
   };
 };
 
@@ -65,12 +64,13 @@ export async function generateProfileImageUploadUrl(formData: FormData): Promise
     const fileExtension = path.extname(file.name);
     const uniqueKey = `profile-images/${session.user.id}/${createId()}${fileExtension}`;
 
-    // Create S3 command (rely on bucket policy for public access)
+    // Create S3 command with server-side encryption
     const command = new PutObjectCommand({
       Bucket: config.aws.s3BucketName,
       Key: uniqueKey,
       ContentType: file.type,
       ContentLength: file.size,
+      ServerSideEncryption: "AES256",
     });
 
     // Generate presigned URL
@@ -78,15 +78,11 @@ export async function generateProfileImageUploadUrl(formData: FormData): Promise
       expiresIn: PRESIGNED_URL_EXPIRATION_SECONDS,
     });
 
-    // Construct the public URL on the server where we have access to config
-    const publicUrl = `https://${config.aws.s3BucketName}.s3.${config.aws.bucketRegion}.amazonaws.com/${uniqueKey}`;
-
     return {
       success: true,
       data: {
         url: presignedUrl,
         key: uniqueKey,
-        publicUrl: publicUrl,
       },
     };
   } catch {

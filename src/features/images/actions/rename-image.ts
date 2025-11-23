@@ -114,6 +114,7 @@ export async function renameImage(values: RenameImageInput): Promise<ActionRespo
       Key: newKey,
       Metadata: objectMetadata.Metadata,
       MetadataDirective: "REPLACE",
+      ServerSideEncryption: "AES256",
     });
     await s3.send(copyCommand);
 
@@ -142,7 +143,8 @@ export async function renameImage(values: RenameImageInput): Promise<ActionRespo
       };
     }
 
-    return { success: true, data: { newKey, newUrl } };
+    // Return the authenticated proxy URL to the client for immediate display.
+    return { success: true, data: { newKey, newUrl: `/api/images/${imageId}` } };
   } catch (error) {
     console.error("Error renaming image:", error);
     return {

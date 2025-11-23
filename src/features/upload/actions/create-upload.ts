@@ -110,6 +110,7 @@ export async function createUpload(
       Key: key,
       ContentType: fileType,
       ContentLength: fileSize,
+      ServerSideEncryption: "AES256",
       Metadata: {
         userId: userId,
         caseId: caseId,

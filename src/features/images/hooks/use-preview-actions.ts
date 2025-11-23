@@ -66,7 +66,6 @@ export const usePreviewActions = ({
       // Ensure we have the file's binary data.
       let fileToProcess = await ensureFileBlob(activeFile);
       let key = activeFile.key;
-      let url = activeFile.url;
 
       // Handle file rename if a new name is provided.
       if (newName) {
@@ -77,7 +76,6 @@ export const usePreviewActions = ({
 
         fileToProcess = new File([fileToProcess], newName, { type: fileToProcess.type });
         key = result.data.newKey;
-        url = result.data.newUrl;
       }
 
       // Handle image rotation if necessary.
@@ -97,6 +95,9 @@ export const usePreviewActions = ({
         const s3Response = await fetch(presignResult.data.url, {
           method: "PUT",
           body: rotatedFile,
+          headers: {
+            "x-amz-server-side-encryption": "AES256",
+          },
         });
         if (!s3Response.ok) throw new Error("Failed to upload rotated image.");
         fileToProcess = rotatedFile;
@@ -109,7 +110,6 @@ export const usePreviewActions = ({
         size: fileToProcess.size,
         type: fileToProcess.type,
         key,
-        url,
       });
       if (!updateDbResult.success)
         throw new Error(updateDbResult.error || "Failed to update file details in database.");

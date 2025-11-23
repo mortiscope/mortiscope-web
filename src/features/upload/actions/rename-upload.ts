@@ -65,6 +65,18 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
       };
     }
 
+    // Look up the upload record to retrieve its database ID for the response URL.
+    const uploadRecord = await db.query.uploads.findFirst({
+      where: and(eq(uploads.key, oldKey), eq(uploads.userId, userId)),
+      columns: { id: true },
+    });
+
+    if (!uploadRecord) {
+      return { success: false, error: "Upload record not found." };
+    }
+
+    const uploadId = uploadRecord.id;
+
     // Construct the new key while preserving the original folder structure and extension
     const oldPath = path.dirname(oldKey);
     const oldExtension = path.extname(oldKey);
@@ -74,13 +86,12 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
     const finalNewFileName = `${sanitizedBaseName}${oldExtension}`;
     const newKey = `${oldPath}/${finalNewFileName}`;
 
-    // Construct the new S3 URL
+    // Construct the new S3 URL for database storage (backward compatibility).
     const newUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${newKey}`;
 
-    // If the new key is the same as the old key after sanitization, there's nothing to do
+    // If the new key is the same as the old key after sanitization, there's nothing to do.
     if (newKey === oldKey) {
-      const oldUrl = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${oldKey}`;
-      return { success: true, data: { newKey: oldKey, newUrl: oldUrl } };
+      return { success: true, data: { newKey: oldKey, newUrl: `/api/images/${uploadId}` } };
     }
 
     // Create and execute the CopyObject command
@@ -90,6 +101,7 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
       Key: newKey,
       Metadata: objectMetadata.Metadata,
       MetadataDirective: "REPLACE",
+      ServerSideEncryption: "AES256",
     });
     await s3.send(copyCommand);
 
@@ -121,7 +133,8 @@ export async function renameUpload(values: RenameUploadInput): Promise<ActionRes
       };
     }
 
-    return { success: true, data: { newKey, newUrl } };
+    // Return the authenticated proxy URL to the client for immediate display.
+    return { success: true, data: { newKey, newUrl: `/api/images/${uploadId}` } };
   } catch (error) {
     // This outer catch handles errors from S3 (copy/delete) or the initial metadata check.
     logError(uploadLogger, "Error renaming file", error, {

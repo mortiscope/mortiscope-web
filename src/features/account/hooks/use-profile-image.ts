@@ -72,6 +72,7 @@ export const useProfileImage = () => {
         body: file,
         headers: {
           "Content-Type": file.type,
+          "x-amz-server-side-encryption": "AES256",
         },
       });
 
@@ -116,24 +117,21 @@ export const useProfileImage = () => {
           return;
         }
 
-        // Use the public URL provided by the server
-        const publicUrl = urlResult.data.publicUrl || urlResult.data.url;
-
-        // Add cache-busting parameter to the URL
-        const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`;
-
-        // Update database
-        const updateResult = await updateUrlMutation.mutateAsync(cacheBustedUrl);
+        // Store the S3 key (not the URL) in the database so presigned URLs can be generated on demand
+        const updateResult = await updateUrlMutation.mutateAsync(urlResult.data.key);
         if (!updateResult.success) {
           toast.error(updateResult.error || "Failed to update profile.");
           return;
         }
 
+        // Use a local blob URL for immediate UI feedback (avoids presigned URL round-trip)
+        const localBlobUrl = URL.createObjectURL(file);
+
         // Set optimistic image URL for immediate UI update
-        setOptimisticImageUrl(cacheBustedUrl);
+        setOptimisticImageUrl(localBlobUrl);
 
         // Store in localStorage to share with other components
-        localStorage.setItem("optimistic-profile-image", cacheBustedUrl);
+        localStorage.setItem("optimistic-profile-image", localBlobUrl);
 
         // Dispatch custom event to notify other components in the same tab
         window.dispatchEvent(new Event("optimistic-image-update"));

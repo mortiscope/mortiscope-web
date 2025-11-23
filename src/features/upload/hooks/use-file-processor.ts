@@ -68,6 +68,8 @@ export const useFileProcessor = ({ files, caseId }: UseFileProcessorProps) => {
       if (!uploadableFile.file || !caseId) return;
       const xhr = new XMLHttpRequest();
       xhr.open("PUT", url, true);
+      // Required because the presigned URL was signed with ServerSideEncryption: "AES256".
+      xhr.setRequestHeader("x-amz-server-side-encryption", "AES256");
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const percentComplete = Math.round((event.loaded / event.total) * 100);
