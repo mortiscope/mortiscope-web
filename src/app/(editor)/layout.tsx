@@ -204,7 +204,7 @@ export default function EditorLayout({ children }: EditorLayoutProps) {
           {isImageEditRoute && !isLoading && image && isMinimapEnabled && (
             <DynamicEditorImageMinimap
               key="editor-minimap"
-              imageUrl={`${image.url}?t=${image.dateUploaded.getTime()}`}
+              imageUrl={image.url}
               alt={`Minimap of ${image.name}`}
               transformState={transformState}
               viewingBox={viewingBox}

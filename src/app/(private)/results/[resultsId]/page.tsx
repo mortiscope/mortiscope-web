@@ -64,7 +64,14 @@ async function ResultsPageContent({ resultsId }: { resultsId: string }) {
     notFound();
   }
 
-  return <ResultsView initialCaseData={caseData} />;
+  // Map each upload's stored URL to the authenticated proxy URL so that `initialCaseData` never contains raw S3 URLs.
+  const uploadsWithProxyUrls = caseData.uploads.map((upload) => ({
+    ...upload,
+    url: `/api/images/${upload.id}`,
+    detections: upload.detections.filter((d) => d.deletedAt === null),
+  }));
+
+  return <ResultsView initialCaseData={{ ...caseData, uploads: uploadsWithProxyUrls }} />;
 }
 
 /**
