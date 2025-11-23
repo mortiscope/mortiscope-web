@@ -35,10 +35,10 @@ export const usePreviewImage = (activeFile: UploadableFile | null) => {
     let objectUrl: string | undefined;
     let currentPreviewUrl = "";
 
-    // Determine the source URL: a cache-busted remote URL or a new local object URL.
+    // Determine the source URL: a presigned remote URL or a new local object URL.
     if (activeFile.url) {
-      // For already uploaded files, use the remote URL and add a version query for cache-busting.
-      currentPreviewUrl = `${activeFile.url}?v=${activeFile.version}`;
+      // For already uploaded files, use the presigned URL directly (no cache-busting needed).
+      currentPreviewUrl = activeFile.url;
     } else if (activeFile.file) {
       // For new local files, create a temporary, in-memory URL.
       objectUrl = URL.createObjectURL(activeFile.file);
@@ -57,7 +57,7 @@ export const usePreviewImage = (activeFile: UploadableFile | null) => {
       setImageDimensions(null);
     }
 
-    // If a temporary object URL was created, this function revokes it when 
+    // If a temporary object URL was created, this function revokes it when
     // the component unmounts or the effect re-runs, preventing memory leaks.
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);

@@ -93,7 +93,7 @@ export const useAnalyzeReview = () => {
    * Determines the correct URL for an image preview, prioritizing a remote URL over a temporary local object URL.
    */
   const getPreviewUrl = (file: UploadableFile) => {
-    if (file.url) return `${file.url}?v=${file.version}`;
+    if (file.url) return file.url;
     return objectUrls.get(file.id) || "";
   };
 

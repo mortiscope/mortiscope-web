@@ -10,6 +10,7 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { trackSession } from "@/features/account/actions/track-session";
 import { SignInSchema } from "@/features/auth/schemas/auth";
+import { getProfileImageUrl } from "@/features/images/actions/get-image-url";
 import { config } from "@/lib/config";
 import { sendEmailChangeNotification } from "@/lib/mail";
 
@@ -110,8 +111,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           if (dbUser) {
             session.user.name = dbUser.name;
             session.user.email = dbUser.email;
-            // Use database image if available, otherwise fall back to OAuth profile picture
-            session.user.image = dbUser.image || (token.picture as string) || null;
+            // Resolve the profile image: S3 keys get presigned, OAuth URLs pass through
+            const rawImage = dbUser.image || (token.picture as string) || null;
+            session.user.image = rawImage ? await getProfileImageUrl(rawImage) : null;
           }
         } catch {
           // Failed to fetch fresh user data, fall back to token picture
