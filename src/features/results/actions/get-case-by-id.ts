@@ -38,12 +38,15 @@ export const getCaseById = async (caseId: string) => {
     throw new Error("Case not found");
   }
 
-  // Filter out soft-deleted detections from each upload
+  // Filter out soft-deleted detections and build authenticated proxy URLs for each upload.
+  const uploadsWithUrls = caseData.uploads.map((upload) => ({
+    ...upload,
+    url: `/api/images/${upload.id}`,
+    detections: upload.detections.filter((d) => d.deletedAt === null),
+  }));
+
   return {
     ...caseData,
-    uploads: caseData.uploads.map((upload) => ({
-      ...upload,
-      detections: upload.detections.filter((d) => d.deletedAt === null),
-    })),
+    uploads: uploadsWithUrls,
   };
 };

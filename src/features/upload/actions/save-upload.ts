@@ -70,7 +70,8 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
       caseId,
     });
 
-    return { success: true, data: { url } };
+    // Return the authenticated proxy URL for immediate client-side display.
+    return { success: true, data: { url: `/api/images/${id}` } };
   } catch (error) {
     logError(uploadLogger, "Error saving upload metadata", error, {
       userId,

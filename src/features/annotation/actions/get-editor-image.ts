@@ -53,7 +53,7 @@ export async function getEditorImage(imageId: string, resultsId: string) {
     return {
       id: imageData.id,
       name: imageData.name,
-      url: imageData.url,
+      url: `/api/images/${imageData.id}`,
       size: imageData.size,
       dateUploaded: imageData.createdAt,
       detections: imageData.detections.filter((d) => d.deletedAt === null),
