@@ -146,7 +146,6 @@ describe("updateProfileImage (integration)", () => {
       expect(result.data!.url).toBe(mockPresignedUrl);
       expect(result.data!.key).toContain(`profile-images/${mockUserId}/`);
       expect(result.data!.key).toContain(mockCuid);
-      expect(result.data!.publicUrl).toContain("test-bucket.s3.us-east-1.amazonaws.com");
     });
 
     /**
@@ -418,10 +417,10 @@ describe("updateProfileImage (integration)", () => {
 
       // Assert: Verify the URL was generated successfully.
       expect(uploadResult.success).toBe(true);
-      expect(uploadResult.data?.publicUrl).toBeDefined();
+      expect(uploadResult.data?.key).toBeDefined();
 
-      // Act: Update the database with the resulting public URL.
-      const updateResult = await updateProfileImageUrl(uploadResult.data!.publicUrl!);
+      // Act: Update the database with the S3 key.
+      const updateResult = await updateProfileImageUrl(uploadResult.data!.key);
 
       // Assert: Verify the database update succeeded and the user record persists.
       expect(updateResult.success).toBe(true);
