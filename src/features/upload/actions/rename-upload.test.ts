@@ -28,10 +28,15 @@ mockDbChain.set.mockReturnValue(mockDbChain);
 // Mock the end of the chain (`where` or `execute`) to resolve successfully.
 mockDbChain.where.mockResolvedValue({});
 
-// Mock the database client to intercept update operations.
+// Mock the database client to intercept update and query operations.
 vi.mock("@/db", () => ({
   db: {
     update: vi.fn(() => mockDbChain),
+    query: {
+      uploads: {
+        findFirst: vi.fn(),
+      },
+    },
   },
 }));
 
@@ -82,6 +87,7 @@ const createMockSession = (userId = "user"): Session => ({
 describe("renameUpload", () => {
   // Define constant test data for use across multiple test cases.
   const userId = "user";
+  const mockUploadId = "upload-123";
   const oldKey = "uploads/user/case/old-file.jpg";
   const newName = "New File Name";
   const expectedNewKey = "uploads/user/case/New-File-Name.jpg";
@@ -91,6 +97,8 @@ describe("renameUpload", () => {
     vi.clearAllMocks();
     mockDbChain.set.mockReturnValue(mockDbChain);
     mockDbChain.where.mockResolvedValue({});
+    // Default: return the test upload record so the ownership DB lookup always resolves.
+    vi.mocked(db.query.uploads.findFirst).mockResolvedValue({ id: mockUploadId } as never);
   });
 
   // Restore all mocks to their original state after each test.
@@ -198,13 +206,14 @@ describe("renameUpload", () => {
     // Act: Call the `renameUpload` action.
     const result = await renameUpload({ oldKey, newFileName: newName });
 
-    // Assert: Verify that `CopyObjectCommand` was called with the correct source, new key, and metadata replacement directive.
+    // Assert: Verify that `CopyObjectCommand` was called with the correct source, new key, SSE, and metadata replacement directive.
     expect(CopyObjectCommand).toHaveBeenCalledWith(
       expect.objectContaining({
         CopySource: expect.stringContaining(oldKey),
         Key: expectedNewKey,
         MetadataDirective: "REPLACE",
         Metadata: { userid: userId, custom: "data" },
+        ServerSideEncryption: "AES256",
       })
     );
 
@@ -227,7 +236,8 @@ describe("renameUpload", () => {
       success: true,
       data: {
         newKey: expectedNewKey,
-        newUrl: expect.stringContaining(expectedNewKey),
+        // The authenticated proxy URL uses the upload's database ID — stable across renames.
+        newUrl: `/api/images/${mockUploadId}`,
       },
     });
   });

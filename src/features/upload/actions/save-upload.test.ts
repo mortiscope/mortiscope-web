@@ -145,11 +145,12 @@ describe("saveUpload", () => {
       caseId: validData.caseId,
     });
 
-    // Assert: Verify that the action returned success along with the generated file URL.
+    // Assert: Verify that the action returned success along with the authenticated proxy URL.
     expect(result).toEqual({
       success: true,
       data: {
-        url: expect.stringContaining(validData.key),
+        // The /api/images/[imageId] route enforces session auth on every request.
+        url: `/api/images/${validData.id}`,
       },
     });
   });

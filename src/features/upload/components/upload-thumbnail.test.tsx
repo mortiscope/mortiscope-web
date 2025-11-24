@@ -71,7 +71,7 @@ describe("UploadThumbnail", () => {
   /**
    * Test case to verify that an image is rendered correctly from a remote URL.
    */
-  it("renders an image from a remote URL with cache busting", () => {
+  it("renders an image from a remote URL directly", () => {
     // Arrange: Create a file object with a remote URL and a specific version number.
     const remoteFile = {
       ...baseFile,
@@ -85,8 +85,8 @@ describe("UploadThumbnail", () => {
     // Assert: Retrieve the rendered image element.
     const img = screen.getByTestId("upload-thumbnail-image");
     expect(img).toBeInTheDocument();
-    // Assert: Check that the `src` attribute includes the URL appended with the cache-busting version query parameter.
-    expect(img).toHaveAttribute("src", "https://example.com/image.jpg?v=5");
+    // Assert: Check that the `src` attribute uses the URL directly without cache-busting.
+    expect(img).toHaveAttribute("src", "https://example.com/image.jpg");
     // Assert: Check that the `alt` attribute is correctly constructed from the file name.
     expect(img).toHaveAttribute("alt", "Preview of test.jpg");
   });
