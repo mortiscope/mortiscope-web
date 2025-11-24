@@ -10,7 +10,6 @@ import {
   updateProfileImageUrl,
 } from "@/features/account/actions/update-profile-image";
 import { ProfileImageSchema } from "@/features/account/schemas/account";
-import { config } from "@/lib/config";
 import { privateActionLimiter } from "@/lib/rate-limiter";
 
 // Mock the AWS S3 client and command structures to avoid network requests.
@@ -261,15 +260,13 @@ describe("generateProfileImageUploadUrl", () => {
     const result = await generateProfileImageUploadUrl(formData);
 
     const expectedKey = `profile-images/${mockUserId}/${mockId}.png`;
-    const expectedPublicUrl = `https://${config.aws.s3BucketName}.s3.${config.aws.bucketRegion}.amazonaws.com/${expectedKey}`;
 
-    // Assert: Verify the success object contains the presigned URL, the S3 key, and the public URL.
+    // Assert: Verify the success object contains the presigned URL and the S3 key.
     expect(result).toEqual({
       success: true,
       data: {
         url: mockPresignedUrl,
         key: expectedKey,
-        publicUrl: expectedPublicUrl,
       },
     });
   });

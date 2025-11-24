@@ -185,11 +185,10 @@ describe("useProfileImage", () => {
     // Arrange: Mock successful S3 URL generation, successful fetch, and successful DB update.
     const mockFile = createMockFile("avatar.png", 1024, "image/png");
     const mockPresignedUrl = "https://s3.amazonaws.com/bucket/key?token=123";
-    const mockPublicUrl = "https://cdn.mortiscope.com/avatar.png";
 
     vi.mocked(generateProfileImageUploadUrl).mockResolvedValue({
       success: true,
-      data: { url: mockPresignedUrl, publicUrl: mockPublicUrl, key: "key" },
+      data: { url: mockPresignedUrl, key: "key" },
     });
 
     vi.mocked(updateProfileImageUrl).mockResolvedValue({ success: true });
@@ -219,10 +218,10 @@ describe("useProfileImage", () => {
       })
     );
 
-    // Assert: Verify optimistic UI state and local storage synchronization.
-    expect(updateProfileImageUrl).toHaveBeenCalledWith(expect.stringContaining(mockPublicUrl));
-    expect(result.current.optimisticImageUrl).toContain(mockPublicUrl);
-    expect(localStorage.getItem("optimistic-profile-image")).toContain(mockPublicUrl);
+    // Assert: Verify the S3 key is stored in the database (not the URL).
+    expect(updateProfileImageUrl).toHaveBeenCalledWith("key");
+    expect(result.current.optimisticImageUrl).toBeTruthy();
+    expect(localStorage.getItem("optimistic-profile-image")).toBeTruthy();
     expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event));
 
     // Assert: Verify form cleanup and success feedback.
@@ -265,7 +264,7 @@ describe("useProfileImage", () => {
 
     vi.mocked(generateProfileImageUploadUrl).mockResolvedValue({
       success: true,
-      data: { url: "http://upload", publicUrl: "http://public", key: "k" },
+      data: { url: "http://upload", key: "k" },
     });
 
     global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
@@ -293,7 +292,7 @@ describe("useProfileImage", () => {
 
     vi.mocked(generateProfileImageUploadUrl).mockResolvedValue({
       success: true,
-      data: { url: "http://upload", publicUrl: "http://public", key: "k" },
+      data: { url: "http://upload", key: "k" },
     });
     vi.mocked(updateProfileImageUrl).mockResolvedValue({
       success: false,
@@ -390,16 +389,17 @@ describe("useProfileImage", () => {
   });
 
   /**
-   * Test case to verify that the hook falls back to the signed URL if the CDN `publicUrl` is missing.
+   * Test case to verify that the hook stores the S3 key in the database after a successful upload.
    */
-  it("uses url as fallback when publicUrl is missing", async () => {
-    // Arrange: Mock response where `publicUrl` is undefined.
+  it("stores the S3 key in the database after upload", async () => {
+    // Arrange: Mock response with a specific key.
     const mockFile = createMockFile("avatar.png", 1024, "image/png");
     const mockUrl = "https://s3.original.url";
+    const mockKey = "profile-images/user123/abc123.png";
 
     vi.mocked(generateProfileImageUploadUrl).mockResolvedValue({
       success: true,
-      data: { url: mockUrl, publicUrl: undefined, key: "key" },
+      data: { url: mockUrl, key: mockKey },
     });
     vi.mocked(updateProfileImageUrl).mockResolvedValue({ success: true });
 
@@ -412,8 +412,8 @@ describe("useProfileImage", () => {
       } as unknown as React.ChangeEvent<HTMLInputElement>);
     });
 
-    // Assert: Verify database update used the fallback `url`.
-    expect(updateProfileImageUrl).toHaveBeenCalledWith(expect.stringContaining(mockUrl));
+    // Assert: Verify database update used the S3 key.
+    expect(updateProfileImageUrl).toHaveBeenCalledWith(mockKey);
   });
 
   /**
@@ -425,7 +425,7 @@ describe("useProfileImage", () => {
 
     vi.mocked(generateProfileImageUploadUrl).mockResolvedValue({
       success: true,
-      data: { url: "url", publicUrl: "public", key: "key" },
+      data: { url: "url", key: "key" },
     });
     vi.mocked(updateProfileImageUrl).mockResolvedValue({
       success: false,
