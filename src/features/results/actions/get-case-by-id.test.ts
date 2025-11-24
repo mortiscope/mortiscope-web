@@ -122,6 +122,7 @@ describe("getCaseById", () => {
       uploads: [
         {
           id: "upload-1",
+          key: "uploads/user-123/case-123/image-1.jpg",
           detections: [
             { id: "detection-1", deletedAt: null },
             { id: "detection-2", deletedAt: new Date("2025-01-01") },
@@ -130,6 +131,7 @@ describe("getCaseById", () => {
         },
         {
           id: "upload-2",
+          key: "uploads/user-123/case-123/image-2.jpg",
           detections: [{ id: "detection-4", deletedAt: new Date("2025-01-02") }],
         },
       ],

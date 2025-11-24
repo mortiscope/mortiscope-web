@@ -1,32 +1,52 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { render, screen, waitFor } from "@/__tests__/setup/test-utils";
+import { mockIds } from "@/__tests__/mocks/fixtures";
+import { render, screen } from "@/__tests__/setup/test-utils";
 import { ExportDropdown } from "@/features/export/components/export-dropdown";
 
 // Mock the PDF export modal component to control its rendering behavior for tests.
 vi.mock("@/features/export/components/export-pdf-modal", () => ({
-  ExportPdfModal: ({ isOpen, caseId }: { isOpen: boolean; caseId: string }) =>
-    isOpen ? <div data-testid="export-pdf-modal">PDF Modal: {caseId}</div> : null,
+  ExportPdfModal: ({
+    isOpen,
+    caseId,
+  }: {
+    isOpen: boolean;
+    caseId: string;
+    onOpenChange: (open: boolean) => void;
+  }) => (isOpen ? <div data-testid="export-pdf-modal">PDF Modal: {caseId}</div> : null),
 }));
 
 // Mock the Labelled Images export modal component to control its rendering behavior for tests.
 vi.mock("@/features/export/components/export-labelled-images-modal", () => ({
-  ExportLabelledImagesModal: ({ isOpen, caseId }: { isOpen: boolean; caseId: string }) =>
-    isOpen ? <div data-testid="export-images-modal">Images Modal: {caseId}</div> : null,
+  ExportLabelledImagesModal: ({
+    isOpen,
+    caseId,
+  }: {
+    isOpen: boolean;
+    caseId: string;
+    onOpenChange: (open: boolean) => void;
+  }) => (isOpen ? <div data-testid="export-images-modal">Images Modal: {caseId}</div> : null),
 }));
 
 // Mock the Raw Data export modal component to control its rendering behavior for tests.
 vi.mock("@/features/export/components/export-raw-data-modal", () => ({
-  ExportRawDataModal: ({ isOpen, caseId }: { isOpen: boolean; caseId: string }) =>
-    isOpen ? <div data-testid="export-raw-modal">Raw Data Modal: {caseId}</div> : null,
+  ExportRawDataModal: ({
+    isOpen,
+    caseId,
+  }: {
+    isOpen: boolean;
+    caseId: string;
+    onOpenChange: (open: boolean) => void;
+  }) => (isOpen ? <div data-testid="export-raw-modal">Raw Data Modal: {caseId}</div> : null),
 }));
 
 /**
  * Groups related tests into a suite for the Export Dropdown component.
  */
 describe("ExportDropdown", () => {
-  const caseId = "case-123";
+  // Use a realistic case ID from the shared fixtures pool.
+  const caseId = mockIds.firstCase;
 
   /**
    * Test case to verify that the dropdown trigger button renders correctly.
@@ -54,9 +74,11 @@ describe("ExportDropdown", () => {
     await user.click(button);
 
     // Assert: Verify that all expected export menu items are visible in the DOM.
-    expect(screen.getByText("Export as PDF")).toBeInTheDocument();
-    expect(screen.getByText("Export as Labelled Images")).toBeInTheDocument();
-    expect(screen.getByText("Export as Raw Data")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Export as PDF/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: /Export as Labelled Images/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Export as Raw Data/i })).toBeInTheDocument();
   });
 
   /**
@@ -70,13 +92,12 @@ describe("ExportDropdown", () => {
     // Act: Open the dropdown menu and select the "Export as PDF" option.
     await user.click(screen.getByRole("button", { name: "Export results" }));
 
-    const option = screen.getByText("Export as PDF");
+    const option = screen.getByRole("menuitem", { name: /Export as PDF/i });
     await user.click(option);
 
     // Assert: Wait for the mock PDF modal to appear and verify it received the correct `caseId`.
-    await waitFor(() => {
-      expect(screen.getByTestId("export-pdf-modal")).toBeInTheDocument();
-    });
+    const modal = await screen.findByTestId("export-pdf-modal");
+    expect(modal).toBeInTheDocument();
     expect(screen.getByText(`PDF Modal: ${caseId}`)).toBeInTheDocument();
   });
 
@@ -91,13 +112,12 @@ describe("ExportDropdown", () => {
     // Act: Open the dropdown menu and select the "Export as Labelled Images" option.
     await user.click(screen.getByRole("button", { name: "Export results" }));
 
-    const option = screen.getByText("Export as Labelled Images");
+    const option = screen.getByRole("menuitem", { name: /Export as Labelled Images/i });
     await user.click(option);
 
     // Assert: Wait for the mock images modal to appear and verify it received the correct `caseId`.
-    await waitFor(() => {
-      expect(screen.getByTestId("export-images-modal")).toBeInTheDocument();
-    });
+    const modal = await screen.findByTestId("export-images-modal");
+    expect(modal).toBeInTheDocument();
     expect(screen.getByText(`Images Modal: ${caseId}`)).toBeInTheDocument();
   });
 
@@ -112,13 +132,12 @@ describe("ExportDropdown", () => {
     // Act: Open the dropdown menu and select the "Export as Raw Data" option.
     await user.click(screen.getByRole("button", { name: "Export results" }));
 
-    const option = screen.getByText("Export as Raw Data");
+    const option = screen.getByRole("menuitem", { name: /Export as Raw Data/i });
     await user.click(option);
 
     // Assert: Wait for the mock raw data modal to appear and verify it received the correct `caseId`.
-    await waitFor(() => {
-      expect(screen.getByTestId("export-raw-modal")).toBeInTheDocument();
-    });
+    const modal = await screen.findByTestId("export-raw-modal");
+    expect(modal).toBeInTheDocument();
     expect(screen.getByText(`Raw Data Modal: ${caseId}`)).toBeInTheDocument();
   });
 
