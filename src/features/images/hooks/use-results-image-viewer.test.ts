@@ -140,10 +140,10 @@ describe("useResultsImageViewer", () => {
       useResultsImageViewer({ image: mockImage1, images: mockImages, isOpen: true })
     );
 
-    // Assert: Verify useRenderedImage was called with the correct versioned URL.
+    // Assert: Verify useRenderedImage was called with the URL directly.
     expect(useRenderedImage).toHaveBeenCalledWith(
       expect.objectContaining({
-        imageUrl: "image-1.jpg?v=1",
+        imageUrl: "image-1.jpg",
       })
     );
   });

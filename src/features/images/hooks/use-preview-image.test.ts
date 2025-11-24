@@ -75,8 +75,8 @@ describe("usePreviewImage", () => {
     // Arrange: Render the hook with a remote file object.
     const { result } = renderHook(() => usePreviewImage(mockRemoteFile));
 
-    // Assert: Verify the URL includes the version query parameter.
-    expect(result.current.previewUrl).toBe("https://example.com/image.jpg?v=123");
+    // Assert: Verify the URL is used directly without a version query parameter.
+    expect(result.current.previewUrl).toBe("https://example.com/image.jpg");
 
     // Act: Manually trigger the image load event.
     act(() => {

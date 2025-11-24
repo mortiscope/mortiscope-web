@@ -212,9 +212,12 @@ describe("usePreviewActions", () => {
       expect(mockMutations.updateUploadMutation.mutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           key: "new-key",
-          url: "new-url",
           name: newName,
         })
+      );
+      // The `url` field should NOT be passed to prevent storing presigned URLs in the database.
+      expect(mockMutations.updateUploadMutation.mutateAsync).toHaveBeenCalledWith(
+        expect.not.objectContaining({ url: expect.anything() })
       );
       expect(mockStoreActions.updateFile).toHaveBeenCalled();
       expect(mockStoreActions.setUploadStatus).toHaveBeenCalledWith(mockActiveFile.id, "success");

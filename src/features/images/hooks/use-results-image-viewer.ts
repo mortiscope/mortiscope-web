@@ -80,7 +80,7 @@ export const useResultsImageViewer = ({ image, images, isOpen }: UseResultsImage
 
   /** A specialized hook to manage the complex logic of image loading and dimension calculation for overlays. */
   const { isImageLoaded, imageDimensions, renderedImageStyle } = useRenderedImage({
-    imageUrl: activeImage ? `${activeImage.url}?v=${activeImage.version}` : null,
+    imageUrl: activeImage ? activeImage.url : null,
     containerRef: imageContainerRef,
   });
 
