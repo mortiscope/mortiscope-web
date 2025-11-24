@@ -338,7 +338,8 @@ describe("renameImage (integration)", () => {
       // Assert: Verify success status and presence of new S3 data.
       expect(result.success).toBe(true);
       expect(result.data?.newKey).toContain("new-image-name.jpg");
-      expect(result.data?.newUrl).toContain("new-image-name.jpg");
+      // The authenticated proxy URL uses the upload's database ID — it is stable across renames.
+      expect(result.data?.newUrl).toBe("/api/images/clv7g8h9i0010jk1l2m3n4o5p");
 
       // Assert: Confirm the `uploads` table record was updated in the database.
       const updatedUpload = await db.query.uploads.findFirst({

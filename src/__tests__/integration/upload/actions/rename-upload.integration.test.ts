@@ -3,11 +3,11 @@
 import { type Session } from "next-auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { mockUsers } from "@/__tests__/mocks/fixtures";
+import { mockIds, mockUploads, mockUsers } from "@/__tests__/mocks/fixtures";
 import { resetMockDb } from "@/__tests__/setup/setup";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { uploads, users } from "@/db/schema";
 import { renameUpload } from "@/features/upload/actions/rename-upload";
 
 // Mock the authentication module to control user session states.
@@ -46,9 +46,12 @@ type AuthMock = () => Promise<Session | null>;
  */
 describe("renameUpload (integration)", () => {
   const validInput = {
-    oldKey: "uploads/user-123/case-456/old-image.jpg",
+    oldKey: mockUploads.firstUpload.key,
     newFileName: "new-image-name",
   };
+
+  const pngKey = `uploads/${mockIds.firstUser}/${mockIds.firstCase}/image-sample.png`;
+  const sameNameKey = `uploads/${mockIds.firstUser}/${mockIds.firstCase}/same-name.jpg`;
 
   /**
    * Resets the database and mocks before each test case to ensure environment isolation.
@@ -64,6 +67,43 @@ describe("renameUpload (integration)", () => {
       email: mockUsers.primaryUser.email,
       name: mockUsers.primaryUser.name,
     });
+
+    // Arrange: Seed upload records for each key used across rename test cases.
+    await db.insert(uploads).values([
+      {
+        id: mockIds.firstUpload,
+        key: mockUploads.firstUpload.key,
+        userId: mockIds.firstUser,
+        name: mockUploads.firstUpload.name,
+        url: mockUploads.firstUpload.url,
+        size: mockUploads.firstUpload.size,
+        type: mockUploads.firstUpload.type,
+        width: mockUploads.firstUpload.width,
+        height: mockUploads.firstUpload.height,
+      },
+      {
+        id: mockIds.secondUpload,
+        key: pngKey,
+        userId: mockIds.firstUser,
+        name: "image.png",
+        url: `https://mortiscope-test.s3.ap-southeast-1.amazonaws.com/${pngKey}`,
+        size: 2856412,
+        type: "image/png",
+        width: 4032,
+        height: 3024,
+      },
+      {
+        id: mockIds.thirdUpload,
+        key: sameNameKey,
+        userId: mockIds.firstUser,
+        name: "same-name.jpg",
+        url: `https://mortiscope-test.s3.ap-southeast-1.amazonaws.com/${sameNameKey}`,
+        size: 3247589,
+        type: "image/jpeg",
+        width: 3984,
+        height: 2656,
+      },
+    ]);
   });
 
   /**
@@ -199,7 +239,8 @@ describe("renameUpload (integration)", () => {
       // Assert: Ensure success is true and the `newKey` contains the updated file name.
       expect(result.success).toBe(true);
       expect(result.data?.newKey).toContain("new-image-name.jpg");
-      expect(result.data?.newUrl).toContain("new-image-name.jpg");
+      // The authenticated proxy URL uses the upload's database ID — stable across renames.
+      expect(result.data?.newUrl).toBe(`/api/images/${mockIds.firstUpload}`);
     });
 
     /**
@@ -208,7 +249,7 @@ describe("renameUpload (integration)", () => {
     it("sanitizes special characters in new file name", async () => {
       // Act: Provide a file name containing spaces and parentheses.
       const result = await renameUpload({
-        oldKey: "uploads/user-123/case-456/old-image.jpg",
+        oldKey: mockUploads.firstUpload.key,
         newFileName: "new file (1).jpg",
       });
 
@@ -225,7 +266,7 @@ describe("renameUpload (integration)", () => {
     it("preserves original file extension", async () => {
       // Act: Rename a `.png` file while providing a name with a different extension.
       const result = await renameUpload({
-        oldKey: "uploads/user-123/case-456/old-image.png",
+        oldKey: pngKey,
         newFileName: "new-name.jpg",
       });
 
@@ -243,7 +284,7 @@ describe("renameUpload (integration)", () => {
 
       // Assert: Verify the folder path in the `newKey` matches the original structure.
       expect(result.success).toBe(true);
-      expect(result.data?.newKey).toContain("uploads/user-123/case-456/");
+      expect(result.data?.newKey).toContain(`uploads/${mockIds.firstUser}/${mockIds.firstCase}/`);
     });
 
     /**
@@ -252,13 +293,13 @@ describe("renameUpload (integration)", () => {
     it("returns same key when sanitized name equals original", async () => {
       // Act: Provide a new file name that is identical to the current one.
       const result = await renameUpload({
-        oldKey: "uploads/user-123/case-456/same-name.jpg",
+        oldKey: sameNameKey,
         newFileName: "same-name",
       });
 
       // Assert: Ensure the returned key is identical to the `oldKey`.
       expect(result.success).toBe(true);
-      expect(result.data?.newKey).toBe("uploads/user-123/case-456/same-name.jpg");
+      expect(result.data?.newKey).toBe(sameNameKey);
     });
   });
 

@@ -152,27 +152,28 @@ describe("saveUpload (integration)", () => {
     });
 
     /**
-     * Verifies that valid metadata is correctly inserted and the URL is returned.
+     * Verifies that valid metadata is correctly inserted and the proxy URL is returned.
      */
     it("successfully saves upload metadata and returns URL", async () => {
       // Act: Invoke the `saveUpload` action with correct data.
       const result = await saveUpload(validInput);
 
-      // Assert: Confirm success and verify the returned `url` contains the object `key`.
+      // Assert: Confirm success and verify the returned `url` is an authenticated proxy URL.
       expect(result.success).toBe(true);
-      expect(result.data?.url).toContain(validInput.key);
+      // The /api/images/[imageId] route enforces session auth on every request.
+      expect(result.data?.url).toBe(`/api/images/${validInput.id}`);
     });
 
     /**
-     * Verifies that the generated URL follows the expected S3 public access format.
+     * Verifies that the generated URL targets the authenticated image proxy route.
      */
-    it("constructs correct S3 URL format", async () => {
+    it("returns an authenticated proxy URL", async () => {
       // Act: Perform a successful save operation.
       const result = await saveUpload(validInput);
 
-      // Assert: Ensure the returned URL matches the standard S3 endpoint pattern.
+      // Assert: Ensure the returned URL uses the /api/images/ proxy route, not a direct S3 URL.
       expect(result.success).toBe(true);
-      expect(result.data?.url).toMatch(/^https:\/\/.*\.s3\..*\.amazonaws\.com\//);
+      expect(result.data?.url).toMatch(/^\/api\/images\//);
     });
   });
 
