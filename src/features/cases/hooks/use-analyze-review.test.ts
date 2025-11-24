@@ -215,18 +215,18 @@ describe("useAnalyzeReview", () => {
    */
   describe("getPreviewUrl", () => {
     /**
-     * Test case to verify that the remote URL is returned with a cache-busting version query parameter.
+     * Test case to verify that the remote URL is returned directly from the presigned URL.
      */
-    it("returns remote URL with version if available", () => {
+    it("returns remote URL directly without cache-busting", () => {
       // Act: Render the hook.
       const { result } = renderHook(() => useAnalyzeReview());
 
       // Arrange: Create a mock file object with a remote URL and a version.
       const fileWithVersion = { ...mockFiles[0], version: 1 } as unknown as UploadableFile;
 
-      // Assert: Check that the returned URL includes the `v=1` query parameter.
+      // Assert: Check that the returned URL is used directly without a version query parameter.
       const url = result.current.getPreviewUrl(fileWithVersion);
-      expect(url).toBe("http://remote/image-2.jpg?v=1");
+      expect(url).toBe("http://remote/image-2.jpg");
     });
 
     /**

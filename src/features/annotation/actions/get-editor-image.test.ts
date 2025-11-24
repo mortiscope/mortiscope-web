@@ -153,11 +153,11 @@ describe("getEditorImage", () => {
     // Act: Fetch the image data.
     const result = await getEditorImage("image-1", "case-1");
 
-    // Assert: Verify the returned object contains correctly mapped fields and the `detections` array.
+    // Assert: Verify the returned object contains correctly mapped fields and a proxy URL.
     expect(result).toEqual({
       id: "image-1",
       name: "sample-image.jpg",
-      url: "https://example.com/sample-image.jpg",
+      url: "/api/images/image-1",
       size: 2048,
       dateUploaded: mockDate,
       detections: mockUpload.detections,

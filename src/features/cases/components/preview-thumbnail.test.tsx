@@ -78,9 +78,9 @@ describe("PreviewThumbnail", () => {
   });
 
   /**
-   * Test case to verify that a remote file URL is rendered with a cache-busting version query parameter.
+   * Test case to verify that a remote file URL is rendered directly from the presigned URL.
    */
-  it("renders a remote URL with cache busting version", () => {
+  it("renders a remote URL directly without cache busting", () => {
     // Arrange: Render the component with a remote file object.
     render(
       <PreviewThumbnail
@@ -91,9 +91,9 @@ describe("PreviewThumbnail", () => {
       />
     );
 
-    // Assert: Check if the rendered image element has the correct URL including the version number.
+    // Assert: Check if the rendered image element has the correct URL without a version query parameter.
     const image = screen.getByTestId("next-image");
-    expect(image).toHaveAttribute("src", "https://example.com/image.jpg?v=5");
+    expect(image).toHaveAttribute("src", "https://example.com/image.jpg");
     // Assert: Verify that the image has the correct descriptive `alt` attribute.
     expect(image).toHaveAttribute("alt", "Thumbnail of image.jpg");
   });
