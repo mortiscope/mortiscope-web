@@ -34,9 +34,9 @@ const mockImageFile = {
  */
 describe("ResultsThumbnail", () => {
   /**
-   * Test case to verify that the thumbnail renders the image with a versioned URL query parameter.
+   * Test case to verify that the thumbnail renders the image with the URL directly.
    */
-  it("renders the image with versioned URL", () => {
+  it("renders the image with the URL directly", () => {
     // Arrange: Render the component with a valid image file.
     render(
       <ResultsThumbnail
@@ -49,7 +49,7 @@ describe("ResultsThumbnail", () => {
 
     // Assert: Check that the image source includes the version and the alt text is correct.
     const img = screen.getByTestId("next-image");
-    expect(img).toHaveAttribute("src", "https://example.com/image.jpg?v=123");
+    expect(img).toHaveAttribute("src", "https://example.com/image.jpg");
     expect(img).toHaveAttribute("alt", "Thumbnail of test-image.jpg");
   });
 

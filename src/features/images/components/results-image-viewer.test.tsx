@@ -102,9 +102,9 @@ describe("ResultsImageViewer", () => {
   });
 
   /**
-   * Test case to verify that the main image renders with the correct versioned URL once loaded.
+   * Test case to verify that the main image renders with the URL directly once loaded.
    */
-  it("renders the main image with versioned URL", () => {
+  it("renders the main image with the URL directly", () => {
     // Arrange: Render the component with isImageLoaded set to true.
     render(
       <ResultsImageViewer
@@ -122,7 +122,7 @@ describe("ResultsImageViewer", () => {
 
     // Assert: Verify image attributes and ensure spinner is removed.
     const img = screen.getByTestId("main-image");
-    expect(img).toHaveAttribute("src", "https://example.com/test.jpg?v=1");
+    expect(img).toHaveAttribute("src", "https://example.com/test.jpg");
     expect(img).toHaveAttribute("alt", "Preview of test.jpg");
     expect(screen.queryByTestId("loading-spinner")).toBeNull();
   });

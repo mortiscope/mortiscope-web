@@ -74,15 +74,15 @@ const defaultProps = {
  */
 describe("ImageCard", () => {
   /**
-   * Test case to verify that the image renders with the correct version query parameter.
+   * Test case to verify that the image renders with the URL directly from presigned URL.
    */
-  it("renders the image with versioned URL", () => {
+  it("renders the image with the URL directly", () => {
     // Arrange: Render the component with default props.
     render(<ImageCard {...defaultProps} />);
 
-    // Assert: Check that the image source includes the version and the alt text is correct.
+    // Assert: Check that the image source is the URL directly and the alt text is correct.
     const img = screen.getByTestId("next-image");
-    expect(img).toHaveAttribute("src", "https://example.com/image.jpg?v=123");
+    expect(img).toHaveAttribute("src", "https://example.com/image.jpg");
     expect(img).toHaveAttribute("alt", "Preview of test-image.jpg");
   });
 

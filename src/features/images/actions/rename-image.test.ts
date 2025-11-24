@@ -219,13 +219,14 @@ describe("renameImage", () => {
       Key: mockOriginalKey,
     });
 
-    // Assert: Verify S3 `CopyObject` was called with the correct source, destination, and metadata.
+    // Assert: Verify S3 `CopyObject` was called with the correct source, destination, SSE, and metadata.
     expect(CopyObjectCommand).toHaveBeenCalledWith({
       Bucket: "mortiscope-bucket",
       CopySource: "mortiscope-bucket/" + mockOriginalKey,
       Key: expectedNewKey,
       Metadata: { "content-type": "image/jpeg" },
       MetadataDirective: "REPLACE",
+      ServerSideEncryption: "AES256",
     });
 
     // Assert: Verify S3 `DeleteObject` was called to remove the old file.
