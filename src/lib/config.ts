@@ -49,7 +49,7 @@ let _config: ServerConfig | undefined;
  */
 function buildConfig(): ServerConfig {
   const appUrl = env.NEXT_PUBLIC_APP_URL || "https://placeholder.example.com";
-  const mailDomain = new URL(appUrl).hostname;
+  const mailDomain = env.RESEND_MAIL_DOMAIN ?? new URL(appUrl).hostname;
   const isDevelopment = env.NODE_ENV === "development";
 
   /**

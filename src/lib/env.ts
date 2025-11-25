@@ -19,6 +19,7 @@ const envSchema = z.object({
 
   // Email service
   RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+  RESEND_MAIL_DOMAIN: z.string().min(1).optional(),
 
   // Application URLs
   NEXT_PUBLIC_APP_URL: z.string().pipe(z.url()),
