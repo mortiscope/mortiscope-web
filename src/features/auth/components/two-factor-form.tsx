@@ -42,6 +42,8 @@ function TwoFactorProcess() {
           if (signinResult?.error) {
             console.error("Server-side signin failed:", signinResult.error);
             setIsRedirecting(false);
+          } else {
+            window.location.href = "/dashboard";
           }
         } catch (error) {
           // Any other error is a genuine failure.

@@ -1,6 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { headers } from "next/headers";
 import { verify as verifyTotp } from "otplib";
 
@@ -115,7 +116,6 @@ export const completeTwoFactorSignIn = async () => {
   // Dynamically import necessary modules.
   const { signIn: authSignIn } = await import("@/auth");
   const { AuthError } = await import("next-auth");
-  const { DEFAULT_LOGIN_REDIRECT } = await import("@/routes");
 
   // Retrieve the temporary 2FA session.
   const authSession = await getAuthSession();
@@ -131,9 +131,11 @@ export const completeTwoFactorSignIn = async () => {
       email: authSession.email,
       // This special, hardcoded string acts as a signal to the `authorize` callback.
       password: "2fa-verified",
-      // Redirect the user to the default authenticated route upon successful sign-in.
-      redirectTo: DEFAULT_LOGIN_REDIRECT,
+      // Prevent server-side redirect. Let the client navigate instead.
+      redirect: false,
     });
+
+    return { success: "Sign-in completed successfully." };
   } catch (error) {
     // Handle specific authentication errors that might be thrown by NextAuth.js.
     if (error instanceof AuthError) {
@@ -142,6 +144,9 @@ export const completeTwoFactorSignIn = async () => {
         "2FA sign-in completion failed"
       );
       return { error: "Authentication failed. Please try again." };
+    }
+    if (isRedirectError(error)) {
+      return { success: "Sign-in completed successfully." };
     }
     // For any other unexpected errors, re-throw them to be handled by the server.
     throw error;

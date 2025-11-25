@@ -14,15 +14,13 @@ if (ipAddress) {
   allowedOrigins.push(ipAddress);
 }
 
-const isDev = process.env.NODE_ENV === "development";
-
 /**
  * Content-Security-Policy directives for the application.
  */
 const cspDirectives = [
   "default-src 'self'",
   // Next.js App Router requires 'unsafe-inline' for SSR hydration scripts.
-  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com`,
   // Tailwind CSS and Radix UI/shadcn primitives inject inline styles at runtime.
   "style-src 'self' 'unsafe-inline'",
   // S3 bucket for profile pictures (presigned GET URLs fetched directly by the browser).
@@ -35,6 +33,8 @@ const cspDirectives = [
   "object-src 'none'",
   // Prohibit audio/video embeds.
   "media-src 'none'",
+  // Sentry Replay and other Web Worker scripts are spawned from blob: URLs.
+  "worker-src blob: 'self'",
   // Prohibit <iframe> embeds from external origins; allow same-origin only.
   "frame-ancestors 'self'",
   // Restrict <base> tag to same origin to prevent base-tag hijacking.
