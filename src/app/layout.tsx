@@ -1,5 +1,7 @@
 import "@/app/globals.css";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { Metadata } from "next/types";
 
@@ -118,6 +120,8 @@ export default function RootLayout({
             <Toaster position="bottom-right" richColors />
           </QueryProvider>
         </NextAuthSessionProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
