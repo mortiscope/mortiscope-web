@@ -423,7 +423,7 @@ describe("completeTwoFactorSignIn Server Action", () => {
     expect(mockAuthSignIn).toHaveBeenCalledWith("credentials", {
       email: "mortiscope@example.com",
       password: "2fa-verified",
-      redirectTo: "/dashboard",
+      redirect: false,
     });
   });
 

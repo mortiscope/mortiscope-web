@@ -590,7 +590,7 @@ describe("completeTwoFactorSignIn (integration)", () => {
     expect(mockAuthSignIn).toHaveBeenCalledWith("credentials", {
       email: mockUsers.primaryUser.email,
       password: "2fa-verified",
-      redirectTo: "/dashboard",
+      redirect: false,
     });
   });
 
@@ -615,6 +615,31 @@ describe("completeTwoFactorSignIn (integration)", () => {
 
     // Assert: Verify the authentication failure error.
     expect(result).toEqual({ error: "Authentication failed. Please try again." });
+  });
+
+  /**
+   * Verifies that a Next.js redirect error thrown by signIn is treated as a successful sign-in.
+   */
+  it("returns success when signIn throws a Next.js redirect error", async () => {
+    // Arrange: Mock a verified session.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue({
+      userId: mockUsers.primaryUser.id,
+      email: mockUsers.primaryUser.email,
+      provider: "credentials",
+      verified: true,
+    } as never);
+
+    // Arrange: Simulate a Next.js redirect by attaching the digest pattern that `isRedirectError` checks.
+    const redirectError = new Error("Redirect");
+    (redirectError as unknown as { digest: string }).digest = "NEXT_REDIRECT;push;/dashboard;307;";
+    mockAuthSignIn.mockRejectedValue(redirectError);
+
+    // Act: Invoke the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the redirect is absorbed and the action reports a successful sign-in.
+    expect(result).toEqual({ success: "Sign-in completed successfully." });
   });
 
   /**

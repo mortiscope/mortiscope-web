@@ -661,26 +661,17 @@ describe("saveDetections (integration)", () => {
     });
 
     /**
-     * Test case to verify resilience when a second database query returns no data.
+     * Test case to verify the action completes successfully when the case has no associated uploads.
      */
     it("handles case where uploads.findMany returns empty after validation", async () => {
-      // Arrange: Mock `uploads.findMany` to return empty on subsequent calls.
+      // Arrange: Mock `uploads.findMany` to return an empty list, simulating a case with no uploads.
       const dbModule = await import("@/db");
-
-      let callCount = 0;
-      const originalFn = dbModule.db.query.uploads.findMany;
-      vi.spyOn(dbModule.db.query.uploads, "findMany").mockImplementation(((args: unknown) => {
-        callCount++;
-        if (callCount > 1) {
-          return Promise.resolve([]);
-        }
-        return originalFn.call(dbModule.db.query.uploads, args as never);
-      }) as never);
+      vi.spyOn(dbModule.db.query.uploads, "findMany").mockResolvedValue([]);
 
       // Act: Execute the save action.
       const result = await saveDetections(mockImageId, mockResultsId, emptyChanges);
 
-      // Assert: Verify the action handles the unexpected empty result gracefully.
+      // Assert: Verify the action completes gracefully without errors.
       expect(result.success).toBe(true);
     });
   });
