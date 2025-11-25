@@ -23,8 +23,8 @@ const cspDirectives = [
   `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com`,
   // Tailwind CSS and Radix UI/shadcn primitives inject inline styles at runtime.
   "style-src 'self' 'unsafe-inline'",
-  // S3 bucket for profile pictures (presigned GET URLs fetched directly by the browser).
-  "img-src 'self' data: blob: https://mortiscope.s3.ap-southeast-1.amazonaws.com",
+  // S3 bucket for profile pictures and OAuth provider profile pictures.
+  "img-src 'self' data: blob: https://mortiscope.s3.ap-southeast-1.amazonaws.com https://lh3.googleusercontent.com https://graph.microsoft.com https://*.microsoft.com",
   // next/font/google self-hosts fonts — no googleapis.com needed at runtime.
   "font-src 'self' data:",
   // External APIs: Sentry (monitoring), GitHub Pages (address data), S3 (uploads), Open-Meteo (weather), and Vercel (analytics & speed insights).
@@ -117,6 +117,16 @@ const nextConfig: NextConfig = {
         hostname: "mortiscope.s3.ap-southeast-1.amazonaws.com",
         port: "",
         pathname: "/profile-images/**",
+      },
+      {
+        // Google OAuth profile pictures
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        // Microsoft Entra ID OAuth profile pictures
+        protocol: "https",
+        hostname: "graph.microsoft.com",
       },
     ],
   },
