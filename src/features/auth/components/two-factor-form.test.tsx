@@ -1,21 +1,19 @@
 import { userEvent } from "@testing-library/user-event";
-import { ReadonlyURLSearchParams, useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, waitFor } from "@/__tests__/setup/test-utils";
-import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import { completeTwoFactorSignIn, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
 import TwoFactorForm from "@/features/auth/components/two-factor-form";
 
 // Mocks the server actions.
 vi.mock("@/features/auth/actions/two-factor", () => ({
   verifySigninTwoFactor: vi.fn(),
-  clearTwoFactorSession: vi.fn(),
+  completeTwoFactorSignIn: vi.fn(),
 }));
 
-// Mocks the router and search params.
+// Mocks the search params.
 vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(),
   useSearchParams: vi.fn(),
 }));
 
@@ -34,19 +32,7 @@ describe("TwoFactorForm", () => {
     }
   });
 
-  const pushMock = vi.fn();
-
   beforeEach(() => {
-    // Default mocks for navigation
-    vi.mocked(useRouter).mockReturnValue({
-      push: pushMock,
-      back: vi.fn(),
-      forward: vi.fn(),
-      refresh: vi.fn(),
-      replace: vi.fn(),
-      prefetch: vi.fn(),
-    });
-
     // Default: No error in search params
     // We cast to unknown then ReadonlyURLSearchParams to satisfy strict linting without 'any'
     vi.mocked(useSearchParams).mockReturnValue({
@@ -125,29 +111,22 @@ describe("TwoFactorForm", () => {
   });
 
   /**
-   * Test case to verify successful 2FA flow: Server verification -> Client SignIn -> Router Push.
+   * Test case to verify successful 2FA flow: Server verification -> Server-side SignIn (redirect).
    */
-  it("handles successful verification and redirects to dashboard", async () => {
+  it("handles successful verification and completes sign-in via server action", async () => {
     // Arrange: Mock successful responses for all steps.
     const user = userEvent.setup();
-    const testEmail = "mortiscope@example.com";
 
     vi.mocked(verifySigninTwoFactor).mockResolvedValue({
       success: "Verification successful!",
       verified: true,
-      email: testEmail,
+      email: "mortiscope@example.com",
       userId: "user-123",
     });
 
-    vi.mocked(signIn).mockResolvedValue({
-      ok: true,
-      error: undefined,
-      status: 200,
-      url: "",
-      code: "success",
-    });
-
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({ success: "Session cleared" });
+    vi.mocked(completeTwoFactorSignIn).mockRejectedValue(
+      Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;push;/dashboard;307" })
+    );
 
     render(<TwoFactorForm />);
 
@@ -158,16 +137,7 @@ describe("TwoFactorForm", () => {
 
     await waitFor(() => {
       expect(verifySigninTwoFactor).toHaveBeenCalledWith("123456");
-
-      expect(signIn).toHaveBeenCalledWith("credentials", {
-        email: testEmail,
-        password: "2fa-verified",
-        redirect: false,
-      });
-
-      expect(clearTwoFactorSession).toHaveBeenCalled();
-
-      expect(pushMock).toHaveBeenCalledWith("/dashboard");
+      expect(completeTwoFactorSignIn).toHaveBeenCalled();
     });
   });
 
@@ -192,16 +162,15 @@ describe("TwoFactorForm", () => {
       expect(screen.getByText("Invalid verification code.")).toBeInTheDocument();
     });
 
-    // Assert: Redirect logic should not be called.
-    expect(signIn).not.toHaveBeenCalled();
-    expect(pushMock).not.toHaveBeenCalled();
+    // Assert: Server-side sign-in should not be called.
+    expect(completeTwoFactorSignIn).not.toHaveBeenCalled();
   });
 
   /**
-   * Test case to verify behavior when server verification passes but client sign-in fails.
+   * Test case to verify behavior when server verification passes but server-side sign-in fails.
    */
-  it("does not redirect if client-side sign-in fails", async () => {
-    // Arrange: Server OK, but NextAuth fails.
+  it("handles server-side sign-in failure gracefully", async () => {
+    // Arrange: Server verification OK, but `completeTwoFactorSignIn` returns error.
     const user = userEvent.setup();
     vi.mocked(verifySigninTwoFactor).mockResolvedValue({
       success: "Verification successful!",
@@ -210,12 +179,8 @@ describe("TwoFactorForm", () => {
       userId: "user-123",
     });
 
-    vi.mocked(signIn).mockResolvedValue({
-      ok: false,
-      error: "CredentialsSignin",
-      status: 401,
-      url: "",
-      code: "error",
+    vi.mocked(completeTwoFactorSignIn).mockResolvedValue({
+      error: "Authentication failed. Please try again.",
     });
 
     render(<TwoFactorForm />);
@@ -226,11 +191,13 @@ describe("TwoFactorForm", () => {
 
     // Assert: Wait for potential async operations.
     await waitFor(() => {
-      expect(signIn).toHaveBeenCalled();
+      expect(completeTwoFactorSignIn).toHaveBeenCalled();
     });
 
-    // Assert: Should not redirect or clear session if sign-in failed.
-    expect(clearTwoFactorSession).not.toHaveBeenCalled();
-    expect(pushMock).not.toHaveBeenCalled();
+    // Assert: The verify button should be re-enabled after failure.
+    await waitFor(() => {
+      const verifyButton = screen.getByRole("button", { name: /verify code/i });
+      expect(verifyButton).toBeInTheDocument();
+    });
   });
 });

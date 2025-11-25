@@ -307,6 +307,25 @@ describe("Recovery Actions", () => {
         userId: mockSession.userId,
       });
     });
+
+    /**
+     * Test case to verify that unexpected errors during execution are handled gracefully.
+     */
+    it("handles unexpected errors gracefully", async () => {
+      // Arrange: Mock a valid session and user, but force the database query to throw.
+      mocks.limit.mockResolvedValueOnce({ success: true });
+      mocks.getAuthSession.mockResolvedValueOnce(mockSession);
+      mocks.getUserByEmail.mockResolvedValueOnce(mockUser);
+      mocks.db.query.userTwoFactor.findFirst.mockRejectedValueOnce(new Error("DB connection lost"));
+
+      // Act: Attempt verification.
+      const result = await verifySigninRecoveryCode(validRecoveryCode);
+
+      // Assert: Verify the generic error message.
+      expect(result).toEqual({
+        error: "An unexpected error occurred. Please try again.",
+      });
+    });
   });
 
   /**
@@ -341,6 +360,36 @@ describe("Recovery Actions", () => {
       // Assert: Verify that the session was cleared and the user was redirected.
       expect(mocks.clearAuthSession).toHaveBeenCalled();
       expect(mocks.redirect).toHaveBeenCalledWith("/dashboard");
+    });
+
+    /**
+     * Test case to verify that errors during session clearing are handled and return an error message.
+     */
+    it("returns error when clearAuthSession throws", async () => {
+      // Arrange: Mock a verified session and force `clearAuthSession` to throw.
+      mocks.getAuthSession.mockResolvedValueOnce({ verified: true });
+      mocks.clearAuthSession.mockRejectedValueOnce(new Error("Session store unavailable"));
+
+      // Act: Attempt to complete the sign-in process.
+      const result = await completeRecoverySignin();
+
+      // Assert: Verify the error message is returned.
+      expect(result).toEqual({ error: "Failed to complete signin." });
+    });
+
+    /**
+     * Test case to verify that the action returns an error when the session is null.
+     */
+    it("returns error if auth session is null", async () => {
+      // Arrange: Mock a null session.
+      mocks.getAuthSession.mockResolvedValueOnce(null);
+
+      // Act: Attempt to complete the sign-in process.
+      const result = await completeRecoverySignin();
+
+      // Assert: Verify the verification error.
+      expect(result).toEqual({ error: "Verification required." });
+      expect(mocks.redirect).not.toHaveBeenCalled();
     });
   });
 });

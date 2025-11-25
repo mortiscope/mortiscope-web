@@ -3,12 +3,40 @@ import { verify as verifyTotp } from "otplib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getUserByEmail } from "@/data/user";
-import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import {
+  clearTwoFactorSession,
+  completeTwoFactorSignIn,
+  verifySigninTwoFactor,
+} from "@/features/auth/actions/two-factor";
 import { clearAuthSession, getAuthSession, updateAuthSessionVerification } from "@/lib/auth";
 import { publicActionLimiter } from "@/lib/rate-limiter";
 
-// Define a hoisted mock for the database query to ensure it is available before imports.
+// Define hoisted mocks to ensure they are available before imports.
 const dbQueryMock = vi.hoisted(() => vi.fn());
+const mockAuthSignIn = vi.hoisted(() => vi.fn());
+
+// Mock the `@/auth` module used by `completeTwoFactorSignIn` via dynamic import.
+vi.mock("@/auth", () => ({
+  signIn: mockAuthSignIn,
+}));
+
+// Mock the `next-auth` module to provide the `AuthError` class for error handling tests.
+vi.mock("next-auth", () => {
+  class AuthError extends Error {
+    type: string;
+    constructor(message?: string) {
+      super(message);
+      this.type = "CredentialsSignin";
+      this.name = "AuthError";
+    }
+  }
+  return { AuthError };
+});
+
+// Mock the routes module used by `completeTwoFactorSignIn` via dynamic import.
+vi.mock("@/routes", () => ({
+  DEFAULT_LOGIN_REDIRECT: "/dashboard",
+}));
 
 // Mock the otplib library to control OTP verification logic.
 vi.mock("otplib", () => ({
@@ -59,20 +87,21 @@ vi.mock("@/db", () => ({
   },
 }));
 
+// Shared auth session fixture for reuse across all test suites.
+const validAuthSession = {
+  userId: "user-123",
+  email: "mortiscope@example.com",
+  provider: "credentials",
+  timestamp: Date.now(),
+  verified: false,
+  expiresAt: Date.now() + 1000 * 60 * 10,
+};
+
 /**
  * Test suite for the verifySigninTwoFactor Server Action.
  */
 describe("verifySigninTwoFactor Server Action", () => {
   const validToken = "123456";
-
-  const validAuthSession = {
-    userId: "user-123",
-    email: "mortiscope@example.com",
-    provider: "credentials",
-    timestamp: Date.now(),
-    verified: false,
-    expiresAt: Date.now() + 1000 * 60 * 10,
-  };
 
   // Set up default successful mock behaviors before each test (Happy Path).
   beforeEach(() => {
@@ -264,6 +293,41 @@ describe("verifySigninTwoFactor Server Action", () => {
     // Assert: Verify the generic error message.
     expect(result).toEqual({ error: "An unexpected error occurred. Please try again." });
   });
+
+  /**
+   * Test case to verify that the rate limiter uses the fallback IP when x-forwarded-for is null.
+   */
+  it("falls back to 127.0.0.1 when x-forwarded-for header is missing", async () => {
+    // Arrange: Mock headers to return null for the IP address.
+    vi.mocked(headers).mockResolvedValue({
+      get: () => null,
+    } as unknown as Headers);
+
+    // Act: Call the action with a valid token.
+    await verifySigninTwoFactor(validToken);
+
+    // Assert: Verify the rate limiter was called with the fallback IP.
+    expect(publicActionLimiter.limit).toHaveBeenCalledWith("127.0.0.1");
+  });
+
+  /**
+   * Test case to verify that the success response uses the fallback provider when session provider is null.
+   */
+  it("uses fallback provider in log when session provider is null", async () => {
+    // Arrange: Mock an auth session with a null provider.
+    vi.mocked(getAuthSession).mockResolvedValue({
+      ...validAuthSession,
+      provider: null,
+    } as unknown as Awaited<ReturnType<typeof getAuthSession>>);
+
+    // Act: Call the action with a valid token.
+    const result = await verifySigninTwoFactor(validToken);
+
+    // Assert: Verify the action still succeeds.
+    expect(result).toEqual(
+      expect.objectContaining({ success: "Two-factor authentication verified successfully." })
+    );
+  });
 });
 
 /**
@@ -297,5 +361,97 @@ describe("clearTwoFactorSession Server Action", () => {
 
     // Assert: Verify the error message.
     expect(result).toEqual({ error: "Failed to clear session." });
+  });
+});
+
+/**
+ * Test suite for the completeTwoFactorSignIn Server Action.
+ */
+describe("completeTwoFactorSignIn Server Action", () => {
+  // Set up a default verified session and a no-op auth sign-in before each test.
+  beforeEach(() => {
+    vi.mocked(getAuthSession).mockResolvedValue({
+      ...validAuthSession,
+      verified: true,
+    } as unknown as Awaited<ReturnType<typeof getAuthSession>>);
+    mockAuthSignIn.mockResolvedValue(undefined);
+  });
+
+  // Clear all mocks after each test to ensure isolation.
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  /**
+   * Test case to verify that the action returns an error when no auth session exists.
+   */
+  it("returns error if auth session is missing", async () => {
+    // Arrange: Mock `getAuthSession` to return null.
+    vi.mocked(getAuthSession).mockResolvedValue(null);
+
+    // Act: Call the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the session expired error.
+    expect(result).toEqual({ error: "Session expired. Please sign in again." });
+  });
+
+  /**
+   * Test case to verify that the action returns an error when the session is not verified.
+   */
+  it("returns error if auth session is not verified", async () => {
+    // Arrange: Override the default session to return an unverified state.
+    vi.mocked(getAuthSession).mockResolvedValue(
+      validAuthSession as unknown as Awaited<ReturnType<typeof getAuthSession>>
+    );
+
+    // Act: Call the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the session expired error.
+    expect(result).toEqual({ error: "Session expired. Please sign in again." });
+  });
+
+  /**
+   * Test case to verify that authSignIn is called with credentials when session is verified.
+   */
+  it("calls authSignIn with credentials when session is verified", async () => {
+    // Act: Call the action (verified session and mockAuthSignIn are set up by beforeEach).
+    await completeTwoFactorSignIn();
+
+    // Assert: Verify `authSignIn` was called with expected parameters.
+    expect(mockAuthSignIn).toHaveBeenCalledWith("credentials", {
+      email: "mortiscope@example.com",
+      password: "2fa-verified",
+      redirectTo: "/dashboard",
+    });
+  });
+
+  /**
+   * Test case to verify that AuthError instances are handled and return an error message.
+   */
+  it("returns error when authSignIn throws AuthError", async () => {
+    // Arrange: Dynamically import `AuthError` and mock `authSignIn` to throw it.
+    const { AuthError } = await import("next-auth");
+    const authError = new AuthError("Auth failed");
+    mockAuthSignIn.mockRejectedValue(authError);
+
+    // Act: Call the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the authentication failed error.
+    expect(result).toEqual({ error: "Authentication failed. Please try again." });
+  });
+
+  /**
+   * Test case to verify that non-AuthError exceptions are re-thrown.
+   */
+  it("re-throws non-AuthError exceptions", async () => {
+    // Arrange: Mock `authSignIn` to throw a generic error (e.g., Next.js redirect).
+    const genericError = new Error("NEXT_REDIRECT");
+    mockAuthSignIn.mockRejectedValue(genericError);
+
+    // Act & Assert: Verify the error is re-thrown rather than caught.
+    await expect(completeTwoFactorSignIn()).rejects.toThrow("NEXT_REDIRECT");
   });
 });

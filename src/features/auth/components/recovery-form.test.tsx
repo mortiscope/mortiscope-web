@@ -1,16 +1,14 @@
 import userEvent from "@testing-library/user-event";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, waitFor } from "@/__tests__/setup/test-utils";
 import { verifySigninRecoveryCode } from "@/features/auth/actions/recovery";
-import { clearTwoFactorSession } from "@/features/auth/actions/two-factor";
+import { completeTwoFactorSignIn } from "@/features/auth/actions/two-factor";
 import RecoveryForm from "@/features/auth/components/recovery-form";
 
 // Mock Next.js navigation hooks to control routing behavior in tests.
 vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(),
   useSearchParams: vi.fn(),
 }));
 
@@ -19,23 +17,19 @@ vi.mock("@/features/auth/actions/recovery", () => ({
   verifySigninRecoveryCode: vi.fn(),
 }));
 
-// Mock server action for clearing two-factor session.
+// Mock server action for completing two-factor sign-in.
 vi.mock("@/features/auth/actions/two-factor", () => ({
-  clearTwoFactorSession: vi.fn(),
+  completeTwoFactorSignIn: vi.fn(),
 }));
 
 // Groups related tests into a suite for the Recovery Form component.
 describe("RecoveryForm", () => {
-  // Mock functions to track router and search params behavior.
-  const mockPush = vi.fn();
+  // Mock function to track search params behavior.
   const mockGet = vi.fn();
 
   // Reset all mocks before each test to ensure test isolation.
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useRouter).mockReturnValue({
-      push: mockPush,
-    } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(useSearchParams).mockReturnValue({
       get: mockGet,
     } as unknown as ReturnType<typeof useSearchParams>);
@@ -234,10 +228,10 @@ describe("RecoveryForm", () => {
       email: "mortiscope@example.com",
       userId: "user-123",
     });
-    vi.mocked(signIn).mockResolvedValue({ ok: true } as Awaited<ReturnType<typeof signIn>>);
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({
-      success: "Session cleared successfully.",
-    });
+    // completeTwoFactorSignIn throws NEXT_REDIRECT on success (handled by Next.js)
+    vi.mocked(completeTwoFactorSignIn).mockRejectedValue(
+      Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;push;/dashboard;307" })
+    );
 
     const user = userEvent.setup();
     render(<RecoveryForm />);
@@ -287,20 +281,19 @@ describe("RecoveryForm", () => {
   });
 
   /**
-   * Test case to verify that signIn is called on successful verification.
+   * Test case to verify that completeTwoFactorSignIn is called on successful verification.
    */
-  it("calls signIn on successful verification", async () => {
-    // Arrange: Mock successful verification and signIn.
+  it("calls completeTwoFactorSignIn on successful verification", async () => {
+    // Arrange: Mock successful verification and server-side sign-in.
     vi.mocked(verifySigninRecoveryCode).mockResolvedValue({
       success: "Recovery code verified successfully.",
       verified: true,
       email: "mortiscope@example.com",
       userId: "user-123",
     });
-    vi.mocked(signIn).mockResolvedValue({ ok: true } as Awaited<ReturnType<typeof signIn>>);
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({
-      success: "Session cleared successfully.",
-    });
+    vi.mocked(completeTwoFactorSignIn).mockRejectedValue(
+      Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;push;/dashboard;307" })
+    );
 
     const user = userEvent.setup();
     render(<RecoveryForm />);
@@ -315,30 +308,25 @@ describe("RecoveryForm", () => {
     const button = screen.getByRole("button", { name: "Verify Code" });
     await user.click(button);
 
-    // Assert: Check that signIn was called with correct parameters.
+    // Assert: Check that completeTwoFactorSignIn was called.
     await waitFor(() => {
-      expect(signIn).toHaveBeenCalledWith("credentials", {
-        email: "mortiscope@example.com",
-        password: "2fa-verified",
-        redirect: false,
-      });
+      expect(completeTwoFactorSignIn).toHaveBeenCalled();
     });
   });
 
   /**
-   * Test case to verify that clearTwoFactorSession is called on successful verification.
+   * Test case to verify that server-side sign-in failure is handled gracefully.
    */
-  it("calls clearTwoFactorSession on successful verification", async () => {
-    // Arrange: Mock successful verification and signIn.
+  it("handles server-side sign-in failure gracefully", async () => {
+    // Arrange: Mock successful verification but failed server-side sign-in.
     vi.mocked(verifySigninRecoveryCode).mockResolvedValue({
       success: "Recovery code verified successfully.",
       verified: true,
       email: "mortiscope@example.com",
       userId: "user-123",
     });
-    vi.mocked(signIn).mockResolvedValue({ ok: true } as Awaited<ReturnType<typeof signIn>>);
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({
-      success: "Session cleared successfully.",
+    vi.mocked(completeTwoFactorSignIn).mockResolvedValue({
+      error: "Authentication failed. Please try again.",
     });
 
     const user = userEvent.setup();
@@ -354,44 +342,9 @@ describe("RecoveryForm", () => {
     const button = screen.getByRole("button", { name: "Verify Code" });
     await user.click(button);
 
-    // Assert: Check that clearTwoFactorSession was called.
+    // Assert: completeTwoFactorSignIn was called.
     await waitFor(() => {
-      expect(clearTwoFactorSession).toHaveBeenCalled();
-    });
-  });
-
-  /**
-   * Test case to verify that router.push is called to redirect to dashboard on success.
-   */
-  it("redirects to dashboard on successful verification", async () => {
-    // Arrange: Mock successful verification and signIn.
-    vi.mocked(verifySigninRecoveryCode).mockResolvedValue({
-      success: "Recovery code verified successfully.",
-      verified: true,
-      email: "mortiscope@example.com",
-      userId: "user-123",
-    });
-    vi.mocked(signIn).mockResolvedValue({ ok: true } as Awaited<ReturnType<typeof signIn>>);
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({
-      success: "Session cleared successfully.",
-    });
-
-    const user = userEvent.setup();
-    render(<RecoveryForm />);
-
-    // Act: Fill in the form and submit.
-    await waitFor(() => {
-      expect(screen.getByLabelText("Recovery Code")).toBeInTheDocument();
-    });
-    const input = screen.getByLabelText("Recovery Code");
-    await user.type(input, "ABCD1234");
-
-    const button = screen.getByRole("button", { name: "Verify Code" });
-    await user.click(button);
-
-    // Assert: Check that router.push was called with dashboard route.
-    await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/dashboard");
+      expect(completeTwoFactorSignIn).toHaveBeenCalled();
     });
   });
 
@@ -480,15 +433,20 @@ describe("RecoveryForm", () => {
       email: "mortiscope@example.com",
       userId: "user-123",
     });
-    vi.mocked(signIn).mockImplementation(
+    vi.mocked(completeTwoFactorSignIn).mockImplementation(
       () =>
-        new Promise((resolve) =>
-          setTimeout(() => resolve({ ok: true } as Awaited<ReturnType<typeof signIn>>), 100)
+        new Promise((_, reject) =>
+          setTimeout(
+            () =>
+              reject(
+                Object.assign(new Error("NEXT_REDIRECT"), {
+                  digest: "NEXT_REDIRECT;push;/dashboard;307",
+                })
+              ),
+            100
+          )
         )
     );
-    vi.mocked(clearTwoFactorSession).mockResolvedValue({
-      success: "Session cleared successfully.",
-    });
 
     const user = userEvent.setup();
     render(<RecoveryForm />);
