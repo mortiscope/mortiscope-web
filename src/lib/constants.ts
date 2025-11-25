@@ -219,6 +219,16 @@ export const STAGE_HIERARCHY: Record<string, number> = {
 };
 
 /**
+ * The cookie names used by Auth.js v5 to store the session token.
+ * The `__Secure-` prefix is added automatically in production (HTTPS) environments.
+ * @constant {readonly string[]}
+ */
+export const SESSION_COOKIE_NAMES = [
+  "__Secure-authjs.session-token",
+  "authjs.session-token",
+] as const;
+
+/**
  * Defines all keyboard shortcuts for the annotation editor.
  * The `as const` assertion ensures the object is read-only for type safety.
  * @constant {object}

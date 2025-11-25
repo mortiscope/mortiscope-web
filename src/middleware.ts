@@ -1,7 +1,7 @@
 import { jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
 
+import { getSessionToken } from "@/lib/edge-session";
 import {
   apiAuthPrefix,
   authRoutes,
@@ -16,11 +16,11 @@ import {
 const AUTH_SESSION_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET || "fallback-secret");
 
 /**
- * Validates the user's NextAuth session by decoding the JWT directly in Edge Runtime.
+ * Validates the user's NextAuth session by decoding the JWE cookie directly in Edge Runtime.
  */
 async function validateSession(req: NextRequest): Promise<boolean> {
   try {
-    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    const token = await getSessionToken(req);
 
     if (!token) {
       return false;
@@ -100,15 +100,7 @@ export default async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  // Allow all public API routes to pass through without checks
-  if (isApiAuthRoute || isPublicApiRoute) {
-    return NextResponse.next();
-  }
-
-  // Validate session once for all protected routes
-  const isLoggedIn = await validateSession(req);
-
-  // Handle NextAuth error redirects for OAuth 2FA
+  // Handle NextAuth error redirects for OAuth 2FA.
   if (
     nextUrl.pathname === "/api/auth/error" &&
     nextUrl.searchParams.get("error") === "AccessDenied"
@@ -118,6 +110,14 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/signin/two-factor", nextUrl));
     }
   }
+
+  // Allow all public API routes to pass through without checks
+  if (isApiAuthRoute || isPublicApiRoute) {
+    return NextResponse.next();
+  }
+
+  // Validate session once for all protected routes
+  const isLoggedIn = await validateSession(req);
 
   // Handle authentication-related routes
   if (isAuthRoute) {
