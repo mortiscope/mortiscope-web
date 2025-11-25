@@ -14,6 +14,7 @@ import { getProfileImageUrl } from "@/features/images/actions/get-image-url";
 import { config } from "@/lib/config";
 import { sendEmailChangeNotification } from "@/lib/mail";
 import { shouldTrackSession } from "@/lib/redis-session";
+import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Specifies the Drizzle ORM adapter, linking NextAuth to the application's database schema
@@ -203,17 +204,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return token;
     },
-  
+
     /**
      * Handles redirects after sign-in attempts
      */
     async redirect({ url, baseUrl }) {
-      // Get the request to preserve the original host
-      const headersList = await headers();
-      const host = headersList.get("host");
-      const protocol =
-        headersList.get("x-forwarded-proto") ||
-        (headersList.get("x-forwarded-ssl") === "on" ? "https" : "http");
+      // Attempt to read the request headers to detect the actual host/protocol.
+      let host: string | null = null;
+      let protocol = "https";
+      try {
+        const headersList = await headers();
+        host = headersList.get("host");
+        const rawProto = headersList.get("x-forwarded-proto");
+        protocol =
+          (rawProto ? rawProto.split(",")[0].trim() : "") ||
+          (headersList.get("x-forwarded-ssl") === "on" ? "https" : "http");
+      } catch {
+        try {
+          protocol = new URL(baseUrl).protocol.replace(":", "");
+        } catch {
+          protocol = "https";
+        }
+      }
 
       // Use the actual request host if available
       const actualBaseUrl = host ? `${protocol}://${host}` : baseUrl;
@@ -234,10 +246,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return url;
         }
       } catch {
-        // Invalid URL, fallback to actual base URL
       }
 
-      return actualBaseUrl;
+      return `${actualBaseUrl}${DEFAULT_LOGIN_REDIRECT}`;
     },
     /**
      * Acts as a gatekeeper for sign-in attempts
