@@ -6,7 +6,37 @@ import { mockUsers } from "@/__tests__/mocks/fixtures";
 import { resetMockDb } from "@/__tests__/setup/setup";
 import { db } from "@/db";
 import { users, userTwoFactor } from "@/db/schema";
-import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import {
+  clearTwoFactorSession,
+  completeTwoFactorSignIn,
+  verifySigninTwoFactor,
+} from "@/features/auth/actions/two-factor";
+
+// Hoisted mock for the NextAuth.js signIn function used by completeTwoFactorSignIn.
+const mockAuthSignIn = vi.hoisted(() => vi.fn());
+
+// Mock the NextAuth.js core signIn used via dynamic import inside completeTwoFactorSignIn.
+vi.mock("@/auth", () => ({
+  signIn: mockAuthSignIn,
+}));
+
+// Mock the next-auth module to expose a typed AuthError class for error-branch testing.
+vi.mock("next-auth", () => {
+  class AuthError extends Error {
+    type: string;
+    constructor(message?: string) {
+      super(message);
+      this.type = "CredentialsSignin";
+      this.name = "AuthError";
+    }
+  }
+  return { AuthError };
+});
+
+// Mock the application routes module used via dynamic import inside completeTwoFactorSignIn.
+vi.mock("@/routes", () => ({
+  DEFAULT_LOGIN_REDIRECT: "/dashboard",
+}));
 
 // Mock the next/headers module to simulate request headers and retrieve client IP addresses.
 vi.mock("next/headers", () => ({
@@ -490,5 +520,119 @@ describe("clearTwoFactorSession (integration)", () => {
 
     // Assert: Check for the failure error message.
     expect(result).toEqual({ error: "Failed to clear session." });
+  });
+});
+
+/**
+ * Integration test suite for the completeTwoFactorSignIn action.
+ */
+describe("completeTwoFactorSignIn (integration)", () => {
+  /**
+   * Resets mock call history and restores the default verified session before each test.
+   */
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockAuthSignIn.mockResolvedValue(undefined);
+  });
+
+  /**
+   * Verifies that the action returns an error when no authentication session is present.
+   */
+  it("returns error when auth session is missing", async () => {
+    // Arrange: Force the session lookup to return null.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue(null);
+
+    // Act: Invoke the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the session expiration error.
+    expect(result).toEqual({ error: "Session expired. Please sign in again." });
+  });
+
+  /**
+   * Verifies that the action returns an error when the session exists but has not been verified.
+   */
+  it("returns error when session is not verified", async () => {
+    // Arrange: Mock a session with the verified flag explicitly set to false.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue({
+      userId: mockUsers.primaryUser.id,
+      email: mockUsers.primaryUser.email,
+      provider: "credentials",
+      verified: false,
+    } as never);
+
+    // Act: Invoke the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the session expiration error.
+    expect(result).toEqual({ error: "Session expired. Please sign in again." });
+  });
+
+  /**
+   * Verifies that the NextAuth signIn is called with the correct credentials on a verified session.
+   */
+  it("calls signIn with 2fa-verified credentials when session is verified", async () => {
+    // Arrange: Mock a fully verified session.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue({
+      userId: mockUsers.primaryUser.id,
+      email: mockUsers.primaryUser.email,
+      provider: "credentials",
+      verified: true,
+    } as never);
+
+    // Act: Invoke the action.
+    await completeTwoFactorSignIn();
+
+    // Assert: Confirm signIn was called with the correct provider and payload.
+    expect(mockAuthSignIn).toHaveBeenCalledWith("credentials", {
+      email: mockUsers.primaryUser.email,
+      password: "2fa-verified",
+      redirectTo: "/dashboard",
+    });
+  });
+
+  /**
+   * Verifies that an AuthError thrown by signIn is caught and returned as a structured error.
+   */
+  it("returns error when signIn throws AuthError", async () => {
+    // Arrange: Mock a verified session and force signIn to throw an AuthError.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue({
+      userId: mockUsers.primaryUser.id,
+      email: mockUsers.primaryUser.email,
+      provider: "credentials",
+      verified: true,
+    } as never);
+
+    const { AuthError } = await import("next-auth");
+    mockAuthSignIn.mockRejectedValue(new AuthError("Credentials mismatch"));
+
+    // Act: Invoke the action.
+    const result = await completeTwoFactorSignIn();
+
+    // Assert: Verify the authentication failure error.
+    expect(result).toEqual({ error: "Authentication failed. Please try again." });
+  });
+
+  /**
+   * Verifies that a non-AuthError exception thrown by signIn is re-thrown without being swallowed.
+   */
+  it("re-throws non-AuthError exceptions from signIn", async () => {
+    // Arrange: Mock a verified session and force signIn to throw a generic error.
+    const { getAuthSession } = await import("@/lib/auth");
+    vi.mocked(getAuthSession).mockResolvedValue({
+      userId: mockUsers.primaryUser.id,
+      email: mockUsers.primaryUser.email,
+      provider: "credentials",
+      verified: true,
+    } as never);
+
+    mockAuthSignIn.mockRejectedValue(new Error("NEXT_REDIRECT"));
+
+    // Act & Assert: Confirm the error propagates rather than being silently handled.
+    await expect(completeTwoFactorSignIn()).rejects.toThrow("NEXT_REDIRECT");
   });
 });
