@@ -22,15 +22,15 @@ const isDev = process.env.NODE_ENV === "development";
 const cspDirectives = [
   "default-src 'self'",
   // Next.js App Router requires 'unsafe-inline' for SSR hydration scripts.
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
   // Tailwind CSS and Radix UI/shadcn primitives inject inline styles at runtime.
   "style-src 'self' 'unsafe-inline'",
   // S3 bucket for profile pictures (presigned GET URLs fetched directly by the browser).
   "img-src 'self' data: blob: https://mortiscope.s3.ap-southeast-1.amazonaws.com",
   // next/font/google self-hosts fonts — no googleapis.com needed at runtime.
   "font-src 'self' data:",
-  // External APIs: Sentry (monitoring), GitHub Pages (address data), S3 (uploads), and Open-Meteo (weather).
-  "connect-src 'self' https://o4510634468376576.ingest.us.sentry.io https://o4510634468376576.ingest.us.sentry.io/api/ https://isaacdarcilla.github.io https://mortiscope.s3.ap-southeast-1.amazonaws.com https://geocoding-api.open-meteo.com https://archive-api.open-meteo.com",
+  // External APIs: Sentry (monitoring), GitHub Pages (address data), S3 (uploads), Open-Meteo (weather), and Vercel (analytics & speed insights).
+  "connect-src 'self' https://o4510634468376576.ingest.us.sentry.io https://o4510634468376576.ingest.us.sentry.io/api/ https://isaacdarcilla.github.io https://mortiscope.s3.ap-southeast-1.amazonaws.com https://geocoding-api.open-meteo.com https://archive-api.open-meteo.com https://va.vercel-scripts.com https://vitals.vercel-insights.com",
   // Prohibit <object>, <embed>, <applet> entirely.
   "object-src 'none'",
   // Prohibit audio/video embeds.

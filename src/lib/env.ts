@@ -13,6 +13,8 @@ const envSchema = z.object({
 
   // Authentication
   AUTH_SECRET: z.string().min(1, "AUTH_SECRET is required"),
+  AUTH_TRUST_HOST: z.string().optional(),
+  AUTH_URL: z.string().pipe(z.url()).optional(),
   NEXTAUTH_URL: z.string().pipe(z.url()).optional(),
 
   // Email service

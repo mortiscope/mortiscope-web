@@ -27,7 +27,8 @@ export async function register() {
 
     process.removeAllListeners("warning");
     process.on("warning", (warning: Error) => {
-      if ((warning as NodeJS.ErrnoException).code === "DEP0060") return;
+      const code = (warning as NodeJS.ErrnoException).code;
+      if (code === "DEP0060" || code === "DEP0169") return;
       process.stderr.write(
         warning.stack ? `${warning.stack}\n` : `${warning.name}: ${warning.message}\n`
       );

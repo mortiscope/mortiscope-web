@@ -13,6 +13,12 @@ export async function POST(req: NextRequest) {
     // Decode and validate the JWT from the request's cookies.
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
+    console.log(
+      "[validate] cookies:",
+      req.cookies.getAll().map((c) => c.name)
+    );
+    console.log("[validate] token present:", !!token, "sub:", token?.sub ?? "none");
+
     // If no valid token can be decoded, the session is definitively invalid.
     if (!token) {
       return NextResponse.json({ isValid: false });
@@ -39,9 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Case C: `revokedStatus` is `null`, indicating the Redis check failed.
-    console.warn(
-      "[Session Validation] Redis unavailable. Check Redis connectivity."
-    );
+    console.warn("[Session Validation] Redis unavailable. Check Redis connectivity.");
     return NextResponse.json({ isValid: true });
   } catch (error) {
     // Handles unexpected errors during the `getToken` process or other parts of the try block.
