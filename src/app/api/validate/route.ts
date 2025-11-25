@@ -13,12 +13,6 @@ export async function POST(req: NextRequest) {
     // Decode and validate the JWT from the request's cookies.
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
-    console.log(
-      "[validate] cookies:",
-      req.cookies.getAll().map((c) => c.name)
-    );
-    console.log("[validate] token present:", !!token, "sub:", token?.sub ?? "none");
-
     // If no valid token can be decoded, the session is definitively invalid.
     if (!token) {
       return NextResponse.json({ isValid: false });

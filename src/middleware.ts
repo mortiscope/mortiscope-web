@@ -1,4 +1,6 @@
+import { jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
 
 import {
   apiAuthPrefix,
@@ -9,25 +11,50 @@ import {
 } from "@/routes";
 
 /**
- * Helper function to validate session by calling the validation API
+ * Shared secret for verifying the temporary auth-session JWT cookie.
+ */
+const AUTH_SESSION_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET || "fallback-secret");
+
+/**
+ * Validates the user's NextAuth session by decoding the JWT directly in Edge Runtime.
  */
 async function validateSession(req: NextRequest): Promise<boolean> {
   try {
-    const response = await fetch(new URL("/api/validate", req.url), {
-      method: "POST",
-      headers: {
-        cookie: req.headers.get("cookie") || "",
-      },
-    });
+    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
-    if (!response.ok) {
+    if (!token) {
       return false;
     }
 
-    const data = await response.json();
-    return data.isValid === true;
+    // If the token has a revocable session ID, check the Redis blacklist.
+    const sessionToken = token.sessionId as string | undefined;
+    if (sessionToken) {
+      try {
+        const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+        const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+        if (redisUrl && redisToken) {
+          // Use the Upstash Redis REST API directly.
+          const response = await fetch(`${redisUrl}/sismember/revoked_sessions/${sessionToken}`, {
+            headers: { Authorization: `Bearer ${redisToken}` },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            // Upstash REST API returns { result: 1 } if the member exists.
+            if (data.result === 1) {
+              return false;
+            }
+          }
+        }
+      } catch {
+        // Redis check failed — allow the request through (fail-open, same as before).
+      }
+    }
+
+    return true;
   } catch {
-    // Fallback to cookie check if API call fails
+    // Fallback to cookie-existence check if JWT decoding fails unexpectedly.
     const sessionCookie =
       req.cookies.get("authjs.session-token") || req.cookies.get("__Secure-authjs.session-token");
     return !!sessionCookie;
@@ -35,23 +62,26 @@ async function validateSession(req: NextRequest): Promise<boolean> {
 }
 
 /**
- * Helper function to validate auth session
+ * Validates the temporary auth-session cookie by verifying the JWT inline with `jose`.
  */
 async function validateAuthSession(req: NextRequest): Promise<boolean> {
   try {
-    const response = await fetch(new URL("/api/auth/check", req.url), {
-      method: "GET",
-      headers: {
-        cookie: req.headers.get("cookie") || "",
-      },
-    });
+    const token = req.cookies.get("auth-session")?.value;
 
-    if (!response.ok) {
+    if (!token) {
       return false;
     }
 
-    const data = await response.json();
-    return data.isValid === true;
+    // Verify and decode the JWT.
+    const { payload } = await jwtVerify(token, AUTH_SESSION_SECRET);
+
+    // Check if the session has expired (mirrors the logic in src/lib/auth.ts).
+    const expiresAt = payload.expiresAt as number | undefined;
+    if (expiresAt && Date.now() > expiresAt) {
+      return false;
+    }
+
+    return true;
   } catch {
     return false;
   }
