@@ -13,6 +13,7 @@ import { SignInSchema } from "@/features/auth/schemas/auth";
 import { getProfileImageUrl } from "@/features/images/actions/get-image-url";
 import { config } from "@/lib/config";
 import { sendEmailChangeNotification } from "@/lib/mail";
+import { shouldTrackSession } from "@/lib/redis-session";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   // Specifies the Drizzle ORM adapter, linking NextAuth to the application's database schema
@@ -143,15 +144,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // For JWT sessions, create a stable session token.
           const sessionToken = (token.sessionId as string) || crypto.randomUUID();
 
-          // Track session in background
-          trackSession({
-            userId: token.sub!,
-            sessionToken,
-            userAgent,
-            ipAddress,
-          }).catch(() => {
-            // Session tracking failed, but don't block the request.
-          });
+          // Throttle tracking to at most once per 5 minutes per session token to avoid hammering the database.
+          shouldTrackSession(sessionToken)
+            .then((shouldTrack) => {
+              if (!shouldTrack) return;
+              return trackSession({
+                userId: token.sub!,
+                sessionToken,
+                userAgent,
+                ipAddress,
+              });
+            })
+            .catch(() => {
+              // Session tracking failed, but don't block the request.
+            });
 
           // Add session token to session for client use
           (session as { sessionToken?: string }).sessionToken = sessionToken;
@@ -197,6 +203,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return token;
     },
+  
     /**
      * Handles redirects after sign-in attempts
      */
@@ -306,16 +313,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (twoFactorData?.enabled) {
         // Check if this is a 2FA-verified sign-in
         if ((user as typeof user & { _2faVerified?: boolean })._2faVerified) {
-          // 2FA verification completed, allow sign-in
+          const { clearAuthSession } = await import("@/lib/auth");
+          await clearAuthSession();
           return true;
         }
 
         // Check if there's a verified auth session
-        const { getAuthSession } = await import("@/lib/auth");
+        const { getAuthSession, clearAuthSession } = await import("@/lib/auth");
         const authSession = await getAuthSession();
 
         if (authSession?.verified && authSession.userId === user.id) {
-          // 2FA verification completed, allow sign-in
+          await clearAuthSession();
           return true;
         } else {
           // 2FA required but not verified, create auth session and block sign-in

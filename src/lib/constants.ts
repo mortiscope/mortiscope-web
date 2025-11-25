@@ -82,6 +82,13 @@ export const PRESIGNED_URL_EXPIRATION_SECONDS = 60 * 10;
 export const PRESIGNED_GET_EXPIRY_PROFILE = 60 * 60 * 24;
 
 /**
+ * The throttle window in seconds for session tracking (5 minutes).
+ * Prevents `trackSession` from hammering the database on every session fetch.
+ * @constant {number}
+ */
+export const SESSION_TRACKING_THROTTLE_SECONDS = 5 * 60;
+
+/**
  * Defines the available sort options for the upload preview.
  * @constant {object[]}
  */

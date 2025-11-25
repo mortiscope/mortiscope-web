@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 
+import { SESSION_TRACKING_THROTTLE_SECONDS } from "@/lib/constants";
 import { env } from "@/lib/env";
 
 /**
@@ -131,6 +132,26 @@ export async function syncRevokedSessionsToRedis(revokedTokens: string[]): Promi
   } catch (error) {
     console.error("Failed to sync revoked sessions to Redis:", error);
     return false;
+  }
+}
+
+/**
+ * Checks whether `trackSession` should run for the given session token,
+ * using Redis as a lightweight throttle (at most once per 5 minutes per token).
+ * @param sessionToken The stable session identifier (JWT `sessionId` claim).
+ * @returns `true` if tracking should proceed, `false` if it was recently tracked.
+ */
+export async function shouldTrackSession(sessionToken: string): Promise<boolean> {
+  try {
+    const throttleKey = `session:tracking:${sessionToken}`;
+    const result = await redis.set(throttleKey, "1", {
+      nx: true,
+      ex: SESSION_TRACKING_THROTTLE_SECONDS,
+    });
+    return result !== null;
+  } catch {
+    // If Redis is unavailable, allow tracking so sessions don't go permanently untracked.
+    return true;
   }
 }
 
