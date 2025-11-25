@@ -3,8 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { BeatLoader } from "react-spinners";
@@ -20,7 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { verifySigninRecoveryCode } from "@/features/auth/actions/recovery";
-import { clearTwoFactorSession } from "@/features/auth/actions/two-factor";
+import { completeTwoFactorSignIn } from "@/features/auth/actions/two-factor";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import {
@@ -29,9 +28,8 @@ import {
 } from "@/features/auth/schemas/auth";
 
 function RecoveryProcess() {
-  // Hook to access URL search parameters and router
+  // Hook to access URL search parameters
   const searchParams = useSearchParams();
-  const router = useRouter();
   // Get any error or session info from the URL
   const error = searchParams.get("error");
 
@@ -60,25 +58,16 @@ function RecoveryProcess() {
       if (result.success && result.verified) {
         // Set redirecting state to keep button disabled
         setIsRedirecting(true);
-        // Complete the signin process on the client side
+        // Complete the signin process on the server side.
         try {
-          const signinResult = await signIn("credentials", {
-            email: result.email,
-            password: "2fa-verified",
-            redirect: false,
-          });
-
-          if (signinResult?.ok) {
-            // Clear the temporary auth session
-            await clearTwoFactorSession();
-            // Redirect to dashboard on successful verification
-            router.push("/dashboard");
-          } else {
-            console.error("Client-side signin failed:", signinResult?.error);
+          const signinResult = await completeTwoFactorSignIn();
+          if (signinResult?.error) {
+            console.error("Server-side signin failed:", signinResult.error);
             setIsRedirecting(false);
           }
         } catch (error) {
-          console.error("Client-side signin failed:", error);
+          // Any other error is a genuine failure.
+          console.error("Server-side signin failed:", error);
           setIsRedirecting(false);
         }
       }
