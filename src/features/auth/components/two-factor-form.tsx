@@ -2,22 +2,20 @@
 
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import React, { Suspense, useState } from "react";
 import { BeatLoader } from "react-spinners";
 
 import { FormFeedback } from "@/components/form-feedback";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { clearTwoFactorSession, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
+import { completeTwoFactorSignIn, verifySigninTwoFactor } from "@/features/auth/actions/two-factor";
 import { AuthFormHeader } from "@/features/auth/components/auth-form-header";
 import { AuthSubmitButton } from "@/features/auth/components/auth-submit-button";
 import { cn } from "@/lib/utils";
 
 function TwoFactorProcess() {
-  // Hook to access URL search parameters and router
+  // Hook to access URL search parameters
   const searchParams = useSearchParams();
-  const router = useRouter();
   // Get any error or session info from the URL
   const error = searchParams.get("error");
 
@@ -38,25 +36,16 @@ function TwoFactorProcess() {
       if (result.success && result.verified) {
         // Set redirecting state to keep button disabled
         setIsRedirecting(true);
-        // Complete the signin process on the client side
+        // Complete the signin process on the server side.
         try {
-          const signinResult = await signIn("credentials", {
-            email: result.email,
-            password: "2fa-verified",
-            redirect: false,
-          });
-
-          if (signinResult?.ok) {
-            // Clear the temporary auth session
-            await clearTwoFactorSession();
-            // Redirect to dashboard on successful verification
-            router.push("/dashboard");
-          } else {
-            console.error("Client-side signin failed:", signinResult?.error);
+          const signinResult = await completeTwoFactorSignIn();
+          if (signinResult?.error) {
+            console.error("Server-side signin failed:", signinResult.error);
             setIsRedirecting(false);
           }
         } catch (error) {
-          console.error("Client-side signin failed:", error);
+          // Any other error is a genuine failure.
+          console.error("Server-side signin failed:", error);
           setIsRedirecting(false);
         }
       }

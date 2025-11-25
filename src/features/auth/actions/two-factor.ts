@@ -106,3 +106,44 @@ export const clearTwoFactorSession = async () => {
     return { error: "Failed to clear session." };
   }
 };
+
+/**
+ * Server action to complete the sign-in process after two-factor verification.
+ * @returns A promise that resolves to an object with an `error` message on failure.
+ */
+export const completeTwoFactorSignIn = async () => {
+  // Dynamically import necessary modules.
+  const { signIn: authSignIn } = await import("@/auth");
+  const { AuthError } = await import("next-auth");
+  const { DEFAULT_LOGIN_REDIRECT } = await import("@/routes");
+
+  // Retrieve the temporary 2FA session.
+  const authSession = await getAuthSession();
+  // The `verified` flag must be true.
+  if (!authSession || !authSession.verified) {
+    authLogger.warn("completeTwoFactorSignIn called without verified auth session");
+    return { error: "Session expired. Please sign in again." };
+  }
+
+  try {
+    // Call the main NextAuth.js `signIn` function using the 'credentials' provider.
+    await authSignIn("credentials", {
+      email: authSession.email,
+      // This special, hardcoded string acts as a signal to the `authorize` callback.
+      password: "2fa-verified",
+      // Redirect the user to the default authenticated route upon successful sign-in.
+      redirectTo: DEFAULT_LOGIN_REDIRECT,
+    });
+  } catch (error) {
+    // Handle specific authentication errors that might be thrown by NextAuth.js.
+    if (error instanceof AuthError) {
+      authLogger.error(
+        { userId: authSession.userId, email: authSession.email, type: error.type },
+        "2FA sign-in completion failed"
+      );
+      return { error: "Authentication failed. Please try again." };
+    }
+    // For any other unexpected errors, re-throw them to be handled by the server.
+    throw error;
+  }
+};
