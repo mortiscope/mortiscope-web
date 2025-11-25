@@ -585,6 +585,146 @@ describe("DetailsSettingsPanel", () => {
       // Assert: Verify the view mode is updated to hide the image background.
       expect(mockSetViewMode).toHaveBeenCalledWith("annotations_only");
     });
+
+    /**
+     * Test case to verify that enabling the image from annotations_only switches to all.
+     */
+    it("sets viewMode to 'all' when enabling image from 'annotations_only'", () => {
+      // Arrange: Render panel with current view mode showing only annotations.
+      const mockSetViewMode = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
+          toggleClassFilter: vi.fn(),
+          viewMode: "annotations_only",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle on the visibility of the image layer.
+      fireEvent.click(screen.getByTestId("switch-show-image"));
+
+      // Assert: Verify the view mode is updated to show both.
+      expect(mockSetViewMode).toHaveBeenCalledWith("all");
+    });
+
+    /**
+     * Test case to verify that disabling the image from 'none' remains at 'none' (nothing visible).
+     */
+    it("sets viewMode to 'none' when disabling annotations from 'image_only'", () => {
+      // Arrange: Render panel with view mode showing only the image.
+      const mockSetViewMode = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
+          toggleClassFilter: vi.fn(),
+          viewMode: "image_only",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle off image visibility.
+      fireEvent.click(screen.getByTestId("switch-show-image"));
+
+      // Assert: Verify the view mode changes to "none".
+      expect(mockSetViewMode).toHaveBeenCalledWith("none");
+    });
+
+    /**
+     * Test case to verify enabling image from 'none' sets viewMode to 'image_only'.
+     */
+    it("sets viewMode to 'image_only' when enabling image from 'none'", () => {
+      // Arrange: Render panel with view mode set to none.
+      const mockSetViewMode = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
+          toggleClassFilter: vi.fn(),
+          viewMode: "none",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle on the image layer visibility.
+      fireEvent.click(screen.getByTestId("switch-show-image"));
+
+      // Assert: Verify view mode is updated to show only the image.
+      expect(mockSetViewMode).toHaveBeenCalledWith("image_only");
+    });
+
+    /**
+     * Test case to verify enabling annotations from 'none' sets viewMode to 'annotations_only'.
+     */
+    it("sets viewMode to 'annotations_only' when enabling annotations from 'none'", () => {
+      // Arrange: Render panel with nothing visible.
+      const mockSetViewMode = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
+          toggleClassFilter: vi.fn(),
+          viewMode: "none",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle on the annotations visibility.
+      fireEvent.click(screen.getByTestId("switch-show-annotations"));
+
+      // Assert: Verify view mode is updated to show only annotations.
+      expect(mockSetViewMode).toHaveBeenCalledWith("annotations_only");
+    });
+
+    /**
+     * Test case to verify disabling annotations from 'annotations_only' sets viewMode to 'none'.
+     */
+    it("sets viewMode to 'none' when disabling annotations from 'annotations_only'", () => {
+      // Arrange: Render panel with only annotations visible.
+      const mockSetViewMode = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1", "instar_2", "instar_3", "pupa", "adult"],
+          toggleClassFilter: vi.fn(),
+          viewMode: "annotations_only",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle off annotations visibility.
+      fireEvent.click(screen.getByTestId("switch-show-annotations"));
+
+      // Assert: Verify view mode changes to "none".
+      expect(mockSetViewMode).toHaveBeenCalledWith("none");
+    });
   });
 
   /**
@@ -679,6 +819,66 @@ describe("DetailsSettingsPanel", () => {
       // Assert: Verify the class is toggled but the general view mode remains unchanged.
       expect(mockToggleClassFilter).toHaveBeenCalledWith("instar_1");
       expect(mockSetViewMode).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test case to verify removing the last class filter from annotations_only switches to none.
+     */
+    it("switches to 'none' when removing the last class filter from 'annotations_only'", () => {
+      // Arrange: Provide only one active class filter with annotations_only view mode.
+      const mockSetViewMode = vi.fn();
+      const mockToggleClassFilter = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: ["instar_1"],
+          toggleClassFilter: mockToggleClassFilter,
+          viewMode: "annotations_only",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle off the last remaining class filter.
+      fireEvent.click(screen.getByTestId("switch-show-instar_1"));
+
+      // Assert: Verify the view mode changes to "none" since no annotations or image are shown.
+      expect(mockToggleClassFilter).toHaveBeenCalledWith("instar_1");
+      expect(mockSetViewMode).toHaveBeenCalledWith("none");
+    });
+
+    /**
+     * Test case to verify adding the first class filter from none switches to annotations_only.
+     */
+    it("switches to 'annotations_only' when adding the first class filter from 'none'", () => {
+      // Arrange: Provide an empty class filter array and "none" view mode.
+      const mockSetViewMode = vi.fn();
+      const mockToggleClassFilter = vi.fn();
+      vi.mocked(useAnnotationStore).mockImplementation((selector) => {
+        return selector({
+          displayFilter: "all",
+          setDisplayFilter: mockSetDisplayFilter,
+          isLocked: false,
+          detections: defaultDetections,
+          classFilter: [],
+          toggleClassFilter: mockToggleClassFilter,
+          viewMode: "none",
+          setViewMode: mockSetViewMode,
+        } as unknown as AnnotationState);
+      });
+
+      render(<DetailsSettingsPanel />);
+
+      // Act: Toggle on a specific class filter.
+      fireEvent.click(screen.getByTestId("switch-show-instar_1"));
+
+      // Assert: Verify the view mode changes to "annotations_only".
+      expect(mockToggleClassFilter).toHaveBeenCalledWith("instar_1");
+      expect(mockSetViewMode).toHaveBeenCalledWith("annotations_only");
     });
   });
 });

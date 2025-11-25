@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -346,5 +346,26 @@ describe("AccountDeletionModal", () => {
 
     // Assert: Confirm visibility remains true and form state is untouched.
     expect(mockOnOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  /**
+   * Test case to verify that the validation error styles are applied when the confirmation text fails schema validation.
+   */
+  it("applies error styles when confirmation text is invalid", async () => {
+    // Arrange: Render the modal.
+    render(<AccountDeletionModal {...defaultProps} />);
+
+    const input = screen.getByPlaceholderText("Delete this account");
+
+    // Act: Type invalid text and trigger blur to ensure onChange validation runs.
+    await act(async () => {
+      fireEvent.change(input, { target: { value: "wrong text" } });
+      fireEvent.blur(input);
+    });
+
+    // Assert: Wait for validation to resolve and check that the error message is displayed.
+    await waitFor(() => {
+      expect(screen.getByText("Text doesn't match the expected text.")).toBeInTheDocument();
+    });
   });
 });
