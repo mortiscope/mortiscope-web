@@ -1,3 +1,4 @@
+import { useParams } from "next/navigation";
 import React from "react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -69,7 +70,7 @@ vi.mock("framer-motion", () => ({
 
 // Mock Next.js navigation hooks to provide route parameters.
 vi.mock("next/navigation", () => ({
-  useParams: () => ({ resultsId: "case-123" }),
+  useParams: vi.fn(() => ({ resultsId: "case-123" })),
 }));
 
 const defaultProps = {
@@ -320,5 +321,92 @@ describe("DeleteImageModal", () => {
 
     // Assert: Verify that the dialog is no longer in the DOM.
     expect(screen.queryByTestId("dialog-root")).toBeNull();
+  });
+
+  /**
+   * Test case to verify that the delete action does nothing when imageId is null.
+   */
+  it("does not call deleteImage when imageId is null", () => {
+    // Arrange: Render the component with a null imageId.
+    render(<DeleteImageModal {...defaultProps} imageId={null} />);
+
+    // Act: Click the delete button.
+    fireEvent.click(screen.getByText("Delete"));
+
+    // Assert: Verify that the delete action was not called.
+    expect(deleteImage).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Test case to verify that duplicate delete clicks are ignored after the first initiation.
+   */
+  it("prevents duplicate delete clicks after initiation", async () => {
+    // Arrange: Create a controlled promise to simulate a pending state.
+    let resolvePromise!: (value: unknown) => void;
+    const pendingPromise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+
+    vi.mocked(deleteImage).mockReturnValue(
+      pendingPromise as unknown as ReturnType<typeof deleteImage>
+    );
+
+    render(<DeleteImageModal {...defaultProps} />);
+
+    // Act: Click delete button twice in quick succession.
+    const deleteBtn = screen.getByText("Delete");
+    fireEvent.click(deleteBtn);
+
+    // Assert: After first click, button becomes disabled, preventing second clicks.
+    await waitFor(() => {
+      expect(screen.getByText("Deleting...")).toBeInTheDocument();
+    });
+
+    // Assert: Verify that `deleteImage` was only invoked once despite attempted double-click.
+    expect(deleteImage).toHaveBeenCalledTimes(1);
+
+    // Resolve the promise to clean up the test.
+    resolvePromise({ success: true });
+    await waitFor(() => expect(toast.success).toHaveBeenCalled());
+  });
+
+  /**
+   * Test case to verify that the deletion error callback handles missing error messages gracefully.
+   */
+  it("handles deletion response with empty success field", async () => {
+    // Arrange: Mock the delete action to return a response without success but without a specific error.
+    vi.mocked(deleteImage).mockResolvedValue({} as Awaited<ReturnType<typeof deleteImage>>);
+
+    render(<DeleteImageModal {...defaultProps} />);
+
+    // Act: Click the delete button.
+    fireEvent.click(screen.getByText("Delete"));
+
+    // Assert: Verify a fallback error toast is displayed.
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Failed to delete file.");
+    });
+  });
+
+  /**
+   * Test case to verify that route parameters that are arrays result in a null caseId.
+   */
+  it("handles array-type resultsId parameter", async () => {
+    // Arrange: Mock useParams to return an array for resultsId.
+    vi.mocked(useParams).mockReturnValue({ resultsId: ["array-val"] } as unknown as ReturnType<
+      typeof useParams
+    >);
+    vi.mocked(deleteImage).mockResolvedValue({ success: "Deleted" });
+
+    render(<DeleteImageModal {...defaultProps} />);
+
+    // Act: Click the delete button.
+    fireEvent.click(screen.getByText("Delete"));
+
+    // Assert: Verify deletion proceeds but recalculation is not triggered (because caseId = null).
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith("Deleted");
+      expect(markForRecalculationMock).not.toHaveBeenCalled();
+    });
   });
 });

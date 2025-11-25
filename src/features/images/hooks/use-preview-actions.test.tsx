@@ -431,10 +431,68 @@ describe("usePreviewActions", () => {
       // Assert: Confirm generic failure toast.
       expect(toast.error).toHaveBeenCalledWith("Rename failed on server.");
     });
+
+    /**
+     * Test case to verify that save is skipped when a deletion is already pending.
+     */
+    it("returns early if deletion is pending", async () => {
+      // Arrange: Mock the delete mutation to be in a pending state.
+      vi.mocked(usePreviewMutations).mockReturnValue({
+        ...mockMutations,
+        deleteMutation: { ...mockMutations.deleteMutation, isPending: true },
+      } as unknown as ReturnType<typeof usePreviewMutations>);
+
+      const { result } = renderHook(() => usePreviewActions(defaultProps), {
+        wrapper: createWrapper(),
+      });
+
+      // Act: Attempt to save while deletion is pending.
+      await result.current.save();
+
+      // Assert: Ensure status update was not called.
+      expect(mockStoreActions.setUploadStatus).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test case to verify that a non-Error thrown during save is handled with a fallback message.
+     */
+    it("handles non-Error thrown during save with fallback message", async () => {
+      // Arrange: Mock `ensureFileBlob` to reject with a non-Error value.
+      mockProcessorActions.ensureFileBlob.mockRejectedValue("string-error");
+
+      const { result } = renderHook(() => usePreviewActions(defaultProps), {
+        wrapper: createWrapper(),
+      });
+
+      // Act: Attempt to save.
+      await result.current.save();
+
+      // Assert: Verify the fallback error message.
+      expect(toast.error).toHaveBeenCalledWith("An unknown error occurred during save.");
+      expect(mockStoreActions.setUploadStatus).toHaveBeenCalledWith(mockActiveFile.id, "error");
+    });
   });
 
   // Test suite for file removal operations.
   describe("remove", () => {
+    /**
+     * Test case to verify removal is skipped if no file is active.
+     */
+    it("returns early if no activeFile", async () => {
+      // Arrange: Initialize hook with activeFile set to null.
+      const { result } = renderHook(
+        () => usePreviewActions({ ...defaultProps, activeFile: null }),
+        { wrapper: createWrapper() }
+      );
+
+      // Act: Attempt to remove.
+      await result.current.remove();
+
+      // Assert: Ensure no store removal or mutation was called.
+      expect(mockStoreActions.removeFile).not.toHaveBeenCalled();
+      expect(mockMutations.deleteMutation.mutateAsync).not.toHaveBeenCalled();
+    });
+
     /**
      * Test case to verify removal of local-only files skips server mutations.
      */
@@ -556,6 +614,23 @@ describe("usePreviewActions", () => {
         defaultProps.previewUrl,
         defaultProps.rotation
       );
+    });
+
+    /**
+     * Test case to verify that download is skipped when no file is active.
+     */
+    it("returns early if no activeFile", () => {
+      // Arrange: Render the hook with null activeFile.
+      const { result } = renderHook(
+        () => usePreviewActions({ ...defaultProps, activeFile: null }),
+        { wrapper: createWrapper() }
+      );
+
+      // Act: Invoke the download function.
+      result.current.download();
+
+      // Assert: Ensure the processor's download method was not called.
+      expect(mockProcessorActions.downloadFile).not.toHaveBeenCalled();
     });
   });
 });
