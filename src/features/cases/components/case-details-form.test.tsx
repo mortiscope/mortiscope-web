@@ -433,4 +433,61 @@ describe("CaseDetailsForm", () => {
     // Assert: Check that an error toast notification was triggered with the specified error message.
     expect(toast.error).toHaveBeenCalledWith("Update Fail");
   });
+
+  /**
+   * Test case to verify error handling when the create mutation throws an unexpected error (onError callback).
+   */
+  it("handles Create onError (unexpected error)", () => {
+    // Arrange: Render the component to initialize mutations.
+    render(<CaseDetailsForm />);
+    // Arrange: Find the options for the `createCase` mutation.
+    const calls = vi.mocked(useMutation).mock.calls;
+    const createCall = calls.find(
+      (c) => (c[0] as { mutationFn: unknown }).mutationFn === createCase
+    );
+    const options = createCall![0] as { onError: (error: Error) => void };
+
+    // Act: Manually call the `onError` handler with a mock error instance.
+    options.onError(new Error("Network timeout"));
+
+    // Assert: Check that an error toast notification was triggered with the error message.
+    expect(toast.error).toHaveBeenCalledWith("An unexpected error occurred: Network timeout");
+  });
+
+  /**
+   * Test case to verify error handling when the update mutation throws an unexpected error (onError callback).
+   */
+  it("handles Update onError (unexpected error)", () => {
+    // Arrange: Render the component to initialize mutations.
+    render(<CaseDetailsForm />);
+    // Arrange: Find the options for the `updateCase` mutation.
+    const calls = vi.mocked(useMutation).mock.calls;
+    const updateCall = calls.find(
+      (c) => (c[0] as { mutationFn: unknown }).mutationFn === updateCase
+    );
+    const options = updateCall![0] as { onError: (error: Error) => void };
+
+    // Act: Manually call the `onError` handler with a mock error instance.
+    options.onError(new Error("Server unavailable"));
+
+    // Assert: Check that an error toast notification was triggered with the error message.
+    expect(toast.error).toHaveBeenCalledWith("An unexpected error occurred: Server unavailable");
+  });
+
+  /**
+   * Test case to verify that the form does not render when the store is not yet hydrated.
+   */
+  it("renders nothing when store is not hydrated", () => {
+    // Arrange: Mock the store to indicate it has not been hydrated yet.
+    vi.mocked(useAnalyzeStore).mockReturnValue({
+      ...mockStoreValues,
+      isHydrated: false,
+    } as unknown as ReturnType<typeof useAnalyzeStore>);
+
+    // Act: Render the component.
+    const { container } = render(<CaseDetailsForm />);
+
+    // Assert: Verify the form container is empty.
+    expect(container.innerHTML).toBe("");
+  });
 });

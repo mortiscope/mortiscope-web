@@ -507,4 +507,70 @@ describe("useFileProcessor", () => {
       expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("S3 key is missing"));
     });
   });
+
+  /**
+   * Test case to verify that the upload is skipped when a pending file has no `file` blob attached.
+   */
+  it("skips processing for pending files with no file blob", async () => {
+    // Arrange: Define a file entry with a null `file` property but still in pending state.
+    const filesWithoutBlob: UploadableFile[] = [
+      {
+        ...mockFiles[0],
+        file: undefined as unknown as File,
+        status: "pending",
+      },
+    ];
+
+    // Act: Render the hook with the blob-less file.
+    renderHook(() => useFileProcessor({ files: filesWithoutBlob, caseId: "case-123" }));
+
+    // Assert: Verify that no presigned URL request was initiated since there's no file to upload.
+    expect(mockPresignedMutateAsync).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Test case to verify that presigned URL rejection with a non-Error type is handled gracefully.
+   */
+  it("handles presigned URL rejection with non-Error type", async () => {
+    // Arrange: Mock presigned URL generation to reject with a plain string.
+    mockPresignedMutateAsync.mockRejectedValue("Network failure");
+
+    // Act: Render the hook.
+    renderHook(() => useFileProcessor({ files: mockFiles, caseId: "case-123" }));
+
+    // Assert: Wait for the status to change to "error" and a fallback error toast to appear.
+    await waitFor(() => {
+      expect(mockSetUploadStatus).toHaveBeenCalledWith("file-1", "error");
+    });
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("Unexpected error"));
+  });
+
+  /**
+   * Test case to verify that the XHR upload progress handler handles non-computable progress events.
+   */
+  it("does not update progress for non-lengthComputable events", async () => {
+    // Arrange: Mock successful presigned URL generation.
+    mockPresignedMutateAsync.mockResolvedValue({
+      success: true,
+      data: { key: "key", url: "url" },
+    });
+
+    // Act: Render the hook.
+    renderHook(() => useFileProcessor({ files: mockFiles, caseId: "case-123" }));
+
+    // Act: Wait for XHR to be ready.
+    await waitFor(() => expect(activeXHR).not.toBeNull());
+
+    // Act: Simulate a non-computable progress event.
+    if (activeXHR?.upload.onprogress) {
+      activeXHR.upload.onprogress({
+        lengthComputable: false,
+        loaded: 0,
+        total: 0,
+      } as ProgressEvent);
+    }
+
+    // Assert: The file progress should not have been updated.
+    expect(mockUpdateFileProgress).not.toHaveBeenCalled();
+  });
 });

@@ -6,9 +6,10 @@ import { type UploadableFile } from "@/features/analyze/store/analyze-store";
 import { UploadPreviewModal } from "@/features/upload/components/upload-preview-modal";
 
 // Mock a hoisted variable to control the transform state dynamically across tests.
-const { mockTransformState, mockSetTransform } = vi.hoisted(() => ({
+const { mockTransformState, mockSetTransform, mockNullRef } = vi.hoisted(() => ({
   mockTransformState: { scale: 2.0 },
   mockSetTransform: vi.fn(),
+  mockNullRef: { value: false },
 }));
 
 // Mock function created to track arguments passed to `usePreviewModal` hook.
@@ -192,15 +193,27 @@ vi.mock("react-zoom-pan-pinch", () => {
       }>
     ) => {
       // Expose a mock `setTransform` on the ref
-      React.useImperativeHandle(ref, () => ({
-        setTransform: mockSetTransform,
-        zoomOut: vi.fn(),
-        instance: {
-          transformState: mockTransformState,
-          contentComponent: { clientWidth: 100, clientHeight: 100 },
-          wrapperComponent: { clientWidth: 200, clientHeight: 200 },
-        },
-      }));
+      React.useImperativeHandle(ref, () =>
+        mockNullRef.value
+          ? (null as unknown as {
+              setTransform: () => void;
+              zoomOut: () => void;
+              instance: {
+                transformState: { scale: number };
+                contentComponent: { clientWidth: number; clientHeight: number };
+                wrapperComponent: { clientWidth: number; clientHeight: number };
+              };
+            })
+          : {
+              setTransform: mockSetTransform,
+              zoomOut: vi.fn(),
+              instance: {
+                transformState: mockTransformState,
+                contentComponent: { clientWidth: 100, clientHeight: 100 },
+                wrapperComponent: { clientWidth: 200, clientHeight: 200 },
+              },
+            }
+      );
 
       return (
         <div data-testid="transform-wrapper">
@@ -222,6 +235,25 @@ vi.mock("react-zoom-pan-pinch", () => {
             }
           >
             Trigger Transform
+          </button>
+          <button
+            onClick={() =>
+              onTransformed?.(
+                {
+                  instance: {
+                    contentComponent: null,
+                    wrapperComponent: null,
+                  },
+                },
+                {
+                  scale: 1,
+                  positionX: 0,
+                  positionY: 0,
+                }
+              )
+            }
+          >
+            Trigger Transform Null
           </button>
           {children({
             zoomIn: vi.fn(),
@@ -478,7 +510,7 @@ describe("UploadPreviewModal", () => {
     const triggerButton = screen.getByText("Trigger Outside");
 
     fireEvent.click(triggerButton);
-    
+
     expect(triggerButton).toBeInTheDocument();
   });
 
@@ -551,5 +583,122 @@ describe("UploadPreviewModal", () => {
     render(<UploadPreviewModal {...defaultProps} />);
     fireEvent.click(screen.getByText("Img Rename"));
     expect(defaultHookValues.setIsRenaming).toHaveBeenCalledWith(true);
+  });
+
+  /**
+   * Test case to verify that zoom out is a no-op when scale would drop below 100%.
+   */
+  it("does not zoom out when scale would go below 1", () => {
+    // Arrange: Set the mock transform state scale to exactly 1.0 (zoom out step is 0.3).
+    mockTransformState.scale = 1.0;
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Act: Click the "Zoom Out" button.
+    fireEvent.click(screen.getByText("Zoom Out"));
+
+    // Assert: `setTransform` should not have been called since zooming out would go below 100%.
+    expect(mockSetTransform).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Test case to verify that the modal renders nothing when `isMobile` is undefined (initial SSR state).
+   */
+  it("renders nothing when isMobile is undefined", () => {
+    // Arrange: Mock the hook to return `isMobile: undefined`.
+    mockUsePreviewModal.mockReturnValue({ ...defaultHookValues, isMobile: undefined });
+
+    // Act: Render the component.
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Assert: Verify that the dialog's root test ID is not present.
+    expect(screen.queryByTestId("dialog-root")).not.toBeInTheDocument();
+  });
+
+  /**
+   * Test case to verify that the TransformWrapper is not rendered when previewUrl is falsy.
+   */
+  it("does not render TransformWrapper when previewUrl is null", () => {
+    // Arrange: Mock the hook to return a null previewUrl.
+    mockUsePreviewModal.mockReturnValue({ ...defaultHookValues, previewUrl: null });
+
+    // Act: Render the component.
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Assert: The transform wrapper should not be present.
+    expect(screen.queryByTestId("transform-wrapper")).not.toBeInTheDocument();
+  });
+
+  /**
+   * Test case to verify the thumbnail list renders without an onSelectFile prop passed.
+   */
+  it("handles thumbnail list selection without onSelectFile prop", () => {
+    // Arrange: Mock the hook with multiple files to show the thumbnail list.
+    mockUsePreviewModal.mockReturnValue({
+      ...defaultHookValues,
+      sortedFiles: [mockFile, { ...mockFile, id: "2" }],
+    });
+
+    // Act: Render the component without `onSelectFile` prop.
+    render(<UploadPreviewModal {...defaultProps} onSelectFile={undefined} />);
+
+    // Assert: The thumbnail list should still be present.
+    expect(screen.getByTestId("preview-thumbnail-list")).toBeInTheDocument();
+
+    // Act: Click the select file button (should not throw even without onSelectFile prop).
+    fireEvent.click(screen.getByText("Select File 2"));
+
+    // Assert: setActiveFile should still have been called.
+    expect(defaultHookValues.setActiveFile).toHaveBeenCalled();
+  });
+
+  /**
+   * Test case to verify that handleZoomOut exits early when the transform ref is null.
+   */
+  it("does not zoom when transform ref is null", () => {
+    // Arrange: Set the hoisted flag to force the ref to be null.
+    mockNullRef.value = true;
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Act: Click the "Zoom Out" button.
+    fireEvent.click(screen.getByText("Zoom Out"));
+
+    // Assert: setTransform should not have been called since the ref was null.
+    expect(mockSetTransform).not.toHaveBeenCalled();
+
+    // Cleanup: Reset the flag.
+    mockNullRef.value = false;
+  });
+
+  /**
+   * Test case to verify that handleResetTransform exits early when the transform ref is null.
+   */
+  it("does not reset transform when transform ref is null", () => {
+    // Arrange: Set the hoisted flag to force the ref to be null.
+    mockNullRef.value = true;
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Act: Click the "Reset Transform" button.
+    fireEvent.click(screen.getByText("Reset Transform"));
+
+    // Assert: setTransform and resetRotation should not have been called.
+    expect(mockSetTransform).not.toHaveBeenCalled();
+    expect(defaultHookValues.resetRotation).not.toHaveBeenCalled();
+
+    // Cleanup: Reset the flag.
+    mockNullRef.value = false;
+  });
+
+  /**
+   * Test case to verify that onTransformed does not update the viewing box when components are null.
+   */
+  it("does not update viewing box when transform components are null", () => {
+    // Arrange: Render the component with a valid preview to include TransformWrapper.
+    render(<UploadPreviewModal {...defaultProps} />);
+
+    // Act: Click the button that triggers onTransformed with null content/wrapper components.
+    fireEvent.click(screen.getByText("Trigger Transform Null"));
+
+    // Assert: The component should not throw and the transform wrapper should remain.
+    expect(screen.getByTestId("transform-wrapper")).toBeInTheDocument();
   });
 });
