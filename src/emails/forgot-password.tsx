@@ -20,16 +20,19 @@ interface ForgotPasswordProps {
   token: string;
 }
 
-const domain = process.env.NEXT_PUBLIC_APP_URL;
+const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? (process.env.NEXT_PUBLIC_APP_URL ?? "")
+    : "http://localhost:3000";
 
 /**
  * Renders an email template for users who have requested to reset their password.
  * @param token The unique token used to construct the password reset link.
  * @returns A React component representing the email structure.
  */
-export const ForgotPassword = ({ token }: ForgotPasswordProps) => {
+export const ForgotPassword = ({ token = "preview-token" }: ForgotPasswordProps) => {
   // Construct the full URL for the password reset page
-  const resetPasswordLink = `${domain}/reset-password?token=${token}`;
+  const resetPasswordLink = `${baseUrl}/reset-password?token=${token}`;
   // Get the current year for the copyright notice
   const currentYear = new Date().getFullYear();
 
@@ -66,8 +69,9 @@ export const ForgotPassword = ({ token }: ForgotPasswordProps) => {
           <Section
             className="h-[175px] w-full bg-emerald-600"
             style={{
-              backgroundImage: `url(${domain}/icons/pattern-temple.svg)`,
+              backgroundImage: `url(${baseUrl}/static/pattern-temple.png)`,
               backgroundRepeat: "repeat",
+              backgroundSize: "128px 128px",
             }}
           />
 
@@ -75,7 +79,7 @@ export const ForgotPassword = ({ token }: ForgotPasswordProps) => {
           <Container className="mx-auto w-full max-w-[560px] p-8">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logos/logo.svg`}
+                src={`${baseUrl}/static/logo.png`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -119,16 +123,15 @@ export const ForgotPassword = ({ token }: ForgotPasswordProps) => {
             {/* Footer section with copyright */}
             <Hr className="my-8 border-slate-300" />
             <Text className="font-inter text-center text-sm tracking-[0.015em] text-slate-600">
-              Copyright © {currentYear} MortiScope.
+              Copyright © {currentYear} — MortiScope.
             </Text>
           </Container>
 
           {/* Site title */}
           <Section className="mb-8 w-full text-center">
             <Img
-              src={`${domain}/logos/site-title.svg`}
-              width="175"
-              height="25"
+              src={`${baseUrl}/static/site-title.png`}
+              width="200"
               alt="MortiScope"
               className="mx-auto my-0"
             />

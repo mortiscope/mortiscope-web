@@ -16,7 +16,10 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-const domain = process.env.NEXT_PUBLIC_APP_URL;
+const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? (process.env.NEXT_PUBLIC_APP_URL ?? "")
+    : "http://localhost:3000";
 const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
 
 /**
@@ -25,7 +28,7 @@ const contactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL;
  */
 export const PasswordUpdated = () => {
   // Define the link to the application's sign-in page
-  const signinLink = `${domain}/signin`;
+  const signinLink = `${baseUrl}/signin`;
   // Get the current year for the copyright notice
   const currentYear = new Date().getFullYear();
 
@@ -65,8 +68,9 @@ export const PasswordUpdated = () => {
           <Section
             className="h-[175px] w-full bg-emerald-600"
             style={{
-              backgroundImage: `url(${domain}/icons/pattern-temple.svg)`,
+              backgroundImage: `url(${baseUrl}/static/pattern-temple.png)`,
               backgroundRepeat: "repeat",
+              backgroundSize: "128px 128px",
             }}
           />
 
@@ -74,7 +78,7 @@ export const PasswordUpdated = () => {
           <Container className="mx-auto w-full max-w-[560px] p-8">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logos/logo.svg`}
+                src={`${baseUrl}/static/logo.png`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -121,16 +125,15 @@ export const PasswordUpdated = () => {
             {/* Footer section with copyright */}
             <Hr className="my-8 border-slate-300" />
             <Text className="font-inter text-center text-sm tracking-[0.015em] text-slate-600">
-              Copyright © {currentYear} MortiScope.
+              Copyright © {currentYear} — MortiScope.
             </Text>
           </Container>
 
           {/* Site title */}
           <Section className="mb-8 w-full text-center">
             <Img
-              src={`${domain}/logos/site-title.svg`}
-              width="175"
-              height="25"
+              src={`${baseUrl}/static/site-title.png`}
+              width="200"
               alt="MortiScope"
               className="mx-auto my-0"
             />

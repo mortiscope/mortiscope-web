@@ -22,7 +22,10 @@ interface AccountDeletionScheduledProps {
   deletionWindowDays?: number;
 }
 
-const domain = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const baseUrl =
+  process.env.NODE_ENV === "production"
+    ? (process.env.NEXT_PUBLIC_APP_URL ?? "")
+    : "http://localhost:3000";
 
 /**
  * Renders an email template notifying a user that their account deletion is scheduled.
@@ -33,7 +36,7 @@ export const AccountDeletionScheduled = ({
   deletionWindowDays = DELETION_GRACE_PERIOD_DAYS,
 }: AccountDeletionScheduledProps) => {
   // Define the link for the user to sign in and cancel the deletion process
-  const recoveryLink = `${domain}/signin`;
+  const recoveryLink = `${baseUrl}/signin`;
   // Get the current year for the copyright notice
   const currentYear = new Date().getFullYear();
 
@@ -73,8 +76,9 @@ export const AccountDeletionScheduled = ({
           <Section
             className="h-[175px] w-full bg-rose-600"
             style={{
-              backgroundImage: `url(${domain}/icons/pattern-skulls.svg)`,
+              backgroundImage: `url(${baseUrl}/static/pattern-skulls.png)`,
               backgroundRepeat: "repeat",
+              backgroundSize: "128px 128px",
             }}
           />
 
@@ -82,7 +86,7 @@ export const AccountDeletionScheduled = ({
           <Container className="mx-auto w-full max-w-[560px] p-8">
             <Section className="mt-4 text-center">
               <Img
-                src={`${domain}/logos/logo.svg`}
+                src={`${baseUrl}/static/logo.png`}
                 width="100"
                 height="100"
                 alt="MortiScope Logo"
@@ -128,16 +132,15 @@ export const AccountDeletionScheduled = ({
             {/* Footer section with copyright */}
             <Hr className="my-8 border-slate-300" />
             <Text className="font-inter text-center text-sm tracking-[0.015em] text-slate-600">
-              Copyright © {currentYear} MortiScope.
+              Copyright © {currentYear} — MortiScope.
             </Text>
           </Container>
 
           {/* Site title */}
           <Section className="mb-8 w-full text-center">
             <Img
-              src={`${domain}/logos/site-title.svg`}
-              width="175"
-              height="25"
+              src={`${baseUrl}/static/site-title.png`}
+              width="200"
               alt="MortiScope"
               className="mx-auto my-0"
             />
