@@ -6,7 +6,7 @@ import type { MetadataRoute } from "next";
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   // The base URL of the production website, used to construct absolute URLs for each page.
-  const baseUrl = "https://mortiscope.com";
+  const baseUrl = "https://www.mortiscope.com";
 
   // The array of all public pages to be included in the sitemap.
   return [

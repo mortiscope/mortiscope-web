@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Review the terms and conditions for using Mortiscope. Understand your rights and responsibilities as a user.",
   alternates: {
-    canonical: "https://mortiscope.com/terms-of-use",
+    canonical: "https://www.mortiscope.com/terms-of-use",
   },
 };
 

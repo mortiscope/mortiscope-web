@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Learn how Mortiscope collects, uses, and protects your personal information. Our privacy policy explains data handling practices for our PMI estimation system.",
   alternates: {
-    canonical: "https://mortiscope.com/privacy-policy",
+    canonical: "https://www.mortiscope.com/privacy-policy",
   },
 };
 

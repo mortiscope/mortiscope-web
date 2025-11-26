@@ -25,11 +25,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mortiscope.com"),
-  title: {
-    default: "Mortiscope — PMI Estimation System Based on the Life Cycle of Chrysomya megacephala",
-    template: "%s | Mortiscope",
-  },
+  metadataBase: new URL("https://www.mortiscope.com"),
+  title: "Mortiscope — PMI Estimation System Based on the Life Cycle of Chrysomya megacephala",
   description:
     "Mortiscope is an experimental web application system that uses computer vision and deep learning to analyze Chrysomya megacephala images for Post-Mortem Interval (PMI) estimation.",
   keywords: [
@@ -71,7 +68,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://mortiscope.com",
+    url: "https://www.mortiscope.com",
     siteName: "Mortiscope",
     title: "Mortiscope — PMI Estimation System Based on the Life Cycle of Chrysomya megacephala",
     description:

@@ -41,6 +41,6 @@ export default function robots(): MetadataRoute.Robots {
     /**
      * Specifies the absolute URL of the sitemap.xml file.
      */
-    sitemap: "https://mortiscope.com/sitemap.xml",
+    sitemap: "https://www.mortiscope.com/sitemap.xml",
   };
 }

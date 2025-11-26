@@ -63,7 +63,7 @@ function buildConfig(): ServerConfig {
     authorization: {
       url: "https://orcid.org/oauth/authorize",
       params: {
-        scope: "/authenticate /read-limited",
+        scope: "/authenticate",
       },
     },
     token: "https://orcid.org/oauth/token",

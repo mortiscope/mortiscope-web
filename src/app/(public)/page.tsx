@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   description:
     "Mortiscope is an experimental intelligent web-based system that uses computer vision and deep learning to analyze Chrysomya megacephala images for forensic Post-Mortem Interval (PMI) estimation.",
   alternates: {
-    canonical: "https://mortiscope.com",
+    canonical: "https://www.mortiscope.com",
   },
 };
 
