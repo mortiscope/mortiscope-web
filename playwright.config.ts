@@ -2,6 +2,9 @@ import { defineConfig, devices } from "@playwright/test";
 import dotenv from "dotenv";
 import path from "path";
 
+// Load test-specific variables first, overriding regular .env
+dotenv.config({ path: path.resolve(__dirname, ".env.test") });
+// Fallback to loading the standard .env
 dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 // Defines and exports the Playwright test configuration.

@@ -31,8 +31,9 @@ import { drizzle } from "drizzle-orm/neon-http";
 
 import { twoFactorRecoveryCodes, users, userTwoFactor } from "@/db/schema";
 
-// Initialize environment variables from .env file
-config();
+// Initialize test environment variables first, falling back to standard .env
+config({ path: ".env.test" });
+config({ path: ".env" });
 
 // Database connection setup using Neon serverless driver
 const sql = neon(process.env.DATABASE_URL!);
