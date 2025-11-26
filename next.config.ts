@@ -135,6 +135,15 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/seo/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Resource-Policy",
+            value: "cross-origin",
+          },
+        ],
+      },
+      {
         // Apply to all routes.
         source: "/(.*)",
         headers: securityHeaders,
