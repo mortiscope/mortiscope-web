@@ -578,3 +578,49 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
   ```bash
   pnpm run pre-commit
   ```
+
+### 🧹 Cleanup
+
+- Remove all cache, build artifacts, and dependencies:
+
+  ```bash
+  pnpm run clean:all
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make clean-all
+  ```
+
+- Remove build artifacts only:
+
+  ```bash
+  pnpm run clean:build
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make clean-build
+  ```
+
+- Remove `node_modules` only:
+
+  ```bash
+  pnpm run clean:deps
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make clean-deps
+  ```
+
+- Remove all Docker containers, volumes, and images:
+
+  ```bash
+  make docker-clean
+  ```
+
+---
