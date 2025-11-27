@@ -145,3 +145,83 @@ Before beginning, ensure the following are installed and configured:
 - **[Docker](https://www.docker.com/)** (Optional) — Container platform for running the application and database in isolated environments. Required only if using the Docker deployment method.
 - **[Make](https://www.gnu.org/software/make/)** (Optional) — Build automation tool. Pre-installed on macOS/Linux. Windows users can install via [Chocolatey](https://chocolatey.org/) (`choco install make`) or use the commands directly.
 - **[Mortiscope API](https://github.com/mortiscope/mortiscope-api)** — The FastAPI inference engine that handles object detection and PMI computation. Must be running and accessible for the analysis pipeline to function.
+
+### 📥 Clone Repository
+
+Clone the repository to the local machine:
+
+```bash
+git clone https://github.com/mortiscope/mortiscope-web.git
+cd mortiscope-web
+```
+
+### 🔐 Environment Configuration
+
+The application requires environment variables for database connection, authentication, AWS services, email delivery, and external API integrations.
+
+1. Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` and configure the following variables:
+
+**Authentication Configuration:**
+
+- `AUTH_SECRET` — Secret key for Auth.js session signing (generate with `openssl rand -base64 32`)
+- `AUTH_TRUST_HOST` — Set to `true` in production behind a proxy
+
+**OAuth Provider Configuration (Optional):**
+
+- `GOOGLE_CLIENT_ID` — Google OAuth 2.0 Client ID
+- `GOOGLE_CLIENT_SECRET` — Google OAuth 2.0 Client Secret
+- `ORCID_CLIENT_ID` — ORCID OAuth Client ID
+- `ORCID_CLIENT_SECRET` — ORCID OAuth Client Secret
+- `AUTH_MICROSOFT_ENTRA_ID_ID` — Microsoft Entra ID Application Client ID
+- `AUTH_MICROSOFT_ENTRA_ID_SECRET` — Microsoft Entra ID Client Secret
+- `AUTH_MICROSOFT_ENTRA_ID_TENANT_ID` — Microsoft Entra ID Tenant ID
+
+**Email Configuration:**
+
+- `RESEND_API_KEY` — Resend API key for sending transactional emails
+- `RESEND_MAIL_DOMAIN` — Verified domain for sending emails
+
+**AWS S3 Configuration:**
+
+- `AWS_BUCKET_NAME` — S3 bucket name
+- `AWS_BUCKET_REGION` — S3 bucket region
+- `AWS_ACCESS_KEY_ID` — IAM access key with S3 permissions
+- `AWS_SECRET_ACCESS_KEY` — IAM secret key
+
+**Redis Configuration:**
+
+- `UPSTASH_REDIS_REST_URL` — Upstash Redis REST API URL
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis REST API token
+
+**Inngest Configuration:**
+
+- `INNGEST_EVENT_KEY` — Secret key for Inngest event authentication
+- `INNGEST_SIGNING_KEY` — Secret key for Inngest request signature verification
+
+**Application Configuration:**
+
+- `NEXT_PUBLIC_APP_URL` — The canonical base URL of the application
+- `NEXT_PUBLIC_CONTACT_EMAIL` — Default contact email address for the application
+- `NEXT_PUBLIC_FASTAPI_URL` — The base URL of the Mortiscope API inference engine
+
+**Security Configuration:**
+
+- `FASTAPI_SECRET_KEY` — Secret key for authenticating with the FastAPI backend
+- `CRON_SECRET` — Secret token for authorizing cron job endpoints
+- `ENCRYPTION_KEY` — Secret key for encrypting sensitive data (generate with `openssl rand -hex 32`)
+
+**Optional Configuration:**
+
+- `MAXMIND_LICENSE_KEY` — MaxMind GeoLite2 license key for IP geolocation
+- `SENTRY_AUTH_TOKEN` — Sentry authentication token for error tracking and performance monitoring
+- `NEXT_PUBLIC_SENTRY_DSN` — Sentry Data Source Name for client-side error tracking
+- `LOG_LEVEL` — Logging level (`debug`, `info`, `warn`, `error`).
+
+> [!TIP]
+> Generate secure random keys using OpenSSL: `openssl rand -base64 32` or `openssl rand -hex 32`
