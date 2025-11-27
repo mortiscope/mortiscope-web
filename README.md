@@ -379,3 +379,202 @@ Access container shell for debugging:
 ```bash
 make docker-shell
 ```
+
+### 🧪 Development Tools
+
+> [!WARNING]
+> This section assumes all dependencies are installed. Run `pnpm install` first. For **npm/yarn** installations without Makefile, use the direct npm script equivalents from [`package.json`](package.json).
+
+#### 🔍 Linting and Type Checking
+
+The project uses **ESLint** for code linting and **TypeScript** for static type checking.
+
+- Run linter with strict rules (fails on warnings):
+
+  ```bash
+  pnpm run lint:strict
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make lint
+  ```
+
+- Auto-fix linting issues:
+
+  ```bash
+  pnpm run lint:fix
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make lint-fix
+  ```
+
+- Run TypeScript type checking:
+
+  ```bash
+  pnpm run typecheck
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make typecheck
+  ```
+
+- Run both linting and type checking:
+
+  ```bash
+  pnpm run quality
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make quality
+  ```
+
+#### 🧬 Testing
+
+The project includes unit tests, integration tests, and end-to-end tests with coverage reporting.
+
+**Unit Tests (Vitest):**
+
+- Run unit tests:
+
+  ```bash
+  pnpm run test:unit
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-unit
+  ```
+
+- Run unit tests with coverage:
+
+  ```bash
+  pnpm run test:unit:coverage
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-unit-cov
+  ```
+
+- Run unit tests with UI:
+
+  ```bash
+  pnpm run test:unit:ui
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-unit-ui
+  ```
+
+**Integration Tests (Vitest):**
+
+- Run integration tests:
+
+  ```bash
+  pnpm run test:integration
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-integration
+  ```
+
+- Run integration tests with coverage:
+
+  ```bash
+  pnpm run test:integration:coverage
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-integration-cov
+  ```
+
+- Run integration tests in watch mode:
+
+  ```bash
+  pnpm run test:integration:watch
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-integration-watch
+  ```
+
+**End-to-End Tests (Playwright):**
+
+- Run E2E tests in headless mode:
+
+  ```bash
+  pnpm run test:e2e
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-e2e
+  ```
+
+- Run E2E tests with Playwright UI:
+
+  ```bash
+  pnpm run test:e2e:ui
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-e2e-ui
+  ```
+
+- Run E2E tests in headed mode (visible browser):
+
+  ```bash
+  pnpm run test:e2e:headed
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-e2e-headed
+  ```
+
+- View last E2E test report:
+
+  ```bash
+  pnpm run test:e2e:report
+  ```
+
+  Or via Makefile:
+
+  ```bash
+  make test-e2e-report
+  ```
+
+#### 🪝 Pre-commit Hooks
+
+Pre-commit hooks automatically run linters and formatters before each Git commit using Husky and lint-staged.
+
+- Pre-commit hooks are automatically installed during `pnpm install` via the `prepare` script.
+
+- To manually trigger the pre-commit hook:
+
+  ```bash
+  pnpm run pre-commit
+  ```
