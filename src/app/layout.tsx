@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     siteName: "Mortiscope",
     title: "Mortiscope — PMI Estimation System Based on the Life Cycle of Chrysomya megacephala",
     description:
-      "An experimental intelligent web application that uses computer vision and deep learning to analyze Chrysomya megacephala images for forensic Post-Mortem Interval estimation.",
+      "An experimental intelligent web application that uses computer vision and deep learning to analyze Chrysomya megacephala specimens in images for forensic Post-Mortem Interval estimation.",
     images: [
       {
         url: "/seo/opengraph-image-v1.png",
