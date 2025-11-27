@@ -225,3 +225,95 @@ cp .env.example .env
 
 > [!TIP]
 > Generate secure random keys using OpenSSL: `openssl rand -base64 32` or `openssl rand -hex 32`
+
+### 📦 Installation
+
+> [!TIP]
+> **pnpm** is the recommended package manager and provides the optimal development experience with faster installs and strict dependency management. If pnpm is unavailable, npm or Yarn can be used as alternatives.
+
+Select one of the following installation methods.
+
+#### 📦 Using pnpm
+
+pnpm is the recommended package manager for this project. It handles dependency installation with better performance and disk efficiency.
+
+1. Install all dependencies:
+
+   ```bash
+   pnpm install
+   ```
+
+2. The installation will automatically set up Husky pre-commit hooks via the `prepare` script.
+
+#### 💾 Using npm or Yarn
+
+> [!NOTE]
+> This path skips pnpm. The `pnpm-lock.yaml` lockfile will be ignored, which may result in slightly different dependency versions. Makefile commands assume pnpm and may not work correctly.
+
+1. Install with npm:
+
+   ```bash
+   npm install
+   ```
+
+   Or with Yarn:
+
+   ```bash
+   yarn install
+   ```
+
+2. Run the server directly:
+
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+#### 🛠️ Using Makefile
+
+The project includes a [`Makefile`](Makefile) with convenient shortcuts for common development tasks.
+
+1. View all available commands:
+
+   ```bash
+   make help
+   ```
+
+2. Install dependencies (runs `pnpm install`):
+
+   ```bash
+   make install
+   ```
+
+> [!NOTE]
+> All Makefile commands use pnpm internally. Ensure pnpm is installed before using Makefile shortcuts.
+
+#### 🐳 Using Docker
+
+Docker provides a fully containerized environment with all dependencies pre-configured.
+
+1. Ensure Docker Engine and Docker Compose are installed and running.
+
+2. Build and start all services:
+
+   ```bash
+   docker compose up --build -d
+   ```
+
+   This starts:
+   - Next.js web application on `http://localhost:3000`
+   - Inngest dev server on `http://localhost:8288`
+   - PostgreSQL database on port `5432`
+
+3. View logs:
+
+   ```bash
+   docker compose logs -f
+   ```
+
+   Or via Makefile:
+
+   ```bash
+   make docker-logs
+   ```
