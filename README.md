@@ -317,3 +317,65 @@ Docker provides a fully containerized environment with all dependencies pre-conf
    ```bash
    make docker-logs
    ```
+
+### 🖥️ Running the Application
+
+#### 💻 Local Development
+
+Run the Next.js application with hot-reloading enabled for development:
+
+```bash
+pnpm run dev:web
+```
+
+This command starts both:
+
+- Next.js dev server with Turbo on `http://localhost:3000`
+- Inngest dev server on `http://localhost:8288`
+
+For Webpack-based development (without Turbo):
+
+```bash
+pnpm run dev:webpack
+```
+
+Access the application at:
+
+- Web Application: `http://localhost:3000`
+- Inngest Dashboard: `http://localhost:8288`
+
+#### ⚡ Via Makefile
+
+Start the development server with a single command:
+
+```bash
+make dev
+```
+
+This automatically runs `pnpm run dev:web` with both Next.js and Inngest.
+
+#### 🐳 Via Docker Compose
+
+With Docker Compose, the server starts automatically upon running:
+
+```bash
+make docker-up
+```
+
+Or directly:
+
+```bash
+docker compose up -d
+```
+
+Stop the services:
+
+```bash
+make docker-down
+```
+
+Access container shell for debugging:
+
+```bash
+make docker-shell
+```
