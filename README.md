@@ -672,6 +672,34 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
   </video>
 </details>
 
+### ✍🏻 Editor
+
+- **Toolbar with Mode Controls**: A floating vertical toolbar with three interaction modes including **pan** for click-and-drag panning across the image, **select** for clicking bounding boxes to select, drag to reposition, and resize via 8 directional handles constrained to image boundaries, and **draw** for click-and-drag to create new bounding boxes, defaulting to the Adult class with verified status.
+- **View Controls**: Toolbar buttons for **zoom in**, **zoom out** with range from 0.1× to 100×, **center focus**, **reset view**, and a toggleable **minimap** overlay on desktop that displays a scaled-down image preview with the current viewport rectangle visible when zoom exceeds 1×.
+- **Undo/Redo History**: A full undo/redo system with a **50-state history stack**, accessible via toolbar buttons or keyboard shortcuts covering all detection operations such as add, update, remove, and verify all. A **Reset Changes** button restores all annotations to their original saved state and clears the entire history.
+- **Annotation Panel**: A sidebar panel displaying detection counts segmented by class with separate breakdowns for total, unverified, and verified detections.
+- **Attributes Panel**: A read-only sidebar panel displaying case and image metadata including case name, image name, resolution computed from natural dimensions, case date, upload date, temperature, and the full Philippine address for Region, Province, City/Municipality, and Barangay.
+- **Keyboard Shortcuts Panel**: A sidebar reference listing all available keyboard shortcuts organized by category.
+- **Settings Panel with Layer Visibility**: Toggles for showing or hiding the image layer and annotation layer independently, with four view modes including **All**, **Image Only**, **Annotations Only**, and **None**.
+- **Class Filters**: Per-class visibility toggles in the settings panel to show or hide specific detection classes. When all classes are hidden, the annotations layer is automatically disabled.
+- **Display Filters**: Filter visible annotations by verification status including **Show All**, **Show Verified Only**, or **Show Unverified Only**.
+- **Detection Panel**: A floating panel that card on desktop and bottom sheet on mobile that appears on bounding box selection.
+- **Bounding Box Drawing**: New bounding boxes are drawn by clicking and dragging in draw mode. Coordinates are transformed from screen space to image pixel space. After drawing, the new detection is automatically selected and the detection panel opens.
+- **Bounding Box Editing**: Selected bounding boxes can be repositioned by dragging and resized via 8 directional handles with 4 corners and 4 edges with 20 px hit zones inversely scaled by zoom. Operations are constrained to image boundaries with a minimum box size enforced. State is captured before each edit for undo support, and performance-optimized updates are used during drag operations.
+- **Verification Workflow**: Detections can be individually verified from the detection panel or bulk-verified via the **Verify All Detections** button in the settings panel. Image-level verification status is computed and displayed in the header including **Verified** for all confirmed, **In Progress** for partial with percentage, **Unverified** for none confirmed, or **No Detections** each with a corresponding informational status modal.
+- **Lock Mode**: A toggleable lock mode via header button or `L` key that disables all editing actions, forces pan mode, and applies visual opacity indicators to locked toolbar buttons.
+- **Save System with Change Detection**: Deep comparison between original and modified annotations, with a save confirmation modal showing a diff summary of added, modified, and deleted detections. The confirmation dialog can be suppressed for future saves via a checkbox preference stored in `localStorage`.
+- **Navigation Guard**: Unsaved changes trigger an "Unsaved Changes" modal when navigating away such as back navigation and image switching, offering options to **Leave** for discard changes or **Save and Leave** for persist then navigate.
+- **Image Navigation**: Previous/Next image arrows in the header with a position indicator and keyboard shortcuts with `[` and `]` for switching between images without leaving the editor.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/editor.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
+
 ### 📦 Export
 
 - **PDF Report Export**: A multi-step wizard spanning introduction, security level, password, and permissions for generating case reports. Three security modes are available such as **Standard** for an open, editable, and printable PDF, **View-Protected** which requires a password to open and view the document, and **Permissions-Protected** which restricts editing, printing, and copying with **AES-256 encryption**. Two page sizes are supported like **A4** and **Letter**.
