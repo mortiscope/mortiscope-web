@@ -671,3 +671,21 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
     Your browser does not support the video tag.
   </video>
 </details>
+
+### 📦 Export
+
+- **PDF Report Export**: A multi-step wizard spanning introduction, security level, password, and permissions for generating case reports. Three security modes are available such as **Standard** for an open, editable, and printable PDF, **View-Protected** which requires a password to open and view the document, and **Permissions-Protected** which restricts editing, printing, and copying with **AES-256 encryption**. Two page sizes are supported like **A4** and **Letter**.
+- **Granular PDF Permissions**: When using **Permissions-Protected** mode, **10 individual permission controls** are available such as disallow printing, disallow degraded printing, disallow copying of text and images, disallow content extraction, disallow screen reader access, disallow adding comments or annotations, disallow filling forms, disallow document assembly, disallow page rotation, and disallow metadata modification with intelligent dependency enforcement between related permissions.
+- **Labelled Images Export**: Generates a ZIP archive containing case images with detection bounding boxes burned in at selectable resolutions like **720p** at 1280×720, **1080p** at 1920×1080, or **4K** at 3840×2160 with optional ZIP password protection.
+- **Raw Data Export**: Bundles all original case images and a detailed JSON file with complete analysis results into a ZIP archive for permanent archival and external analysis, with optional ZIP password protection.
+- **ZIP Password Protection**: Both labelled images and raw data exports support optional **password-protected ZIP encryption** with a minimum password length of 8 characters, configurable through a toggle-based interface.
+- **Export Status Polling**: Each export request is dispatched through an **Inngest** background job to the FastAPI backend and polled every **3 seconds** for status updates for `pending`, `processing`, `completed`, or `failed`. Completed exports are automatically downloaded via a presigned S3 URL valid for 60 seconds.
+- **Recent Exports**: A running list of exports created within the last **10 minutes**, polled every 5 seconds, with toast notifications for completion or failure and duplicate-tracking to prevent redundant alerts.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/export.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
