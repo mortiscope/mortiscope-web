@@ -624,3 +624,30 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
   ```
 
 ---
+
+## ✨ Features
+
+> [!NOTE]
+> This list provides only a rough overview of the system's features. The internal architecture encompasses complex asynchronous pipelines, granular state management, and strict access controls that operate far beneath the surface of these high-level descriptions.
+
+### 🧐 Analyze
+
+- **Multi-Step Case Creation Wizard**: A guided three-step workflow for creating forensic cases, with automatic draft persistence to `localStorage` and database-backed state recovery on page reload.
+- **Case Details Form**: Users provide case metadata including case name, collection date and time, ambient temperature, and a hierarchical Philippine address through cascading dropdown selectors.
+- **Automatic Weather Integration**: An optional toggle fetches the historical ambient temperature from the **Open-Meteo** archive API based on the selected case date and city, using geocoding to determine coordinates and nearest-hour matching for precision. The temperature auto-resets when the date or location changes while the toggle is active.
+- **Dual Image Ingestion**: Supports both **file upload** via drag-and-drop or click-to-browse and **live camera capture** with selectable aspect ratios like Square 1:1, Landscape 16:9, and Portrait 9:16, alongside front/back camera switching and mirror/flip controls. Up to **20 images** can be provided per case, each with a maximum size of **10 MB**.
+- **Supported Formats**: Accepts **JPEG**, **PNG**, **WebP**, **HEIC**, and **HEIF** image formats with binary content validation via `file-type` to detect corrupted or spoofed files, alongside MIME type checking and duplicate name rejection.
+- **Client-Side Image Processing**: Uploaded images support **rotation** for 0°, 90°, 180°, and 270° via offscreen canvas processing, **renaming**, **deletion**, and **preview** in both list and grid view modes with search and sort functionality. Upload progress is tracked per file with retry support for failed uploads.
+- **End-to-End Image Encryption**: All uploaded images are encrypted at rest with **AES-256 Server-Side Encryption SSE-S3** in AWS S3. Images are served exclusively through authenticated proxy routes and presigned upload URLs expire after **10 minutes**. Each S3 object stores user and case metadata for ownership verification to ensure images are accessible only to the account that uploaded them.
+- **Review and Submit**: Before submission, users review a sorted image summary grid and case details summary with pre-submit Zod schema re-validation. All files must have a successful upload status and at least one image is required.
+- **Asynchronous AI Analysis Pipeline**: Upon submission, an **Inngest** background event triggers the FastAPI inference engine for object detection and PMI computation with up to **3 retries**, **exponential backoff**, and a **30-minute timeout**. The case transitions through `pending` to `processing` to `completed` or `failed` statuses, with a 1-minute initial delay to allow browser uploads to finalize.
+- **Real-Time Status Polling**: The client polls analysis status every **3 seconds** with contextual status messages, automatic toast notifications on completion or failure, and a redirect to the results page upon successful analysis.
+- **Cancellation Support**: Users can cancel an in-progress analysis, which atomically reverts the case to draft status, deletes all detection data, removes the analysis results record, and restores the wizard to the review step.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/analyze.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
