@@ -735,3 +735,23 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
     Your browser does not support the video tag.
   </video>
 </details>
+
+### 👤 Account
+
+- **Profile Editing**: Editable account fields with individual lock/unlock toggles and save buttons for **name** with 2 to 50 characters, capitalized words, and letters, hyphens, and apostrophes only, **professional title** with 1 to 100 characters, **institution** with 1 to 150 characters, and **location** for cascading Philippine address like Region, Province, City/Municipality, Barangay. Name editing is disabled for users authenticated through social providers.
+- **Profile Image Upload**: Users can upload a profile image up to **10 MB** for JPEG, PNG, WebP, HEIC, or HEIF stored in AWS S3, with a hover overlay upload interface and optimistic image display during upload.
+- **Email Change**: Email address updates use a **token-based verification** flow sent to the new address, with RFC 5321 compliant validation and a maximum length of 254 characters.
+- **Password Change**: A two-phase process requiring verification of the current password before unlocking the new password form. The **NIST-based** password policy enforces 12 to 128 characters, at least one uppercase letter, one lowercase letter, one number, and one symbol, no more than 3 consecutive identical characters, no whitespace, and the new password must differ from the current one. Hidden for social provider users.
+- **Two-Factor Authentication 2FA**: TOTP-based two-factor authentication with a setup flow that generates a secret, displays a scannable **QR code** via `react-qr-code`, accepts a **6-digit verification code** via `InputOTP`, and upon successful verification, presents single-use **recovery codes** in a grid with options to **copy** to clipboard, **download** as a file, or **regenerate** new codes. Users can disable 2FA with password confirmation.
+- **Session Management**: A session list displaying active sessions with **browser name**, **device type**, **operating system**, **location** for city and province via IP geolocation, and **activity status** such as active now or inactive. Sessions can be individually reviewed in a detail modal and revoked, or all sessions can be signed out at once with an option to **exclude** or **include** the current session requiring password confirmation.
+- **Account Deletion**: A deletion flow with separate interfaces for credential users requiring current password verification and social provider users with lock/unlock toggle. Users must type the exact phrase `"Delete this account"` as confirmation. A **30-day grace period** allows account recovery before permanent deletion, managed through Inngest background jobs with scheduled execution and farewell email notifications. Upon confirmation, the session is terminated and the user is redirected to the sign-in page.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/account.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
+
+---
