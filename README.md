@@ -651,3 +651,23 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
     Your browser does not support the video tag.
   </video>
 </details>
+
+### 📊 Results
+
+- **Case Summary Charts**: Five interactive chart types to visualize detection data including **bar chart**, **line chart**, **composed chart**, **pie chart**, and **radar chart**. Users can switch between chart types and data sources like overall aggregated, maximum stages per image, or per-image via a configurable toolbar.
+- **PMI Estimation Display**: The Post-Mortem Interval estimation is displayed with animated value transitions and switchable time formats for **minutes**, **hours**, and **days** with two-decimal precision. An explanation modal provides all three calculated values, the backend-provided estimation logic, the oldest life stage detected, the Accumulated Degree Hours (ADH), Lower Developmental Threshold (LDT), and an interpretable summary string.
+- **Image Viewing with Annotations**: A searchable, sortable image gallery where each image card shows a thumbnail, verification status indicator like **Verified**, **Unverified**, **In Progress** with percentage, or **No Detections**, and action buttons for view, edit, export, and delete. The full-screen image preview modal includes zoom and pan controls, color-coded bounding box overlays with adaptive stroke width based on zoom scale, tooltips showing detection label and confidence score, a minimap viewport indicator, and a scrollable thumbnail strip for navigation between images.
+- **Individual Image Export**: Each image can be individually exported as either a **raw data** package containing the original image and JSON detection data in a ZIP or a **labelled image** with bounding boxes rendered at selectable resolutions like **720p**, **1080p**, or **4K**.
+- **Case Editing**: A slide-out side panel with three tabs. **Details** contains editable case name, date, temperature with Celsius/Fahrenheit toggle, and cascading Philippine address fields, each with individual lock/unlock toggles. **Notes** that have rich-text editor. And **History** with auto-refreshing audit log timeline. Changes to analysis-affecting fields trigger a recalculation flag.
+- **Rich-Text Note Editor**: A text editor with a full formatting toolbar supporting **bold**, **italic**, **underline**, **strikethrough**, **heading** with H1 toggle, **blockquote**, **bullet list**, **numbered list**, **checklist** with nested task list, smart typography replacements, and a **view/edit mode toggle**. Content is stored as HTML and managed through `react-hook-form`.
+- **PMI Recalculation**: After editing annotations, users can trigger a PMI recalculation via a confirmation modal. The recalculation is dispatched through an Inngest background event, polled in real-time with intelligent query invalidation and retry logic, and automatically refreshes all result visualizations upon completion.
+- **Case Details Display**: Six color-coded gradient cards present key case metadata including case date, temperature, region, province, city/municipality, and barangay.
+- **Reviewed Images Widget**: Displays a progress count of reviewed versus total images, where only images with all detections verified.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/results.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
