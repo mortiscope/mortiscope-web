@@ -689,3 +689,21 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
     Your browser does not support the video tag.
   </video>
 </details>
+
+### 📈 Dashboard
+
+- **Metrics Grid**: Six summary metric cards displayed at the top of the dashboard for **Verified Cases** representing verified out of total, **Verified Images** representing verified out of total, **Verified Detections** representing verified out of total, **Average PMI Estimation** in hours, **Average Confidence Score**, and **Correction Rate** in percentage.
+- **Forensic Insights Widget**: A switchable bar chart widget with three analytical views such as **Life Stage Distribution** for detection counts per class, **PMI Distribution** for time interval frequency across cases, and **Sampling Density** for image count distribution across cases.
+- **Verification Status Widget**: A switchable pie chart widget with three views such as **Case Verification Status** for verified, in progress, and unverified, **Image Verification Status**, and **Detection Verification Status** providing an at-a-glance overview of annotation review progress across all cases.
+- **Quality Metrics Widget**: A multi-chart widget with three views like **Model Performance by Stage** using a line chart tracking accuracy per life stage, **User Correction Ratio** using a pie chart showing the proportion of model detections modified by users, and **Confidence Score Distribution** using a distribution chart offering insight into model accuracy and the extent of manual corrections applied to detections.
+- **Case Data Table**: A fully-featured data table with 12 columns like case date, case name, verification status, PMI estimation, oldest stage used for calculation, average confidence, image count, detection count, location, and temperature supporting **column sorting**, **global text search** with highlighted matching, **column visibility toggles**, **pagination**, **row selection** via checkboxes, and **bulk delete** with password confirmation.
+- **Date Range Filtering**: A URL-synchronized time period filter with preset ranges like **All-Time**, **Past Year**, **Past Month**, **Past Week** and a **custom date range** selector via a dual-month calendar picker disabling future dates. Filter state persists across navigation through query parameters.
+- **Adaptive Polling**: Dashboard data updates automatically with exponential back-off polling starting with 10-second initial interval, 1.5× increase up to 30 seconds when no new data is detected, resetting to fast polling on changes, with user inactivity detection after a 2-minute threshold based on mouse, keyboard, click, and scroll events.
+
+<details>
+  <summary><strong>See preview</strong></summary>
+  <br />
+  <video src="public/demos/dashboard.mp4" controls width="100%">
+    Your browser does not support the video tag.
+  </video>
+</details>
