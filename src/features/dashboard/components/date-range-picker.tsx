@@ -120,10 +120,10 @@ export const DateRangePicker = memo(function DateRangePicker({
             !date && "text-muted-foreground"
           )}
         >
-          <BsCalendar4Week className="mr-2 h-4 w-4" />
+          <BsCalendar4Week className="mr-2 h-4 w-4 shrink-0" />
           {/* Uses a utility function to display the selected date range in a user-friendly format. */}
-          <span className="text-sm">{formatDateRange(date)}</span>
-          <ChevronDown className="ml-2 size-4 opacity-50" />
+          <span className="truncate text-sm">{formatDateRange(date)}</span>
+          <ChevronDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent

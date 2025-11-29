@@ -59,7 +59,7 @@ export const DashboardHeader = memo(function DashboardHeader({
         <div className="w-auto">
           <TimePeriodFilter selectedPeriod={selectedPeriod} onPeriodChange={onPeriodChange} />
         </div>
-        <div className="flex-1 md:w-auto md:flex-none">
+        <div className="min-w-0 flex-1 md:w-auto md:flex-none">
           <DateRangePicker
             date={dateRange}
             onDateChange={onDateChange}
