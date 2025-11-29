@@ -6,12 +6,20 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
 });
 
-const allowedOrigins = ["localhost"];
+// In development, allow all local network origins
+const allowedOrigins =
+  process.env.NODE_ENV === "development" ? ["localhost", "127.0.0.1"] : ["localhost"];
 
 const ipAddress = internalIpV4Sync();
 
 if (ipAddress) {
   allowedOrigins.push(ipAddress);
+  // In development, also allow access from any device on the local network
+  if (process.env.NODE_ENV === "development") {
+    // Allow the full /24 subnet
+    const subnet = ipAddress.split(".").slice(0, 3).join(".");
+    allowedOrigins.push(`${subnet}.*`);
+  }
 }
 
 /**
@@ -41,16 +49,22 @@ const cspDirectives = [
   "base-uri 'self'",
   // Restrict where forms may submit to same origin.
   "form-action 'self'",
-  // Automatically upgrade plain HTTP requests to HTTPS (has no effect on localhost).
-  "upgrade-insecure-requests",
-].join("; ");
+  // Automatically upgrade plain HTTP requests to HTTPS (skip in development for local network access).
+  ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
+]
+  .filter(Boolean)
+  .join("; ");
 
 const securityHeaders = [
   // Enforces HTTPS for 2 years, includes subdomains, and opts in to HSTS preload list.
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-  },
+  ...(process.env.NODE_ENV === "production"
+    ? [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+      ]
+    : []),
   // Prevents MIME-type sniffing attacks.
   {
     key: "X-Content-Type-Options",
@@ -90,7 +104,7 @@ const securityHeaders = [
   // Prevents browsers that support CORP from loading resources cross-origin.
   {
     key: "Cross-Origin-Resource-Policy",
-    value: "same-origin",
+    value: process.env.NODE_ENV === "development" ? "cross-origin" : "same-origin",
   },
   // Allows the browsing context to be embedded cross-origin but restricts opening cross-origin windows without explicit opt-in.
   {
