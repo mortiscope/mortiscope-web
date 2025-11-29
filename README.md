@@ -2150,3 +2150,188 @@ The project includes unit tests with coverage reporting.
 ```
 
 </details>
+
+### 📋 Integration Test Structure
+
+The project includes integration tests to ensure interaction between different modules and the database layer.
+
+> [!TIP]
+> For instructions on running integration tests, see the [Testing](#-testing) section in Getting Started. For the complete list of test commands, see the [`package.json`](package.json) file.
+
+<details>
+  <summary><strong>See code structure here</strong></summary>
+
+```plaintext
+└── 📁.husky
+    ├── pre-commit
+└── 📁scripts
+    ├── clean.ts
+    ├── fetch.ts
+    ├── typecheck.ts
+└── 📁src
+    └── 📁__tests__
+        └── 📁integration
+            └── 📁account
+                └── 📁actions
+                    ├── change-password.integration.test.ts
+                    ├── disable-two-factor.integration.test.ts
+                    ├── get-account-profile.integration.test.ts
+                    ├── get-account-providers.integration.test.ts
+                    ├── get-account-security.integration.test.ts
+                    ├── get-current-session.integration.test.ts
+                    ├── get-recovery-codes.integration.test.ts
+                    ├── get-two-factor-status.integration.test.ts
+                    ├── get-user-sessions.integration.test.ts
+                    ├── mark-current-session.integration.test.ts
+                    ├── regenerate-recovery-codes.integration.test.ts
+                    ├── request-account-deletion.integration.test.ts
+                    ├── request-email-change.integration.test.ts
+                    ├── revoke-all-sessions.integration.test.ts
+                    ├── revoke-session.integration.test.ts
+                    ├── setup-two-factor.integration.test.ts
+                    ├── track-session.integration.test.ts
+                    ├── update-profile-image.integration.test.ts
+                    ├── update-profile.integration.test.ts
+                    ├── update-session-activity.integration.test.ts
+                    ├── verify-current-password.integration.test.ts
+                    ├── verify-email-change.integration.test.ts
+                    ├── verify-two-factor.integration.test.ts
+                └── 📁tokens
+                    ├── account-deletion-token.integration.test.ts
+                    ├── email-change-token.integration.test.ts
+            └── 📁analyze
+                └── 📁actions
+                    ├── cancel-analysis.integration.test.ts
+                    ├── get-case-uploads.integration.test.ts
+                    ├── get-draft-case.integration.test.ts
+                    ├── get-upload.integration.test.ts
+                    ├── submit-analysis.integration.test.ts
+            └── 📁annotation
+                └── 📁actions
+                    ├── get-editor-image.integration.test.ts
+                    ├── save-detections.integration.test.ts
+            └── 📁auth
+                └── 📁actions
+                    ├── forgot-password.integration.test.ts
+                    ├── recovery.integration.test.ts
+                    ├── reset-password.integration.test.ts
+                    ├── signin.integration.test.ts
+                    ├── signup.integration.test.ts
+                    ├── two-factor.integration.test.ts
+                    ├── verification.integration.test.ts
+                └── 📁tokens
+                    ├── forgot-password-token.integration.test.ts
+                    ├── verification-token.integration.test.ts
+            └── 📁cases
+                └── 📁actions
+                    ├── create-case.integration.test.ts
+                    ├── update-case.integration.test.ts
+                └── 📁utils
+                    ├── weather-service.integration.test.ts
+            └── 📁dashboard
+                └── 📁actions
+                    ├── delete-selected-cases.integration.test.ts
+                    ├── get-case-data.integration.test.ts
+                    ├── get-confidence-score-distribution.integration.test.ts
+                    ├── get-dashboard-metrics.integration.test.ts
+                    ├── get-life-stage-distribution.integration.test.ts
+                    ├── get-model-performance-metrics.integration.test.ts
+                    ├── get-pmi-distribution.integration.test.ts
+                    ├── get-sampling-density.integration.test.ts
+                    ├── get-user-correction-ratio.integration.test.ts
+                    ├── get-verification-status.integration.test.ts
+            └── 📁export
+                └── 📁actions
+                    ├── get-export-status.integration.test.ts
+                    ├── get-recent-exports.integration.test.ts
+                    ├── request-image-export.integration.test.ts
+                    ├── request-results-export.integration.test.ts
+            └── 📁images
+                └── 📁actions
+                    ├── delete-image.integration.test.ts
+                    ├── get-image-url.integration.test.ts
+                    ├── rename-image.integration.test.ts
+            └── 📁results
+                └── 📁actions
+                    ├── delete-case.integration.test.ts
+                    ├── get-analysis-status.integration.test.ts
+                    ├── get-case-by-id.integration.test.ts
+                    ├── get-case-history.integration.test.ts
+                    ├── get-case-name.integration.test.ts
+                    ├── get-cases.integration.test.ts
+                    ├── get-recalculation-status.integration.test.ts
+                    ├── rename-case.integration.test.ts
+                    ├── request-recalculation.integration.test.ts
+            └── 📁upload
+                └── 📁actions
+                    ├── create-upload.integration.test.ts
+                    ├── delete-upload.integration.test.ts
+                    ├── rename-upload.integration.test.ts
+                    ├── save-upload.integration.test.ts
+                    ├── update-upload.integration.test.ts
+        └── 📁mocks
+            └── 📁database
+                └── 📁queries
+                    ├── account.queries.ts
+                    ├── auth.queries.ts
+                    ├── cases.queries.ts
+                    ├── exports.queries.ts
+                    ├── index.ts
+                    ├── results.queries.ts
+                ├── index.ts
+                ├── mock.ts
+                ├── operations.ts
+                ├── store.ts
+                ├── types.ts
+                ├── utils.ts
+            └── 📁fixtures
+                ├── analysis.fixtures.ts
+                ├── auth.fixtures.ts
+                ├── cases.fixtures.ts
+                ├── dashboard.fixtures.ts
+                ├── dates.fixtures.ts
+                ├── detections.fixtures.ts
+                ├── exports.fixtures.ts
+                ├── ids.fixtures.ts
+                ├── index.ts
+                ├── locations.fixtures.ts
+                ├── sessions.fixtures.ts
+                ├── uploads.fixtures.ts
+                ├── users.fixtures.ts
+            └── 📁handlers
+                ├── account.handlers.ts
+                ├── analyze.handlers.ts
+                ├── annotation.handlers.ts
+                ├── auth.handlers.ts
+                ├── cases.handlers.ts
+                ├── dashboard.handlers.ts
+                ├── export.handlers.ts
+                ├── images.handlers.ts
+                ├── index.ts
+                ├── results.handlers.ts
+                ├── upload.handlers.ts
+            ├── server.ts
+        └── 📁setup
+            ├── setup.ts
+            ├── test-utils.tsx
+├── .dockerignore
+├── .env.example
+├── .gitignore
+├── .prettierrc
+├── CODE_OF_CONDUCT.md
+├── docker-compose.yml
+├── Dockerfile
+├── eslint.config.mjs
+├── LICENSE
+├── Makefile
+├── next.config.ts
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.mjs
+├── README.md
+└── vitest.config.ts
+```
+
+</details>
+
+---
