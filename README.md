@@ -2335,3 +2335,40 @@ The project includes integration tests to ensure interaction between different m
 </details>
 
 ---
+
+## 💻 Technology Stack
+
+> [!NOTE]
+> The list of tech stack here represents just the core tools used in the project. This list isn't exhaustive and the full list can be found in the [`package.json`](package.json) file.
+
+- **[Auth.js](https://authjs.dev)** - A JavaScript library for module-based authentication in web applications, with a focus on session management and OAuth integrations for secure account access across multiple providers.
+- **[AWS S3](https://aws.amazon.com/s3)** - A cloud storage service for storage and retrieval of data from any location on the web, with industry-grade scalability, data availability, security, and performance for media assets.
+- **[Docker](https://www.docker.com)** - A platform for application development and containerization, for consistent environments across development, test procedures, and production deployments on any host infrastructure.
+- **[Drizzle ORM](https://orm.drizzle.team)** - A headless, typesafe TypeScript ORM with both relational and SQL-like query APIs, for maximum performance, edge-readiness, and a positive experience without the bloat of traditional ORMs.
+- **[ESLint](https://eslint.org)** - A static code analysis tool for problematic pattern identification in JavaScript code, to enforce code standards, catch bugs early, and maintain a consistent codebase quality across the entire project.
+- **[Framer Motion](https://www.framer.com/motion)** - A production-ready motion library for React that makes animation simple and intuitive, with support for declarative animations, complex gestures, and layout transitions with minimal code for fluid interface experiences.
+- **[Immer](https://immerjs.github.io/immer)** - A library for immutable state management for a convenient approach to data mutations, which permits code that safely and automatically produces the next state tree under the hood for complex data structures.
+- **[JSON Web Tokens](https://jwt.io)** - An open standard for secure transmission of information between parties as a JSON object, widely used for authentication and authorization across distributed systems.
+- **[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview)** - An open-source, automated tool for website quality improvement, with deep audits and metrics for performance, accessibility, SEO, and progressive web apps for optimized results.
+- **[Mock Service Worker](https://mswjs.io)** - An API mock library that uses Service Worker API to intercept actual requests, for network-level request mocks for development, test environments, and debug procedures without code alterations.
+- **[Next.js](https://nextjs.org)** - A React framework for web application development, equipped with server-side render capabilities, static site generation, API routes, and a build system for modern full-stack web development.
+- **[Pino](https://getpino.io)** - A low overhead Node.js logger, inspired by Bunyan, for high-performance applications that require structured JSON logs with minimal impact on application throughput and system resource use.
+- **[Playwright](https://playwright.dev)** - A framework for Web Tests and Automation that permits Chromium, Firefox and WebKit browser tests with a single API, for reliable end-to-end test capabilities with built-in auto-wait and trace viewers.
+- **[pnpm](https://pnpm.io)** - A disk space efficient package manager that uses a content-addressable store to share dependencies across projects, to reduce installation times and disk space use with strict dependency control.
+- **[PostgreSQL](https://www.postgresql.org)** - A powerful, open source object-relational database system with a strong reputation for reliability, feature robustness, data integrity, and support for advanced data types and concurrent workloads.
+- **[Radix UI](https://www.radix-ui.com)** - An open-source UI component library for high-quality, accessible design systems and web apps, to provide unstyled, primitive components that handle complex accessibility requirements and state management.
+- **[React](https://react.dev)** - A JavaScript framework for user interfaces, which utilizes a component-based architecture and a virtual DOM for efficient display and state management for complex application states.
+- **[React Hook Form](https://react-hook-form.com)** - Performant, flexible and extensible forms with easy-to-use validation, to minimize the number of re-renders and reduce boilerplate code for complex form state in React applications.
+- **[React Query](https://tanstack.com/query/latest)** - Asynchronous state management for TS/JS, React, Solid, Vue, Svelte and Angular, to simplify data fetch tasks, cache systems, synchronization, and error control for server state.
+- **[React Table](https://tanstack.com/table/latest)** - Headless UI for powerful tables & datagrids, to provide complete control over markup and styles with robust features like sequence sorts, filters, page segments, and data groups for large datasets.
+- **[Resend](https://resend.com)** - An email API for dispatch of transactional emails, designed for the modern web with a focus on ease of use, high deliverability, and a positive experience with React-based email templates.
+- **[Sentry](https://sentry.io)** - An open-source error track tool for real-time crash monitor and resolution, to provide deep context, stack traces, and performance metric data to identify and resolve issues with application health.
+- **[shadcn/ui](https://ui.shadcn.com)** - Designed components for direct integration into applications, to provide a customizable foundation built on top of Radix UI primitives and Tailwind CSS for rapid UI generation for design consistency.
+- **[Tailwind CSS](https://tailwindcss.com)** - A utility-first CSS framework for quick and flexible style definitions with predefined classes, to enable rapid custom design without CSS file alterations for responsive layouts.
+- **[TypeScript](https://www.typescriptlang.org)** - A strongly typed programming language that builds on JavaScript by the addition of static types, to catch errors early at compile time, improve code editor tools, and enhance codebase maintainability.
+- **[Upstash Redis](https://upstash.com/redis)** - A serverless database with Redis API, optimized for latency and edge environments, for a fully managed, REST-accessible in-memory database that scales automatically with per-request structures.
+- **[Vercel](https://vercel.com)** - A cloud platform for static frontend frameworks and serverless functions, for deployments, global edge networks, and integrations for Next.js applications with zero configuration requirements.
+- **[Vitest](https://vitest.dev)** - A Next Generation Test Framework built for Vite, equipped with out-of-the-box ESM, TypeScript, and JSX support, with a Jest-compatible API and fast execution times for unit and integration tests.
+- **[Zod](https://zod.dev)** - TypeScript-first schema declaration and validation library for a type-safe way to validate JavaScript objects, to eliminate the need for redundant type definitions and ensure runtime type safety.
+
+---
