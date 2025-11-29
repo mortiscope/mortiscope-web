@@ -127,6 +127,43 @@
 
 The application covers the entire case workflow which consists of structured case creation with collection metadata and image ingestion, asynchronous AI-driven analysis, interactive result visualization with manual annotation editing and recalculation, cross-case dashboard analytics, multi-format export, and a full account system with multi-provider authentication and session management.
 
+## 🗂️ Table of Contents
+
+- [🗂️ Table of Contents](#️-table-of-contents)
+- [🚀 Getting Started](#-getting-started)
+  - [📋 Prerequisites](#-prerequisites)
+  - [📥 Clone Repository](#-clone-repository)
+  - [🔐 Environment Configuration](#-environment-configuration)
+  - [📦 Installation](#-installation)
+    - [📦 Using pnpm](#-using-pnpm)
+    - [💾 Using npm or Yarn](#-using-npm-or-yarn)
+    - [🛠️ Using Makefile](#️-using-makefile)
+    - [🐳 Using Docker](#-using-docker)
+  - [🖥️ Running the Application](#️-running-the-application)
+    - [💻 Local Development](#-local-development)
+    - [⚡ Via Makefile](#-via-makefile)
+    - [🐳 Via Docker Compose](#-via-docker-compose)
+  - [🧪 Development Tools](#-development-tools)
+    - [🔍 Linting and Type Checking](#-linting-and-type-checking)
+    - [🧬 Testing](#-testing)
+    - [🪝 Pre-commit Hooks](#-pre-commit-hooks)
+  - [🧹 Cleanup](#-cleanup)
+- [✨ Features](#-features)
+  - [🧐 Analyze](#-analyze)
+  - [📊 Results](#-results)
+  - [✍🏻 Editor](#-editor)
+  - [📦 Export](#-export)
+  - [📈 Dashboard](#-dashboard)
+  - [👤 Account](#-account)
+- [📂 Project Structure](#-project-structure)
+  - [🗂️ Source Code Structure](#️-source-code-structure)
+  - [📝 Unit Test Structure](#-unit-test-structure)
+  - [📋 Integration Test Structure](#-integration-test-structure)
+- [💻 Technology Stack](#-technology-stack)
+- [📄 License](#-license)
+
+---
+
 ## 🚀 Getting Started
 
 This guide provides multiple approaches to set up and run the Mortiscope Web application for local development and testing.
@@ -2372,3 +2409,7 @@ The project includes integration tests to ensure interaction between different m
 - **[Zod](https://zod.dev)** - TypeScript-first schema declaration and validation library for a type-safe way to validate JavaScript objects, to eliminate the need for redundant type definitions and ensure runtime type safety.
 
 ---
+
+## 📄 License
+
+Distributed under the [GNU Affero General Public License](https://www.gnu.org/licenses/agpl-3.0.en.html). See `LICENSE` for more information.
