@@ -30,6 +30,9 @@ playwright.config.ts
 Dockerfile
 docker-compose.yml
 Makefile
+!drizzle.config.ts
+!sentry.server.config.ts
+!sentry.edge.config.ts
 
 # ide / editor
 .vscode

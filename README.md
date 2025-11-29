@@ -177,7 +177,7 @@ Before beginning, ensure the following are installed and configured:
 - **[Git](https://git-scm.com/downloads)** — Distributed version control system needed to clone the repository and manage code changes.
 - **[PostgreSQL](https://www.postgresql.org/)** — Primary relational database for storing case data, detections, analyses, and exports. Version 16+ recommended.
 - **[AWS S3](https://aws.amazon.com/s3/)** — Cloud object storage for images and export artifacts. Requires an active AWS account, an S3 bucket, and IAM credentials with read/write permissions.
-- **[Upstash Redis](https://upstash.com/)** — Serverless Redis database for rate limiting and session management. Create a free account and database at [upstash.com](https://upstash.com/).
+- **[Upstash Redis](https://upstash.com/)** — Serverless Redis database for rate limiting and session management.
 - **[Resend](https://resend.com/)** — Email API for transactional emails including account verification, password reset, and two-factor authentication codes. Requires a Resend account and API key.
 - **[Docker](https://www.docker.com/)** (Optional) — Container platform for running the application and database in isolated environments. Required only if using the Docker deployment method.
 - **[Make](https://www.gnu.org/software/make/)** (Optional) — Build automation tool. Pre-installed on macOS/Linux. Windows users can install via [Chocolatey](https://chocolatey.org/) (`choco install make`) or use the commands directly.
@@ -680,14 +680,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **Asynchronous AI Analysis Pipeline**: Upon submission, an **Inngest** background event triggers the FastAPI inference engine for object detection and PMI computation with up to **3 retries**, **exponential backoff**, and a **30-minute timeout**. The case transitions through `pending` to `processing` to `completed` or `failed` statuses, with a 1-minute initial delay to allow browser uploads to finalize.
 - **Real-Time Status Polling**: The client polls analysis status every **3 seconds** with contextual status messages, automatic toast notifications on completion or failure, and a redirect to the results page upon successful analysis.
 - **Cancellation Support**: Users can cancel an in-progress analysis, which atomically reverts the case to draft status, deletes all detection data, removes the analysis results record, and restores the wizard to the review step.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/analyze.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Analyze Demonstration Preview](https://drive.google.com/file/d/1xCI_RB-ohmXKJrlqmm7GpRJCW7h6x9EN/view)**
 
 ### 📊 Results
 
@@ -700,14 +693,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **PMI Recalculation**: After editing annotations, users can trigger a PMI recalculation via a confirmation modal. The recalculation is dispatched through an Inngest background event, polled in real-time with intelligent query invalidation and retry logic, and automatically refreshes all result visualizations upon completion.
 - **Case Details Display**: Six color-coded gradient cards present key case metadata including case date, temperature, region, province, city/municipality, and barangay.
 - **Reviewed Images Widget**: Displays a progress count of reviewed versus total images, where only images with all detections verified.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/results.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Results Demonstration Preview](https://drive.google.com/file/d/1sATPAsztx8Zr7UDkbvnn6zbyn1bmk9HS/view)**
 
 ### ✍🏻 Editor
 
@@ -728,14 +714,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **Save System with Change Detection**: Deep comparison between original and modified annotations, with a save confirmation modal showing a diff summary of added, modified, and deleted detections. The confirmation dialog can be suppressed for future saves via a checkbox preference stored in `localStorage`.
 - **Navigation Guard**: Unsaved changes trigger an "Unsaved Changes" modal when navigating away such as back navigation and image switching, offering options to **Leave** for discard changes or **Save and Leave** for persist then navigate.
 - **Image Navigation**: Previous/Next image arrows in the header with a position indicator and keyboard shortcuts with `[` and `]` for switching between images without leaving the editor.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/editor.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Editor Demonstration Preview](https://drive.google.com/file/d/1zjJfoiDQXViApvh8x0A3N8wGKMHb7TqG/view)**
 
 ### 📦 Export
 
@@ -746,14 +725,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **ZIP Password Protection**: Both labelled images and raw data exports support optional **password-protected ZIP encryption** with a minimum password length of 8 characters, configurable through a toggle-based interface.
 - **Export Status Polling**: Each export request is dispatched through an **Inngest** background job to the FastAPI backend and polled every **3 seconds** for status updates for `pending`, `processing`, `completed`, or `failed`. Completed exports are automatically downloaded via a presigned S3 URL valid for 60 seconds.
 - **Recent Exports**: A running list of exports created within the last **10 minutes**, polled every 5 seconds, with toast notifications for completion or failure and duplicate-tracking to prevent redundant alerts.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/export.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Export Demonstration Preview](https://drive.google.com/file/d/1ZhVTunRqsQV-gHq7lSgE0xc-Ic_O6qkK/view)**
 
 ### 📈 Dashboard
 
@@ -764,14 +736,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **Case Data Table**: A fully-featured data table with 12 columns like case date, case name, verification status, PMI estimation, oldest stage used for calculation, average confidence, image count, detection count, location, and temperature supporting **column sorting**, **global text search** with highlighted matching, **column visibility toggles**, **pagination**, **row selection** via checkboxes, and **bulk delete** with password confirmation.
 - **Date Range Filtering**: A URL-synchronized time period filter with preset ranges like **All-Time**, **Past Year**, **Past Month**, **Past Week** and a **custom date range** selector via a dual-month calendar picker disabling future dates. Filter state persists across navigation through query parameters.
 - **Adaptive Polling**: Dashboard data updates automatically with exponential back-off polling starting with 10-second initial interval, 1.5× increase up to 30 seconds when no new data is detected, resetting to fast polling on changes, with user inactivity detection after a 2-minute threshold based on mouse, keyboard, click, and scroll events.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/dashboard.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Dashboard Demonstration Preview](https://drive.google.com/file/d/1DCBCSpPbFKF6KP6GR8SskSePeN-LqwQo/view)**
 
 ### 👤 Account
 
@@ -782,14 +747,7 @@ Pre-commit hooks automatically run linters and formatters before each Git commit
 - **Two-Factor Authentication 2FA**: TOTP-based two-factor authentication with a setup flow that generates a secret, displays a scannable **QR code** via `react-qr-code`, accepts a **6-digit verification code** via `InputOTP`, and upon successful verification, presents single-use **recovery codes** in a grid with options to **copy** to clipboard, **download** as a file, or **regenerate** new codes. Users can disable 2FA with password confirmation.
 - **Session Management**: A session list displaying active sessions with **browser name**, **device type**, **operating system**, **location** for city and province via IP geolocation, and **activity status** such as active now or inactive. Sessions can be individually reviewed in a detail modal and revoked, or all sessions can be signed out at once with an option to **exclude** or **include** the current session requiring password confirmation.
 - **Account Deletion**: A deletion flow with separate interfaces for credential users requiring current password verification and social provider users with lock/unlock toggle. Users must type the exact phrase `"Delete this account"` as confirmation. A **30-day grace period** allows account recovery before permanent deletion, managed through Inngest background jobs with scheduled execution and farewell email notifications. Upon confirmation, the session is terminated and the user is redirected to the sign-in page.
-
-<details>
-  <summary><strong>See preview</strong></summary>
-  <br />
-  <video src="public/demos/account.mp4" controls width="100%">
-    Your browser does not support the video tag.
-  </video>
-</details>
+- **[See Account Demonstration Preview](https://drive.google.com/file/d/1a8Afkqcr4psj6sBwjVK2WYi0kNn2tYp4/view)**
 
 ---
 
@@ -1635,7 +1593,7 @@ The following subsections outline the structure of the application's source code
 The project includes unit tests with coverage reporting.
 
 > [!TIP]
-> For instructions on running unit tests, see the [testing](#-testing) section in Getting Started. For the complete list of test commands, see the [`package.json`](package.json) file.
+> For instructions on running unit tests, see the [testing](#-testing) section in [Getting Started](#-getting-started). For the complete list of test commands, see the [`package.json`](package.json) file.
 
 <details>
   <summary><strong>See code structure here</strong></summary>
@@ -2193,7 +2151,7 @@ The project includes unit tests with coverage reporting.
 The project includes integration tests to ensure interaction between different modules and the database layer.
 
 > [!TIP]
-> For instructions on running integration tests, see the [Testing](#-testing) section in Getting Started. For the complete list of test commands, see the [`package.json`](package.json) file.
+> For instructions on running integration tests, see the [testing](#-testing) section in [Getting Started](#-getting-started). For the complete list of test commands, see the [`package.json`](package.json) file.
 
 <details>
   <summary><strong>See code structure here</strong></summary>

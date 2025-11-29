@@ -27,8 +27,11 @@ WORKDIR /app
 # Specific `node_modules` from the deps stage.
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy the application source code.
+# Copy the application source code and configuration files.
 COPY . .
+
+# Ensure critical configuration files are present for Sentry and database operations.
+COPY sentry.server.config.ts sentry.edge.config.ts drizzle.config.ts ./
 
 # Import build-time environment variables.
 ARG NEXT_PUBLIC_APP_URL
@@ -47,7 +50,9 @@ ENV NEXT_TELEMETRY_DISABLED=1 \
     NODE_OPTIONS="--max-old-space-size=4096"
 
 # Execute the production build script.
-RUN pnpm run build
+RUN --mount=type=secret,id=sentry_auth_token \
+    SENTRY_AUTH_TOKEN=$(cat /run/secrets/sentry_auth_token) \
+    pnpm run build
 
 # Creates a minimal, secure runtime image.
 FROM node:20-alpine@sha256:09e2b3d9726018aecf269bd35325f46bf75046a643a66d28360ec71132750ec8 AS runner
@@ -71,11 +76,14 @@ ENV NODE_ENV=production \
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy essential build artifacts from the builder stage.
+# Copy essential build artifacts and configuration files from the builder stage.
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=nextjs:nodejs /app/sentry.server.config.ts ./sentry.server.config.ts
+COPY --from=builder --chown=nextjs:nodejs /app/sentry.edge.config.ts ./sentry.edge.config.ts
 
 # Switch to the non-root user.
 USER nextjs

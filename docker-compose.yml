@@ -12,6 +12,8 @@ services:
         - NEXT_PUBLIC_FASTAPI_URL=${NEXT_PUBLIC_FASTAPI_URL}
         - NEXT_PUBLIC_CONTACT_EMAIL=${NEXT_PUBLIC_CONTACT_EMAIL}
         - NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN:-}
+      secrets:
+        - sentry_auth_token
     # Exposes port 3000 to the host for web traffic.
     ports:
       - "3000:3000"
@@ -57,7 +59,7 @@ services:
   # Inngest dev server for handling background jobs and event-driven workflows.
   inngest:
     container_name: mortiscope-inngest
-    image: inngest/inngest:v1.14.0
+    image: inngest/inngest:latest
     ports:
       - "8288:8288"
     environment:
@@ -68,7 +70,11 @@ services:
       -u http://mortiscope-web:3000/api/inngest
       --no-discovery
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8288/ || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:8288/ || exit 1",
+        ]
       interval: 10s
       timeout: 5s
       start_period: 15s
@@ -126,3 +132,8 @@ networks:
 # Defines a persistent volume for the PostgreSQL database.
 volumes:
   mortiscope-web-pgdata:
+
+# The token is never written to any image layer or build cache.
+secrets:
+  sentry_auth_token:
+    environment: SENTRY_AUTH_TOKEN
