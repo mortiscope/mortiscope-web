@@ -24,7 +24,7 @@ const LandingPage = () => {
   return (
     <SmoothScrollProvider>
       <JsonLd type="homepage" />
-      <main className="relative">
+      <main className="relative bg-green-50">
         <div className="sticky top-0 h-screen w-full overflow-hidden">
           <Hero />
         </div>

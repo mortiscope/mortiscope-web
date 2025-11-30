@@ -26,6 +26,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.mortiscope.com"),
+  applicationName: "Mortiscope",
+  appleWebApp: {
+    title: "Mortiscope",
+  },
   title: "Mortiscope — PMI Estimation System Based on the Life Cycle of Chrysomya megacephala",
   description:
     "Mortiscope is an experimental web application system that uses computer vision and deep learning to analyze Chrysomya megacephala images for Post-Mortem Interval (PMI) estimation.",
@@ -106,11 +110,22 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Mortiscope",
+    url: "https://www.mortiscope.com/",
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${plusJakartaSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <NextAuthSessionProvider>
           <QueryProvider>
             <main>{children}</main>
