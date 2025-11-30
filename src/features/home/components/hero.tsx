@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type Variants } from "framer-motion";
+import { motion, useScroll, useTransform, type Variants } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -18,6 +18,19 @@ const Hero = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Track scroll position for parallax effect
+  const { scrollY } = useScroll();
+
+  // Synchronized upward movement and subtle fade for all hero components
+  const textY = useTransform(scrollY, [0, 800], [0, -250]);
+  const textOpacity = useTransform(scrollY, [0, 800], [1, 0.4]);
+
+  const imageY = useTransform(scrollY, [0, 800], [0, -250]);
+  const imageOpacity = useTransform(scrollY, [0, 800], [1, 0.4]);
+
+  const navY = useTransform(scrollY, [0, 800], [0, -250]);
+  const navOpacity = useTransform(scrollY, [0, 800], [1, 0.4]);
 
   // Defines the main fade-in animation for the entire hero section
   const heroVariant: Variants = {
@@ -81,7 +94,7 @@ const Hero = () => {
   // Prevent rendering until mounted to avoid layout issues
   if (!isMounted) {
     return (
-      <section className="relative flex min-h-auto w-full flex-col overflow-hidden opacity-0">
+      <section className="relative flex min-h-screen w-full flex-col overflow-hidden opacity-0">
         <div className="absolute inset-0 z-[-1] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat" />
         <div className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6">
           <div className="flex items-center">
@@ -108,40 +121,45 @@ const Hero = () => {
     <>
       <motion.section
         ref={heroSectionRef}
-        className="relative flex min-h-auto w-full flex-col overflow-hidden"
+        className="relative flex min-h-screen w-full flex-col overflow-hidden"
         aria-label="Hero background image"
         variants={heroVariant}
         initial="hidden"
         animate={isMounted ? "show" : "hidden"}
       >
         {/* Animated Background */}
-        <motion.div
-          className="absolute inset-0 -top-[10%] -left-[10%] z-[-1] h-[120%] w-[120%] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat"
-          animate={
-            isMounted
-              ? {
-                  scale: [1, 1.15, 1],
-                  x: [0, -40, 0],
-                  y: [0, -30, 0],
-                }
-              : {}
-          }
-          transition={{
-            duration: 12,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "loop",
-          }}
-        />
+        <div className="absolute inset-0 z-[-1]">
+          <motion.div
+            className="absolute inset-0 -top-[10%] -left-[10%] h-[120%] w-[120%] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat"
+            animate={
+              isMounted
+                ? {
+                    scale: [1, 1.15, 1],
+                    x: [0, -40, 0],
+                    y: [0, -30, 0],
+                  }
+                : {}
+            }
+            transition={{
+              duration: 12,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "loop",
+            }}
+          />
+        </div>
 
-        {/* Navigation bar */}
-        <NavigationBar animated={true} />
+        {/* Navigation bar items move upward in sync */}
+        <motion.div style={{ y: navY, opacity: navOpacity }}>
+          <NavigationBar animated={true} />
+        </motion.div>
 
         {/* Hero Content Area */}
         <div className="container mx-auto flex flex-grow items-center px-4 py-10 sm:px-6 lg:px-6 2xl:px-32">
           {/* Grid layout for hero content */}
           <div className="grid w-full grid-cols-1 gap-x-8 gap-y-10 md:grid-cols-2">
             <motion.div
+              style={{ y: textY, opacity: textOpacity }}
               className="flex flex-col justify-center space-y-6 text-center md:space-y-8 md:text-left"
               variants={contentStaggerContainer}
               initial="hidden"
@@ -175,7 +193,10 @@ const Hero = () => {
             </motion.div>
 
             {/* Right-side Content */}
-            <div className="relative order-last flex h-full min-h-[300px] items-end justify-center sm:min-h-[350px] md:order-none md:min-h-[400px] lg:min-h-[550px] xl:min-h-[600px] 2xl:min-h-[650px]">
+            <motion.div
+              style={{ y: imageY, opacity: imageOpacity }}
+              className="relative order-last flex h-full min-h-[300px] items-end justify-center sm:min-h-[350px] md:order-none md:min-h-[400px] lg:min-h-[550px] xl:min-h-[600px] 2xl:min-h-[650px]"
+            >
               {/* Container for the hand image */}
               <div className="absolute bottom-[-95%] left-1/2 w-[145%] max-w-none -translate-x-1/2 sm:bottom-[-100%] sm:w-[155%] md:bottom-[-85%] md:w-[180%] lg:bottom-[-115%] lg:w-[180%] xl:bottom-[-90%] xl:w-[160%] 2xl:bottom-[-80%] 2xl:w-[140%]">
                 <motion.div
@@ -219,7 +240,7 @@ const Hero = () => {
                   </motion.div>
                 </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </motion.section>

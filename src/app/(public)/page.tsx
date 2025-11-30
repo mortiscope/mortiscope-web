@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 
 import { JsonLd } from "@/components/json-ld";
+import { SmoothScrollProvider } from "@/components/providers/smooth-scroll-provider";
 import Hero from "@/features/home/components/hero";
+import Introduction from "@/features/home/components/introduction";
 
 /**
  * Page-specific metadata for the landing page.
@@ -20,12 +22,15 @@ export const metadata: Metadata = {
  */
 const LandingPage = () => {
   return (
-    <>
+    <SmoothScrollProvider>
       <JsonLd type="homepage" />
-      <div>
-        <Hero />
-      </div>
-    </>
+      <main className="relative">
+        <div className="sticky top-0 h-screen w-full overflow-hidden">
+          <Hero />
+        </div>
+        <Introduction />
+      </main>
+    </SmoothScrollProvider>
   );
 };
 
