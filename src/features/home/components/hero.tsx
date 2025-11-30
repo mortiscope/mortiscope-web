@@ -94,7 +94,7 @@ const Hero = () => {
   // Prevent rendering until mounted to avoid layout issues
   if (!isMounted) {
     return (
-      <section className="relative flex min-h-screen w-full flex-col overflow-hidden opacity-0">
+      <section className="relative flex min-h-auto w-full flex-col overflow-hidden opacity-0">
         <div className="absolute inset-0 z-[-1] bg-[url('/images/background.png')] bg-cover bg-center bg-no-repeat" />
         <div className="container mx-auto flex items-center justify-between px-4 py-6 sm:px-6 lg:px-6">
           <div className="flex items-center">
@@ -121,7 +121,7 @@ const Hero = () => {
     <>
       <motion.section
         ref={heroSectionRef}
-        className="relative flex min-h-screen w-full flex-col overflow-hidden"
+        className="relative flex min-h-auto w-full flex-col overflow-hidden"
         aria-label="Hero background image"
         variants={heroVariant}
         initial="hidden"
