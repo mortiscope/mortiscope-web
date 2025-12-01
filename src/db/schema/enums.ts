@@ -30,3 +30,6 @@ export const exportStatusEnum = pgEnum("export_status", [
 
 // Enum to define the possible formats for an export.
 export const exportFormatEnum = pgEnum("export_format", ["raw_data", "pdf", "labelled_images"]);
+
+// Enum to classify the type of an uploaded image.
+export const imageTypeEnum = pgEnum("image_type", ["macro", "field"]);

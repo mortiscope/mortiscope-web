@@ -2,6 +2,7 @@ import { index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 import { users } from "@/db/schema/authentication";
 import { cases } from "@/db/schema/cases";
+import { imageTypeEnum } from "@/db/schema/enums";
 
 // Stores metadata for each file uploaded to S3, linking it to a user and a case
 export const uploads = pgTable(
@@ -22,6 +23,7 @@ export const uploads = pgTable(
       onDelete: "cascade",
     }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    imageType: imageTypeEnum("image_type"),
   },
   (table) => [
     index("uploads_user_id_idx").on(table.userId),
