@@ -316,3 +316,23 @@ export const STATUS_CONFIG = {
     hex: "#f59e0b",
   },
 } as const;
+
+/**
+ * Defines the options for specifying the type of an uploaded image.
+ * Macro and field selection affects the detection approach.
+ * @constant {object[]}
+ */
+export const IMAGE_TYPE_OPTIONS = [
+  {
+    value: "macro" as const,
+    label: "Macro",
+    description:
+      "Close-up photographs of the specimens. Use for identifying developmental stages of Chrysomya megacephala.",
+  },
+  {
+    value: "field" as const,
+    label: "Field",
+    description:
+      "Environmental photographs documenting the collection site. Use for locating specimens on a tiny scale within the scene, remains, or substrate.",
+  },
+];
