@@ -132,6 +132,7 @@ const mockUploads = [
     userId: "user-123",
     caseId: "case-123",
     createdAt: new Date(),
+    imageType: null,
     detections: [
       {
         id: "det-1",
@@ -165,6 +166,7 @@ const mockUploads = [
     userId: "user-123",
     caseId: "case-123",
     createdAt: new Date(),
+    imageType: null,
     detections: [
       {
         id: "det-2",

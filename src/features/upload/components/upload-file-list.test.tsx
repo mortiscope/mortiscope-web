@@ -44,6 +44,7 @@ describe("UploadFileList", () => {
       dateUploaded: new Date(),
       version: 1,
       key: "key-1",
+      imageType: null,
     },
     {
       id: "2",
@@ -58,6 +59,7 @@ describe("UploadFileList", () => {
       dateUploaded: new Date(),
       version: 1,
       key: "key-2",
+      imageType: null,
     },
   ];
 
@@ -69,6 +71,7 @@ describe("UploadFileList", () => {
     onDeleteFile: vi.fn(),
     onRetry: vi.fn(),
     deletingFileId: null,
+    onSetImageType: vi.fn(),
   };
 
   /**

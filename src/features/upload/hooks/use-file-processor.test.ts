@@ -134,6 +134,7 @@ describe("useFileProcessor", () => {
         dateUploaded: new Date(),
         version: 123,
         file: new File(["content"], "test.jpg", { type: "image/jpeg" }),
+        imageType: null,
       },
     ];
 

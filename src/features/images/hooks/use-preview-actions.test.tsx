@@ -62,6 +62,7 @@ const mockActiveFile: UploadableFile = {
   source: "upload",
   dateUploaded: new Date(),
   version: 1,
+  imageType: null,
 };
 
 // Define default mock actions for the analyze store.

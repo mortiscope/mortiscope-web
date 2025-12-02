@@ -169,6 +169,7 @@ describe("useAnalyzeStore", () => {
         source: "upload",
         dateUploaded: expect.any(Date),
         version: expect.any(Number),
+        imageType: null,
       });
     });
 
@@ -490,6 +491,7 @@ describe("useAnalyzeStore", () => {
         size: 5000,
         type: "image/jpeg",
         createdAt: new Date("2025-01-01"),
+        imageType: null,
       };
 
       // Act: Hydrate files into the store.

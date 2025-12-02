@@ -66,6 +66,7 @@ const mockFile: UploadableFile = {
   source: "upload",
   dateUploaded: new Date(),
   version: 1,
+  imageType: null,
 };
 
 // Define default return values for the file state hook.

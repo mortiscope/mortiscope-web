@@ -425,7 +425,7 @@ describe("CaseUpload Component", () => {
       // Arrange: Mock the store to contain a file with a "success" status.
       vi.mocked(useAnalyzeStore).mockReturnValue({
         ...mockStoreValues,
-        data: { files: [{ status: "success" }] },
+        data: { files: [{ status: "success", imageType: "macro" }] },
       } as unknown as ReturnType<typeof useAnalyzeStore>);
 
       // Arrange: Render the component.

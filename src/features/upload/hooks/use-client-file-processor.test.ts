@@ -114,6 +114,7 @@ describe("useClientFileProcessor", () => {
     dateUploaded: new Date(),
     version: 1,
     key: "key-1",
+    imageType: null,
   };
 
   /**

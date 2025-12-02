@@ -15,6 +15,7 @@ const mockFile: UploadableFile = {
   source: "db",
   dateUploaded: new Date(),
   version: 1,
+  imageType: null,
 };
 
 // Test suite for the `usePreviewRotation` hook, verifying rotation logic and state resets.

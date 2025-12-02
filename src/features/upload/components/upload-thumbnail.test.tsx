@@ -51,6 +51,7 @@ describe("UploadThumbnail", () => {
     key: "key-1",
     file: undefined,
     url: "",
+    imageType: null,
   };
 
   /**

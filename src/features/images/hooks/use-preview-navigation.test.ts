@@ -15,6 +15,7 @@ const mockBaseFile: UploadableFile = {
   source: "upload",
   dateUploaded: new Date("2025-01-01T10:00:00Z"),
   version: 1,
+  imageType: null,
 };
 
 // Create specific file instances with distinct properties for sorting verification.
