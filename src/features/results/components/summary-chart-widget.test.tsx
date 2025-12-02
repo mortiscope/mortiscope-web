@@ -55,7 +55,7 @@ vi.mock("next/dynamic", () => ({
     options?: { loading?: () => React.ReactNode }
   ) => {
     const validLoader = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 0));
       const loaded = await loader();
       if (typeof loaded === "function") {
         return { default: loaded };

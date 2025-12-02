@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
 import { memo } from "react";
+import { BsCamera } from "react-icons/bs";
+import { IoWarningOutline } from "react-icons/io5";
 import { LuLoaderCircle, LuTrash2 } from "react-icons/lu";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
+import { PiMicroscope } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -26,6 +29,25 @@ type UploadFileItemProps = {
   onRetry: (fileId: string) => void;
   /** The ID of the file currently being deleted, used to show a loading state on the correct item. */
   deletingFileId: string | null;
+  /** A callback to open the image type specification modal for this file. */
+  onSetImageType: (file: UploadableFile) => void;
+};
+
+/**
+ * Returns the icon, color, and tooltip label for the image type indicator.
+ */
+const getImageTypeIndicator = (imageType: UploadableFile["imageType"]) => {
+  if (imageType === "macro") {
+    return { Icon: PiMicroscope, className: "", label: "Macro" };
+  }
+  if (imageType === "field") {
+    return { Icon: BsCamera, className: "", label: "Field" };
+  }
+  return {
+    Icon: IoWarningOutline,
+    className: "",
+    label: "Image Type Unspecified",
+  };
 };
 
 /**
@@ -33,9 +55,13 @@ type UploadFileItemProps = {
  * This component is memoized to optimize performance in long lists.
  */
 export const UploadFileItem = memo(
-  ({ file, viewMode, onViewFile, onDeleteFile, onRetry, deletingFileId }: UploadFileItemProps) => {
+  ({ file, viewMode, onViewFile, onDeleteFile, onRetry, deletingFileId, onSetImageType }: UploadFileItemProps) => {
     // A derived boolean to determine if this specific item is the one currently being deleted.
     const isDeleting = deletingFileId === file.id;
+
+    // Show the image type icon for files that are either uploading, successful, or queued.
+    const showImageTypeIcon = file.status !== "error";
+    const imageTypeIndicator = getImageTypeIndicator(file.imageType);
 
     return (
       <motion.div
@@ -77,9 +103,33 @@ export const UploadFileItem = memo(
                 <p className="text-xs text-slate-500 sm:text-sm">{formatBytes(file.size)}</p>
               </div>
             </div>
-            {/* Container for action buttons (status, view, delete). */}
+            {/* Container for action buttons (status, image type, view, delete). */}
             <div className="flex flex-shrink-0 items-center gap-1">
               <UploadStatusIcon file={file} onRetry={onRetry} />
+              {showImageTypeIcon && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onSetImageType(file)}
+                      aria-label={`Set image type for ${file.name}`}
+                      className={cn(
+                        "h-8 w-8 flex-shrink-0 cursor-pointer transition-colors duration-300 ease-in-out",
+                        file.imageType
+                          ? "text-slate-500 hover:bg-indigo-100 hover:text-indigo-600"
+                          : "text-red-500 hover:bg-red-100 hover:text-red-600"
+                      )}
+                      disabled={isDeleting}
+                    >
+                      <imageTypeIndicator.Icon className={cn("h-5 w-5", imageTypeIndicator.className)} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="font-inter">{imageTypeIndicator.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -136,6 +186,30 @@ export const UploadFileItem = memo(
             <div className="flex w-full flex-col items-center justify-center p-1">
               <div className="mt-1 flex flex-shrink-0 items-center gap-1">
                 <UploadStatusIcon file={file} onRetry={onRetry} />
+                {showImageTypeIcon && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onSetImageType(file)}
+                        aria-label={`Set image type for ${file.name}`}
+                        className={cn(
+                          "h-8 w-8 flex-shrink-0 cursor-pointer transition-colors duration-300 ease-in-out",
+                          file.imageType
+                            ? "text-slate-500 hover:bg-indigo-100 hover:text-indigo-600"
+                            : "text-red-500 hover:bg-red-100 hover:text-red-600"
+                        )}
+                        disabled={isDeleting}
+                      >
+                        <imageTypeIndicator.Icon className={cn("h-5 w-5", imageTypeIndicator.className)} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="font-inter">{imageTypeIndicator.label}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
