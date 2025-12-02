@@ -125,6 +125,12 @@ export const ResultsModalHeader = memo(
             )}
             <span className="hidden text-slate-400 sm:inline">•</span>
             <span>{formatBytes(activeImage.size)}</span>
+            {activeImage.imageType && (
+              <>
+                <span className="hidden text-slate-400 sm:inline">•</span>
+                <span className="capitalize">{activeImage.imageType}</span>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
       </motion.div>

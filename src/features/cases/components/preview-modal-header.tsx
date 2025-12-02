@@ -219,6 +219,12 @@ export const PreviewModalHeader = memo(
             )}
             <span className="hidden text-slate-400 sm:inline">•</span>
             <span>{formatBytes(activeFile.size)}</span>
+            {activeFile.imageType && (
+              <>
+                <span className="hidden text-slate-400 sm:inline">•</span>
+                <span className="capitalize">{activeFile.imageType}</span>
+              </>
+            )}
           </DialogDescription>
         </DialogHeader>
       </motion.div>
