@@ -13,6 +13,7 @@ import {
   type ViewMode,
 } from "@/features/analyze/store/analyze-store";
 import { deleteUpload } from "@/features/upload/actions/delete-upload";
+import { updateUpload } from "@/features/upload/actions/update-upload";
 import { UploadFileList } from "@/features/upload/components/upload-file-list";
 import { UploadNoResults } from "@/features/upload/components/upload-no-results";
 import { UploadToolbar } from "@/features/upload/components/upload-toolbar";
@@ -23,6 +24,15 @@ const UploadPreviewModal = dynamic(
   () =>
     import("@/features/upload/components/upload-preview-modal").then((module) => ({
       default: module.UploadPreviewModal,
+    })),
+  { ssr: false }
+);
+
+// Dynamically load the image type modal.
+const ImageTypeModal = dynamic(
+  () =>
+    import("@/features/upload/components/image-type-modal").then((module) => ({
+      default: module.ImageTypeModal,
     })),
   { ssr: false }
 );
@@ -45,6 +55,7 @@ export const UploadPreview = () => {
     setSearchTerm,
     removeFile,
     retryUpload,
+    setImageType,
   } = useAnalyzeStore();
 
   /** A memoized value for the display label of the currently selected sort option. */
@@ -56,6 +67,8 @@ export const UploadPreview = () => {
   const [viewingFile, setViewingFile] = useState<UploadableFile | null>(null);
   // State to track the ID of the file being deleted to show a spinner on the correct item.
   const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
+  // State to track the file whose image type is being specified. Null means the modal is closed.
+  const [imageTypeFile, setImageTypeFile] = useState<UploadableFile | null>(null);
 
   /**
    * Memoizes the list of files filtered by the current search term.
@@ -116,6 +129,41 @@ export const UploadPreview = () => {
       setDeletingFileId(null);
     },
   });
+
+  /**
+   * Mutation to persist the image type selection for a file in the database.
+   */
+  const imageTypeMutation = useMutation({
+    mutationFn: (variables: { id: string; imageType: "macro" | "field" }) =>
+      updateUpload(variables),
+    onSuccess: (data, variables) => {
+      if (data.success) {
+        setImageType(variables.id, variables.imageType);
+        const file = files.find((f) => f.id === variables.id);
+        const label = variables.imageType === "macro" ? "macro" : "field";
+        toast.success(`${file?.name || "File"} has been set to ${label}.`);
+      } else {
+        toast.error(data.error || "Failed to update image type.");
+      }
+    },
+    onError: (error) => toast.error(error.message || "An error occurred while saving image type."),
+  });
+
+  /**
+   * Handles the confirmation of an image type selection from the modal.
+   */
+  const handleImageTypeConfirm = (fileId: string, imageType: "macro" | "field") => {
+    const file = files.find((f) => f.id === fileId);
+    if (!file) return;
+
+    if (file.status === "success") {
+      imageTypeMutation.mutate({ id: fileId, imageType });
+    } else {
+      setImageType(fileId, imageType);
+      const label = imageType === "macro" ? "macro" : "field";
+      toast.success(`The image type for ${file.name} will be saved as ${label}.`);
+    }
+  };
 
   /**
    * Handles the deletion of a file. It removes locally for non-uploaded files or
@@ -207,6 +255,7 @@ export const UploadPreview = () => {
                 onDeleteFile={handleDeleteFile}
                 onRetry={retryUpload}
                 deletingFileId={deletingFileId}
+                onSetImageType={setImageTypeFile}
               />
             ) : (
               <UploadNoResults />
@@ -215,7 +264,7 @@ export const UploadPreview = () => {
         </motion.div>
       </TooltipProvider>
 
-      {/* Dynamic import handles the loading of the modal component. */}
+      {/* Dynamic import handles the loading of the preview modal component. */}
       <UploadPreviewModal
         file={viewingFile}
         isOpen={!!viewingFile}
@@ -223,6 +272,17 @@ export const UploadPreview = () => {
         onNext={() => handleNavigate("next")}
         onPrevious={() => handleNavigate("previous")}
         onSelectFile={handleSelectFile}
+      />
+
+      {/* Modal for specifying the image type (Macro or Field). */}
+      <ImageTypeModal
+        file={imageTypeFile}
+        isOpen={!!imageTypeFile}
+        onOpenChange={(open) => {
+          if (!open) setImageTypeFile(null);
+        }}
+        onConfirm={handleImageTypeConfirm}
+        isPending={imageTypeMutation.isPending}
       />
     </>
   );
