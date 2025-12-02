@@ -21,6 +21,8 @@ type UploadFileListProps = {
   onRetry: (fileId: string) => void;
   /** The ID of the file currently being deleted, to show a pending state on the correct child item. */
   deletingFileId: string | null;
+  /** A callback function to open the image type specification modal for the given file. */
+  onSetImageType: (file: UploadableFile) => void;
 };
 
 /**
@@ -28,7 +30,7 @@ type UploadFileListProps = {
  * orchestrates the layout and animations of its `UploadFileItem` children.
  */
 export const UploadFileList = memo(
-  ({ files, viewMode, onViewFile, onDeleteFile, onRetry, deletingFileId }: UploadFileListProps) => {
+  ({ files, viewMode, onViewFile, onDeleteFile, onRetry, deletingFileId, onSetImageType }: UploadFileListProps) => {
     return (
       <motion.div
         layout
@@ -58,6 +60,7 @@ export const UploadFileList = memo(
               onDeleteFile={onDeleteFile}
               onRetry={onRetry}
               deletingFileId={deletingFileId}
+              onSetImageType={onSetImageType}
             />
           ))}
         </AnimatePresence>
