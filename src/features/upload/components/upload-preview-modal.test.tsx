@@ -292,6 +292,7 @@ describe("UploadPreviewModal", () => {
     dateUploaded: new Date(),
     version: 1,
     key: "key-1",
+    imageType: null,
   } as UploadableFile;
 
   // Arrange: Define default props for the `UploadPreviewModal` component.

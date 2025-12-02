@@ -54,6 +54,7 @@ export type ImageFile = {
   size: number;
   dateUploaded: Date;
   version: number;
+  imageType?: "macro" | "field" | null;
   detections?: (typeof detections.$inferSelect)[];
 };
 

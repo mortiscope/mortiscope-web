@@ -16,6 +16,7 @@ const updateUploadSchema = z.object({
   type: z.string().optional(),
   key: z.string().optional(),
   url: z.string().url().optional(),
+  imageType: z.enum(["macro", "field"]).optional(),
 });
 
 type UpdateUploadInput = z.infer<typeof updateUploadSchema>;

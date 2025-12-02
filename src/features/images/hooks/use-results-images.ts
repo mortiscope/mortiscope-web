@@ -33,6 +33,7 @@ export const useResultsImages = (initialImages?: InitialImages) => {
         size: img.size,
         dateUploaded: img.createdAt,
         version: img.createdAt.getTime(),
+        imageType: img.imageType,
         detections: img.detections,
       })) || [];
 

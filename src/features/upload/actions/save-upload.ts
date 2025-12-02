@@ -18,6 +18,7 @@ const saveUploadSchema = z.object({
   width: z.number(),
   height: z.number(),
   caseId: z.string().min(1, { message: "Case ID is required to save the upload." }),
+  imageType: z.enum(["macro", "field"]).nullable().optional(),
 });
 
 type SaveUploadInput = z.infer<typeof saveUploadSchema>;
@@ -53,7 +54,7 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
     return { success: false, error: "Invalid input provided for saving upload." };
   }
 
-  const { id, key, name, size, type, width, height, caseId } = parseResult.data;
+  const { id, key, name, size, type, width, height, caseId, imageType } = parseResult.data;
   const url = `https://${BUCKET_NAME}.s3.${BUCKET_REGION}.amazonaws.com/${key}`;
 
   try {
@@ -68,6 +69,7 @@ export async function saveUpload(values: SaveUploadInput): Promise<ActionRespons
       height,
       userId,
       caseId,
+      imageType,
     });
 
     // Return the authenticated proxy URL for immediate client-side display.

@@ -92,6 +92,7 @@ export const useFileProcessor = ({ files, caseId }: UseFileProcessorProps) => {
                 width,
                 height,
                 caseId,
+                imageType: useAnalyzeStore.getState().data.files.find((f: UploadableFile) => f.id === uploadableFile.id)?.imageType,
               });
             } catch (error) {
               setUploadStatus(uploadableFile.id, "error");

@@ -61,6 +61,8 @@ export type UploadableFile = {
   dateUploaded: Date;
   // A number (timestamp) that changes when the file is edited, forcing a re-fetch.
   version: number;
+  // The classification of the image: macro (scaled-up specimen) or field (in-situ). Null means unspecified.
+  imageType: "macro" | "field" | null;
 };
 
 /**
@@ -74,6 +76,7 @@ export type PersistedFile = {
   size: number;
   type: string;
   createdAt: Date;
+  imageType: "macro" | "field" | null;
 };
 
 /**
@@ -153,6 +156,8 @@ type AnalyzeState = {
   setUploadKey: (fileId: string, key: string) => void;
   // Action to store the final S3 URL for a file after saving its metadata.
   setUploadUrl: (fileId: string, url: string) => void;
+  // Action to set the image type classification (macro or field) for a specific file.
+  setImageType: (fileId: string, imageType: "macro" | "field") => void;
   // Action to populate the store with files from the database.
   hydrateFiles: (files: PersistedFile[]) => void;
   // Action to update the details form data with a validated payload.
@@ -252,6 +257,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
           source,
           dateUploaded: new Date(),
           version: Date.now(),
+          imageType: null,
         }));
         set((state) => ({
           data: {
@@ -329,6 +335,14 @@ export const useAnalyzeStore = create<AnalyzeState>()(
             files: state.data.files.map((f) => (f.id === fileId ? { ...f, url } : f)),
           },
         })),
+      // Sets the image type classification for a specific file.
+      setImageType: (fileId, imageType) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            files: state.data.files.map((f) => (f.id === fileId ? { ...f, imageType } : f)),
+          },
+        })),
       // Populates the store with persisted files from the database.
       hydrateFiles: (files) => {
         const persistedFiles: UploadableFile[] = files.map((file) => ({
@@ -343,6 +357,7 @@ export const useAnalyzeStore = create<AnalyzeState>()(
           source: "db",
           dateUploaded: file.createdAt,
           version: file.createdAt.getTime(),
+          imageType: file.imageType ?? null,
         }));
         set({ data: { files: persistedFiles }, isHydrated: true });
       },

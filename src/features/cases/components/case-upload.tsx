@@ -117,7 +117,10 @@ export const CaseUpload = () => {
     disabled: isMaxFilesReached || !caseId,
   });
 
-  const isNextDisabled = filesCount === 0 || files.some((file) => file.status !== "success");
+  const isNextDisabled =
+    filesCount === 0 ||
+    files.some((file) => file.status !== "success") ||
+    files.some((file) => file.status === "success" && !file.imageType);
 
   return (
     <>
