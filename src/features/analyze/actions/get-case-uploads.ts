@@ -26,7 +26,12 @@ export async function getCaseUploads(caseId: string) {
       orderBy: [desc(uploads.createdAt)],
     });
 
-    return { success: true, data: caseUploads };
+    const mappedUploads = caseUploads.map((upload) => ({
+      ...upload,
+      url: `/api/images/${upload.id}`,
+    }));
+
+    return { success: true, data: mappedUploads };
   } catch (error) {
     console.error("Error fetching case uploads:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
