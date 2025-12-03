@@ -18,6 +18,7 @@ export interface EditorImage {
   url: string;
   size: number;
   dateUploaded: Date;
+  imageType?: string | null;
   detections?: Detection[];
 }
 

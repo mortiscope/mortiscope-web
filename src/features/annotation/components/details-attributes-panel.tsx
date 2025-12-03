@@ -12,6 +12,7 @@ import {
   IoCalendarOutline,
   IoFolderOpenOutline,
   IoImageOutline,
+  IoImagesOutline,
   IoThermometerOutline,
 } from "react-icons/io5";
 import { PiCity, PiMapTrifold } from "react-icons/pi";
@@ -82,6 +83,18 @@ export const DetailsAttributesPanel = memo(() => {
     return image?.dateUploaded ? formatDate(new Date(image.dateUploaded)) : "N/A";
   }, [image?.dateUploaded]);
 
+  /** Memoizes the display label for the image type. */
+  const displayImageType = useMemo(() => {
+    if (!image?.imageType) return "N/A";
+
+    const typeMapping: Record<string, string> = {
+      field: "Field",
+      macro: "Macro",
+    };
+
+    return typeMapping[image.imageType.toLowerCase()] || image.imageType;
+  }, [image?.imageType]);
+
   // A derived boolean for the overall loading state of the component.
   const isLoading = isCaseLoading || isImageLoading;
 
@@ -117,6 +130,14 @@ export const DetailsAttributesPanel = memo(() => {
 
       {/* Image Name */}
       <PanelInformationRow icon={IoImageOutline} label="Image Name" value={imageName} delay={0.1} />
+
+      {/* Image Type */}
+      <PanelInformationRow
+        icon={IoImagesOutline}
+        label="Image Type"
+        value={displayImageType}
+        delay={0.2}
+      />
 
       {/* Resolution */}
       <PanelInformationRow icon={BsAspectRatio} label="Resolution" value={resolution} delay={0.2} />
