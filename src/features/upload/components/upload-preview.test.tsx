@@ -1,34 +1,56 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, type Mock, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
-import { useAnalyzeStore } from "@/features/analyze/store/analyze-store";
+import { mockUploads } from "@/__tests__/mocks/fixtures/uploads.fixtures";
+import { type UploadableFile, useAnalyzeStore } from "@/features/analyze/store/analyze-store";
 import { deleteUpload } from "@/features/upload/actions/delete-upload";
+import { updateUpload } from "@/features/upload/actions/update-upload";
 import { UploadPreview } from "@/features/upload/components/upload-preview";
 
 // Mock the `next/dynamic` function used for lazy loading components.
 vi.mock("next/dynamic", () => ({
   default: (loader: () => Promise<unknown>) => {
-    loader();
-    // Return a functional mock component that simulates the behavior of the dynamic modal.
-    return function MockDynamicComponent(props: {
-      isOpen: boolean;
-      onNext: () => void;
-      onPrevious: () => void;
-      onSelectFile: (id: string) => void;
-      onClose: () => void;
-      file?: { id: string; name: string };
-    }) {
-      // Arrange: Render nothing when the modal is closed.
-      if (!props.isOpen) return null;
-      // Arrange: Render the mock modal with internal controls and test IDs.
+    const loaderStr = loader.toString();
+    if (loaderStr.includes("image-type-modal")) {
+      return function MockImageTypeModal(props: Record<string, unknown>) {
+        const { isOpen, file, onConfirm, onOpenChange } = props as {
+          isOpen: boolean;
+          file: { id: string } | null;
+          onConfirm: (id: string, type: string) => void;
+          onOpenChange: (open: boolean) => void;
+        };
+        if (!isOpen) return null;
+        return (
+          <div data-testid="image-type-modal">
+            <button onClick={() => onConfirm(file?.id ?? "", "macro")}>Confirm Macro</button>
+            <button onClick={() => onConfirm(file?.id ?? "", "field")}>Confirm Field</button>
+            <button onClick={() => onConfirm("nonexistent-id", "macro")}>Confirm Unknown</button>
+            <button onClick={() => onOpenChange(false)}>Close Image Type</button>
+            <button onClick={() => onOpenChange(true)}>Keep Open</button>
+          </div>
+        );
+      };
+    }
+
+    // Default to the upload preview modal mock
+    return function MockDynamicComponent(props: Record<string, unknown>) {
+      const { isOpen, file, onNext, onPrevious, onSelectFile, onClose } = props as {
+        isOpen: boolean;
+        file: { name: string } | null;
+        onNext: () => void;
+        onPrevious: () => void;
+        onSelectFile: (id: string) => void;
+        onClose: () => void;
+      };
+      if (!isOpen) return null;
       return (
         <div data-testid="upload-preview-modal">
-          <div data-testid="preview-file-name">{props.file?.name}</div>
-          <button onClick={props.onNext}>Next</button>
-          <button onClick={props.onPrevious}>Previous</button>
-          <button onClick={() => props.onSelectFile("2")}>Select File 2</button>
-          <button onClick={() => props.onSelectFile("invalid-id")}>Select Invalid File</button>
-          <button onClick={props.onClose}>Close</button>
+          <div data-testid="preview-file-name">{file?.name}</div>
+          <button onClick={onNext}>Next</button>
+          <button onClick={onPrevious}>Previous</button>
+          <button onClick={() => onSelectFile("2")}>Select File 2</button>
+          <button onClick={() => onSelectFile("invalid-id")}>Select Invalid File</button>
+          <button onClick={onClose}>Close</button>
         </div>
       );
     };
@@ -97,7 +119,12 @@ vi.mock("@/features/analyze/store/analyze-store", () => ({
 
 // Mock the server action for deleting an upload.
 vi.mock("@/features/upload/actions/delete-upload", () => ({
-  deleteUpload: vi.fn(),
+  deleteUpload: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+// Mock the server action for updating an upload.
+vi.mock("@/features/upload/actions/update-upload", () => ({
+  updateUpload: vi.fn().mockResolvedValue({ success: true }),
 }));
 
 // Mock the `UploadFileList` component, abstracting its rendering and interaction logic.
@@ -106,10 +133,12 @@ vi.mock("@/features/upload/components/upload-file-list", () => ({
     files,
     onViewFile,
     onDeleteFile,
+    onSetImageType,
   }: {
     files: Array<{ id: string; name: string; key?: string }>;
     onViewFile: (file: { id: string }) => void;
     onDeleteFile: (id: string, key: string | null) => void;
+    onSetImageType?: (file: { id: string }) => void;
   }) => (
     // Arrange: Render a test container for the file list.
     <div data-testid="upload-file-list">
@@ -119,10 +148,15 @@ vi.mock("@/features/upload/components/upload-file-list", () => ({
           <span>{f.name}</span>
           <button onClick={() => onViewFile(f)}>View {f.name}</button>
           <button onClick={() => onDeleteFile(f.id, f.key || null)}>Delete {f.name}</button>
+          {onSetImageType && <button onClick={() => onSetImageType(f)}>Set Type {f.name}</button>}
         </div>
       ))}
       {/* Arrange: Add a button to test local deletion when no S3 key is present. */}
       <button onClick={() => onDeleteFile("phantom-id", null)}>Delete Phantom Local</button>
+      {/* Arrange: Add a button to test server deletion when file is not in store. */}
+      <button onClick={() => onDeleteFile("phantom-id", "phantom-key")}>
+        Delete Phantom Server
+      </button>
     </div>
   ),
 }));
@@ -172,21 +206,46 @@ describe("UploadPreview", () => {
   const mockRetryUpload = vi.fn();
 
   // Define a consistent set of test file data.
-  const filesData = [
+  const filesData: UploadableFile[] = [
     {
+      ...mockUploads.firstUpload,
       id: "1",
       name: "instar-2.jpg",
       size: 5000,
+      progress: 100,
+      status: "success",
+      source: "upload",
       dateUploaded: new Date("2025-01-01"),
       key: "key-1",
+      version: 1,
+      imageType: null,
     },
-    { id: "2", name: "instar-3.jpg", size: 1000, dateUploaded: new Date("2025-01-02") },
     {
+      ...mockUploads.secondUpload,
+      id: "2",
+      name: "instar-3.jpg",
+      size: 1000,
+      progress: 100,
+      status: "success",
+      source: "upload",
+      dateUploaded: new Date("2025-01-02"),
+      version: 1,
+      imageType: null,
+      key: "",
+    },
+    {
+      ...mockUploads.firstUpload,
       id: "3",
       name: "instar-1.jpg",
       size: 3000,
+      progress: 100,
+      status: "success",
+      source: "upload",
       dateUploaded: new Date("2025-01-03"),
       key: "key-3",
+      url: "https://example.com/instar-1.jpg",
+      version: 1,
+      imageType: null,
     },
   ];
 
@@ -603,6 +662,283 @@ describe("UploadPreview", () => {
         expect(toast.error).toHaveBeenCalledWith("Access Denied");
       });
     });
+
+    /**
+     * Test case to verify that a fallback error message is shown when the server rejection contains no details.
+     */
+    it("displays default error toast if server delete fails with no message", async () => {
+      // Arrange: Mock the deletion service to reject with a generic error.
+      (deleteUpload as unknown as Mock).mockRejectedValue(new Error());
+      render(<UploadPreview />);
+
+      // Act: Trigger the deletion of a specific file.
+      fireEvent.click(screen.getByText("Delete instar-1.jpg"));
+
+      // Assert: Verify that the toast notification displays the default error string.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("An error occurred during deletion.");
+      });
+    });
+
+    /**
+     * Test case to verify that a failure response without an error string triggers a default error message.
+     */
+    it("displays default error toast if deleteUpload returns success: false with no error text", async () => {
+      // Arrange: Mock the deletion service to return a failed status without a specific message.
+      (deleteUpload as unknown as Mock).mockResolvedValue({ success: false });
+      render(<UploadPreview />);
+
+      // Act: Trigger the deletion of a specific file.
+      fireEvent.click(screen.getByText("Delete instar-1.jpg"));
+
+      // Assert: Verify that the fallback server failure message is displayed in a toast.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Failed to delete file from server.");
+      });
+    });
+
+    /**
+     * Test case to verify that a generic success message is shown even if the deleted file data is missing from the state.
+     */
+    it("displays generic success toast if deleted file is missing", async () => {
+      // Arrange: Mock the deletion service to return a successful response.
+      (deleteUpload as unknown as Mock).mockResolvedValue({ success: true });
+      render(<UploadPreview />);
+
+      // Act: Trigger the deletion of a file entry.
+      fireEvent.click(screen.getByText("Delete Phantom Server"));
+
+      // Assert: Verify that the success toast is triggered regardless of state presence.
+      await waitFor(() => {
+        expect(toast.success).toHaveBeenCalledWith("File deleted successfully.");
+      });
+    });
+  });
+
+  /**
+   * Test suite for managing image type categories (e.g., Macro, Field) within the preview.
+   */
+  describe("Image Type Selection", () => {
+    /**
+     * Test case to verify that local state is updated and a modal is used for files that haven't reached the server yet.
+     */
+    it("opens the image type modal and handles a pending file selection", () => {
+      // Arrange: Set up a file in the store with a `pending` status.
+      const mockSetImageType = vi.fn();
+      const nonUploadedFiles = [
+        {
+          ...filesData[0],
+          status: "pending",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: nonUploadedFiles },
+        setImageType: mockSetImageType,
+      });
+
+      render(<UploadPreview />);
+
+      // Act: Open the selection modal and simulate a confirmation for the `macro` type.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      expect(screen.getByTestId("image-type-modal")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Confirm Macro"));
+
+      // Assert: Ensure the local store is updated and a notification confirms the future save.
+      expect(mockSetImageType).toHaveBeenCalledWith("1", "macro");
+      expect(toast.success).toHaveBeenCalledWith("The image type will be saved as macro.");
+    });
+
+    /**
+     * Test case to verify that updating an already uploaded file triggers a server-side mutation.
+     */
+    it("handles an uploaded file selection and calls the server mutation", async () => {
+      // Arrange: Set up a file in the store with a `success` status and mock the update service.
+      const mockSetImageType = vi.fn();
+      const uploadedFiles = [
+        {
+          ...filesData[0],
+          status: "success",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+        setImageType: mockSetImageType,
+      });
+      (updateUpload as unknown as Mock).mockResolvedValue({ success: true });
+
+      render(<UploadPreview />);
+
+      // Act: Open the modal and confirm a change to the `field` type.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Verify the server mutation, local state update, and success toast are all executed.
+      await waitFor(() => {
+        expect(updateUpload).toHaveBeenCalledWith({ id: "1", imageType: "field" });
+        expect(mockSetImageType).toHaveBeenCalledWith("1", "field");
+        expect(toast.success).toHaveBeenCalledWith("The image type has been set to field.");
+      });
+    });
+
+    /**
+     * Test case to verify that specific server error messages are displayed to the user upon update failure.
+     */
+    it("displays error toast if updateUpload returns success: false", async () => {
+      // Arrange: Set up the store with an uploaded file and mock a server-side failure message.
+      const mockSetImageType = vi.fn();
+      const uploadedFiles = [
+        {
+          ...filesData[0],
+          status: "success",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+        setImageType: mockSetImageType,
+      });
+      (updateUpload as unknown as Mock).mockResolvedValue({
+        success: false,
+        error: "Update failed",
+      });
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to update the image type via the modal.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Verify that the specific error message from the server is displayed in a toast.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Update failed");
+      });
+    });
+
+    /**
+     * Test case to verify that network or unexpected server errors display the error's message property.
+     */
+    it("displays error toast if server update fails completely", async () => {
+      // Arrange: Set up the store and mock a rejected promise with a specific error message.
+      const mockSetImageType = vi.fn();
+      const uploadedFiles = [
+        {
+          ...filesData[0],
+          status: "success",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+        setImageType: mockSetImageType,
+      });
+      (updateUpload as unknown as Mock).mockRejectedValue(new Error("Network Error"));
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to update the image type.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Verify the rejection message is displayed in the UI.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Network Error");
+      });
+    });
+
+    /**
+     * Test case to verify the fallback error message for failed updates with no descriptive error text.
+     */
+    it("displays error toast if updateUpload returns success: false empty message", async () => {
+      // Arrange: Mock the update service to fail without providing a reason.
+      const uploadedFiles = [{ ...filesData[0], status: "success" }];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+      });
+      (updateUpload as unknown as Mock).mockResolvedValue({ success: false });
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to update the image type.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Ensure the default update failure string is shown.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Failed to update image type.");
+      });
+    });
+
+    /**
+     * Test case to verify the fallback error message for rejected update promises with no message.
+     */
+    it("displays error toast if server update fails completely empty message", async () => {
+      // Arrange: Mock a hard server rejection with no error payload.
+      const uploadedFiles = [{ ...filesData[0], status: "success" }];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+      });
+      (updateUpload as unknown as Mock).mockRejectedValue(new Error());
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to update the image type.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Ensure the default server exception string is shown.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("An error occurred while saving image type.");
+      });
+    });
+
+    /**
+     * Test case to verify that confirmations are ignored if the target file has been removed from the store since the modal opened.
+     */
+    it("ignores confirmation if the file cannot be found in the store", () => {
+      // Arrange: Configure the store with standard data.
+      const mockSetImageType = vi.fn();
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: filesData },
+        setImageType: mockSetImageType,
+      });
+
+      render(<UploadPreview />);
+
+      // Act: Open the modal for a file, but simulate a confirmation for an ID not present in state.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      expect(screen.getByTestId("image-type-modal")).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Confirm Unknown"));
+
+      // Assert: Verify that the store update was not called.
+      expect(mockSetImageType).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test case to verify that the modal correctly responds to open and close trigger interactions.
+     */
+    it("closes the image type modal", () => {
+      // Arrange: Render the component.
+      render(<UploadPreview />);
+
+      // Act: Open the modal, verify its presence, and then trigger the close action.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      expect(screen.getByTestId("image-type-modal")).toBeInTheDocument();
+
+      // Act: Ensure dummy interactions do not close the modal.
+      fireEvent.click(screen.getByText("Keep Open"));
+      expect(screen.getByTestId("image-type-modal")).toBeInTheDocument();
+
+      // Act: Trigger the formal close event.
+      fireEvent.click(screen.getByText("Close Image Type"));
+
+      // Assert: Verify the modal is removed from the DOM.
+      expect(screen.queryByTestId("image-type-modal")).not.toBeInTheDocument();
+    });
   });
 
   /**
@@ -681,6 +1017,109 @@ describe("UploadPreview", () => {
 
       // Assert: Verify that the viewing file is unchanged because the current file is not in the new filtered navigation array.
       expect(screen.getByTestId("preview-file-name")).toHaveTextContent("instar-3.jpg");
+
+      // Act: Attempt to navigate to the "Previous" file.
+      fireEvent.click(screen.getByText("Previous"));
+
+      // Assert: Verify that the viewing file is still unchanged.
+      expect(screen.getByTestId("preview-file-name")).toHaveTextContent("instar-3.jpg");
+    });
+
+    /**
+     * Test case to verify that the mutation error handler correctly extracts and displays the error message.
+     */
+    it("handles imageTypeMutation onError", async () => {
+      // Arrange: Set up a store containing a successfully uploaded file.
+      const uploadedFiles = [
+        {
+          id: "1",
+          name: "instar-2.jpg",
+          size: 5000,
+          dateUploaded: new Date("2025-01-01"),
+          key: "key-1",
+          status: "success",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+      });
+
+      // Arrange: Mock the mutation to reject with a specific error object.
+      (updateUpload as unknown as Mock).mockRejectedValueOnce({
+        message: "Generic Mutation Error",
+      });
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to confirm a new image type through the modal.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Verify that the toast notification displays the caught error message.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Generic Mutation Error");
+      });
+    });
+
+    /**
+     * Test case to verify that the mutation is aborted if the target file is no longer present in the store.
+     */
+    it("handles imageTypeMutation if !file return", () => {
+      // Arrange: Initialize the component with an empty file list.
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: [] },
+      });
+      render(<UploadPreview />);
+
+      (useAnalyzeStore as unknown as Mock).mockReturnValue(defaultStoreState);
+      render(<UploadPreview />);
+
+      // Act: Attempt to interact with a file that does not exist or cannot be identified.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Unknown"));
+
+      // Assert: Ensure that the server mutation logic was never triggered.
+      expect(updateUpload).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Test case to verify that a successful network response containing a logical application error is handled.
+     */
+    it("handles mutation success with custom error message", async () => {
+      // Arrange: Set up a store with a valid file.
+      const uploadedFiles = [
+        {
+          id: "1",
+          name: "instar-2.jpg",
+          size: 5000,
+          dateUploaded: new Date("2025-01-01"),
+          key: "key-1",
+          status: "success",
+        },
+      ];
+      (useAnalyzeStore as unknown as Mock).mockReturnValue({
+        ...defaultStoreState,
+        data: { files: uploadedFiles },
+      });
+
+      // Arrange: Mock the server response to indicate failure via a returned error property.
+      (updateUpload as unknown as Mock).mockResolvedValue({
+        success: false,
+        error: "Server Error Message",
+      });
+
+      render(<UploadPreview />);
+
+      // Act: Attempt to update the image type via the UI.
+      fireEvent.click(screen.getByText("Set Type instar-2.jpg"));
+      fireEvent.click(screen.getByText("Confirm Field"));
+
+      // Assert: Verify that the application displays the specific error message provided by the server.
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith("Server Error Message");
+      });
     });
   });
 });
