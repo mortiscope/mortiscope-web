@@ -782,6 +782,7 @@ The following subsections outline the structure of the application's source code
         ├── 0013_snapshot.json
         ├── 0014_snapshot.json
         ├── 0015_snapshot.json
+        ├── 0016_snapshot.json
     ├── 0000_authentication.sql
     ├── 0001_analysis.sql
     ├── 0002_case.sql
@@ -798,6 +799,7 @@ The following subsections outline the structure of the application's source code
     ├── 0013_sessions.sql
     ├── 0014_annotations.sql
     ├── 0015_indexes.sql
+    ├── 0016_image_type.sql
 └── 📁public
     └── 📁avatars
         ├── avatar-1.svg
@@ -972,6 +974,9 @@ The following subsections outline the structure of the application's source code
         ├── gradient-text.tsx
         ├── json-ld.tsx
         ├── location-dropdown.tsx
+        ├── scroll-reveal.tsx
+        ├── shiny-text.tsx
+        ├── spotlight-card.tsx
         ├── user-avatar.tsx
     └── 📁data
         ├── user.ts
@@ -1493,6 +1498,7 @@ The following subsections outline the structure of the application's source code
                 ├── save-upload.ts
                 ├── update-upload.ts
             └── 📁components
+                ├── image-type-modal.tsx
                 ├── upload-dropzone.tsx
                 ├── upload-file-item.tsx
                 ├── upload-file-list.tsx
@@ -2106,6 +2112,7 @@ The project includes unit tests with coverage reporting.
                 ├── save-upload.test.ts
                 ├── update-upload.test.ts
             └── 📁components
+                ├── image-type-modal.test.tsx
                 ├── upload-dropdzone.test.tsx
                 ├── upload-file-item.test.tsx
                 ├── upload-file-list.test.tsx
