@@ -97,7 +97,7 @@ describe("getCaseUploads", () => {
     // Assert: Check that the returned data matches the mock uploads.
     expect(result).toEqual({
       success: true,
-      data: mockUploads,
+      data: mockUploads.map((u) => ({ ...u, url: `/api/images/${u.id}` })),
     });
   });
 

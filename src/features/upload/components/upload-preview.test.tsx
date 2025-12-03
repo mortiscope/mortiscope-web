@@ -746,7 +746,9 @@ describe("UploadPreview", () => {
 
       // Assert: Ensure the local store is updated and a notification confirms the future save.
       expect(mockSetImageType).toHaveBeenCalledWith("1", "macro");
-      expect(toast.success).toHaveBeenCalledWith("The image type will be saved as macro.");
+      expect(toast.success).toHaveBeenCalledWith(
+        "The image type for instar-2.jpg will be saved as macro."
+      );
     });
 
     /**
@@ -778,7 +780,7 @@ describe("UploadPreview", () => {
       await waitFor(() => {
         expect(updateUpload).toHaveBeenCalledWith({ id: "1", imageType: "field" });
         expect(mockSetImageType).toHaveBeenCalledWith("1", "field");
-        expect(toast.success).toHaveBeenCalledWith("The image type has been set to field.");
+        expect(toast.success).toHaveBeenCalledWith("instar-2.jpg has been set to field.");
       });
     });
 
