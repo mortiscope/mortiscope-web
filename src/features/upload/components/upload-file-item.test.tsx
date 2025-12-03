@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { mockUploads } from "@/__tests__/mocks/fixtures/uploads.fixtures";
 import { type UploadableFile } from "@/features/analyze/store/analyze-store";
 import { UploadFileItem } from "@/features/upload/components/upload-file-item";
 
@@ -52,18 +53,16 @@ vi.mock("@/lib/utils", async (importOriginal) => {
 describe("UploadFileItem", () => {
   // Arrange: Define a consistent mock `UploadableFile` object for use across tests.
   const mockFile: UploadableFile = {
-    id: "file-123",
-    file: new File(["dummy content"], "test-image.png", { type: "image/png" }),
-    url: "blob:http://localhost:3000/uuid",
-    name: "test-image.png",
-    size: 1024 * 1024,
-    type: "image/png",
+    ...mockUploads.firstUpload,
+    file: new File(["dummy content"], mockUploads.firstUpload.name, {
+      type: mockUploads.firstUpload.type,
+    }),
     status: "success",
     progress: 100,
-    key: "s3-key-123",
     source: "upload",
-    dateUploaded: new Date(),
+    dateUploaded: new Date(mockUploads.firstUpload.createdAt),
     version: 1,
+    imageType: null,
   };
 
   // Arrange: Define a default set of props for the component under test.
@@ -74,7 +73,60 @@ describe("UploadFileItem", () => {
     onDeleteFile: vi.fn(),
     onRetry: vi.fn(),
     deletingFileId: null,
+    onSetImageType: vi.fn(),
   };
+
+  /**
+   * Test suite for the Image Type Indicator within the Upload File Item component.
+   */
+  describe("Image Type Indicator", () => {
+    /**
+     * Test case to verify that the macro icon is rendered when the file type is set to macro.
+     */
+    it("renders macro icon when imageType is macro", () => {
+      // Arrange: Create a file mock with the `imageType` property set to `macro`.
+      const macroFile = { ...mockFile, imageType: "macro" as const };
+      render(<UploadFileItem {...defaultProps} file={macroFile} />);
+
+      // Act: Locate the button using the accessible label associated with the file name.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${macroFile.name}`);
+
+      // Assert: Verify the button is in the document and contains the expected styling classes.
+      expect(setImageTypeBtn).toBeInTheDocument();
+      expect(setImageTypeBtn).toHaveClass("text-slate-500");
+    });
+
+    /**
+     * Test case to verify that the field icon is rendered when the file type is set to field.
+     */
+    it("renders field icon when imageType is field", () => {
+      // Arrange: Create a file mock with the `imageType` property set to `field`.
+      const fieldFile = { ...mockFile, imageType: "field" as const };
+      render(<UploadFileItem {...defaultProps} file={fieldFile} />);
+
+      // Act: Locate the button using the accessible label associated with the file name.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${fieldFile.name}`);
+
+      // Assert: Verify the button is present and styled correctly for the field state.
+      expect(setImageTypeBtn).toBeInTheDocument();
+      expect(setImageTypeBtn).toHaveClass("text-slate-500");
+    });
+
+    /**
+     * Test case to verify that the image type selection button is hidden when a file upload fails.
+     */
+    it("does not render image type button if file status is error", () => {
+      // Arrange: Create a file mock where the `status` property is set to `error`.
+      const errorFile = { ...mockFile, status: "error" as const };
+      render(<UploadFileItem {...defaultProps} file={errorFile} />);
+
+      // Act: Attempt to find the image type button in the document.
+      const setImageTypeBtn = screen.queryByLabelText(`Set image type for ${errorFile.name}`);
+
+      // Assert: Ensure the button is not rendered when the file is in an error state.
+      expect(setImageTypeBtn).not.toBeInTheDocument();
+    });
+  });
 
   /**
    * Test suite for the component behavior when the `viewMode` is set to "list".
@@ -88,7 +140,7 @@ describe("UploadFileItem", () => {
       render(<UploadFileItem {...defaultProps} viewMode="list" />);
 
       // Assert: Check for the presence of the file name, formatted size, and mock thumbnail/status icons.
-      expect(screen.getByText("test-image.png")).toBeInTheDocument();
+      expect(screen.getByText(mockFile.name)).toBeInTheDocument();
       expect(screen.getByText("1.0 MB")).toBeInTheDocument();
       expect(screen.getByTestId("upload-thumbnail")).toBeInTheDocument();
       expect(screen.getByTestId("status-icon")).toBeInTheDocument();
@@ -110,6 +162,21 @@ describe("UploadFileItem", () => {
       // Assert: Verify that the `onViewFile` function was called with the mock file object.
       expect(defaultProps.onViewFile).toHaveBeenCalledWith(mockFile);
     });
+
+    /**
+     * Test case to verify that the onSetImageType callback is executed when the interaction button is clicked in list view.
+     */
+    it("calls onSetImageType when clicking the set image type button in list mode", () => {
+      // Arrange: Render the component with the `viewMode` prop set to "list".
+      render(<UploadFileItem {...defaultProps} viewMode="list" />);
+
+      // Act: Locate the image type button by its accessible label and simulate a user click.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${mockFile.name}`);
+      fireEvent.click(setImageTypeBtn);
+
+      // Assert: Ensure the `onSetImageType` function was triggered with the correct `mockFile` object.
+      expect(defaultProps.onSetImageType).toHaveBeenCalledWith(mockFile);
+    });
   });
 
   /**
@@ -124,7 +191,7 @@ describe("UploadFileItem", () => {
       render(<UploadFileItem {...defaultProps} viewMode="grid" />);
 
       // Assert: Check that the file name and size text elements are not present.
-      expect(screen.queryByText("test-image.png")).not.toBeInTheDocument();
+      expect(screen.queryByText(mockFile.name)).not.toBeInTheDocument();
       expect(screen.queryByText("1.0 MB")).not.toBeInTheDocument();
 
       // Assert: Check that the visual thumbnail is still present.
@@ -148,23 +215,57 @@ describe("UploadFileItem", () => {
       expect(defaultProps.onViewFile).toHaveBeenCalledWith(mockFile);
     });
 
+    /**
+     * Test case to verify that the onViewFile callback is triggered when the view button is clicked in grid mode.
+     */
     it("calls onViewFile when clicking the eye icon button in grid mode", () => {
+      // Arrange: Render the component in "grid" mode.
       render(<UploadFileItem {...defaultProps} viewMode="grid" />);
+
+      // Act: Filter the available buttons to identify the specific button element for viewing the file.
       const viewButtons = screen.getAllByRole("button", { name: `View ${mockFile.name}` });
-      // In grid mode, the button is rendered.
       const viewButton = viewButtons.find((btn) => btn.tagName === "BUTTON");
       fireEvent.click(viewButton!);
+
+      // Assert: Ensure the `onViewFile` callback is invoked with the `mockFile` data.
       expect(defaultProps.onViewFile).toHaveBeenCalledWith(mockFile);
     });
 
+    /**
+     * Test case to verify that the onDeleteFile callback is triggered when the removal button is clicked in grid mode.
+     */
     it("calls onDeleteFile when clicking the trash icon button in grid mode", () => {
+      // Arrange: Render the component in "grid" mode.
       render(<UploadFileItem {...defaultProps} viewMode="grid" />);
+
+      // Act: Locate the deletion button by its accessible name and simulate a click event.
       const deleteButton = screen.getByRole("button", { name: `Remove ${mockFile.name}` });
       fireEvent.click(deleteButton);
+
+      // Assert: Ensure `onDeleteFile` is called with both the file `id` and `key`.
       expect(defaultProps.onDeleteFile).toHaveBeenCalledWith(mockFile.id, mockFile.key);
     });
 
+    /**
+     * Test case to verify that the onSetImageType callback is triggered when the type selection button is clicked in grid mode.
+     */
+    it("calls onSetImageType when clicking the set image type button in grid mode", () => {
+      // Arrange: Render the component in "grid" mode.
+      render(<UploadFileItem {...defaultProps} viewMode="grid" />);
+
+      // Act: Locate the image type button via its label and trigger a click.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${mockFile.name}`);
+      fireEvent.click(setImageTypeBtn);
+
+      // Assert: Verify that `onSetImageType` receives the current `mockFile` as an argument.
+      expect(defaultProps.onSetImageType).toHaveBeenCalledWith(mockFile);
+    });
+
+    /**
+     * Test case to verify that a null key is passed to the delete callback if the file metadata is incomplete.
+     */
     it("passes null key to onDeleteFile in grid mode if file has no key", () => {
+      // Arrange: Create a file object where the `key` property is `undefined`.
       const fileWithoutKey = { ...mockFile, key: undefined };
       render(
         <UploadFileItem
@@ -173,17 +274,65 @@ describe("UploadFileItem", () => {
           file={fileWithoutKey as unknown as UploadableFile}
         />
       );
+
+      // Act: Trigger the deletion logic by clicking the removal button.
       const deleteButton = screen.getByRole("button", { name: `Remove ${mockFile.name}` });
       fireEvent.click(deleteButton);
+
+      // Assert: Confirm that the callback handles the missing key by passing `null`.
       expect(defaultProps.onDeleteFile).toHaveBeenCalledWith(mockFile.id, null);
     });
 
+    /**
+     * Test case to verify that the UI displays a loading spinner and disables interaction during file deletion.
+     */
     it("shows spinner in grid mode when deleting this file", () => {
+      // Arrange: Render the component with a `deletingFileId` matching the current file.
       render(<UploadFileItem {...defaultProps} viewMode="grid" deletingFileId={mockFile.id} />);
+
+      // Act: Locate the deletion button in the DOM.
       const deleteButton = screen.getByRole("button", { name: `Remove ${mockFile.name}` });
+
+      // Assert: Verify the button is non-interactive and contains a child element with the animation class.
       expect(deleteButton).toBeDisabled();
       const spinner = deleteButton.querySelector(".animate-spin");
       expect(spinner).toBeInTheDocument();
+    });
+
+    /**
+     * Test case to verify that a red visual indicator is displayed in grid mode when the image type is missing.
+     */
+    it("renders red icon if imageType is unset in grid mode", () => {
+      // Arrange: Render the component in "grid" mode with the `imageType` prop set to `null`.
+      render(
+        <UploadFileItem {...defaultProps} viewMode="grid" file={{ ...mockFile, imageType: null }} />
+      );
+
+      // Act: Locate the image type selection button by its accessible label.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${mockFile.name}`);
+
+      // Assert: Ensure the button contains the `text-red-500` class to signal a required action.
+      expect(setImageTypeBtn).toHaveClass("text-red-500");
+    });
+
+    /**
+     * Test case to verify that a standard slate visual indicator is displayed in grid mode when the image type is defined.
+     */
+    it("renders indigo icon if imageType is set in grid mode", () => {
+      // Arrange: Render the component in "grid" mode with a valid `imageType` provided.
+      render(
+        <UploadFileItem
+          {...defaultProps}
+          viewMode="grid"
+          file={{ ...mockFile, imageType: "macro" }}
+        />
+      );
+
+      // Act: Locate the image type selection button by its accessible label.
+      const setImageTypeBtn = screen.getByLabelText(`Set image type for ${mockFile.name}`);
+
+      // Assert: Ensure the button contains the `text-slate-500` class indicating a completed state.
+      expect(setImageTypeBtn).toHaveClass("text-slate-500");
     });
   });
 
