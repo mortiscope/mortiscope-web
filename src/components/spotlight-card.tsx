@@ -10,12 +10,14 @@ interface Position {
 interface SpotlightCardProps extends React.PropsWithChildren {
   className?: string;
   spotlightColor?: `rgba(${number}, ${number}, ${number}, ${number})`;
+  isActive?: boolean;
 }
 
 const SpotlightCard: React.FC<SpotlightCardProps> = ({
   children,
   className = "",
   spotlightColor = "rgba(255, 255, 255, 0.25)",
+  isActive = true,
 }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState<boolean>(false);
@@ -58,10 +60,10 @@ const SpotlightCard: React.FC<SpotlightCardProps> = ({
       className={cn("relative overflow-hidden rounded-[3rem] bg-neutral-900 p-8", className)}
     >
       <div
-        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 ease-in-out"
+        className="pointer-events-none absolute inset-0 transition-opacity duration-500 ease-in-out"
         style={{
-          opacity,
-          background: `radial-gradient(circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 80%)`,
+          opacity: isActive && className.includes("mobile-active") ? 0.6 : opacity,
+          background: `radial-gradient(circle at ${className.includes("mobile-active") && divRef.current ? divRef.current.offsetWidth / 2 : position.x}px ${className.includes("mobile-active") && divRef.current ? divRef.current.offsetHeight / 2 : position.y}px, ${spotlightColor}, transparent 80%)`,
         }}
       />
       {children}

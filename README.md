@@ -1372,7 +1372,14 @@ The following subsections outline the structure of the application's source code
         └── 📁home
             └── 📁components
                 ├── hero.tsx
+                ├── hero-content.tsx
+                ├── hero-image-display.tsx
                 ├── navigation-bar.tsx
+            └── 📁hooks
+                ├── use-cursor-follow.ts
+                ├── use-hero-animation.ts
+                ├── use-mobile-interaction.ts
+                ├── use-scroll-reveal.ts
         └── 📁images
             └── 📁actions
                 ├── delete-image.ts
