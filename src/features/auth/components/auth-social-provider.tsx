@@ -80,7 +80,7 @@ export function AuthSocialProvider({ disabled = false, separatorText }: AuthSoci
               }
             }}
             disabled={areSocialsDisabled}
-            className="relative h-9 w-full cursor-pointer overflow-hidden rounded px-5 py-2.5 text-white transition-all duration-500 hover:rounded-sm hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:h-10"
+            className="relative h-9 w-full cursor-pointer overflow-hidden rounded-md px-5 py-2.5 text-white transition-all duration-500 hover:rounded-lg hover:bg-green-200 hover:ring-2 hover:ring-green-300 hover:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:h-10"
           >
             {/* Renders the social provider's logo. */}
             <Image

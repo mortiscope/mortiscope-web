@@ -184,7 +184,7 @@ export const HistoryLogTimelineEvent = ({ batchId, batchLogs }: HistoryLogTimeli
         </ul>
         <Tooltip>
           <TooltipTrigger asChild>
-            <time className="mt-2 inline-block w-fit cursor-help text-xs text-slate-400">
+            <time className="font-inter mt-2 inline-block w-fit cursor-help text-xs text-slate-400">
               {formatDistanceToNow(timestamp, { addSuffix: true })}
             </time>
           </TooltipTrigger>

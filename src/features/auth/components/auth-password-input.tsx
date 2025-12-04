@@ -68,7 +68,7 @@ export function AuthPasswordInput<
             type={showPassword ? "text" : "password"}
             placeholder={placeholder}
             disabled={disabled}
-            className="h-9 border-2 border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+            className="h-9 border border-slate-200 pr-10 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10 md:border-2"
             // Spreads the `field` object from react-hook-form to connect the input.
             {...field}
           />

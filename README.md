@@ -1199,6 +1199,7 @@ The following subsections outline the structure of the application's source code
             └── 📁components
                 ├── auth-form-container.tsx
                 ├── auth-form-header.tsx
+                ├── auth-form-logo.tsx
                 ├── auth-password-input.tsx
                 ├── auth-social-provider.tsx
                 ├── auth-submit-button.tsx
@@ -1851,6 +1852,7 @@ The project includes unit tests with coverage reporting.
             └── 📁components
                 ├── auth-form-container.test.tsx
                 ├── auth-form-header.test.tsx
+                ├── auth-form-logo.test.tsx
                 ├── auth-password-input.test.tsx
                 ├── auth-social-provider.test.tsx
                 ├── auth-submit-button.test.tsx

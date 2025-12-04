@@ -1,5 +1,4 @@
-import Image from "next/image";
-import Link from "next/link";
+import { AuthFormLogo } from "@/features/auth/components/auth-form-logo";
 
 /**
  * Defines the props for the authentication form header component.
@@ -22,20 +21,7 @@ export function AuthFormHeader({ title, description }: AuthFormHeaderProps) {
   return (
     <>
       {/* Logo section, links to homepage */}
-      <div className="mb-1 flex flex-col items-center md:mb-2">
-        <Link href="/" aria-label="Go to homepage">
-          <div className="flex cursor-pointer items-center">
-            <Image
-              src="/logos/logo.svg"
-              alt="Mortiscope Logo"
-              width={60}
-              height={60}
-              className="md:h-[80px] md:w-[80px]"
-              style={{ width: "auto", height: "auto" }}
-            />
-          </div>
-        </Link>
-      </div>
+      <AuthFormLogo />
       {/* Heading and Description for the auth page */}
       <div className="text-center">
         <h1 className="font-plus-jakarta-sans text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">

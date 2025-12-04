@@ -95,7 +95,7 @@ export default function SignInForm() {
                     id="email"
                     type="email"
                     placeholder="Enter your email"
-                    className="h-9 border-2 border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10"
+                    className="h-9 border border-slate-200 text-sm placeholder:text-slate-400 focus-visible:border-green-600 focus-visible:ring-0 md:h-10 md:border-2"
                     {...field}
                     disabled={isCredentialsPending || isRedirecting}
                   />
