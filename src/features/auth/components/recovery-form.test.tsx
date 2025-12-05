@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { useSearchParams } from "next/navigation";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, waitFor } from "@/__tests__/setup/test-utils";
 import { verifySigninRecoveryCode } from "@/features/auth/actions/recovery";
@@ -26,15 +26,27 @@ vi.mock("@/features/auth/actions/two-factor", () => ({
 describe("RecoveryForm", () => {
   // Mock function to track search params behavior.
   const mockGet = vi.fn();
+  const originalLocation = window.location;
 
   // Reset all mocks before each test to ensure test isolation.
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: { ...originalLocation, href: "" },
+    });
     vi.mocked(useSearchParams).mockReturnValue({
       get: mockGet,
     } as unknown as ReturnType<typeof useSearchParams>);
     // Default: no error in URL
     mockGet.mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      configurable: true,
+      value: originalLocation,
+    });
   });
 
   /**
@@ -311,6 +323,40 @@ describe("RecoveryForm", () => {
     // Assert: Check that completeTwoFactorSignIn was called.
     await waitFor(() => {
       expect(completeTwoFactorSignIn).toHaveBeenCalled();
+    });
+  });
+
+  /**
+   * Test case to verify that successful recovery verification navigates to dashboard.
+   */
+  it("redirects to dashboard after successful recovery sign-in completion", async () => {
+    // Arrange: Mock successful verification and server-side sign-in completion.
+    vi.mocked(verifySigninRecoveryCode).mockResolvedValue({
+      success: "Recovery code verified successfully.",
+      verified: true,
+      email: "mortiscope@example.com",
+      userId: "user-123",
+    });
+    vi.mocked(completeTwoFactorSignIn).mockResolvedValue({
+      success: "Sign-in completed successfully.",
+    });
+
+    const user = userEvent.setup();
+    render(<RecoveryForm />);
+
+    // Act: Fill in the form and submit.
+    await waitFor(() => {
+      expect(screen.getByLabelText("Recovery Code")).toBeInTheDocument();
+    });
+    const input = screen.getByLabelText("Recovery Code");
+    await user.type(input, "ABCD1234");
+
+    const button = screen.getByRole("button", { name: "Verify Code" });
+    await user.click(button);
+
+    // Assert: Verify redirect destination.
+    await waitFor(() => {
+      expect(window.location.href).toBe("/dashboard");
     });
   });
 
