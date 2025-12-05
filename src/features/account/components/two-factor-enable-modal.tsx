@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { BeatLoader } from "react-spinners";
 
@@ -60,24 +60,33 @@ export const TwoFactorEnableModal = ({
   const [otpValue, setOtpValue] = useState("");
   const [secret, setSecret] = useState("");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const hasRequestedSetupRef = useRef(false);
 
   const { setupTwoFactor, verifyTwoFactor } = useTwoFactorAuth();
 
   // Setup two-factor authentication when modal opens
   useEffect(() => {
-    if (isOpen && !secret) {
-      setupTwoFactor.mutate(
-        {},
-        {
-          onSuccess: (data) => {
-            if (data.success && data.data) {
-              setSecret(data.data.secret);
-              setQrCodeUrl(data.data.qrCodeUrl);
-            }
-          },
-        }
-      );
+    if (!isOpen) {
+      return;
     }
+
+    if (secret || hasRequestedSetupRef.current) {
+      return;
+    }
+
+    hasRequestedSetupRef.current = true;
+
+    setupTwoFactor.mutate(
+      {},
+      {
+        onSuccess: (data) => {
+          if (data.success && data.data) {
+            setSecret(data.data.secret);
+            setQrCodeUrl(data.data.qrCodeUrl);
+          }
+        },
+      }
+    );
   }, [isOpen, secret, setupTwoFactor]);
 
   // Handle OTP verification
@@ -109,6 +118,7 @@ export const TwoFactorEnableModal = ({
     setOtpValue("");
     setSecret("");
     setQrCodeUrl("");
+    hasRequestedSetupRef.current = false;
     onOpenChange(false);
   };
 
@@ -116,7 +126,14 @@ export const TwoFactorEnableModal = ({
   const isFinishEnabled = otpValue.length === 6 && !verifyTwoFactor.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent className="flex flex-col rounded-2xl bg-white p-0 shadow-2xl sm:max-w-md md:rounded-3xl">
         <motion.div
           className="contents"
